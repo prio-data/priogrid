@@ -1,0 +1,1965 @@
+\documentclass[]{book}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{kpfonts}
+\usepackage[stretch=10,shrink=10]{microtype}
+
+\usepackage[top=1.25in, bottom=1.25in,left=1.5in, right=1.25in]{geometry}
+\setlength{\oddsidemargin}{36pt}
+\setlength{\evensidemargin}{36pt}
+
+%\usepackage{lmodern}
+\usepackage[unicode=true]{hyperref}
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={},
+            pdftitle={},
+            colorlinks=true,
+            citecolor=blue,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+\title{PRIO-GRID v.2.0 Codebook}
+\author{Andreas Forø Tollefsen, Karim Baghat, Jonas Nordkvelle and Halvard
+Buhaug}
+\date{\today}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+
+\paragraph{Version Information:}\label{version-information}
+
+This codebook describes the content and development of the PRIO-GRID
+version 2.0.
+
+\paragraph{Citation:}\label{citation}
+
+PRIO-GRID is a unique data framework developed at PRIO and made freely
+available to all interested users. Whenever using the PRIO-GRID data
+frame or parts of its content, please cite:
+
+\begin{quote}
+\href{http://jpr.sagepub.com/content/49/2/363}{Tollefsen, Andreas Forø;
+Håvard Strand \& Halvard Buhaug (2012) PRIO-GRID: A unified spatial data
+structure. \emph{Journal of Peace Research}, 49(2): 363-374. doi:
+10.1177/0022343311431287}
+\end{quote}
+
+The article is \emph{open access} and freely available for download at
+the journal's web page.
+
+PRIO-GRID consists of data from multiple third-party sources. Hence,
+users are requested to cite the original source for each variable used
+in their work, in addition to citing the PRIO-GRID article. See variable
+descriptions in this codebook for each variable for the correct
+citation).
+
+If you want to cite this codebook, please use:
+
+\begin{quote}
+Tollefsen, Andreas Forø, Karim Baghat, Jonas Nordkvelle and Halvard
+Buhaug (2015). \emph{PRIO-GRID v.2.0 Codebook}. Peace Research Institute
+Oslo.
+\end{quote}
+
+\paragraph{Funding:}\label{funding}
+
+PRIO-GRID was initiated by Andreas Forø Tollefsen and Halvard Buhaug in
+2008. The project was an integral part of the Advanced Conflict Data
+Catalogue (ACDC) project (2011-2013), led by Håvard Strand, and funded
+by the Research Council of Norway. The upgrade to PRIO-GRID version 2.0
+has been funded by the Research Council of Norway and the European
+Research Council through separate research project grants (\#240315-F10
+and \#648291, respectively), led by Halvard Buhaug (PRIO).
+
+\paragraph{Acknowledgements:}\label{acknowledgements}
+
+We thank numerous colleagues at PRIO, Uppsala University, ENCoRe Cost
+Network, ETH Zürich, University of Colorado Boulder, CIESIN Columbia
+University, participants at FOSS4G 2011 conference in Denver, and users
+around the world for crucial feedback during the development of the
+PRIO-GRID project. Gerdis Wischnath, Johan Dittrich Hallberg, and Nils
+Weidmann provided important input on the initial version.
+
+We also appreciate the cooperation with providers of the source data
+that are integrated into the PRIO-GRID framework. Please do cite the
+sources as described in relation to each variable.
+
+\paragraph{Questions and Support:}\label{questions-and-support}
+
+The PRIO-GRID website can be found at:
+\href{http://grid.prio.org}{grid.prio.org}. The website provides an
+interactive visualization of the PRIO-GRID variables and allows users to
+download variables of interest as spreadsheets or shapefiles through the
+data portal.
+
+Questions and comments should be addressed to Andreas Forø Tollefsen:
+\href{mailto:andreas@prio.no}{andreas@prio.org}.
+
+\mainmatter
+
+\chapter{Introduction}\label{introduction}
+
+This document describes the development and content of the PRIO-GRID
+dataset, a standardized spatial grid structure with global coverage at a
+resolution of 0.5 x 0.5 decimal degrees. See Tollefsen, Strand \& Buhaug
+(2012) for additional information on the background, motivation, and
+application of PRIO-GRID.
+
+PRIO-GRID consists of four components. The first is the tabular dataset,
+containing spatially disaggregated data at the grid cell level. While
+these tables do not contain the geometries per se, they can be
+represented and visualized using the PRIO-GRID geographic information
+systems (GIS) shapefiles, which contain the polygon grid and the
+corresponding cell centroids. Two .csv files are available for download;
+one .csv table for static variables and one .csv table for time-varying
+variables where the grid has one realization per calendar year. The
+content of the .csv files depends on the variables selected for download
+through the data portal.
+
+The second component includes open-source replication scripts that were
+used to generate the PRIO-GRID dataset, publically available through the
+GitHub-repository at
+\href{http://www.github.com/prio-data/priogrid}{github.com/prio-data/priogrid}.
+These files facilitate replication, modification, and extension of the
+original files, including joining of additional geo-referenced data,
+should the user wish to do so.
+
+The third component is the documentation, consisting of the journal
+article presenting PRIO-GRID (Tollefsen, Strand \& Buhaug 2012), this
+codebook, and the instructions for how to use the replication files at
+\href{http://www.github.com/prio-data/priogrid}{GitHub}.
+
+The fourth component is a shapefile of the grid-cells. The shapefile is
+a 0.5 x 0.5 decimal degree grid system of the world. It contains both
+land and sea grids. When merged with the data, you can use this
+shapefile to plot data on a map.
+
+PRIO-GRID is a versioned dataset, meaning that changes to the data are
+released with new version numbers. Higher version numbers indicate more
+recent data. All files, scripts, and documentation should reflect these
+version changes.
+
+\section{Changes in version 2.0}\label{changes-in-version-2.0}
+
+PRIO-GRID version 2.0 introduces several updates, changes, and new
+additions since version 1.01. PRIO-GRID 2.0 extends the temporal
+coverage until 2014, providing one annual grid representation of the
+globe for each year, 1946-2014. While previous PRIO-GRID versions only
+contained grid cells occupied by independent states as defined by the
+Gleditsch \& Ward system membership list, version 2.0 contains all
+terrestrial cells, in total 64,818 per grid, for all years regardless of
+the political status of the territory. For grid cells covering
+non-independent territory, the country code (gwno) will be missing. This
+is done to facilitate inclusion of time-series data that are not
+associated with a country, notably climate statistics.
+
+\paragraph{List of changes}\label{list-of-changes}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  The data structure has been refactored for easier use. Version 2.0
+  consists of one static table, one yearly table, and one shapefile with
+  the corresponding geometries. The content of the tables will be
+  determined by the user when generating the data through the data
+  portal.
+\item
+  Duplicates of cell-year observations (previously done to permit info
+  on overlapping ethnic groups) have been removed. Instead, link tables,
+  such as GeoEPR2PRIO-GRID, are provided as an extension.
+\item
+  A new interactive data portal has been created where PRIO-GRID data
+  can be visualized, queried, and downloaded.
+\item
+  The development process has been made fully automated and replicable
+  in a downloadable package, along with instructions for how to use.
+  This includes converting from a mixed use of Python and SQL scripts to
+  nearly pure SQL scripts, for less dependencies and easier replication.
+  Any replication will require a PostGIS compatible database. The
+  scripts used to create PRIO-GRID have been made available as
+  open-source files through the GitHub data repository.
+\item
+  In addition to general updating of time-varying variables to cover
+  more recent years and minor adjustments in some variable
+  operationalizations (see data description below for details), several
+  new indicators have been added, and some have been removed. More
+  specifically:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    The Conflict Sites and onset data featured in v.1.01 are not
+    included in v.2.0 since the underlying Conflict Site dataset has not
+    been updated after 2008. Please refer back to v.1.01 for these data
+    (merge using gid-year). Note that the UCDP Georeferenced Event Data,
+    UCDP conflict polygons, and the ACLED datasets provide links to
+    PRIO-GRID cell IDs for each event and can thus be easily imported
+    into the grid.
+  \item
+    All distance measurements are now spherical distances, rather than
+    geometric distances.
+  \item
+    Rather than listing all GeoEPR groups within a cell, v.2.0 includes
+    a count of \nameref{excluded} groups within a gid-year. A new link
+    table, GeoEPR2PRIO-GRID, is available on the PRIO-GRID web as an
+    extension for users who want to import additional information from
+    the EPR family datasets.
+  \item
+    Globcover landuse coverages are now separated into variables
+    (\nameref{urban-gc}, \nameref{agri-gc}, \nameref{forest-gc},
+    \nameref{shrub-gc}, \nameref{herb-gc}, \nameref{aquaveg-gc},
+    \nameref{barren-gc}, \nameref{water-gc}), rather than using the
+    combination of \textbf{lclass} and \textbf{lclasspct} in PRIO-GRID
+    v.1.01. Users wishing to aggregate their own combinations of landuse
+    types should consult the old v.1.01.
+  \item
+    Data on irrigation (\nameref{irrig-}) is now based on a new data
+    source that also captures changes over time.
+  \item
+    Precipitation data (\nameref{prec-gpcc} and \nameref{prec-gpcp}) are
+    now derived from two alternative sources, GPCC and GPCP, rather than
+    the University of Delaware (NOAA 2011) data provided through
+    PRIO-GRID v.1.01.
+  \item
+    Temperature data (\nameref{temp}) are now derived from GHCN/CAMS (Fan
+    et.al. 2008), rather than the University of Delaware (NOAA 2011)
+    data provided through PRIO-GRID v.1.01.
+  \item
+    A number of new drought measures have been added.
+  \item
+    Data on the location of diamond, petroleum, gems, gold, and drugs
+    deposits have been added.
+  \item
+    Data on child malnutrition has been added (CIESIN CMR).
+  \item
+    Satellite Nightlight emission data have been added (DMSP-OLS).
+  \item
+    Crop and landuse data from MIRCA2000 and ISAM-HYDE have been added.
+  \item
+    Population data from HYDE have been added to supplement the GPW
+    data.
+  \end{itemize}
+\end{itemize}
+
+\section{The development of
+PRIO-GRID}\label{the-development-of-prio-grid}
+
+PRIO-GRID is generated in a relational database management system
+(RDBMS); PostgreSQL with the spatial PostGIS extension supplying the
+geometric functionality of the Structured Query Language (SQL) database.
+PRIO-GRID is released with a 0.5 x 0.5 decimal degree cell resolution.
+This corresponds to a cell of roughly 55 x 55 kilometers at the Equator
+(3025 square kilometers area). Cell area decreases at higher latitudes
+due to the curvature of the earth.
+
+The grid structure is defined by a south-western starting point defined
+by x and y coordinates (90S and 180W) and represented using the WGS84
+geographic reference system. The cell identifier starts at 1 at the
+south-western corner (column 1 and row 1) and increases by 1 for each
+column, until reaching 720 (column 720 and row 1). The cell identifier
+then starts at the next row and begins at 721 (column 1 row 2). The full
+grid at 0.5 x 0.5 degrees resolution contains 259,200 cells (720 x 360).
+A majority of these cells cover water and other uninhabited areas
+(notably the Arctic and Antarctica) and are of little relevance in most
+applications. To limit file size, the released PRIO-GRID only includes
+terrestrial grid cells (64,818) although the full grid is maintained and
+is available on request. The current version of PRIO-GRID consists of
+one grid per calendar year for the period 1946--2014.
+
+The remaining sections of the codebook contain a brief presentation of
+all variables in the PRIO-GRID files and how they were imported and
+modified to fit into the PRIO-GRID data structure.
+
+\section{The grid reference file}\label{the-grid-reference-file}
+
+The grid reference file contains information about the PRIO-GRID spatial
+data structure. This file is provided in the ESRI shapefile format,
+where each cell is represented by a rectangular vector geometry in
+addition to a shapefile containing the centroid point. Variables from
+the static and temporal files can be visualized and analyzed by merging
+data to the shapefile via the grid identifier (see below).
+
+\section{Adding additional data using the provided
+shapefile}\label{adding-additional-data-using-the-provided-shapefile}
+
+In addition to the data available in the tables explained above, we
+provide a shapefile with the cell geometry that make it possible for
+users to add their own data. This file may be used in a GIS software to
+extract, join or overlay with other spatial data. The shapefile may be
+joined to the various attribute tables using the gid variable.
+
+\section{Using the replication
+scripts}\label{using-the-replication-scripts}
+
+PRIO-GRID aims to be transparent and is fully replicable with a set of
+automated script. The necessary files and instructions can be found at
+the GitHub repository at
+\href{http://www.github.com/prio-data/priogrid}{github.com/prio-data/priogrid}.
+
+\chapter{Overview of Included Data}\label{overview-of-included-data}
+
+This section presents the data available through the PRIO-GRID, and
+descriptions of the variable names. Below each source of data is a
+reference to the appropriate citation for each data source. Please cite
+the original source in addition to the JPR article and this codebook
+whenever using PRIO-GRID.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \nameref{grid-cell-identifiers}
+\item
+  \nameref{the-static-table}
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    \nameref{accessibility-variables}
+  \item
+    \nameref{socioeconomic-variables}
+  \item
+    \nameref{resource-variables}
+  \item
+    \nameref{landuse-variables}
+  \item
+    \nameref{climate-variables}
+  \end{itemize}
+\item
+  \nameref{the-temporal-table}
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    \nameref{country-variables}
+  \item
+    \nameref{socioeconomic-variables-1}
+  \item
+    \nameref{resource-variables-1}
+  \item
+    \nameref{climate-variables-1}
+  \item
+    \nameref{landuse-variables-1}
+  \end{itemize}
+\end{itemize}
+
+\section{Grid Cell Identifiers}\label{grid-cell-identifiers}
+
+\paragraph{gid}\label{gid}
+
+is the grid cell identifier, a unique id code for each cell in the grid.
+Since we only include the terrestrial cells from the full grid, the gid
+starts at 49182 and ends at 249344. See \nameref{the-development-of-prio-grid} for explanation of the grid structure.
+
+\paragraph{col}\label{col}
+
+denotes column number for the grid cell. Column 1 is the westernmost
+column in the grid, between 180 and 179.5 decimal degrees W. With one
+column per half degree, there are 720 columns in PRIO-GRID.
+
+\paragraph{row}\label{row}
+
+denotes the row number for the grid cell. Row 1 is the southernmost row
+(between 90 and 89.5 degrees S) and row 360 is the northernmost row in
+the full grid in the underlying data.
+
+\paragraph{xcoord}\label{xcoord}
+
+denotes the longitude coordinate (decimal degrees) for the centroid of
+the grid cell. Negative coordinates are located west of the Prime
+Meridian (Greenwich) at 0 degrees longitude.
+
+\paragraph{ycoord}\label{ycoord}
+
+denotes the latitude coordinate (decimal degrees) for the centroid of
+the grid cell. Negative coordinates are located south of the Equator at
+0 degrees latitude.
+
+\section{The Static Table}\label{the-static-table}
+
+The static table contains a grid cell identifier (gid). This means that
+gid constitutes the unique identifier in the static file. The PRIO-GRID
+static table contains observations of all terrestrial grid cells (based
+on cShapes, thus excluding Antarctica, Greenland, and several smaller
+island states). In total, the table contains 64,818 observations.
+
+\paragraph{gid}\label{gid-1}
+
+is the grid cell identifier, a unique id code for each cell in the grid.
+
+\paragraph{landarea}\label{landarea}
+
+gives the total area covered by land in the grid cell in square
+kilometers as defined by the CShapes dataset. Hence, we exclude
+Antarctica, Greenland, and several smaller island states. Areas are
+calculated assuming that the earth in an oblate spheroid (WGS 84).
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B; Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\subsection{Accessibility variables}\label{accessibility-variables}
+
+\paragraph{ttime\_
+{[}\href{http://forobs.jrc.ec.europa.eu/products/gam/}{Original
+data}{]}}\label{ttime-}
+
+is an estimate of the travel time to the nearest major city, derived
+from a global high-resolution raster map of accessibility developed for
+the EU. The original indicator is a result of network analysis using a
+combination of
+\href{http://forobs.jrc.ec.europa.eu/products/gam/sources.php}{several
+sources}, most collected between 1990 and 2005. The original pixel value
+is the estimated travel time in minutes by land transportation from the
+pixel to the nearest major city with more than 50 000 inhabitants.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{ttime\_mean} gives the average travel time within each cell.
+\item
+  \textbf{ttime\_sd} gives the standard deviation of original pixel
+  values within each cell.
+\item
+  \textbf{ttime\_min} gives the minimum original pixel value within each
+  cell.
+\item
+  \textbf{ttime\_max} gives the maximum original pixel value within each
+  cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Uchida, Hirotsugu and Nelson, Andrew (2009). Agglomeration Index:
+Towards a New Measure of Urban Concentration. \emph{Background paper for
+the World Bank's World Development Report 2009}.
+\end{quote}
+
+\paragraph{mountain\_mean
+{[}\href{http://www.unep-wcmc.org/resources-and-data/mountains-and-forests-in-mountains}{Original
+data}{]}}\label{mountain-mean}
+
+measures the proportion of mountainous terrain within the cell based on
+elevation, slope and local elevation range, taken from a high-resolution
+mountain raster developed for UNEP's Mountain Watch Report. The original
+pixel values are binary, capturing whether the pixel is a mountain pixel
+or not based on the seven different categories of mountainous terrain in
+the report.
+
+Please cite:
+
+\begin{quote}
+Blyth, Simon, Brian Groombridge, Igor Lysenko, Lera Miles, and Adrian
+Newton (2002). \emph{Mountain Watch: environmental change \& sustainable
+development in mountains.} UNEP-WCMC Biodiversity Series 12. ISBN:
+1-899628-20-7
+\end{quote}
+
+\subsection{Socioeconomic variables}\label{socioeconomic-variables}
+
+\paragraph{imr\_
+{[}\href{http://sedac.ciesin.columbia.edu/data/set/povmap-global-subnational-infant-mortality-rates}{Original
+data}{]}}\label{imr-}
+
+measures infant mortality rate, based on raster data from the SEDAC
+Global Poverty Mapping project. The original pixel value is the number
+of children per 10,000 live births that die before reaching their first
+birthday. This indicator is a snapshot for the year 2000 only.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{imr\_mean} gives the average infant mortality rate within the
+  grid cell.
+\item
+  \textbf{imr\_sd} gives the standard deviation of original pixel values
+  within each cell.
+\item
+  \textbf{imr\_min} gives the minimum of original pixel values within
+  each cell.
+\item
+  \textbf{imr\_max} gives the maximum of original pixel values within
+  each cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Storeygard, Adam; Deborah Balk, Marc Levy \& Glenn Deane (2008) The
+global distribution of infant mortality: A subnational spatial view.
+\emph{Population, Space and Place}, 14(3):209-229.
+\end{quote}
+
+\begin{quote}
+Center for International Earth Science Information Network - CIESIN -
+Columbia University. 2005. \emph{Poverty Mapping Project: Global
+Subnational Infant Mortality Rates}. Palisades, NY: NASA Socioeconomic
+Data and Applications Center (SEDAC). doi:10.7927/H4PZ56R2. Accessed
+19.05.2006.
+\end{quote}
+
+\paragraph{cmr\_
+{[}\href{http://sedac.ciesin.columbia.edu/data/set/povmap-global-subnational-prevalence-child-malnutrition}{Original
+data}{]}}\label{cmr-}
+
+measures the prevalence of child malnutrition, based on raster data from
+the SEDAC Global Poverty Mapping project. The original pixel value is
+the percent of children under the age of 5 that are malnutritioned. This
+indicator is a snapshot for the year 2000 only.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{cmr\_mean} gives the average prevalence of child malnutrition
+  within the grid cell.
+\item
+  \textbf{cmr\_sd} gives the standard deviation of original pixel values
+  within each cell.
+\item
+  \textbf{cmr\_min} gives the minimum of original pixel values within
+  each cell.
+\item
+  \textbf{cmr\_max} gives the maximum of original pixel values within
+  each cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Center for International Earth Science Information Network - CIESIN -
+Columbia University. 2005. \emph{Poverty Mapping Project: Global
+Subnational Prevalence of Child Malnutrition}. Palisades, NY: NASA
+Socioeconomic Data and Applications Center (SEDAC).
+doi:10.7927/H4K64G12. Accessed 13.08.2015.
+\end{quote}
+
+\subsection{Resource variables}\label{resource-variables}
+
+\paragraph{petroleum\_s
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Petroleum-Dataset/Petroleum-Dataset-v-12/}{Original
+data}{]}}\label{petroleum-s}
+
+is a dummy variable for whether onshore petroleum deposits have been
+found within the given grid cell, based on the Petroleum Dataset v.1.2.
+This variable only codes those petroleum deposits that do not have a
+known discovery or start of production year. For a complete picture,
+these data must therefore be combined with the \nameref{petroleum-y}
+data.
+
+Please cite:
+
+\begin{quote}
+Lujala, Päivi, Jan Ketil Rød \& Nadia Thieme, 2007. Fighting over Oil:
+Introducing A New Dataset. \emph{Conflict Management and Peace Science},
+24(3), 239-256.
+\end{quote}
+
+\paragraph{diamsec\_s
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/}{Original
+data}{]}}\label{diamsec-s}
+
+is a dummy variable for whether secondary (alluvial) diamond deposits
+have been found within the given grid cell, based on the Diamond
+Resources dataset v1a. This variable only codes those deposits that do
+not have a known discovery or start of production year. For a complete
+picture, these data must therefore be combined with the
+\nameref{diamsec-y} data.
+
+Please cite:
+
+\begin{quote}
+Gilmore, Elisabeth, Nils Petter Gleditsch, Päivi Lujala \& Jan Ketil
+Rød, 2005. Conflict Diamonds: A New Dataset, \emph{Conflict Management
+and Peace Science} 22(3): 257--292
+\end{quote}
+
+\begin{quote}
+Lujala, Päivi, Nils Petter Gleditsch \& Elisabeth Gilmore, 2005. A
+Diamond Curse? Civil War and a Lootable Resource. \emph{Journal of
+Conflict Resolution}, 49(4): 538--562.
+\end{quote}
+
+\paragraph{diamprim\_s
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/}{Original
+data}{]}}\label{diamprim-s}
+
+is a dummy variable for whether primary (kimberlite) diamond deposits
+have been found within the given grid cell, based on the Diamond
+Resources dataset v1a. This variable only codes those deposits that do
+not have a known discovery or start of production year. For a complete
+picture, these data must therefore be combined with the
+\nameref{diamprim-y} data.
+
+Please cite the same source as \nameref{diamsec-s}.
+
+\paragraph{goldplacer\_s
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldplacer-s}
+
+is a dummy variable for whether placer gold deposits have been found
+within the given grid cell, based on the GOLDATA\_L subset of the
+GOLDDATA v1.2. This variable only codes those deposits that do not have
+a known discovery or start of production year. For a complete picture,
+these data must therefore be combined with the \nameref{goldplacer-y}
+data.
+
+Please cite:
+
+\begin{quote}
+Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook,
+Version 1.2. \emph{Cognitive Science and Communication Research Centre}
+WP 02/15. doi:10.13140/RG.2.1.1730.8648
+\end{quote}
+
+\begin{quote}
+Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a
+spatially disaggregated analysis, Peace Economics. \emph{Peace Science
+and Public Policy}, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+\end{quote}
+
+\paragraph{goldsurface\_s
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldsurface-s}
+
+is a dummy variable for whether surface gold deposits have been found
+within the given grid cell, based on the GOLDATA\_S subset of the
+GOLDDATA v1.2. Surface gold deposits are defined as deposits that are
+located near the surface but ``do not hold enough information to be
+properly defined as lootable {[}placer gold{]}''. This variable only
+codes those deposits that do not have a known discovery or start of
+production year. For a complete picture, these data must therefore be
+combined with the \nameref{goldsurface-y} data.
+
+Please cite the same source as \nameref{goldplacer-s}.
+
+\paragraph{goldvein\_s
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldvein-s}
+
+is a dummy variable for whether vein gold deposits have been found
+within the given grid cell, based on the GOLDATA\_NL subset of the
+GOLDDATA v1.2. This variable only codes those deposits that do not have
+a known discovery or start of production year. For a complete picture,
+these data must therefore be combined with the \nameref{goldvein-y}
+data.
+
+Please cite the same source as \nameref{goldplacer-s}.
+
+\paragraph{gem\_s
+{[}\href{http://paivilujala.weebly.com/gemdata.html}{Original
+data}{]}}\label{gem-s}
+
+is a dummy variable for whether gem deposits have been found within the
+given grid cell, based on the GEMDATA dataset. This variable only codes
+those deposits that do not have a known discovery or start of production
+year. For a complete picture, these data must therefore be combined with
+the \nameref{gem-y} data.
+
+Please cite:
+
+\begin{quote}
+Lujala, Päivi 2009. Deadly Combat over Natural Resources: Gems,
+Petroleum, Drugs, and the Severity of Armed Civil Conflict.
+\emph{Journal of Conflict Resolution}, 53(1): 50-71.
+\end{quote}
+
+\subsection{Landuse variables}\label{landuse-variables}
+
+\paragraph{urban\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{urban-gc}
+
+measures the coverage of urban areas in each cell, based on the
+Globcover 2009 dataset v.2.3. To compute \nameref{urban-gc} we follow
+the FAO land cover classification system used by Globcover and aggregate
+to the category ``Artificial areas'' (Landuse class 190). The value
+indicates the percentage area of the cell covered by urban area. This
+indicator is a snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{agri\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{agri-gc}
+
+measures the coverage of agricultural areas in each cell, extracted from
+the Globcover 2009 dataset v.2.3. To compute \nameref{agri-gc} we follow
+the FAO land cover classification system used by Globcover and aggregate
+to the category ``Cultivated terrestrial areas and managed lands''
+(landuse classes 11, 14, 20, 30). The value indicates the percentage
+area of the cell covered by agricultural area. This indicator is a
+snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{forest\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{forest-gc}
+
+measures the coverage of forest areas in each cell, extracted from the
+Globcover 2009 dataset v.2.3. To compute \nameref{forest-gc} we follow
+the FAO land cover classification system used by Globcover and aggregate
+to the category ``Woody - trees''(landuse classes 40, 50, 60, 70, 80,
+90, 100, 110, 120). The value indicates the percentage area of the cell
+covered by forested area. This indicator is a snapshot for the year 2009
+only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{shrub\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{shrub-gc}
+
+measures the coverage of shrubland in each cell, extracted from the
+Globcover 2009 dataset v.2.3. To compute \nameref{shrub-gc} we follow
+the FAO land cover classification system used by Globcover and aggregate
+to the category ``Shrub'' (landuse class 130). The value indicates the
+percentage area of the cell covered by shrubland. This indicator is a
+snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{herb\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{herb-gc}
+
+measures the coverage of herbaceous vegetation and lichens/mosses in
+each cell, extracted from the Globcover 2009 dataset v.2.3. To compute
+\nameref{herb-gc} we follow the FAO land cover classification system
+used by Globcover and aggregate to the category ``Herbaceous'' (landuse
+class 140). The value indicates the percentage area of the cell covered
+by forested area. This indicator is a snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{aquaveg\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{aquaveg-gc}
+
+measures the coverage of aquatic vegetation in each cell, extracted from
+the Globcover 2009 dataset v.2.3. To compute \nameref{aquaveg-gc} we
+follow the FAO land cover classification system used by Globcover and
+aggregate to the category ``Natural and seminatural aquatic vegetation''
+(landuse classes 150, 160, 170, 180). The value indicates the percentage
+area of the cell covered by forested area. This indicator is a snapshot
+for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{barren\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{barren-gc}
+
+measures the coverage of barren areas in each cell, extracted from the
+Globcover 2009 dataset v.2.3. To compute \nameref{barren-gc} we follow
+but deviate slightly from the FAO land cover classification system used
+by Globcover by aggregating to the category ``Barren'' and also
+including the ``Permanent snow and ice'' class (landuse classes 200,
+220). The value indicates the percentage area of the cell covered by
+barren area. This indicator is a snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{water\_gc
+{[}\href{http://due.esrin.esa.int/page_globcover.php}{Original
+data}{]}}\label{water-gc}
+
+measures the coverage of water areas in each cell, extracted from the
+Globcover 2009 dataset v.2.3. To compute \nameref{water-gc} we follow
+but deviate slightly from the FAO land cover classification system used
+by Globcover and aggregate only to the ``Natural/Artificial water
+bodies'' class excluding the ``Permanent snow and ice'' class (landuse
+class 2010). The value indicates the percentage area of the cell covered
+by water area. This indicator is a snapshot for the year 2009 only.
+
+Please cite:
+
+\begin{quote}
+Bontemps, Sophie; Pierre Defourny \& Eric Van Bogaert (2009) Globcover
+2009. Products Description and Validation Report. \emph{European Space
+Agency}.
+(\url{http://due.esrin.esa.int/files/GLOBCOVER2009_Validation_Report_2.2.pdf}).
+\end{quote}
+
+\paragraph{maincrop
+{[}\href{http://www.uni-frankfurt.de/45218031}{Original
+data}{]}}\label{maincrop}
+
+indicates the main crop code for the cell, based on the Cropping Periods
+List data from the MIRCA2000 dataset v.1.1. The main crop is determined
+as the subcrop with the highest harvested area for each cell. Crop codes 26
+and below are irrigated crops, while 27 and up are rainfed crops. Data
+is only a snapshot for the year 2000.
+
+Please cite:
+
+\begin{quote}
+Portmann, Felix T., Stefan Siebert \& Petra Döll (2010): MIRCA2000 --
+Global monthly irrigated and rainfed crop areas around the year 2000: A
+new high-resolution data set for agricultural and hydrological modeling,
+\emph{Global Biogeochemical Cycles}, 24, GB 1011,
+doi:10.1029/2008GB003435.
+\end{quote}
+
+\paragraph{harvarea
+{[}\href{http://www.uni-frankfurt.de/45218031}{Original
+data}{]}}\label{harvarea}
+
+is the sum of the harvested area (given in hectares) for the cell's main
+crop determined in the \nameref{maincrop} variable, based on the Cropping
+Periods List data from the MIRCA2000 dataset v.1.1.
+
+Please cite the same source as \nameref{maincrop}.
+
+\subsection{Climate variables}\label{climate-variables}
+
+\paragraph{rainseas
+{[}\href{ftp://ftp.dwd.de/pub/data/gpcc/html/fulldata_v7_doi_download.html}{Original
+data}{]}}\label{rainseas}
+
+gives the initial month of the rainy season in the cell (values 1-12),
+defined as the first of the three consecutive months during a normal
+year with the highest total amount of rainfall, calculated on the basis
+of the \nameref{prec-gpcc} variable for the 1946-2013 period.
+
+Please cite:
+
+\begin{quote}
+Schneider, Udo, Andreas Becker, Peter Finger, Anja Meyer-Christoffer,
+Bruno Rudolf and Markus Ziese (2015). \emph{GPCC Full Data Reanalysis
+Version 7.0 at 0.5°: Monthly Land-Surface Precipitation from Rain-Gauges
+built on GTS-based and Historic Data}.
+doi:10.5676/DWD\_GPCC/FD\_M\_V7\_050
+\end{quote}
+
+\paragraph{growstart
+{[}\href{http://www.uni-frankfurt.de/45218031}{Original
+data}{]}}\label{growstart}
+
+provides the starting month of the growing season for the cell's main
+crop determined in the \nameref{maincrop} variable, values 1-12, based on
+the Cropping Periods List data from the MIRCA2000 dataset v.1.1.
+
+Please cite:
+
+\begin{quote}
+Portmann, Felix T., Stefan Siebert \& Petra Döll (2010): MIRCA2000 --
+Global monthly irrigated and rainfed crop areas around the year 2000: A
+new high-resolution data set for agricultural and hydrological modeling.
+\emph{Global Biogeochemical Cycles}, 24, GB 1011,
+doi:10.1029/2008GB003435.
+\end{quote}
+
+\paragraph{growend
+{[}\href{http://www.uni-frankfurt.de/45218031}{Original
+data}{]}}\label{growend}
+
+provides the final month of the growing season for the cell's main crop
+determined in the \nameref{maincrop} variable, values 1-12, based on the
+Cropping Periods List data from the MIRCA2000 dataset v.1.1.
+
+Please cite the same source as \nameref{growstart}.
+
+\section{The Temporal Table}\label{the-temporal-table}
+
+In addition to the grid identifier, the temporal data table also
+includes a year variable. This means that gid + year create a unique
+identifier in the time-series data. The PRIO-GRID v.2.0 temporal table
+contains yearly observations of all terrestrial grid cells (excluding
+Antarctica and Greenland) for all calendar years between 1946 and 2014.
+In total, the table contains 64,818 cells x 69 years = 4,472,442
+observations (cell years) in total. However, all variables are not
+available for all years.
+
+\paragraph{gid}\label{gid-2}
+
+is the grid cell identifier, a unique id code for each cell in the grid.
+
+\paragraph{year}\label{year}
+
+gives the calendar year of observation.
+
+\subsection{Country variables}\label{country-variables}
+
+\paragraph{gwno
+{[}\href{http://nils.weidmann.ws/projects/cshapes}{Original
+data}{]}}\label{gwno}
+
+denotes the numerical country code for the country to which the cell is
+allocated, based on the Gleditsch \& Ward system membership list and
+cShapes geometries. Each cell is assigned to one and only one country in
+each yearly file. To determine country ownership, PRIO-GRID draws on the
+cShapes dataset v.0.4-2, last modified 22 Mar 2015. Grid cells that fall
+completely within the territory of an independent state are assigned the
+corresponding Gleditsch \& Ward country code (gwno). The country code
+reflects the status as of 31 December of each year, which means that in
+the case of territorial transfer (e.g., from East Pakistan to Bangladesh
+in 1971), a cell is given the country code that applies to the status at
+the end of the year, 31 December. Grid cells that cover the territory of
+two or more independent states (i.e., the cell intersects with multiple
+country polygons) are assigned to the country that covers the largest
+share of the cell's area. Note that while all terrestrial cells are
+included in the yearly file, country codes are assigned to cells only in
+those years that the host country is a member of the Gleditsch \& Ward
+international system. Missing values imply non-independent territory.
+
+Please cite:
+
+\begin{quote}
+Gleditsch, Kristian Skrede \& Michael D. Ward (1999) Interstate system
+membership: A revised list of the independent states since 1816.
+\emph{International Interactions}, 25: 393-413.
+\end{quote}
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\paragraph{gwarea}\label{gwarea}
+
+gives the land area in square kilometers of the grid cell belonging to
+the allocated country for that year, based on cShapes. Areas are
+calculated assuming that the earth in an oblate spheroid (WGS 84).
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\paragraph{bdist1}\label{bdist1}
+
+gives the spherical distance in kilometer from the cell centroid to the
+border of the nearest land-contiguous neighboring country, based on
+country border data using cShapes v.0.4-2. This implies that cells in
+e.g. Northern Denmark are measured to the border to Germany even if the
+straight-line distance to Norway (across international waters) is
+shorter. Cells belonging to island states with no contiguous neighboring
+country (e.g., New Zealand) are coded as missing.
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\paragraph{bdist2}\label{bdist2}
+
+gives the spherical distance (in kilometer) from the cell centroid to
+the border of the nearest neighboring country, regardless of whether the
+nearest country is located across international waters. Hence, for cells
+belonging to island states (e.g. New Zealand), bdist2 gives the shortest
+distance to the nearest land territory of another state.
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\paragraph{bdist3}\label{bdist3}
+
+gives the spherical distance (in kilometer) from the cell centroid to
+the territorial outline of the country the cell belongs to. For cells
+located along a coast and for cells of island states (e.g. New Zealand),
+bdist3 measures the shortest straight-line distance to international
+waters. By definition, bdist3 can never have higher values than the two
+other border distance indicators and for 44 \% of the cell years all
+three border distance estimates are identical.
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\paragraph{capdist}\label{capdist}
+
+gives the spherical distance in kilometers from the cell centroid to the
+national capital city in the corresponding country, based on coordinate
+pairs of capital cities derived from the cShapes dataset v.0.4-2. It
+captures changes over time wherever relevant. Figure 3 visualizes these
+straight-line distances.
+
+Please cite:
+
+\begin{quote}
+Weidmann, Nils B., Doreen Kuse \& Kristian Skrede Gleditsch (2010) The
+geography of the international system: The CShapes Dataset.
+\emph{International Interactions}, 36(1): 86-106.
+\end{quote}
+
+\subsection{Socioeconomic variables}\label{socioeconomic-variables-1}
+
+\paragraph{pop\_gpw\_
+{[}\href{http://sedac.ciesin.columbia.edu/data/collection/gpw-v3}{Original
+data}{]}}\label{pop-gpw-}
+
+measures population size, taken from the Gridded Population of the World
+version 3. Population estimates are available for 1990, 1995, 2000, and
+2005. The original pixel value is number of persons.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{pop\_gpw\_sum} gives the sum of pixel values (number of
+  persons) within the grid cell. To obtain population density estimates,
+  this variable can be divided by \nameref{landarea} in the static table.
+\item
+  \textbf{pop\_gpw\_sd} gives the standard deviation of original pixel
+  values within each cell.
+\item
+  \textbf{pop\_gpw\_min} gives the minimum of original pixel values
+  within each cell.
+\item
+  \textbf{pop\_gpw\_max} gives the maximum of original pixel values
+  within each cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Center for International Earth Science Information Network (CIESIN) and
+Centro Internacional de Agricultura Tropical (CIAT) (2005).
+\emph{Gridded Population of the World, Version 3 (GPWv3): Population
+Count Grid}. Palisades, NY. doi:10.7927/H4639MPP. Accessed 03.06.2013.
+\end{quote}
+
+\paragraph{pop\_hyd\_
+{[}\href{http://themasites.pbl.nl/tridion/en/themasites/hyde/download/index-2.html}{Original
+data}{]}}\label{pop-hyd-}
+
+measures the population size for each populated cell in the grid, taken
+from the History Database of the Global Environment (HYDE) version 3.1.
+Population estimates are available for 1950, 1960, 1970, 1980, 1990,
+2000, and 2005. The original pixel value is number of persons.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{pop\_hyd\_sum} gives the sum of pixel values (number of
+  persons) within the grid cell. To obtain population density estimates,
+  this variable can be divided by\nameref{landarea} in the static table.
+\item
+  \textbf{pop\_hyd\_sd} gives the standard deviation of original pixel
+  values within each cell.
+\item
+  \textbf{pop\_hyd\_min} gives the minimum of original pixel values
+  within each cell.
+\item
+  \textbf{pop\_hyd\_max} gives the maximum of original pixel values
+  within each cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Klein Goldewijk, K. , A. Beusen, M. de Vos and G. van Drecht (2011). The
+HYDE 3.1 spatially explicit database of human induced land use change
+over the past 12,000 years. \emph{Global Ecology and Biogeography},
+20(1): 73-86. doi: 10.1111/j.1466-8238.2010.00587.x.
+\end{quote}
+
+\begin{quote}
+Klein Goldewijk, K. , A. Beusen, and P. Janssen (2010). Long term
+dynamic modeling of global population and built-up area in a spatially
+explicit way, HYDE 3 .1. \emph{The Holocene}, 20(4):565-573.
+doi:10.1177/0959683609356587
+\end{quote}
+
+\paragraph{excluded
+{[}\href{http://www.icr.ethz.ch/data/geoepr}{Original
+data}{]}}\label{excluded}
+
+counts the number of excluded groups (discriminated or powerless) as
+defined in the GeoEPR/EPR data on the status and location of politically
+relevant ethnic groups settled in the grid cell for the given year,
+derived from the GeoEPR/EPR 2014 update 2 dataset.
+
+Please cite:
+
+\begin{quote}
+Vogt, Manuel, Nils-Christian Bormann, Seraina Rüegger, Lars-Erik
+Cederman, Philipp Hunziker, and Luc Girardin. 2015. ``Integrating Data
+on Ethnicity, Geography, and Conflict: The Ethnic Power Relations
+Dataset Family.'' \emph{Journal of Conflict Resolution}, 59(7),
+1327-1342. doi:10.1177/0022002715591215
+\end{quote}
+
+\paragraph{gcp\_mer {[}\href{http://gecon.yale.edu/}{Original
+data}{]}}\label{gcp-mer}
+
+indicates the gross cell product, measured in USD, based on the G-Econ
+dataset v4.0, last modified May 2011. The original G-Econ data represent
+the total economic activity at a 1x1 degree resolution, so when
+assigning this to PRIO-GRID we distribute the total value across the
+number of contained PRIO-GRID land cells. In border areas, the G-Econ
+1x1 degree cells might overlap with PRIO-GRID cells allocated to a
+neighboring country. To minimize bias, PRIO-GRID only extracts G-Econ
+data for cells that have the same country code as the G-Econ cell
+represents. This variable is only available for five-year intervals
+since 1990.
+
+Note: The user should be aware of the following special case. Differing
+definitions used by G-Econ and PRIO-GRID over the territorial border
+between Libya and Chad across all years resulted in no G-Econ cell being
+matched with PRIO-GRID's country definitions, leaving a small strip of
+cells in the border region with missing GCP data.
+
+Please cite:
+
+\begin{quote}
+Nordhaus, William D. (2006) Geography and macroeconomics: New data and
+new findings. \emph{Proceedings of the National Academy of Sciences of
+the USA}, 103(10): 3510-3517.
+\end{quote}
+
+\paragraph{gcp\_ppp {[}\href{http://gecon.yale.edu/}{Original
+data}{]}}\label{gcp-ppp}
+
+indicates the gross cell product, measured in USD using
+purchasing-power-parity, based on the G-Econ dataset v4.0, last modified
+May 2011. Else similar to \nameref{gcp-mer}, but uses USD at
+purchasing-power-parity which corrects for each currency's purchasing
+power. This variable is only available for 1990, 1995, 2000, and 2005.
+
+Please cite:
+
+\begin{quote}
+Nordhaus, William D. (2006) Geography and macroeconomics: New data and
+new findings. \emph{Proceedings of the National Academy of Sciences of
+the USA}, 103(10): 3510-3517.
+\end{quote}
+
+\paragraph{gcp\_qual {[}\href{http://gecon.yale.edu/}{Original
+data}{]}}\label{gcp-qual}
+
+indicates the quality of the GCP values, based on the G-Econ dataset
+v4.0, last modified May 2011. Quality is a measure of the quality of the
+economic data. Quality = 1 for countries for which the data are
+consistent, but it does not capture the quality of the underlying
+country statistics. In general, quality \textless{} 1 indicates that
+there are major inconsistencies in one of the underlying data inputs
+into GCP. See the G-Econ definition table, available at
+\url{http://gecon.yale.edu/}.
+
+Please cite:
+
+\begin{quote}
+Nordhaus, William D. (2006) Geography and macroeconomics: New data and
+new findings. \emph{Proceedings of the National Academy of Sciences of
+the USA}, 103(10): 3510-3517.
+\end{quote}
+
+\subsection{Resource variables}\label{resource-variables-1}
+
+\paragraph{petroleum\_y
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Petroleum-Dataset/Petroleum-Dataset-v-12/}{Original
+data}{]}}\label{petroleum-y}
+
+is a dummy variable for whether onshore petroleum deposits have been
+found within the given grid cell for any given year, based on the
+Petroleum Dataset v.1.2. This variable only codes those petroleum
+deposits that have a known discovery or start of production year. For a
+complete picture, these data must therefore be combined with the
+\nameref{petroleum-s} data.
+
+Please cite:
+
+\begin{quote}
+Lujala, Päivi, Jan Ketil Rød \& Nadia Thieme, 2007. Fighting over Oil:
+Introducing A New Dataset. \emph{Conflict Management and Peace Science},
+24(3), 239-256.
+\end{quote}
+
+\paragraph{diamsec\_y
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/}{Original
+data}{]}}\label{diamsec-y}
+
+is a dummy variable for whether secondary (alluvial) diamond deposits
+have been found within the given grid cell for any given year, based on
+the Diamond Resources dataset v1a. This variable only codes those
+deposits that have a known discovery or start of production year. For a
+complete picture, these data must therefore be combined with the
+\nameref{diamsec-s} data.
+
+Please cite:
+
+\begin{quote}
+Gilmore, Elisabeth, Nils Petter Gleditsch, Päivi Lujala \& Jan Ketil
+Rød, 2005. Conflict Diamonds: A New Dataset. \emph{Conflict Management
+and Peace Science}, 22(3): 257--292
+\end{quote}
+
+\begin{quote}
+Lujala, Päivi, Nils Petter Gleditsch \& Elisabeth Gilmore, 2005. A
+Diamond Curse? Civil War and a Lootable Resource. \emph{Journal of
+Conflict Resolution}, 49(4): 538--562.
+\end{quote}
+
+\paragraph{diamprim\_y
+{[}\href{https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/}{Original
+data}{]}}\label{diamprim-y}
+
+is a dummy variable for whether primary (kimberlite) diamond deposits
+have been found within the given grid cell for any given year, based on
+the Diamond Resources dataset v1a. This variable only codes those
+deposits that have a known discovery or start of production year. For a
+complete picture, these data must therefore be combined with the
+\href{}{diamprim\_s} data.
+
+Please cite:
+
+\begin{quote}
+Gilmore, Elisabeth, Nils Petter Gleditsch, Päivi Lujala \& Jan Ketil
+Rød, 2005. Conflict Diamonds: A New Dataset, \emph{Conflict Management
+and Peace Science} 22(3): 257--292
+\end{quote}
+
+\begin{quote}
+Lujala, Päivi, Nils Petter Gleditsch \& Elisabeth Gilmore, 2005. A
+Diamond Curse? Civil War and a Lootable Resource. \emph{Journal of
+Conflict Resolution}, 49(4): 538--562.
+\end{quote}
+
+\paragraph{goldplacer\_y
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldplacer-y}
+
+is a dummy variable for whether placer gold deposits have been found
+within the given grid cell, based on the GOLDATA\_L subset of the
+GOLDATA dataset v1.2. This variable only codes those deposits that have
+a known discovery or start of production year. For a complete picture,
+these data must therefore be combined with the \nameref{goldplacer-s}
+data.
+
+Please cite:
+
+\begin{quote}
+Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook,
+Version 1.2. \emph{Cognitive Science and Communication Research Centre},
+WP 02/15. doi:10.13140/RG.2.1.1730.8648
+\end{quote}
+
+\begin{quote}
+Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a
+spatially disaggregated analysis. \emph{Peace Economics, Peace Science
+and Public Policy}, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+\end{quote}
+
+\paragraph{goldsurface\_y
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldsurface-y}
+
+is a dummy variable for whether surface gold deposits defined as
+deposits that are located near the surface but ``do not hold enough
+information to be properly defined as lootable'' have been found within
+the given grid cell, based on the GOLDATA\_S subset of the GOLDATA
+dataset v1.2. This variable only codes those deposits that have a known
+discovery or start of production year. For a complete picture, these
+data must therefore be combined with the \nameref{goldsurface-s} data.
+
+Please cite the same source as \nameref{goldplacer-y}.
+
+\paragraph{goldvein\_y
+{[}\href{http://www.researchgate.net/profile/Sara_Balestri}{Original
+data}{]}}\label{goldvein-y}
+
+is a dummy variable for whether vein gold deposits have been found
+within the given grid cell, based on the GOLDATA\_NL subset of the
+GOLDATA dataset v1.2. This variable only codes those deposits that have
+a known discovery or start of production year. For a complete picture,
+these data must therefore be combined with the \nameref{goldvein-s}
+data.
+
+Please cite the same source as \nameref{goldplacer-y}.
+
+\paragraph{gem\_y
+{[}\href{http://paivilujala.weebly.com/gemdata.html}{Original
+data}{]}}\label{gem-y}
+
+is a dummy variable for whether gem deposits have been found within the
+given grid cell, based on the GEMDATA dataset. This variable only codes
+those deposits that have a known discovery or start of production year.
+For a complete picture, these data must therefore be combined with the
+\nameref{gem-s} data.
+
+Please cite:
+
+\begin{quote}
+Lujala, Päivi 2009. Deadly Combat over Natural Resources: Gems,
+Petroleum, Drugs, and the Severity of Armed Civil Conflict.
+\emph{Journal of Conflict Resolution}, 53(1): 50-71.
+\end{quote}
+
+\paragraph{drug\_y
+{[}\href{http://paivilujala.weebly.com/drugdata.html}{Original
+data}{]}}\label{drug-y}
+
+is a dummy variable for whether large-scale drug cultivation (coca bush,
+opium poppy, or cannabis) is ongoing within the given grid cell, based
+on the DRUGDATA dataset.
+
+Please cite:
+
+\begin{quote}
+Buhaug, Halvard \& Päivi Lujala 2005. Accounting for Scale: Measuring
+Geography in Quantitative Studies of Civil War. \emph{Political
+Geography}, 24: 399-418.
+\end{quote}
+
+\subsection{Climate variables}\label{climate-variables-1}
+
+\paragraph{prec\_gpcc
+{[}\href{ftp://ftp.dwd.de/pub/data/gpcc/html/fulldata_v7_doi_download.html}{Original
+data}{]}}\label{prec-gpcc}
+
+gives the yearly total amount of precipitation (in millimeter) in the
+cell, based on monthly meteorological statistics from the Global
+Precipitation Climatology Centre. This indicator contains data for the
+years 1946-2013 in PRIO-GRID (1901/01 - 2013/12 in the original data).
+
+Please cite:
+
+\begin{quote}
+Schneider, Udo, Andreas Becker, Peter Finger, Anja Meyer-Christoffer,
+Bruno Rudolf and Markus Ziese (2015): GPCC Full Data Reanalysis Version
+7.0 at 0.5°: Monthly Land-Surface Precipitation from Rain-Gauges built
+on GTS-based and Historic Data. doi: 10.5676/DWD\_GPCC/FD\_M\_V7\_050
+\end{quote}
+
+\paragraph{prec\_gpcp
+{[}\href{http://www.esrl.noaa.gov/psd/data/gridded/data.gpcp.html}{Original
+data}{]}}\label{prec-gpcp}
+
+gives the yearly total amount of precipitation (in millimeter) in the
+cell, based on monthly meteorological statistics from the GPCP v.2.2
+Combined Precipitation Data Set. Since the original data only reported
+the daily average for each month, we multiplied the daily average by the
+number of days in each month in order to obtain approximate monthly
+totals, from which yearly totals were estimated. This indicator contains
+data for the years 1979-2014.
+
+Please cite:
+
+\begin{quote}
+Huffman, G.J., D.T. Bolvin, R.F. Adler, 2012, last updated 2012: GPCP
+Version 2.2 SG Combined Precipitation Data Set. WDC-A, NCDC, Asheville,
+NC. Dataset accessed 26.06.2015 at
+\url{ftp://precip.gsfc.nasa.gov/pub/gpcp-v2.2/psg/}
+\end{quote}
+
+Also please note when using:
+
+\begin{quote}
+The GPCP combined precipitation data were developed and computed by the
+NASA/Goddard Space Flight Center's Laboratory for Atmospheres as a
+contribution to the GEWEX Global Precipitation Climatology Project.
+\end{quote}
+
+\begin{quote}
+The GPCP data was provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado,
+USA, from their Web site at \url{http://www.esrl.noaa.gov/psd/}.
+\end{quote}
+
+\paragraph{temp
+{[}\href{http://www.esrl.noaa.gov/psd/data/gridded/data.ghcncams.html}{Original
+data}{]}}\label{temp}
+
+gives the yearly mean temperature (in degrees Celsius) in the cell,
+based on monthly meteorological statistics from GHCN/CAMS, developed at
+the Climate Prediction Center, NOAA/National Weather Service. This
+indicator contains data for the years 1948-2014.
+
+Please cite:
+
+\begin{quote}
+Fan, Yun and Huug van den Dool (2008), A global monthly land surface air
+temperature analysis for 1948-present, \emph{Journal of Geophysical
+Research}, 113, D01103, doi:10.1029/2007JD008470.
+\end{quote}
+
+Also please note when using:
+
+\begin{quote}
+The GHCN Gridded V2 data was provided by the NOAA/OAR/ESRL PSD, Boulder,
+Colorado, USA, from their Web site at
+\url{http://www.esrl.noaa.gov/psd/}.
+\end{quote}
+
+\paragraph{droughtstart\_spi
+{[}\href{http://iridl.ldeo.columbia.edu/maproom/Global/Precipitation/SPI.html}{Original
+data}{]}}\label{droughtstart-spi}
+
+gives the severity of drought during the first month of the cell's rainy
+season, as defined by the \nameref{rainseas} variable. The severity value
+is the SPI1 value during the first month of the rainy season. The
+monthly SPI1 index measures deviation from long-term normal rainfall for
+that month. The values are standardized where deviation estimates less
+than 1 standard deviation indicate near normal rainfall.
+
+We use SPI data from the International Research Institute for Climate
+and Society at Colombia University, as defined in Guttman (1999). The
+SPI values are calculated based on the
+\href{http://www.cpc.ncep.noaa.gov/products/global_precip/html/wpage.cams_opi.html}{CAMS\_OPI}
+precipitation dataset. This indicator contains data for the years
+1979-2014.
+
+Please cite:
+
+\begin{quote}
+Guttman, N. B., 1999: Accepting the Standardized Precipitation Index: A
+calculation algorithm. Journal of the American Water Resources
+Association, 35(2), 311-322.
+\end{quote}
+
+\begin{quote}
+McKee, Thomas B., Nolan J. Doesken, and John D. Kliest (1993) The
+relationship of drought frequency and duration to time scales. \emph{In
+Proceedings of the 8th Conference of Applied Climatology}, 17-22
+January, Anaheim, CA. American Meteorological Society, Boston, MA.
+179-184.
+\end{quote}
+
+\paragraph{droughtend\_spi
+{[}\href{http://iridl.ldeo.columbia.edu/maproom/Global/Precipitation/SPI.html}{Original
+data}{]}}\label{droughtend-spi}
+
+gives the severity of drought for the entirety of the cell's rainy
+season, as defined by the \nameref{rainseas} variable. The severity value
+is the SPI3 value for the last month the rainy season. For each month,
+the monthly SPI3 index measures deviation from long-term normal rainfall
+during the three preceding months. A rainy season is defined as the
+three consecutive months in which it on average rained the most during a
+year in any cell.
+
+Please cite the same source as \nameref{droughtstart-spi}.
+
+\paragraph{droughtyr\_spi
+{[}\href{http://iridl.ldeo.columbia.edu/maproom/Global/Precipitation/SPI.html}{Original
+data}{]}}\label{droughtyr-spi}
+
+gives the proportion of months out of 12 months that are part of the
+longest streak of consecutive months ending in the given year with SPI1
+values below -1.5. For a year where the longest consecutive streak of
+months below -1.5 is three, the cell will be given a value of 3/12 =
+0.25. When the longest streak starts in the previous year, it is only
+counted and included in the year in which the streak ended.
+Theoretically, the proportion can become higher than 1.
+
+Please cite the same source as \nameref{droughtstart-spi}.
+
+\paragraph{droughtcrop\_spi
+{[}\href{http://iridl.ldeo.columbia.edu/maproom/Global/Precipitation/SPI.html}{Original
+data}{]}}\label{droughtcrop-spi}
+
+gives the proportion of months in the growing season that are part of
+the longest streak of consecutive months in that growing season with
+SPI1 values below -1.5. The growing season is the growing season for the
+cell's main crop, defined in the MIRCA2000 dataset v.1.1. For growing
+seasons that cross 1 January, we define the whole season to belong to
+the year in which the season ended. Thus, a year with two consecutive
+months below -1.5 during the growing season that started in September
+the previous year and ended in March in the current year, is given a
+value of 2/8 = 0.25. Each year only have defined one growing season.
+
+Please cite the same source as \nameref{droughtstart-spi}.
+
+\paragraph{droughtstart\_speigdm
+{[}\href{http://sac.csic.es/spei/map/maps.html}{Original
+data}{]}}\label{droughtstart-speigdm}
+
+This variable is operationalized similarly as
+\nameref{droughtstart-spi}, only that instead of using the SPI1, it uses
+the Standardized Precipitation and Evapotranspiration Index SPEI1 from
+the SPEI Global Drought Monitor, downloaded 15 July 2015. SPEI GDM uses
+the GPCC `first guess' product and GHCN/CAMS, while using the
+Thornthwaite potential evapotranspiration (PET) estimation.
+
+Please cite:
+
+\begin{quote}
+Beguería, Santiago, Sergio M. Vicente-Serrano, Fergus Reig, and Borja
+Latorre (2014), Standardized Precipitation Evapotranspiration Index
+(SPEI) revisited: parameter fitting, evapotranspiration models, tools,
+datasets and drought monitoring. \emph{International Journal of
+Climatology}, 34(10): 3001--3023. doi: 10.1002/joc.3887
+\end{quote}
+
+\paragraph{droughtend\_speigdm
+{[}\href{http://sac.csic.es/spei/map/maps.html}{Original
+data}{]}}\label{droughtend-speigdm}
+
+This variable is operationalized similarly as \nameref{droughtend-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-3 from the SPEI Global
+Drought Monitor.
+
+Please cite the same source as \nameref{droughtstart-speigdm}.
+
+\paragraph{droughtyr\_speigdm
+{[}\href{http://sac.csic.es/spei/map/maps.html}{Original
+data}{]}}\label{droughtyr-speigdm}
+
+This variable is operationalized similarly as \nameref{droughtyr-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-1 from the SPEI Global
+Drought Monitor.
+
+Please cite the same source as \nameref{droughtstart-speigdm}.
+
+\paragraph{droughtcrop\_speigdm
+{[}\href{http://sac.csic.es/spei/map/maps.html}{Original
+data}{]}}\label{droughtcrop-speigdm}
+
+This variable is operationalized similarly as \nameref{droughtcrop-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-1 from the SPEI Global
+Drought Monitor.
+
+Please cite the same source as \nameref{droughtstart-speigdm}.
+
+\paragraph{droughtstart\_speibase
+{[}\href{https://digital.csic.es/handle/10261/104742}{Original
+data}{]}}\label{droughtstart-speibase}
+
+This variable is operationalized similarly as
+\nameref{droughtstart-spi}, only that instead of using the SPI-1, it
+uses the Standardized Precipitation and Evapotranspiration Index SPEI-1
+from the SPEIbase v.2.3. SPEIbase is based on precipitation and
+potential evapotranspiration from the Climatic Research Unit of
+University of East Anglia
+\href{http://browse.ceda.ac.uk/browse/badc/cru/data}{CRU v.3.22}. The
+PET estimation used by CRU is the Penman-Montheith method, considered
+better than the Thornthwaite estimation.
+
+Please cite:
+
+\begin{quote}
+Beguería, Santiago, Sergio M. Vicente Serrano, and Marta Angulo-Martínez
+(2010). A Multiscalar Global Drought Dataset: The SPEIbase: A New
+Gridded Product for the Analysis of Drought Variability and Impacts.
+\emph{Bulletin of the American Meteorological Society}, 91 (10):
+1351--1356. doi:10.1175/2010BAMS2988.1
+\end{quote}
+
+\paragraph{droughtend\_speibase
+{[}\href{https://digital.csic.es/handle/10261/104742}{Original
+data}{]}}\label{droughtend-speibase}
+
+This variable is operationalized similarly as \nameref{droughtend-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-3 from the SPEIbase
+v.2.3. SPEIbase is based on precipitation and potential
+evapotranspiration from the Climatic Research Unit of University of East
+Anglia \href{http://browse.ceda.ac.uk/browse/badc/cru/data}{CRU v.3.22}.
+The PET estimation used by CRU is the Penman-Montheith method,
+considered better than the Thornthwaite estimation.
+
+Please cite the same source as \nameref{droughtstart-speibase}.
+
+\paragraph{droughtyr\_speibase
+{[}\href{https://digital.csic.es/handle/10261/104742}{Original
+data}{]}}\label{droughtyr-speibase}
+
+This variable is operationalized similarly as \nameref{droughtyr-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-1 from the SPEIbase
+v.2.3. SPEIbase is based on precipitation and potential
+evapotranspiration from the Climatic Research Unit of University of East
+Anglia \href{http://browse.ceda.ac.uk/browse/badc/cru/data}{CRU v.3.22}.
+The PET estimation used by CRU is the Penman-Montheith method,
+considered better than the Thornthwaite estimation.
+
+Please cite the same source as \nameref{droughtstart-speibase}.
+
+\paragraph{droughtcrop\_speibase
+{[}\href{https://digital.csic.es/handle/10261/104742}{Original
+data}{]}}\label{droughtcrop-speibase}
+
+This variable is operationalized similarly as \nameref{droughtcrop-spi},
+only that instead of using the SPI-1, it uses the Standardized
+Precipitation and Evapotranspiration Index SPEI-1 from the SPEIbase
+v.2.3. SPEIbase is based on precipitation and potential
+evapotranspiration from the Climatic Research Unit of University of East
+Anglia \href{http://browse.ceda.ac.uk/browse/badc/cru/data}{CRU v.3.22}.
+The PET estimation used by CRU is the Penman-Montheith method,
+considered better than the Thornthwaite estimation.
+
+Please cite the same source as \nameref{droughtstart-speibase}.
+
+\subsection{Landuse variables}\label{landuse-variables-1}
+
+\paragraph{irrig\_
+{[}\href{https://mygeohub.org/publications/8}{Original
+data}{]}}\label{irrig-}
+
+measures the area equipped for irrigation within each cell (in
+hectares). The data is taken from the Historical Irrigation dataset v.1,
+which indicates pixelated data on areas equipped for irrigation across
+time. Specifically we used the AEI\_EARTHSTAT\_IR dataset, which reports
+irrigation based on subnational sources and Earthstat historical landuse
+data. In PRIO-GRID, this indicator is only available for the years 1950,
+1960, 1970, 1980, 1985, 1990, 1995, 2000, and 2005.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{irrig\_sum} gives the total area (in hectares) equipped for
+  irrigation within the grid cell.
+\item
+  \textbf{irrig\_sd} gives the standard deviation of original pixel
+  values within each cell.
+\item
+  \textbf{irrig\_min} gives the minimum of original pixel values within
+  each cell.
+\item
+  \textbf{irrig\_max} gives the maximum of original pixel values within
+  each cell.
+\end{itemize}
+
+Please cite:
+
+\begin{quote}
+Stefan Siebert, Matti Kummu, Miina Porkka, Petra Döll, Navin Ramankutty,
+Bridget R. Scanlon (2015). Historical Irrigation Dataset (HID).
+\emph{MyGeoHUB}. doi:10.13019/M20599
+\end{quote}
+
+\paragraph{urban\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{urban-ih}
+
+gives the percentage area of the cell covered by urban area, based on
+ISAM-HYDE landuse data. To measure the coverage of urban areas we
+include the percentage urban areas in a cell extracted from the
+ISAM-HYDE historical landuse dataset. To compute \nameref{urban-ih} we
+follow the land cover classification system used by ISAM-HYDE and
+aggregate to the category ``Urban'' (landuse class ``Urban''). In
+PRIO-GRID, this indicator is available for the years 1950, 1960, 1970,
+1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139.
+doi:10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{agri\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{agri-ih}
+
+gives the percentage area of the cell covered by agricultural area,
+based on ISAM-HYDE landuse data. To measure the coverage of agricultural
+areas we include the percentage agricultural areas in a cell extracted
+from the ISAM-HYDE historical landuse dataset. To compute
+\nameref{agri-ih} we follow the land cover classification system used by
+ISAM-HYDE and aggregate to the category ``Total cropland'' (landuse
+classes ``C3crop'', ``C4crop''). In PRIO-GRID, this indicator is
+available for the years 1950, 1960, 1970, 1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{pasture\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{pasture-ih}
+
+gives the percentage area of the cell covered by pasture area, based on
+ISAM-HYDE landuse data. To measure the coverage of pasture areas we
+include the percentage pasture areas in a cell extracted from the
+ISAM-HYDE historical landuse dataset. To compute \nameref{pasture-ih} we
+follow the land cover classification system used by ISAM-HYDE and
+aggregate to the category ``Total pastureland'' (landuse classes
+``C3past'', ``C4past''). In PRIO-GRID, this indicator is available for
+the years 1950, 1960, 1970, 1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{forest\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{forest-ih}
+
+gives the percentage area of the cell covered by forest area, based on
+ISAM-HYDE landuse data. To measure the coverage of forest areas we
+include the percentage forest areas in a cell extracted from the
+ISAM-HYDE historical landuse dataset. To compute \nameref{forest-ih} we
+follow the land cover classification system used by ISAM-HYDE and
+aggregate to the category ``Total forest'' (landuse classes ``TrpEBF'',
+``TrpDBF'', ``TmpEBF'', ``TmpENF'', ``TmpDBF'', ``BorENF'', ``BorDNF'',
+``SecTrpEBF'', ``SecTrpDBF'', ``SecTmpEBF'', ``SecTmpENF'',
+``SecTmpDBF'', ``SecBorENF'', ``SecBorDNF''). In PRIO-GRID, this
+indicator is available for the years 1950, 1960, 1970, 1980, 1990, 2000,
+and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{grass\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{grass-ih}
+
+gives the percentage area of the cell covered by grasslands, based on
+ISAM-HYDE landuse data. To measure the coverage of grasslands we include
+the percentage grassland areas in a cell extracted from the ISAM-HYDE
+historical landuse dataset. To compute \nameref{grass-ih} we follow the
+land cover classification system used by ISAM-HYDE and aggregate to the
+category ``Total grassland''(landuse classes ``C3grass'', ``C4grass'').
+In PRIO-GRID, this indicator is available for the years 1950, 1960,
+1970, 1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{shrub\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{shrub-ih}
+
+gives the percentage area of the cell covered by shrublands, based on
+ISAM-HYDE landuse data. To measure the coverage of shrublands we include
+the percentage shrubland areas in a cell extracted from the ISAM-HYDE
+historical landuse dataset. To compute \nameref{shrub-ih} we follow the
+land cover classification system used by ISAM-HYDE and aggregate to the
+category ``Total shrubland''(landuse classes ``Denseshrub'',
+``Openshrub''). In PRIO-GRID, this indicator is available for the years
+1950, 1960, 1970, 1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{savanna\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{savanna-ih}
+
+gives the percentage area of the cell covered by grasslands, based on
+ISAM-HYDE landuse data. To measure the coverage of savanna we include
+the percentage savanna areas in a cell extracted from the ISAM-HYDE
+historical landuse dataset. To compute \nameref{savanna-ih} we follow
+the land cover classification system used by ISAM-HYDE and aggregate to
+the category ``Savanna'' (landuse class ``Savanna''). In PRIO-GRID, this
+indicator is available for the years 1950, 1960, 1970, 1980, 1990, 2000,
+and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{barren\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{barren-ih}
+
+gives the percentage area of the cell covered by barren area, based on
+ISAM-HYDE landuse data. To measure the coverage of barren areas we
+include the percentage barren areas in a cell extracted from the
+ISAM-HYDE historical landuse dataset. To compute \nameref{barren-ih} we
+aggregate using the following lansuse classes: ``Tundra'', ``Desert'',
+``PdRI''. In PRIO-GRID, this indicator is available for the years 1950,
+1960, 1970, 1980, 1990, 2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{water\_ih
+{[}\href{https://www.atmos.illinois.edu/~meiyapp2/datasets.htm}{Original
+data}{]}}\label{water-ih}
+
+gives the percentage area of the cell covered by water area, based on
+ISAM-HYDE landuse data. To measure the coverage of water areas we
+include the percentage water areas in a cell extracted from the
+ISAM-HYDE historical landuse dataset. To compute \nameref{water-ih} we
+aggregate using the following landuse class: ``Water''. In PRIO-GRID,
+this indicator is available for the years 1950, 1960, 1970, 1980, 1990,
+2000, and 2010.
+
+Please cite:
+
+\begin{quote}
+Meiyappan, Prasanth and Atul K. Jain (2012). Three distinct global
+estimates of historical land-cover change and land-use conversions for
+over 200 years. \emph{Frontiers of Earth Science}, 6(2), 122-139. doi:
+10.1007/s11707-012-0314-2.
+\end{quote}
+
+\paragraph{nlights\_
+{[}\href{http://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html}{Original
+data}{]}}\label{nlights-}
+
+measures average nighttime light emission from the DMSP-OLS Nighttime
+Lights Time Series Version 4 (Average Visible, Stable Lights, \& Cloud
+Free Coverages). We use the data gathered from the newest satellites
+(F10 in 1992-93, F12 in 1994-1996, and so on). These data are not
+calibrated for time-series analysis, but are available from 1992-2013.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{nlights\_mean} gives the mean night time lights within the
+  grid cell.
+\item
+  \textbf{nlights\_sd} gives the standard deviation of original pixel
+  values within each cell.
+\item
+  \textbf{nlights\_min} gives the minimum of original pixel values
+  within each cell.
+\item
+  \textbf{nlights\_max} gives the maximum of original pixel values
+  within each cell.
+\end{itemize}
+
+Please cite/note:
+
+\begin{quote}
+Image and data processing by NOAA's National Geophysical Data Center.
+DMSP data collected by US Air Force Weather Agency.
+\end{quote}
+
+\paragraph{nlights\_calib\_mean
+{[}\href{http://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html}{Original
+data}{]}}\label{nlights-calib-mean}
+
+measures average nighttime light emission from the DMSP-OLS Nighttime
+Lights Time Series Version 4 (Average Visible, Stable Lights, \& Cloud
+Free Coverages), calibrated to account for intersatellite differences
+and interannual sensor decay using calibration values from Elvidge
+et.al. (2013). Thus, they might be more suitable for time-series
+analysis. Values are standardized to be between 0 and 1, where 1 is the
+highest observed value in the time-series, and 0 is the lowest. The
+times-series are available from 1992-2012.
+
+Please cite/note:
+
+\begin{quote}
+Elvidge, Christopher D., Feng-Chi Hsu, Kimberly E. Baugh and Tilottama
+Ghosh (2014). ``National Trends in Satellite Observed Lighting:
+1992-2012.'' \emph{Global Urban Monitoring and Assessment Through Earth
+Observation}. Ed. Qihao Weng. CRC Press.
+\end{quote}
+
+\begin{quote}
+Image and data processing by NOAA's National Geophysical Data Center.
+DMSP data collected by US Air Force Weather Agency.
+\end{quote}
+
+
+
+\end{document}
