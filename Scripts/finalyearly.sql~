@@ -1,0 +1,88 @@
+﻿ -- Merge all yearly tables into one final one
+
+DROP TABLE IF EXISTS finalyearly;
+
+
+CREATE TABLE finalyearly AS
+  (SELECT gid,
+          "year",
+          gwno,
+          area::real AS gwarea,
+          bdist1::real,
+          bdist2::real,
+          bdist3::real,
+          capdist::real,
+          pop_gpw.population_sum::real AS pop_gpw_sum,
+          pop_gpw.population_mean::real AS pop_gpw_mean,
+          pop_gpw.population_sd::real AS pop_gpw_sd,
+          pop_gpw.population_min::real AS pop_gpw_min,
+          pop_gpw.population_max::real AS pop_gpw_max ,
+          nexcluded::smallint AS excluded ,
+          gecon_gcpmer::real AS gcp_mer,
+          gecon_gcpppp::real AS gcp_ppp,
+          gecon_qual::real AS gcp_qual ,
+          petroleum::boolean AS petroleum_y ,
+          diamloot::boolean AS diamloot_y,
+          diamnonloot::boolean AS diamnonloot_y ,
+          goldloot::boolean AS goldloot_y,
+          goldsemiloot::boolean AS goldsemiloot_y,
+          goldnonloot::boolean AS goldnonloot_y ,
+          gems::boolean AS gems_y ,
+          drugs::boolean AS drugs_y ,
+          gpcp.total::real AS prec_gpcp ,
+          gpcc.total::real AS prec_gpcc ,
+          irrig.sum::real AS irrig_sum,
+          irrig.mean::real AS irrig_mean,
+          irrig.sd::real AS irrig_sd,
+          irrig.min::real AS irrig_min,
+          irrig.max::real AS irrig_max ,
+          pop_hyde.sum::real AS pop_hyd_sum,
+          pop_hyde.mean::real AS pop_hyd_mean,
+          pop_hyde.sd::real AS pop_hyd_sd,
+          pop_hyde.min::real AS pop_hyd_min,
+          pop_hyde.max::real AS pop_hyd_max ,
+          ih.urban::real AS urban_ih,
+          ih.crop::real AS agri_ih,
+          ih.pasture::real AS pasture_ih,
+          ih.forest::real AS forest_ih,
+          ih.semibarren::real AS semibarren_ih,
+          ih.barren::real AS barren_ih,
+          ih.water::real AS water_ih ,
+          nl_sum::real,
+          nl_mean::real,
+          nl_sd::real,
+          nl_min::real,
+          nl_max::real,
+          nl_cal_sum::real,
+          nl_cal_mean::real,
+          nl_cal_sd::real,
+          nl_cal_min::real,
+          nl_cal_max::real
+   FROM cshapes
+   FULL OUTER JOIN borderdist USING(gid, year)
+   FULL OUTER JOIN pop_gpw USING(gid, year)
+   FULL OUTER JOIN excluded_epr USING(gid, year)
+   FULL OUTER JOIN nordhaus USING(gid, year)
+   FULL OUTER JOIN petroleum_y USING(gid, year)
+   FULL OUTER JOIN diamonds_y USING(gid, year)
+   FULL OUTER JOIN gold_y USING(gid, year)
+   FULL OUTER JOIN gems_y USING(gid, year)
+   FULL OUTER JOIN drugs_y USING(gid, year)
+   FULL OUTER JOIN precip_gpcp AS gpcp USING(gid, year)
+   FULL OUTER JOIN precip_gpcc AS gpcc USING(gid, year)
+   FULL OUTER JOIN irrigation AS irrig USING(gid, year)
+   FULL OUTER JOIN pop_hyde USING(gid, year)
+   FULL OUTER JOIN isamhyde AS ih USING(gid, year)
+   FULL OUTER JOIN nightlights USING(gid, year) );
+
+ -- Add indexes
+
+CREATE INDEX finalyearly_idx_1 ON finalyearly USING BTREE(gid);
+CREATE INDEX finalyearly_idx_2 ON finalyearly USING BTREE(year);
+CREATE INDEX finalyearly_idx_3 ON finalyearly USING BTREE(gid, year);
+ANALYZE finalyearly;
+
+
+
+
+
