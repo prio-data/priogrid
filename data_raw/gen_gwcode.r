@@ -4,11 +4,11 @@ library(spex)
 library(tidyverse)
 library(lubridate)
 
+# Should this be a function?
 pg <- create_pg_indices(prio_ncol(), prio_nrow())
 pg <- raster::raster(pg)
 crs(pg) <- prio_crs()
 extent(pg) <- prio_extent()
-
 pg_poly <- polygonize(pg)
 
 tmp_dir <- tempdir()
