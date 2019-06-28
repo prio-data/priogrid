@@ -99,7 +99,7 @@ get_gwcode_rasters <- function(crossection_date, cshp){
   return(crossection_date)
 }
 
-ldf <- lapply(sections_with_change_plus_first$date[1], get_gwcode_rasters, cshp = cshp)
+#ldf <- lapply(sections_with_change_plus_first$date[1], get_gwcode_rasters, cshp = cshp)
 
 ldf <- mclapply(sections_with_change_plus_first$date, get_gwcode_rasters, cshp = cshp, mc.cores = 10)
 
