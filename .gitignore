@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 *.rda
+
+*.swp
+
+R/.depr/*
+tests/testthat/.depr/*
