@@ -1,7 +1,13 @@
+# ================================
+# Functions for working with 
+# rasters
+# ================================
+
 library(raster)
 library(ncdf4)
 
 get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
+  #TODO Needs documentation
   nc <- nc_open(file)
 
   if(missing(lon) & missing(lat)){
@@ -23,18 +29,25 @@ get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
   nc_array[nc_array == fillvarname$value] <- NA
   nc_close(nc)
 
-  return(list("data" = nc_array, "lon" = lon, "lat" = lat, "lonres" = lonres, "latres" = latres))
+  return(list("data" = nc_array, 
+              "lon" = lon, "lat" = lat, 
+              "lonres" = lonres, "latres" = latres))
 }
 
 make_raster <- function(nclist, transpose=FALSE, crs=NULL){
+  #TODO Needs documentation
+  #TODO perhaps a better name? make_raster is too generic
+
   if(transpose){
-    result <- raster(t(nclist$data), xmn =  min(nclist$lon)-nclist$lonres, xmx = max(nclist$lon)+nclist$lonres,
-                     ymn = min(nclist$lat)-nclist$latres, ymx = max(nclist$lat)+nclist$latres,
-                     crs=crs)
+     data <- t(nclist$data)
   } else {
-    result <- raster(nclist$data, xmn =  min(nclist$lon)-nclist$lonres, xmx = max(nclist$lon)+nclist$lonres,
-                     ymn = min(nclist$lat)-nclist$latres, ymx = max(nclist$lat)+nclist$latres,
-                     crs=crs)
+     data <- nclist$data
   }
-  return(result)
+
+  raster(data, 
+      xmn =  min(nclist$lon)-nclist$lonres, 
+      xmx = max(nclist$lon)+nclist$lonres,
+      ymn = min(nclist$lat)-nclist$latres, 
+      ymx = max(nclist$lat)+nclist$latres,
+      crs=crs)
 }

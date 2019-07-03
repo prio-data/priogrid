@@ -1,10 +1,19 @@
 Package: priogrid
-Title: What the Package Does (one line, title case)
+Title: PRIOGrid Replication Code 
 Version: 0.0.0.9000
-Authors@R: person("Jonas", "Vestby", email = "jonves@prio.org", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-Depends: R (>= 3.5.1)
+Authors@R: c(person("Jonas", "Vestby", email = "jonves@prio.org", role = c("aut", "cre")),
+             person("Andreas", "Forø Tollefsen", email = "andreas@prio.org", role = "aut"),
+             person("Peder", "Landsverk", email = "pglandsverk@gmail.com", role = "aut"),
+             person("Vilde", "Bergstad Larsen", "villar@prio.org", role = "aut"))
+Description: Codebase for building PRIOGrid from a diverse set of raw data. 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Imports:
+   ncdf4,
+   spex,
+   lubridate,
+   parallel,
+   dplyr,
+   raster
 Suggests: testthat
