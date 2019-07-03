@@ -180,6 +180,12 @@ prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FA
    pg
 }
 
+#' Polygonize grid 
+#' Returns a polygon version of PRIOGrid 
+#'
+#' @param rastergrid A raster 
+#' 
+#' @return A polygon grid 
 prio_polygonize_grid <- function(rastergrid){
    poly <- spex::polygonize(rastergrid)
    poly$pgid <- poly$layer
