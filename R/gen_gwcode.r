@@ -7,7 +7,7 @@
 #library(raster)
 
 make_gwcode <- function(input_file, output_file, ncores = 1){
-   pg <- priogrid::blank_pgrid()
+   pg <- priogrid::prio_blank_grid()
    pg_poly <- sf::polygonize(pg)
 
    cshp <- sf::st_read(input_file)

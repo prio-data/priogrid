@@ -160,7 +160,7 @@ pgneighbors_nnb <- function(gids, ncol, nrow){
 #' @param crs CRS string, defaults to prio_crs
 #' 
 #' @return A blank grid 
-blank_pgrid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE){
+prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE){
    if(!ncol){
       ncol <- priogrid::prio_ncol()
    }
@@ -178,4 +178,13 @@ blank_pgrid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE)
    pg <- raster::raster(pg, crs = crs)
    raster::extent(pg) <- extent
    pg
+}
+
+prio_polygonize_grid <- function(rastergrid){
+   poly <- spex::polygonize(rastergrid)
+   poly$pgid <- poly$layer
+   poly$layer <- NULL
+   poly$row <- as.integer(ceiling(poly$pgid/720))
+   poly$col <- as.integer(poly$pgid %% 720)
+   poly
 }
