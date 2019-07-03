@@ -15,5 +15,6 @@ Imports:
    lubridate,
    parallel,
    dplyr,
-   raster
+   raster,
+   lwgeom
 Suggests: testthat
