@@ -1,12 +1,3 @@
-library(devtools)
-devtools::load_all()
-library(priogrid)
-library(sf)
-library(lubridate)
-library(tidyverse)
-library(spex)
-
-
 # Yearly gem presence dummy -----------------------------------------------
 
 prio_gems_y <- function(input_file, output_file, ncores = 1){
