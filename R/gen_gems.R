@@ -29,7 +29,7 @@ prio_gems_y <- function(input_file, output_file, ncores = 1){
     dplyr::mutate(gem_y = 1,
            startyear = pmin(PRO_Y, DISC_Y, na.rm = TRUE),
            endyear = 2004,
-           year = list(startyear:endyear)) %>%
+           year = purrr::map2(startyear, endyear, `:`)) %>%
     dplyr::ungroup() %>%
     tidyr::unnest() %>%
     dplyr::select(gwno = COWCODE, year, gem_y, geometry)
