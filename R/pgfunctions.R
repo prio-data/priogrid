@@ -181,7 +181,7 @@ prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FA
 }
 
 #' Polygonize grid 
-#' Returns a polygon version of PRIOGrid 
+#' Returns a polygon version of PRIOGrid, meaning a grid of square polygons
 #'
 #' @param rastergrid A raster 
 #' 
