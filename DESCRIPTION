@@ -1,10 +1,10 @@
-﻿Package: priogrid
+Package: priogrid
 Title: PRIOGrid Replication Code 
 Version: 0.0.0.9000
 Authors@R: c(person("Jonas", "Vestby", email = "jonves@prio.org", role = c("aut", "cre")),
              person("Andreas", "Forø Tollefsen", email = "andreas@prio.org", role = "aut"),
              person("Peder", "Landsverk", email = "pglandsverk@gmail.com", role = "aut"),
-             person("Vilde", "Bergstad Larsen", "villar@prio.org", role = "aut")
+             person("Vilde", "Bergstad Larsen", "villar@prio.org", role = "aut"))
 Description: Codebase for building PRIOGrid from a diverse set of raw data. 
 License: What license is it under?
 Encoding: UTF-8
