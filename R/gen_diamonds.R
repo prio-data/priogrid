@@ -4,6 +4,7 @@
 # library(sf)
 # library(lubridate)
 # library(tidyverse)
+# library(spex)
 
 
 
@@ -27,7 +28,7 @@ prio_diamonds_y <- function(input_file, output_file, ncores = 1){
                   startyear = pmin(disc.year, prod.year, na.rm = TRUE),
                   endyear = 2005) %>%
     filter(DIAINFO == "S" | DIAINFO == "P") %>%
-    mutate(year = list(startyear:endyear)) %>% # Time series
+    mutate(year = purrr::map2(startyear, endyear, `:`)) %>% # Time series
     tidyr::unnest() %>%
     ungroup() %>%
     dplyr::select(gwno = COWCODE, year, diamsec_y, diamprim_y, geometry)
