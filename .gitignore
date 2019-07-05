@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+*.rda
+
+*.swp
+
+R/.depr/*
+tests/testthat/.depr/*
