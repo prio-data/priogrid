@@ -181,6 +181,7 @@ prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FA
 }
 
 #' Polygonize grid 
+#'
 #' Returns a polygon version of PRIOGrid, meaning a grid of square polygons
 #'
 #' @param rastergrid A raster 
@@ -194,3 +195,45 @@ prio_polygonize_grid <- function(rastergrid){
    poly$col <- as.integer(poly$pgid %% 720)
    poly
 }
+
+#' Raster layers 
+#' 
+#' Returns a list of n rasters where n = length(unique(values(raster)))
+#' (Might be) useful for partitioning a raster into separate instances for
+#' more effective computation.
+#TODO i think this might actually already be a function raster::layerize?
+
+prio_raster_layers <- function(raster){
+   unique_values <- unique(raster::values(raster))
+   unique_values <- unique_values[!is.na(unique_values)]
+
+   lapply(unique_values, function(x){
+      copy <- raster 
+      values(copy) <- ifelse(values(copy) == x,values(copy),NA)
+      copy
+   })
+}
+
+
+#' Raster points
+#' 
+#' Converts a raster to a set of points, optionally
+#' removing missing values.
+#' @return An sf with column val = values(raster)
+
+raster_points <- function(raster, na.rm = TRUE){
+   cids <- 1:length(raster)
+   raster_values <- values(raster)
+   if(na.rm){
+      cids <- cids[!is.na(raster_values)]
+      raster_values <- raster_values[!is.na(raster_values)]
+   }
+
+   pts <- lapply(cids, function(cid){
+      st_point(xyFromCell(raster,cid))
+      })
+
+   tibble::tibble(val = raster_values) %>%
+     st_sf(geometry = pts) 
+}
+

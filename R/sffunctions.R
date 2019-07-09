@@ -1,11 +1,16 @@
 # Functions that use or improve sf features, handling
 # geometry data.
 
-
 # The stuff below can be done for any monthly cross-section, but we should come
 # up with a smarter algorithm so that we do not need to calculate everything
 # anew every month.
 #### I have just started here with some code that could be a smarter algorithm...
+
+#' Map changes
+#'
+#' Determines which months a set of geometries has changed 
+#' Used to determine when to reraster, such as in
+#' make_gwcodes.
 compare_crossection <- function(crossection_date, cshp){
   if(crossection_date - months(1) < min(cshp$startdate)){
     res <- tibble::tibble(date = crossection_date, change = 1)
@@ -18,7 +23,6 @@ compare_crossection <- function(crossection_date, cshp){
     } else{
       res <- tibble::tibble(date = crossection_date, change = 1)
     }
-
   }
   res
 }
