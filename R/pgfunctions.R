@@ -160,6 +160,7 @@ pgneighbors_nnb <- function(gids, ncol, nrow){
 #' @param crs CRS string, defaults to prio_crs
 #' 
 #' @return A blank grid 
+#' @export
 prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE){
    if(!ncol){
       ncol <- priogrid::prio_ncol()
