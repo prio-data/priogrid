@@ -16,5 +16,7 @@ Imports:
    parallel,
    dplyr,
    raster,
-   lwgeom
+   lwgeom,
+   velox,
+   tictoc
 Suggests: testthat

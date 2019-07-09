@@ -51,3 +51,23 @@ make_raster <- function(nclist, transpose=FALSE, crs=NULL){
       ymx = max(nclist$lat)+nclist$latres,
       crs=crs)
 }
+
+#' Raster points
+#' 
+#' Simple function that returns a raster as a sf set of  
+raster_points <- function(raster, na.rm = TRUE){
+
+   cids <- 1:length(raster)
+   raster_values <- values(raster)
+   if(na.rm){
+      cids <- cids[!is.na(raster_values)]
+      raster_values <- raster_values[!is.na(raster_values)]
+   }
+
+   pts <- lapply(cids, function(cid){
+      st_point(xyFromCell(raster,cid))
+      })
+
+   tibble::tibble(val = raster_values) %>%
+     st_sf(geometry = pts) 
+}

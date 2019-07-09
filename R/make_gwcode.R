@@ -1,63 +1,68 @@
 
-#library(sf)
-#library(spex)
-#library(tidyverse)
-#library(lubridate)
-#library(parallel)
-#library(raster)
 
-make_gwcode <- function(cshp, ncores = 1){
-   pg <- priogrid::landgrid(cshp)
-   pg_poly <- priogrid::prio_polygonize_grid(pg)
+
+make_gwno <- function(cshp, date_override = NULL, detail = NULL, ncores = 1){
+   tictoc::tic('Doing the whole thing')
+
+   blank_grid <- priogrid::prio_blank_grid()
+   full_landgrid <- priogrid::landgrid(cshp, blank = blank_grid) 
+
+   #borders <- st_simplify(cshp,dTolerance = 1) %>%
+   #   st_boundary() %>%
+   #   st_buffer(1) %>%
+   #   st_simplify(dTolerance = 1)
+   #borderVelox <- velox(blank_grid)
+   #borderVelox$rasterize(borders)
+
+   getGwRaster <- function(date, cshp, raster, detail){
+      tictoc::tic(glue::glue('Doing {strftime(date,"%d %b %Y")}'))
+      crossection <- cshp[date %within% cshp$date_interval,]
+      baseVelox <- velox::velox(raster)
+      baseVelox$rasterize(crossection, field = 'GWCODE', band = 1, background = NA)
+      baseRaster <- baseVelox$as.RasterStack()[[1]]
+
+      if(!is.null(detail)){
+         tictoc::tic('Detailing')
+         fineVelox <- velox::velox(raster::disaggregate(raster, detail))
+         fineVelox$rasterize(crossection, field = 'GWCODE', band = 1, background = NA)
+         fineRaster <- fineVelox$as.RasterStack()[[1]]
+         fineRaster <- raster::aggregate(fineRaster, detail, fun = raster::modal)
+         diff <- baseRaster != fineRaster
+         print(glue::glue('Diff: {sum(values(diff), na.rm = TRUE)}'))
+         #baseRaster[diff] <- fineRaster
+         tictoc::toc()
+      }
+
+      tictoc::toc()
+      stck <- raster::stack(baseRaster,fineRaster,diff)
+      names(stck) <- c('base','fine','diff')
+      stck
+
+   }
 
    cshp <- cshp %>%
      dplyr::filter(GWCODE != -1) %>%
      dplyr::mutate(
        startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
-       enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-     dplyr::mutate(
+       enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-")),
        date_interval = lubridate::interval(startdate, enddate)
      )
 
-   all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
-   all_months <- all_months[all_months >= lubridate::ymd("1990-01-01")]
-   unique_crossections <- parallel::mclapply(all_months, 
-                                   priogrid::compare_crossection, 
-                                   cshp=cshp, 
-                                   mc.cores = ncores)
-   unique_crossections <- dplyr::bind_rows(unique_crossections)
+   unique_dates <- unique(c(cshp$startdate, cshp$enddate))
+    
+   if(!is.null(date_override)){
+      print(glue::glue('Overriding date'))
+      unique_dates <- date_override
+   }
 
-   changedates <- dplyr::filter(unique_crossections, 
-                                change == 1 | 
-                                unique_crossections$date == unique_crossections$date[1])
+   print(glue::glue('Applying to {length(unique_dates)} dates!'))
 
-   get_gwcode_rasters <- function(crossection_date, cshp){
-
-      cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
-      cshp_crossection$date_interval <- NULL # Not supported by dplyr, so I remove the column
-
-      cshp_pg <- sf::st_intersection(pg_poly, cshp_crossection)
-
-      cshp_pg$cell_area <- sf::st_area(cshp_pg)
- 
-      cshp_pg_max <- dplyr::group_by(cshp_pg, pgid) %>%
-         dplyr::filter(cell_area == max(cell_area)) %>%
-         dplyr::ungroup()
-
-      sf::st_geometry(cshp_pg_max) <- NULL
-      cshp_pg_max <- dplyr::select(cshp_pg_max, pgid, GWCODE) %>%
-         dplyr::rename(gwcode = GWCODE)
- 
-      class_df <- tibble::tibble(to = unique(pg[,]), from = unique(pg[,]))
-      class_df <- dplyr::left_join(class_df, cshp_pg_max, by = c("to" = "pgid"))
- 
-      classification_matrix <- as.matrix(class_df)
-      rclf <- raster::reclassify(pg, classification_matrix, right = NA)
-
-      return(rclf)
-  }
-
-   parallel::mclapply(changedates$date, 
-                      get_gwcode_rasters, cshp = cshp, 
-                      mc.cores = ncores)
+   unique_dates <- sort(unique_dates)
+   res <- parallel::mclapply(unique_dates, getGwRaster,
+          cshp = cshp,
+          raster = full_landgrid,
+          mc.cores = ncores,
+          detail = detail)
+   tictoc::toc()
+   return(res)
 }
