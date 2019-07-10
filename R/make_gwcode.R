@@ -1,5 +1,14 @@
 
-mk_gwcode <- function(cshapes, partial = TRUE, ...){
+make_gwcode <- function(cshapes, partial = FALSE, ...){
+
+   cshapes <- cshapes %>%
+     dplyr::filter(GWCODE != -1) %>%
+     dplyr::mutate(
+       startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
+       enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
+     dplyr::mutate(
+       date_interval = lubridate::interval(startdate, enddate)
+     )
 
    unique_dates <- unique(c(cshapes$startdate, cshapes$enddate))
    unique_dates <- sort(unique_dates)
@@ -9,13 +18,14 @@ mk_gwcode <- function(cshapes, partial = TRUE, ...){
                            replace = TRUE, prob = c(0.1,0.9))
       whichdates[1] <- TRUE
       whichdates[length(whichdates)] <- TRUE
+      print(glue::glue('Using {sum(whichdates)}/{length(unique_dates)} dates'))
       unique_dates <- unique_dates[whichdates]
    }
 
    base <- prio_blank_grid()
-
    out <- list()
 
+   i <- 1
    tictoc::tic('Looping over dates')
    for(specdate in unique_dates){
       specdate <- as.Date(specdate,as.Date('1970-01-01'))
@@ -30,32 +40,28 @@ mk_gwcode <- function(cshapes, partial = TRUE, ...){
                    rasterize_tile, ...)
 
       if(length(res) > 1){
-         res <- do.call(merge,res)
+         res <- do.call(raster::merge,res)
       } else {
          res <- res[[1]]
       }
 
+      if(i > 1){
+         res <- raster::merge(res,prev)
+      }
+      prev <- res
+
       out[[strftime(specdate)]] <- res
 
+      i <- i + 1
       tictoc::toc()
    }
-
    tictoc::toc()
    out
 }
 
 rasterize_worldtiles <- function(vectors, raster, fun, 
                          vectorsOfInterest = NULL, 
-                         subdiv = 4, ncore = 1, ...){
-
-   #if(is.null(vectorsOfInterest)){
-   #   # Only do function for relevant vectors,
-   #   # unless nothing was specified.
-   #   vectorsOfInterest <- 1:nrow(vectors)
-   #   print(glue::glue('Using all {length(vectorsOfInterest)} vectors'))
-   #} else {
-   #   print(glue::glue('Using {length(vectorsOfInterest)} vectors'))
-   #}
+                         subdiv = 16, ncore = 1, ...){
 
    tiles <- raster::raster(nrow = subdiv, ncol = subdiv * 2,
                    ext = raster::extent(raster),
@@ -67,24 +73,21 @@ rasterize_worldtiles <- function(vectors, raster, fun,
    res <- parallel::mclapply(1:nrow(polytiles), mc.cores = ncore,
             function(tilenumber){
 
-      intersections <- suppressMessages(sf::st_intersects(polytiles[tilenumber,], vectors))
+      intersections <- suppressMessages(sf::st_intersects(polytiles[tilenumber,], 
+                                                          vectors))
 
-      if(any(intersections[[1]] %in% vectorsOfInterest)){
-         relevantvector <- vectors[intersections[[1]],]
-         relevantraster <- raster::crop(raster,polytiles[tilenumber,])
-         
-         tile_info <- list(intersections = intersections[[1]]) 
+      relevantvector <- vectors[intersections[[1]],]
+      relevantraster <- raster::crop(raster,polytiles[tilenumber,])
+      
+      tile_info <- list(intersections = intersections[[1]]) 
 
-         fun(relevantvector, relevantraster, tile_info,  ...)
-      } else {
-         NA
-      }
+      fun(relevantvector, relevantraster, tile_info,  ...)
    })
 
    res[!is.na(res)]
 }
 
-rasterize_tile <- function(vec,ras, tile_info, detail = 2){
+rasterize_tile <- function(vec,ras, tile_info, detail = 16){
    if(nrow(vec) > 0){
       if(length(tile_info$intersections) > 1){
          gigaras <- raster::disaggregate(ras,detail)
