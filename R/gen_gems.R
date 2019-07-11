@@ -30,12 +30,12 @@ gen_gems_y <- function(gem_data){
   
   # Data prep
   ## Missing data
-  gems$DISC_Y <- prio_NA(gems$DISC_Y, 0)
-  gems$PRO_Y <- prio_NA(gems$PRO_Y, 0)
+  gems$DISC_Y <- priogrid::prio_NA(gems$DISC_Y, 0)
+  gems$PRO_Y <- priogrid::prio_NA(gems$PRO_Y, 0)
   
   ## Set earliest start year of disc or prod to 1946
-  gems$DISC_Y <- prio_earliest(gems$DISC_Y)
-  gems$PRO_Y <- prio_earliest(gems$PRO_Y)
+  gems$DISC_Y <- priogrid::prio_earliest(gems$DISC_Y)
+  gems$PRO_Y <- priogrid::prio_earliest(gems$PRO_Y)
 
   
   # Create yearly presence dummy
@@ -44,8 +44,7 @@ gen_gems_y <- function(gem_data){
     dplyr::filter(!is.na(PRO_Y) | !is.na(DISC_Y)) %>%
     dplyr::mutate(gem_y = 1,
                   startyear = pmin(PRO_Y, DISC_Y, na.rm = TRUE),
-                  endyear = 2004,
-                  year = prio_year(startyear, endyear)) %>%
+                  year = priogrid::prio_year(startyear, 2004)) %>%
     dplyr::ungroup() %>%
     tidyr::unnest() %>%
     dplyr::select(gwno = COWCODE, year, gem_y, geometry)
@@ -68,12 +67,12 @@ gen_gems_s <- function(gem_data){
   
   # Data prep
   ## Missing data
-  gems$DISC_Y <- prio_NA(gems$DISC_Y, 0)
-  gems$PRO_Y <- prio_NA(gems$PRO_Y, 0)
+  gems$DISC_Y <- priogrid::prio_NA(gems$DISC_Y, 0)
+  gems$PRO_Y <- priogrid::prio_NA(gems$PRO_Y, 0)
   
   ## Set earliest start year of disc or prod to 1946
-  gems$DISC_Y <- prio_earliest(gems$DISC_Y)
-  gems$PRO_Y <- prio_earliest(gems$PRO_Y)
+  gems$DISC_Y <- priogrid::prio_earliest(gems$DISC_Y)
+  gems$PRO_Y <- priogrid::prio_earliest(gems$PRO_Y)
   
   # Create static dummy
   gems <- gems %>%
