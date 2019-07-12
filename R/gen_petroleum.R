@@ -28,7 +28,7 @@ prio_NA <- function(x, na_value){
 prio_petro_y <- function(petro_data){
   # Load data
   petroleum <- sf::st_read(petro_data)
-  petroleum <- sf:st_set_crs(petroleum, value = priogrid::prio_crs())
+  petroleum <- sf::st_set_crs(petroleum, value = priogrid::prio_crs())
 
   # Data prep
   petroleum <- petroleum %>%
