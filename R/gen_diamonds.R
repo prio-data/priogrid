@@ -1,10 +1,4 @@
 
-# Helper functions --------------------------------------------------------
-prio_year <- function(startyear, endyear){
-  purrr::map2(startyear, endyear, `:`)
-}
-
-
 # Yearly ------------------------------------------------------------------
 
 
@@ -14,29 +8,12 @@ prio_year <- function(startyear, endyear){
 
 
 gen_diamonds_y <- function(diamond_data){
-  # Load diamond data
-  diamonds <- sf::st_read(diamond_data)
-
-  # Data prep
-  diamonds$disc.year <- lubridate::year(diamonds$DISC)
-  diamonds$PROD <- base::as.Date(diamonds$PROD, format = "%d/%m/%Y")
-  diamonds$prod.year <- lubridate::year(diamonds$PROD)
-
-  # Generate yearly presence dummy
-  diamonds_y <- diamonds %>%
-    dplyr::group_by(PRIMKEY) %>%
-    dplyr::filter(!is.na(prod.year) | !is.na(disc.year)) %>%
-    dplyr::mutate(diamprim_y = ifelse(DIAINFO == "P", yes = 1, no = NA),
-                  diamsec_y = ifelse(DIAINFO == "S", yes = 1, no = NA),
-                  startyear = pmin(disc.year, prod.year, na.rm = TRUE),
-                  year = priogrid::prio_year(startyear, 2005)) %>%
-    filter(DIAINFO == "S" | DIAINFO == "P") %>%
-    tidyr::unnest() %>%
-    ungroup() %>%
-    dplyr::select(gwno = COWCODE, year, diamsec_y, diamprim_y, geometry)
-
-  # Harmonize with PRIO-GRID
-  diamonds_y <- sf::st_transform(diamonds_y, crs = priogrid::prio_crs())
+  
+  diamonds <- priogrid::prep_diamonds(diamond_data)
+  
+  diamonds <- priogrid::yearly_dummy(data = diamonds, endyear = 2005) %>%
+    dplyr::rename(diamsec_y = diamsec, diamprim_y = diamprim)
+    
 }
 
 
@@ -49,24 +26,43 @@ gen_diamonds_y <- function(diamond_data){
 #'
 #' @param diamond_data DIADATA shapefile from the PRIO Diamond Resources dataset.
 
-prio_diamonds_s <- function(diamond_data){
-  # Load diamond data
-  diamonds <- sf::st_read(diamond_data)
+gen_diamonds_s <- function(diamond_data){
+  diamonds <- priogrid::prep_diamonds(diamond_data)
+  
+  diamonds <- priogrid::static_dummy(diamonds) %>%
+    dplyr::rename(diamsec_s = diamsec, diamprim_s = diamprim)
+  
+  # Rasterize
+  diamprim_s <- raster::rasterize(diamonds, priogrid::prio_blank_grid(), 
+                                  field = "diamprim_s", fun = "first")
+  
+  diamsec_s <- raster::rasterize(diamonds, priogrid::prio_blank_grid(),
+                                 field = "diamsec_s", fun = "first")
+  
+  stack <- raster::stack(c(diamprim_s, diamsec_s))
+  return(stack)
+}
 
-  # Data prep
+
+
+
+# Diamonds data prep function ---------------------------------------------
+
+prep_diamonds <- function(diamond_data){
+  
+  diamonds <- sf::st_read(diamond_data)
+  diamonds <- sf::st_transform(diamonds, crs = priogrid::prio_crs())
+  
   diamonds$disc.year <- lubridate::year(diamonds$DISC)
   diamonds$PROD <- base::as.Date(diamonds$PROD, format = "%d/%m/%Y")
   diamonds$prod.year <- lubridate::year(diamonds$PROD)
-
-  # Generate static presence dummy
-  diamonds_s <- diamonds %>%
-    dplyr::filter(is.na(prod.year) & is.na(disc.year)) %>%
-    dplyr::mutate(diamprim_s = ifelse(DIAINFO == "P", yes = 1, no = NA),
-           diamsec_s = ifelse(DIAINFO == "S", yes = 1, no = NA)) %>%
-    dplyr::filter(DIAINFO == "S" | DIAINFO == "P") %>%
-    dplyr::select(gwno = COWCODE, diamsec_s, diamprim_s, geometry)
-
-  # Harmonize with PRIO-GRID
-  diamonds_s <- st_set_crs(diamonds_s, value = priogrid::prio_crs())
+  
+  diamonds <- diamonds %>%
+    dplyr::select(gwno = COWCODE, id = PRIMKEY, disc.year, prod.year, DIAINFO, geometry) %>%
+    dplyr::mutate(diamprim = ifelse(DIAINFO == "P", yes = 1, no = NA),
+                  diamsec = ifelse(DIAINFO == "S", yes = 1, no = NA)) %>%
+    dplyr::filter(diamprim == 1 | diamsec == 1)
+  
+  diamonds
 }
 
