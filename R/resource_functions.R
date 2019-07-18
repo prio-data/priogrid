@@ -24,7 +24,7 @@ prio_NA <- function(x, na_value){
 ## Generate yearly dummy for resource variables
 # NB! Assign variable name manually by piping dplyr::rename(new_name = dummy) after function
 
-yearly_dummy <- function(data, id, disc.year, prod.year, endyear){
+yearly_dummy <- function(data, endyear){
   data <- data %>%
     dplyr::group_by(id) %>%
     dplyr::filter(!is.na(disc.year) | !is.na(prod.year)) %>%
@@ -40,12 +40,10 @@ yearly_dummy <- function(data, id, disc.year, prod.year, endyear){
 ## Generate static dummy for resource variables
 # NB! Assign variable name manually by piping dplyr::rename(new_name = dummy) after function
 
-static_dummy <- function(data, disc.year, prod.year){
+static_dummy <- function(data){
   data <- data %>%
     dplyr::filter(is.na(disc.year) & is.na(prod.year)) %>%
-    dplyr::mutate(dummy = 1) %>%
-    dplyr::select(gwno, dummy, geometry) # not sure whether to include select() 
-  
+    dplyr::mutate(dummy = 1)
 }
 
 
