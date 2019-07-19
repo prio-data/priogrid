@@ -1,18 +1,20 @@
 # Yearly ------------------------------------------------------------------
-## Returns an sf object (will be updated to return raster layer with gid).
 
 #' Generate yearly gem dummy.
 #' Function to generate yearly gem presence dummy for records with known discovery or start of production year. 
 #' 
 #' @param gemdata GEMDATA shapefile.
 
-gen_gems_y <- function(gem_data){
+gen_gem_y <- function(gem_data){
   gems <- priogrid::prep_gems(gem_data)
   
   # Create yearly presence dummy
   gems <- priogrid::yearly_dummy(gems, endyear = 2004) %>%
-    dplyr::rename(gems_y = dummy)
+    dplyr::rename(gem_y = dummy)
   
+  # Yearly RasterStack
+  
+  gems <- priogrid::yearly_stack(gems, variable = "gem_y", raster.fun = "first")
 }
 
 
@@ -27,7 +29,7 @@ gen_gems_y <- function(gem_data){
 #' @return RasterLayer.
 
 
-gen_gems_s <- function(gem_data){
+gen_gem_s <- function(gem_data){
   gems <- priogrid::prep_gems(gem_data)
   
   gems <- priogrid::static_dummy(gems) %>%

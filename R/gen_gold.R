@@ -1,7 +1,6 @@
 ## Create three separate gold presence dummy variables
 ## based on whether deposits are lootable, semi-lootable or non-lootable.
 
-## TODO Rasterize yearly variables and write function for stacking these (yearly layers?)
 
 
 # Lootable yearly dummy (goldplacer_y) ------------------------------------
@@ -12,12 +11,12 @@
 gen_goldplacer_y <- function(golddata_l){
   gold_lootable <- priogrid::prep_gold(golddata_l)
 
-  # Create yearly placer gold presence dummy for records with discovery or production year
-  gold_lootable <- priogrid::yearly_dummy(gold_lootable) %>%
+  gold_lootable <- priogrid::yearly_dummy(gold_lootable, endyear = 2012) %>%
     dplyr::rename(goldplacer_y = dummy)
+  
+  gold_lootable <- priogrid::yearly_stack(gold_lootable, variable = "goldplacer_y", raster.fun = "first")
 
 }
-
 
 
 # Semi-lootable yearly dummy (goldsurface_y) ------------------------------
@@ -29,9 +28,10 @@ gen_goldplacer_y <- function(golddata_l){
 gen_goldsurface_y <- function(golddata_s){
   gold_semiloot <- priogrid::prep_gold(golddata_s)
 
-  # Create yearly surface gold presence dummy for records with discovery or production year
-  gold_semiloot <- priogrid::yearly_dummy(gold_semiloot) %>%
+  gold_semiloot <- priogrid::yearly_dummy(gold_semiloot, endyear = 2012) %>%
     dplyr::rename(goldsurface_y = dummy)
+  
+  gold_semiloot <- priogrid::yearly_stack(gold_semiloot, variable = "goldsurface_y", raster.fun = "first")
 
 }
 
@@ -45,12 +45,12 @@ gen_goldsurface_y <- function(golddata_s){
 gen_goldvein_y <- function(golddata_nl){
   gold_nonloot <- priogrid::prep_gold(golddata_nl)
 
-  # Create yearly vein gold presence dummy for records with discovery or production year
-  gold_nonloot <- priogrid::yearly_dummy(gold_nonloot) %>%
+  gold_nonloot <- priogrid::yearly_dummy(gold_nonloot, 2012) %>%
     dplyr::rename(goldvein_y = dummy)
+  
+  gold_nonloot <- priogrid::yearly_stack(gold_nonloot, variable = "goldvein_y", raster.fun = "first")
 
 }
-
 
 
 # Static ------------------------------------------------------------------
@@ -78,7 +78,6 @@ gen_gold_s <- function(golddata_l, golddata_s, golddata_nl){
   names(gold_raster) <- c("goldplacer_s", "goldsurface_s", "goldvein_s")
   return(gold_raster)
 }
-
 
 
 

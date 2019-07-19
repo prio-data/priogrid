@@ -1,7 +1,6 @@
 
 
 # Yearly ------------------------------------------------------------------
-## Will be updated to include rasterization and return RasterLayer.
 
 #' Generate drug dummy.
 #' 
@@ -13,7 +12,7 @@
 #' @param opium_data Opium poppy shapefile from the DRUGDATA dataset.
 
 
-gen_drugs_y <- function(cannabis_data, coca_data, opium_data){
+gen_drug_y <- function(cannabis_data, coca_data, opium_data){
   drugs <- priogrid::prep_drugs(cannabis_data, coca_data, opium_data)
   
   drugs <- drugs %>%
@@ -24,7 +23,9 @@ gen_drugs_y <- function(cannabis_data, coca_data, opium_data){
     dplyr::ungroup()
   
   drugs <- sf::st_cast(drugs, "MULTIPOLYGON")
-  drugs
+  
+  drugs <- priogrid::yearly_stack(drugs, variable = "drug_y", raster.fun = "first")
+  
 }
 
 
