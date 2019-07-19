@@ -2,18 +2,36 @@
 # Yearly ------------------------------------------------------------------
 
 
-#' Generate yearly diamond presence dummy.
+#' Generate yearly primary diamond presence dummy.
 #'
 #' @param diamond_data DIADATA shapefile from the PRIO Diamond Resources dataset.
 
 
-gen_diamonds_y <- function(diamond_data){
+gen_diamprim_y <- function(diamond_data){
   
   diamonds <- priogrid::prep_diamonds(diamond_data)
   
   diamonds <- priogrid::yearly_dummy(data = diamonds, endyear = 2005) %>%
-    dplyr::rename(diamsec_y = diamsec, diamprim_y = diamprim)
+    dplyr::rename(diamprim_y = diamprim)
+  
+  diamonds <- priogrid::yearly_stack(diamonds, variable = "diamprim_y", raster.fun = "first")
     
+}
+
+
+#' Generate yearly secondary diamond presence dummy.
+#' 
+#' @param diamond_data DIADATA shapefile from the PRIO Diamond Resources dataset.
+
+gen_diamsec_y <- function(diamond_data){
+  
+  diamonds <- priogrid::prep_diamonds(diamond_data)
+  
+  diamonds <- priogrid::yearly_dummy(data = diamonds, endyear = 2005) %>%
+    dplyr::rename(diamsec_y = diamsec)
+  
+  diamonds <- priogrid::yearly_stack(diamonds, variable = "diamsec_y", raster.fun = "first")
+  
 }
 
 

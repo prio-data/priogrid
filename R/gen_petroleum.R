@@ -1,6 +1,6 @@
 
 # Create yearly petroleum presence dummy ----------------------------------
-## Will be updated to return PRIO-GRID compatible raster.
+
 
 #' Generate yearly petroleum presence dummy variable. 
 #' 
@@ -12,8 +12,12 @@ gen_petro_y <- function(petro_data){
   
   petroleum <- priogrid::yearly_dummy(data = petroleum, endyear = 2003) %>%
     dplyr::rename(petroleum_y = dummy)
+  
+  petroleum <- priogrid::yearly_stack(petroleum, variable = "petroleum_y", raster.fun = "first")
 
 }
+
+
 
 
 # Create static petroleum presence dummy ----------------------------------

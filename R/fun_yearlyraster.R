@@ -2,12 +2,10 @@
 ## Create RasterStack consisting of one RasterLayer for each year
 # NB! If we are working with RasterBrick instead, just change raster::stack to raster::brick
 
-# Prior to running, define variable and function for rasterization ("first", "last", "count" etc.)
-# variable <- "variable_name"
-# raster.fun <- "function"
+# Define variable and raster.fun as character string. 
 
 
-yearly_stack <- function(data){
+yearly_stack <- function(data, variable, raster.fun){
 years <- unique(data$year)
 emp <- list()
 
