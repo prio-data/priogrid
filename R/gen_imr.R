@@ -14,7 +14,7 @@ gen_imr <- function(imr_data, rast.fun){
   imr <- raster::reclassify(imr, rcl = cbind(-Inf, 0, NA), right = FALSE)
 
   # Aggregate to pg resolution
-  imr <- raster::aggregate(imr, fact = resolution_factor(imr),
+  imr <- raster::aggregate(imr, fact = priogrid::resolution_factor(imr),
                                 fun = rast.fun, na.rm = TRUE)
   return(imr)
 
