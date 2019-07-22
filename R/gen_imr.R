@@ -3,7 +3,7 @@
 
 #' Generate imr variables
 #'
-#' @param cmr_data SEDAC Global Subnational Infant Mortality Rates grid data (v.2)
+#' @param imr_data SEDAC Global Subnational Infant Mortality Rates grid data (v.2, GeoTIFF)
 #' @param rast.fun Function to aggregate by ('mean', 'sd', 'min', 'max')
 
 
@@ -19,8 +19,6 @@ gen_imr <- function(imr_data, rast.fun){
   return(imr)
 
 }
-
-
 
 
 
