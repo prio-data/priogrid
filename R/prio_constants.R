@@ -10,5 +10,5 @@ prio_midatlantic <- -29
 
 
 resolution_factor <- function(x){
-  priogrid::prio_resolution()/res(x) # Calculates the factor to aggregate by to get 0.5 x 0.5 resolution
+  priogrid::prio_resolution()/raster::res(x) # Calculates the factor to aggregate by to get 0.5 x 0.5 resolution
 }
