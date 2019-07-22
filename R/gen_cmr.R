@@ -3,7 +3,7 @@
 
 #' Generate cmr variables
 #' 
-#' @param cmr_data SEDAC Global Subnational Prevalence of Child Malnutrition grid data (v.1)
+#' @param cmr_data SEDAC Global Subnational Prevalence of Child Malnutrition grid data (v.1, uw.asc)
 #' @param rast.fun Function to aggregate by ('mean', 'sd', 'min', 'max')
 
 
@@ -19,7 +19,7 @@ gen_cmr <- function(cmr_data, rast.fun){
 }
 
 
-## Used file 'Uwq/uwq.asc' from the hunger-grid zip folder
+
 
 
 # Stack of sub-variables
@@ -34,5 +34,3 @@ gen_cmr_stack <- function(cmr_data){
   return(cmr)
   
 }
-
-
