@@ -13,7 +13,7 @@ gen_petro_y <- function(petro_data){
   petroleum <- priogrid::yearly_dummy(data = petroleum, endyear = 2003) %>%
     dplyr::rename(petroleum_y = dummy)
   
-  petroleum <- priogrid::yearly_stack(petroleum, variable = "petroleum_y", raster.fun = "first")
+  petroleum <- priogrid::yearly_brick(petroleum, variable = "petroleum_y", raster.fun = "first")
 
 }
 

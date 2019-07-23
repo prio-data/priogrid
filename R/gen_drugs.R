@@ -24,7 +24,7 @@ gen_drug_y <- function(cannabis_data, coca_data, opium_data){
   
   drugs <- sf::st_cast(drugs, "MULTIPOLYGON")
   
-  drugs <- priogrid::yearly_stack(drugs, variable = "drug_y", raster.fun = "first")
+  drugs <- priogrid::yearly_brick(drugs, variable = "drug_y", raster.fun = "first")
   
 }
 

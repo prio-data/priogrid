@@ -22,14 +22,14 @@ gen_cmr <- function(cmr_data, rast.fun){
 
 
 
-# Stack of sub-variables
-gen_cmr_stack <- function(cmr_data){
+# Brick of sub-variables
+gen_cmr_brick <- function(cmr_data){
   cmr_mean <- gen_cmr(cmr_data, rast.fun = 'mean')
   cmr_sd <- gen_cmr(cmr_data, rast.fun = 'sd')
   cmr_min <- gen_cmr(cmr_data, rast.fun = 'min')
   cmr_max <- gen_cmr(cmr_data, rast.fun = 'max')
   
-  cmr <- raster::stack(c(cmr_mean, cmr_sd, cmr_min, cmr_max))
+  cmr <- raster::brick(c(cmr_mean, cmr_sd, cmr_min, cmr_max))
   names(cmr) <- c("cmr_mean", "cmr_sd", "cmr_min", "cmr_max")
   return(cmr)
   

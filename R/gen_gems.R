@@ -12,9 +12,9 @@ gen_gem_y <- function(gem_data){
   gems <- priogrid::yearly_dummy(gems, endyear = 2004) %>%
     dplyr::rename(gem_y = dummy)
   
-  # Yearly RasterStack
+  # Yearly Rasterbrick
   
-  gems <- priogrid::yearly_stack(gems, variable = "gem_y", raster.fun = "first")
+  gems <- priogrid::yearly_brick(gems, variable = "gem_y", raster.fun = "first")
 }
 
 

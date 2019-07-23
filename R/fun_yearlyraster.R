@@ -1,6 +1,5 @@
 
-## Create RasterStack consisting of one RasterLayer for each year
-# NB! If we are working with RasterBrick instead, just change raster::stack to raster::brick
+## Create RasterBrick consisting of one RasterLayer for each year
 
 # NOTE: This is fairly quick on smaller point data, but takes a lot of time on larger data. 
 # Look into vectorized solution.
@@ -8,7 +7,7 @@
 # Define variable and raster.fun as character string. 
 
 
-yearly_stack <- function(data, variable, raster.fun){
+yearly_brick <- function(data, variable, raster.fun){
 years <- unique(data$year)
 emp <- list()
 
@@ -20,7 +19,7 @@ for(i in 1:length(years)) {
                                   field = variable,
                                   fun = raster.fun)
   }
-stack <- raster::stack(emp)
-names(stack) <- paste0(variable, years)
-return(stack)
+brick <- raster::brick(emp)
+names(brick) <- paste0(variable,"_", years)
+return(brick)
 }
