@@ -14,7 +14,8 @@ gen_goldplacer_y <- function(golddata_l){
   gold_lootable <- priogrid::yearly_dummy(gold_lootable, endyear = 2012) %>%
     dplyr::rename(goldplacer_y = dummy)
   
-  gold_lootable <- priogrid::yearly_stack(gold_lootable, variable = "goldplacer_y", raster.fun = "first")
+  gold_lootable <- priogrid::yearly_brick(gold_lootable, 
+                                          variable = "goldplacer_y", raster.fun = "first")
 
 }
 
@@ -31,7 +32,8 @@ gen_goldsurface_y <- function(golddata_s){
   gold_semiloot <- priogrid::yearly_dummy(gold_semiloot, endyear = 2012) %>%
     dplyr::rename(goldsurface_y = dummy)
   
-  gold_semiloot <- priogrid::yearly_stack(gold_semiloot, variable = "goldsurface_y", raster.fun = "first")
+  gold_semiloot <- priogrid::yearly_brick(gold_semiloot, 
+                                          variable = "goldsurface_y", raster.fun = "first")
 
 }
 
@@ -48,7 +50,8 @@ gen_goldvein_y <- function(golddata_nl){
   gold_nonloot <- priogrid::yearly_dummy(gold_nonloot, 2012) %>%
     dplyr::rename(goldvein_y = dummy)
   
-  gold_nonloot <- priogrid::yearly_stack(gold_nonloot, variable = "goldvein_y", raster.fun = "first")
+  gold_nonloot <- priogrid::yearly_brick(gold_nonloot, 
+                                         variable = "goldvein_y", raster.fun = "first")
 
 }
 
@@ -63,7 +66,7 @@ gen_goldvein_y <- function(golddata_nl){
 #' @param golddata_s GOLDATA 1.2 v semi-lootable gold shapefile.
 #' @param golddata_nl GOLDATA 1.2 v non-lootable gold shapefile.
 #' 
-#' @return PRIO-GRID compatible RasterStack with one layer for each variable. 
+#' @return PRIO-GRID compatible Rasterbrick with one layer for each variable. 
 
 
 gen_gold_s <- function(golddata_l, golddata_s, golddata_nl){
@@ -74,7 +77,7 @@ gen_gold_s <- function(golddata_l, golddata_s, golddata_nl){
   goldvein_s <- priogrid::gen_goldvein_s(golddata_nl)
   
   # Combine RasterLayers
-  gold_raster <- raster::stack(c(goldplacer_s, goldsurface_s, goldvein_s))
+  gold_raster <- raster::brick(c(goldplacer_s, goldsurface_s, goldvein_s))
   names(gold_raster) <- c("goldplacer_s", "goldsurface_s", "goldvein_s")
   return(gold_raster)
 }
@@ -93,7 +96,8 @@ gen_goldplacer_s <- function(golddata_l){
   gold_lootable <- priogrid::static_dummy(gold_lootable) %>%
     dplyr::rename(goldplacer_s = dummy)
   
-  loot_raster <- raster::rasterize(gold_lootable, priogrid::prio_blank_grid(), field = "goldplacer_s", fun = "first")
+  loot_raster <- raster::rasterize(gold_lootable, priogrid::prio_blank_grid(), 
+                                   field = "goldplacer_s", fun = "first")
   return(loot_raster)
   
 }
@@ -107,7 +111,8 @@ gen_goldsurface_s <- function(golddata_s){
   gold_semiloot <- priogrid::static_dummy(gold_semiloot) %>%
     dplyr::rename(goldsurface_s = dummy)
   
-  semi_raster <- raster::rasterize(gold_semiloot, priogrid::prio_blank_grid(), field = "goldsurface_s", fun = "first")
+  semi_raster <- raster::rasterize(gold_semiloot, priogrid::prio_blank_grid(), 
+                                   field = "goldsurface_s", fun = "first")
   return(semi_raster)
   
 }
@@ -122,7 +127,8 @@ gen_goldvein_s <- function(golddata_nl){
   gold_nonloot <- priogrid::static_dummy(gold_nonloot) %>%
     dplyr::rename(goldvein_s = dummy)
   
-  non_raster <- raster::rasterize(gold_nonloot, priogrid::prio_blank_grid(), field = "goldvein_s", fun = "first")
+  non_raster <- raster::rasterize(gold_nonloot, priogrid::prio_blank_grid(), 
+                                  field = "goldvein_s", fun = "first")
   return(non_raster)
   
 }

@@ -14,7 +14,7 @@ gen_diamprim_y <- function(diamond_data){
   diamonds <- priogrid::yearly_dummy(data = diamonds, endyear = 2005) %>%
     dplyr::rename(diamprim_y = diamprim)
   
-  diamonds <- priogrid::yearly_stack(diamonds, variable = "diamprim_y", raster.fun = "first")
+  diamonds <- priogrid::yearly_brick(diamonds, variable = "diamprim_y", raster.fun = "first")
     
 }
 
@@ -30,7 +30,7 @@ gen_diamsec_y <- function(diamond_data){
   diamonds <- priogrid::yearly_dummy(data = diamonds, endyear = 2005) %>%
     dplyr::rename(diamsec_y = diamsec)
   
-  diamonds <- priogrid::yearly_stack(diamonds, variable = "diamsec_y", raster.fun = "first")
+  diamonds <- priogrid::yearly_brick(diamonds, variable = "diamsec_y", raster.fun = "first")
   
 }
 
@@ -57,8 +57,8 @@ gen_diamonds_s <- function(diamond_data){
   diamsec_s <- raster::rasterize(diamonds, priogrid::prio_blank_grid(),
                                  field = "diamsec_s", fun = "first")
   
-  stack <- raster::stack(c(diamprim_s, diamsec_s))
-  return(stack)
+  brick <- raster::brick(c(diamprim_s, diamsec_s))
+  return(brick)
 }
 
 

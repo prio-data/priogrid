@@ -45,9 +45,9 @@ gen_geoepr <- function(geoepr_data, epr_data){
   geoepr_epr <- geoepr_epr %>%
     filter(!sf::st_is_empty(geometry))
 
-  rasterStack <- priogrid::yearly_stack(geoepr_epr, variable = "excluded", raster.fun = "count")
+  brick <- priogrid::yearly_brick(geoepr_epr, variable = "excluded", raster.fun = "count")
 
-  return(rasterStack)
+  return(brick)
 
 
 

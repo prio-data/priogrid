@@ -22,14 +22,14 @@ gen_imr <- function(imr_data, rast.fun){
 
 
 
-# Optional stack of sub-variables ~19 mins
-gen_imr_stack <- function(imr_data){
+# Optional brick of sub-variables ~19 mins
+gen_imr_brick <- function(imr_data){
   imr_mean <- gen_imr(imr_data, rast.fun = 'mean')
   imr_sd <- gen_imr(imr_data, rast.fun = 'sd')
   imr_min <- gen_imr(imr_data, rast.fun = 'min')
   imr_max <- gen_imr(imr_data, rast.fun = 'max')
 
-  imr <- raster::stack(c(imr_mean, imr_sd, imr_min, imr_max))
+  imr <- raster::brick(c(imr_mean, imr_sd, imr_min, imr_max))
   names(imr) <- c("imr_mean", "imr_sd", "imr_min", "imr_max")
   return(imr)
 
