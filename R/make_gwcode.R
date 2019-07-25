@@ -40,8 +40,12 @@ make_gwcode <- function(cshapes, partial = FALSE, ...){
 
    tictoc::tic('Figuring out country-cell relationship')
    simpleworld <- st_simplify(cshapes,dTolerance = 1)
-   countries_in_cell <- st_intersects(polyTiles,
-                                  simpleworld)
+
+   # Predicates - A list of rules that govern ========
+   # what cells/countries are considered when ========
+   predicates <- list(intersections = st_intersects(polyTiles,
+                                                    simpleworld))
+
    tictoc::toc()
 
    tictoc::tic('Looping over dates')
@@ -52,18 +56,18 @@ make_gwcode <- function(cshapes, partial = FALSE, ...){
 
       # Only do the ones that ==========
       # exist ==========================
-      new_countries <- cshapes$startdate == specdate
-      all_existing_countries <- cshapes$startdate <= specdate & 
-                                cshapes$enddate >= specdate
+      predicates$new_countries <- cshapes$startdate == specdate
+      predicates$existing_countries <- cshapes$startdate <= specdate & 
+                                       cshapes$enddate >= specdate
 
       print(glue::glue('{sum(existing_countries)} existing countries}'))
 
       tictoc::tic('Time spent')
 
       res <- rasterize_worldtiles(cshapes, 
-                                  existing_countries,
-                                  countries_in_cell,
-                                  rasterize_tile, ...)
+                                  baseraster,
+                                  polyTiles,
+                                  predicates)
 
       if(length(res) > 1){
          res <- do.call(raster::merge,res)
@@ -88,15 +92,7 @@ make_gwcode <- function(cshapes, partial = FALSE, ...){
    out
 }
 
-rasterize_worldtiles <- function(vectors, raster, fun, 
-                         vectorsOfInterest = NULL, 
-                         subdiv = 16, ncore = 1, ...){
-
-   tiles <- raster::raster(nrow = subdiv, ncol = subdiv * 2,
-                   ext = raster::extent(raster),
-                   crs = raster::crs(raster))
-
-   polytiles <- spex::polygonize(tiles)
+rasterize_worldtiles <- function(vectors, base, tiles, predicates, ncore = 1, ...){
 
    res <- parallel::mclapply(1:nrow(polytiles), mc.cores = ncore,
             function(tilenumber){
