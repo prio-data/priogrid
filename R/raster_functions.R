@@ -54,7 +54,7 @@ make_raster <- function(nclist, transpose=FALSE, crs=NULL){
 
 #' Raster points
 #' 
-#' Simple function that returns a raster as a sf set of  
+#' Simple function that returns a raster as a sf set of points
 raster_points <- function(raster, na.rm = TRUE){
 
    cids <- 1:length(raster)
@@ -70,4 +70,28 @@ raster_points <- function(raster, na.rm = TRUE){
 
    tibble::tibble(val = raster_values) %>%
      st_sf(geometry = pts) 
+}
+
+#' stepwiseAggregate
+#' 
+#' @arg data a rasterlayer 
+#' @arg minres won't aggregate past this mininmum res
+#' @arg fun what function to use
+#' @arg firstpass aggregate first round with min, saving time
+
+stepwiseAggregate <- function(data, minres, fun = raster::modal, firstpass = TRUE){
+   resultant <- length(data) / 4
+   if(firstpass){
+      tictoc::tic('First pass aggregating with min')
+      data <- raster::aggregate(data, fact = 2, fun = min)
+      tictoc::toc()
+   }
+
+   while(resultant > minres){
+      tictoc::tic(glue::glue('Aggregating data of length {length(data)}'))
+      data <- raster::aggregate(data, fact = 2, fun = fun)
+      tictoc::toc()
+      resultant <- length(data) / 4
+   }
+   data
 }
