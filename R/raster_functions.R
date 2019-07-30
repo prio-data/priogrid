@@ -110,8 +110,6 @@ stepwiseAggregate <- function(data, minres, fun = priogrid::quickmode, firstpass
       tictoc::toc()
       resultant <- length(data) / 4
    }
-<<<<<<< HEAD
 }
-=======
->>>>>>> f35e78544b47e29e5fa94c0a2f99c8053affc791
    
+
