@@ -73,6 +73,15 @@ raster_points <- function(raster, na.rm = TRUE){
 }
 
 #' stepwiseAggregate
+#'
+#' This is a function for aggregating huge rasters.
+#' The stepwise aggregation makes it possible to
+#' aggregate huge rasters by not having to hold
+#' them in memory in their entirety.
+#'
+#' Use the function "hugeAggregate" instead of this one,
+#' since this one will output a raster with an arbitrary
+#' instead of a target resolution.
 #' 
 #' @arg data a rasterlayer 
 #' @arg minres won't aggregate past this mininmum res
