@@ -1,5 +1,18 @@
+#' gen_gwcode
+#'
+#' Takes the weidmann cshapes data set and returns a
+#' list of rasterlayers for each _changed_ country- 
+#' border year. Arguments are passed to rasterize_tile and rasterize_worldtiles.
+#' Useful arguments to specify 
+#'
+#' @param cshapes weidmann cshapes data
+#' @param partial Only do some of the dates? Useful for debugging.
+#' @param subdiv How many tiles to consider, shortening computation 
+#' @param detail How much detail to use when rasterizing the polygons. 
 
-make_gwcode <- function(cshapes, partial = FALSE, ...){
+gen_gwcode <- function(cshapes, partial = FALSE, subdiv = 16, detail = 16){
+   # made by Peder
+   # Nonfunctional
 
    cshapes <- cshapes %>%
      dplyr::filter(GWCODE != -1) %>%
@@ -47,8 +60,7 @@ make_gwcode <- function(cshapes, partial = FALSE, ...){
 
       if(i > 1){
          res <- raster::merge(res,prev)
-      }
-      prev <- res
+      } prev <- res
 
       out[[strftime(specdate)]] <- res
 
@@ -61,7 +73,7 @@ make_gwcode <- function(cshapes, partial = FALSE, ...){
 
 rasterize_worldtiles <- function(vectors, raster, fun, 
                          vectorsOfInterest = NULL, 
-                         subdiv = 16, ncore = 1, ...){
+                         subdiv = subdiv, ncore = 1, ...){
 
    tiles <- raster::raster(nrow = subdiv, ncol = subdiv * 2,
                    ext = raster::extent(raster),
@@ -81,13 +93,13 @@ rasterize_worldtiles <- function(vectors, raster, fun,
       
       tile_info <- list(intersections = intersections[[1]]) 
 
-      fun(relevantvector, relevantraster, tile_info,  ...)
+      fun(relevantvector, relevantraster, tile_info, detail)
    })
 
    res[!is.na(res)]
 }
 
-rasterize_tile <- function(vec,ras, tile_info, detail = 16){
+rasterize_tile <- function(vec,ras, tile_info, detail = detail){
    if(nrow(vec) > 0){
       if(length(tile_info$intersections) > 1){
          gigaras <- raster::disaggregate(ras,detail)
