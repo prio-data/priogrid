@@ -10,14 +10,17 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports:
-   ncdf4,
-   spex,
-   lubridate,
-   parallel,
-   dplyr,
-   raster,
-   lwgeom,
-   velox,
-   tictoc
+    ncdf4,
+    spex,
+    lubridate,
+    parallel,
+    dplyr,
+    raster,
+    lwgeom,
+    velox,
+    tictoc,
+    Rcpp
 Suggests: testthat
 RoxygenNote: 6.1.0.9000
+LinkingTo: 
+    Rcpp
