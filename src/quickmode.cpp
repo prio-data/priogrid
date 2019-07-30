@@ -10,17 +10,23 @@ double quickmode(NumericVector values) {
 	int n = values.length();
    IntegerVector counts(n);
 
-   int tieCount = 1;
+
+   // Loop over values, counting them
+   for (int i = 0; i < n; ++i) {
+      counts[i] = 0;
+      int j = 0;
+      while ((j < i) && (values[i] != values[j])) {
+         ++j;
+      }
+      ++(counts[j]);
+   }
+
    int maxCount = 0;
-   for (int i = 1; i < n; ++i) {
-      if (counts[i] > counts[maxCount]) {
+
+   // Return value at index with max count (last)
+   for(int i = 1; i < n; ++i){
+      if(counts[i] > counts[maxCount]){
          maxCount = i;
-         tieCount = 1;
-      } else if (counts[i] == counts[maxCount]) {
-         tieCount++;
-         if (R::runif(0,1) < (1.0 / tieCount)) {
-            maxCount = i;
-         }			
       }
    }
    return values[maxCount];

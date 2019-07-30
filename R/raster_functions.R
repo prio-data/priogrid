@@ -7,10 +7,10 @@ library(raster)
 library(ncdf4)
 
 prio_aggregate_raster <- function(x, fun){
-   fact <- resolution_factor(x)
-   res <- aggregate(x,fact=fact,fun=fun)
-   crs(res) <- prio_crs()
-   extent(res) <- prio_extent()
+   fact <- priogrid::resolution_factor(x)
+   res <- raster::aggregate(x,fact=fact,fun=fun)
+   raster::crs(res) <- priogrid::prio_crs()
+   raster::extent(res) <- priogrid::prio_extent()
    res
 }
 
