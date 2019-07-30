@@ -6,6 +6,14 @@
 library(raster)
 library(ncdf4)
 
+prio_aggregate_raster <- function(x, fun){
+   fact <- resolution_factor(x)
+   res <- aggregate(x,fact=fact,fun=fun)
+   crs(res) <- prio_crs()
+   extent(res) <- prio_extent()
+   res
+}
+
 get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
   #TODO Needs documentation
   nc <- nc_open(file)
@@ -88,7 +96,7 @@ raster_points <- function(raster, na.rm = TRUE){
 #' @arg fun what function to use
 #' @arg firstpass aggregate first round with min, saving time
 
-stepwiseAggregate <- function(data, minres, fun = raster::modal, firstpass = TRUE){
+stepwiseAggregate <- function(data, minres, fun = priogrid::quickmode, firstpass = TRUE){
    resultant <- length(data) / 4
    if(firstpass){
       tictoc::tic('First pass aggregating with min')
@@ -102,5 +110,5 @@ stepwiseAggregate <- function(data, minres, fun = raster::modal, firstpass = TRU
       tictoc::toc()
       resultant <- length(data) / 4
    }
-   data
 }
+   
