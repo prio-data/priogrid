@@ -60,7 +60,8 @@ gen_gwcode <- function(cshapes, partial = FALSE, subdiv = 16, detail = 16){
 
       if(i > 1){
          res <- raster::merge(res,prev)
-      } prev <- res
+      } 
+      prev <- res
 
       out[[strftime(specdate)]] <- res
 
