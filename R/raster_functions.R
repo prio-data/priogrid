@@ -10,11 +10,18 @@ prio_aggregate_raster <- function(x, fun){
    fact <- priogrid::resolution_factor(x)
    res <- raster::aggregate(x,fact=fact,fun=fun)
    raster::crs(res) <- priogrid::prio_crs()
-   raster::extent(res) <- priogrid::prio_extent()
+   
+   pg <- priogrid::prio_blank_grid()
+   raster::values(pg) <- NA
+   
+   raster::origin(res) <- raster::origin(pg)
+   
+   res <- raster::merge(res, pg)
+   
    res
 }
 
-get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
+ get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
   #TODO Needs documentation
   nc <- nc_open(file)
 
