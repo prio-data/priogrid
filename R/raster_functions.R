@@ -144,3 +144,27 @@ yearly_brick <- function(data, variable, raster.fun){
   return(brick)
 } ## NOTE: This is fairly quick on smaller point data, but takes a lot of time on larger data. 
 
+
+
+
+#' Rotate extent of raster 
+#' 
+#' Function to change raster latitudes from (0, 360) to (-180, 180),
+#' the former is commonly used in climate data. 
+#' 
+#' @param raster RasterLayer or RasterBrick.
+
+rotateExtent <- function(raster){
+  ext1 <- raster::extent(0, 180, -90, 90)
+  ext2 <- raster::extent(180, 360, -90, 90)
+  
+  rightCrop <- raster::crop(raster, ext1)
+  
+  leftCrop <- raster::crop(raster, ext2)
+  
+  full <- raster::merge(rightCrop, leftCrop)
+  full <- raster::rotate(full)
+  
+  full
+}
+
