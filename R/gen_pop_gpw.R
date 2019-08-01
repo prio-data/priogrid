@@ -14,15 +14,14 @@ gen_pop_gpw <- function(gpw_nc, rast.fun){
   gpw <- gpw[[1:4]] # 1:5 to also included estimate for 2020
   years <- c(2000, 2005, 2010, 2015)
 
-  gpw <- raster::aggregate(gpw, fact = priogrid::resolution_factor(gpw),
-                           fun = rast.fun)
+  gpw <- priogrid::prio_aggregate_raster(gpw, fun = rast.fun)
 
   names(gpw) <- paste0("pop_gpw_", rast.fun, "_", years)
   return(gpw)
 }
 
 
-# Function to combine all subvariables in one stack
+# Function to combine all subvariables in one stack - can include this in above function
 
 gen_pop_gpw_c <- function(gpw_nc){
   sum <- gen_pop_gpw(gpw_nc, rast.fun = 'sum')
