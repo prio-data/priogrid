@@ -120,3 +120,27 @@ stepwiseAggregate <- function(data, minres, fun = priogrid::quickmode, firstpass
 }
    
 
+
+#' Create RasterBrick consisting of one RasterLayer for each year
+#'
+#' @param data sf object.
+#' @param variable Variable to rasterize, character string.
+#' @param raster.fun Function to rasterize by, character string.
+
+yearly_brick <- function(data, variable, raster.fun){
+  years <- unique(data$year)
+  emp <- list()
+  
+  for(i in 1:length(years)) {
+    y <- years[i]
+    if(sum(data$year == y) > 0)
+      emp[[i]] <- raster::rasterize(data[which(data$year == y),],
+                                    priogrid::prio_blank_grid(),
+                                    field = variable,
+                                    fun = raster.fun)
+  }
+  brick <- raster::brick(emp)
+  names(brick) <- paste0(variable,"_", years)
+  return(brick)
+} ## NOTE: This is fairly quick on smaller point data, but takes a lot of time on larger data. 
+
