@@ -1,39 +1,26 @@
 
 # Generate infant mortality rate variable ---------------------------------
 
-#' Generate imr variables
+#' Generate imr variables, returned as brick
 #'
 #' @param imr_data SEDAC Global Subnational Infant Mortality Rates grid data (v.2, GeoTIFF)
-#' @param rast.fun Function to aggregate by ('mean', 'sd', 'min', 'max')
 
 
-gen_imr <- function(imr_data, rast.fun){
+gen_imr <- function(imr_data){
   imr <- raster::raster(imr_data)
 
-  # Set NA values < 0
   imr <- raster::reclassify(imr, rcl = cbind(-Inf, 0, NA), right = FALSE)
 
-  # Aggregate to pg resolution
-  imr <- raster::aggregate(imr, fact = priogrid::resolution_factor(imr),
-                                fun = rast.fun, na.rm = TRUE)
-  return(imr)
-
-}
-
-
-
-# Optional brick of sub-variables ~19 mins
-gen_imr_brick <- function(imr_data){
-  imr_mean <- gen_imr(imr_data, rast.fun = 'mean')
-  imr_sd <- gen_imr(imr_data, rast.fun = 'sd')
-  imr_min <- gen_imr(imr_data, rast.fun = 'min')
-  imr_max <- gen_imr(imr_data, rast.fun = 'max')
-
+  # Aggregate to pg resolution and create subvariables
+  imr_mean <- priogrid::prio_aggregate_raster(imr, fun = 'mean')
+  imr_sd <- priogrid::prio_aggregate_raster(imr, fun = 'sd')
+  imr_min <- priogrid::prio_aggregate_raster(imr, fun = 'min')
+  imr_max <- priogrid::prio_aggregate_raster(imr, fun = 'max')
+  
   imr <- raster::brick(c(imr_mean, imr_sd, imr_min, imr_max))
   names(imr) <- c("imr_mean", "imr_sd", "imr_min", "imr_max")
+  
   return(imr)
 
 }
-
-
 
