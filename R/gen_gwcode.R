@@ -23,103 +23,125 @@ gen_gwcode <- function(cshapes, partial = FALSE, subdiv = 16, detail = 16){
        date_interval = lubridate::interval(startdate, enddate)
      )
 
-   unique_dates <- unique(c(cshapes$startdate, cshapes$enddate))
-   unique_dates <- sort(unique_dates)
+   cshapes$id <- as.numeric(row.names(cshapes))
+   
+   # Figuring out tiles =============
 
-   if(partial){
-      whichdates <- sample(c(TRUE,FALSE), size = length(unique_dates), 
-                           replace = TRUE, prob = c(0.1,0.9))
-      whichdates[1] <- TRUE
-      whichdates[length(whichdates)] <- TRUE
-      print(glue::glue('Using {sum(whichdates)}/{length(unique_dates)} dates'))
-      unique_dates <- unique_dates[whichdates]
-   }
+   simpleWorld <- st_simplify(cshapes,dTolerance = 1)
+   simpleBorders <- st_boundary(simpleWorld)
 
-   base <- prio_blank_grid()
+   tiles <- raster::raster(nrow = subdiv, ncol = subdiv * 2,
+                           ext = priogrid::prio_extent(),
+                           crs = priogrid::prio_crs()) %>%
+      spex::polygonize()
+
+   tiles$intersections <- sapply(st_intersects(tiles,simpleWorld),unlist)
+
+   tiles$boundarytile <- sapply(st_intersects(tiles,simpleBorders),length) != 0
+   tiles$bordertile <- sapply(st_intersects(tiles,simpleBorders),length) > 1
+
+   tiles$id <- as.numeric(row.names(tiles))
+
+   hasintersect <- sapply(tiles$intersections, length) != 0
+   tiles <- tiles[hasintersect,]
+
+   # Looping! =======================
+
+   years <- seq(lubridate::floor_date(min(cshapes$startdate),unit = 'year'),
+                lubridate::floor_date(max(cshapes$enddate),unit = 'year'), 
+                by = 'years')
+
+   base <- priogrid::prio_blank_grid()
    out <- list()
+   done <- logical(nrow(cshapes))
 
-   i <- 1
-   tictoc::tic('Looping over dates')
-   for(specdate in unique_dates){
-      specdate <- as.Date(specdate,as.Date('1970-01-01'))
-      print(glue::glue('Doing {specdate}'))
+   for(start_of_year in years){
+      start_of_year <- as.Date(start_of_year,as.Date('1970-01-01'))
+      print(glue::glue('Doing {start_of_year}'))
 
-      countries <- which(cshapes$startdate == specdate | cshapes$enddate == specdate)
-      cshapes_cs <- cshapes[countries,]
+      current <- logical(length = nrow(cshapes))
+      current[which(cshapes$startdate < start_of_year)] <- TRUE
+      current <- current & ! done
+      exist <- current | done & !cshapes$enddate < start_of_year
 
-      tictoc::tic('Time spent')
+      print(glue::glue('{sum(current)} countries to do in {start_of_year}'))
+      print(glue::glue('{sum(exist)} countries exist in {start_of_year}'))
 
-      res <- rasterize_worldtiles(cshapes_cs, base,
-                   rasterize_tile, ...)
+      current_countries <- cshapes[current,]
+      existing_countries <- cshapes[exist,]
 
-      if(length(res) > 1){
-         res <- do.call(raster::merge,res)
+      current_tiles <- sapply(tiles$intersections,function(inters){
+         any(current_countries$id %in% inters) 
+         })
+
+      current_tiles <- tiles[current_tiles,]
+
+
+      if(nrow(current_tiles) > 0){
+         print(glue::glue('Doing {nrow(current_tiles)} tiles'))
+         res <- rasterize_tilewise(current_tiles, current_countries, detail = detail)
       } else {
-         res <- res[[1]]
+         res <- prio_blank_grid()
+         values(res) <- NA
+         print(glue::glue('Nothing to do!'))
       }
 
-      if(i > 1){
-         res <- raster::merge(res,prev)
-      } 
-      prev <- res
+      out[[strftime(start_of_year)]] <- res 
 
-      out[[strftime(specdate)]] <- res
-
-      i <- i + 1
-      tictoc::toc()
+      done <- done | current
+      print(glue::glue('Done with {sum(done)} countries'))
    }
-   tictoc::toc()
+   for(i in 1:length(out)){
+      if(i > 1){
+         out[[i]] <- raster::merge(out[[i - 1]],out[[i]])
+      }
+   }
    out
 }
 
-rasterize_worldtiles <- function(vectors, raster, fun, 
-                         vectorsOfInterest = NULL, 
-                         subdiv = subdiv, ncore = 1, ...){
+rasterize_tilewise <- function(tiles,countries,detail = 2){
 
-   tiles <- raster::raster(nrow = subdiv, ncol = subdiv * 2,
-                   ext = raster::extent(raster),
-                   crs = raster::crs(raster))
-
-   polytiles <- spex::polygonize(tiles)
-   print(glue::glue('Using {nrow(polytiles)} tiles'))
-
-   res <- parallel::mclapply(1:nrow(polytiles), mc.cores = ncore,
-            function(tilenumber){
-
-      intersections <- suppressMessages(sf::st_intersects(polytiles[tilenumber,], 
-                                                          vectors))
-
-      relevantvector <- vectors[intersections[[1]],]
-      relevantraster <- raster::crop(raster,polytiles[tilenumber,])
-      
-      tile_info <- list(intersections = intersections[[1]]) 
-
-      fun(relevantvector, relevantraster, tile_info, detail)
-   })
-
-   res[!is.na(res)]
-}
-
-rasterize_tile <- function(vec,ras, tile_info, detail = detail){
-   if(nrow(vec) > 0){
-      if(length(tile_info$intersections) > 1){
-         gigaras <- raster::disaggregate(ras,detail)
-         vx <- velox::velox(gigaras)
-
-         vx$rasterize(vec, 'GWCODE', 1, NA)
-         ras <- vx$as.RasterStack()[[1]]
-         raster::aggregate(ras, detail, fun = raster::modal)
-
-      } else {
-         vx <- velox::velox(ras)
-         vx$rasterize(vec, 'GWCODE', 1, NA)
-         vx$as.RasterStack()[[1]]
+   veloxRasterize <- function(r,vectors,detail = 1){
+      if(detail > 1){
+         r <- disaggregate(r,fact = detail)   
       }
-
-   } else {
-      # Ocean tiles
-      raster::values(ras) <- NA
-      ras
+      vx <- velox::velox(r)
+      vx$rasterize(vectors, field = 'GWCODE', band = 1,background = NA)
+      r <- vx$as.RasterLayer()
+      
+      if(detail > 1){
+         r <- aggregate(r,fact = detail,fun = raster::modal)   
+      }
+      r
    }
 
+   rasters <- list()
+   for(i in 1:nrow(tiles)){
+
+      tile <- tiles[i,]
+
+      r <- crop(base,tiles[i,])
+
+      curr_countries <- countries[countries$id %in% unlist(tile$intersections),]
+
+      # Different levels of detail, ====
+      # ================================
+      if(tile$bordertile){
+         curr_detail <- detail
+      } else if(tile$boundarytile){
+         curr_detail <- round(detail / 2)
+         curr_detail <- 1
+      } else {
+         curr_detail <- 1
+      }
+
+      if(nrow(curr_countries) > 0){
+         r <- veloxRasterize(r,curr_countries,curr_detail)
+      }
+
+      rasters[[length(rasters) + 1]] <- r
+   }
+
+   do.call(raster::merge,rasters)
 }
+
