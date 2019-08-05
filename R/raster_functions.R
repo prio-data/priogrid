@@ -16,7 +16,7 @@ prio_aggregate_raster <- function(x, fun){
    
    raster::origin(res) <- raster::origin(pg)
    
-   res <- raster::merge(res, pg)
+   res <- raster::merge(res, pg, overlap = FALSE)
    
    res
 }
