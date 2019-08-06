@@ -20,8 +20,8 @@ gen_prec_gpcp <- function(gpcp_data){
   yearly <- raster::stackApply(prec, index, fun = sum)
 
   prec.r <- priogrid::rotateExtent(yearly)
-  names(prec.r) <- paste0("precip_gpcp_", unique(index))
-
+  names(prec.r) <- paste0("prec_gpcp_", unique(index))
+  
   prec.r <- raster::dropLayer(prec.r, 41) # Drop 2019 - precipitation only recorded from January to May
 
   disagg <- raster::disaggregate(prec.r, fact = 5, method = 'bilinear') # Unsure if method is correct
