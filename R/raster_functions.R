@@ -21,6 +21,24 @@ prio_aggregate_raster <- function(x, fun){
    res
 }
 
+
+prio_raster <- function(x){
+  # Returns raster with same extent and dimensions as PG, use when aggregation is not needed
+  
+  raster::crs(x) <- priogrid::prio_crs()
+  
+  pg <- priogrid::prio_blank_grid()
+  raster::values(pg) <- NA
+  
+  raster::origin(x) <- raster::origin(pg)
+  
+  x <- raster::merge(x, pg, overlap = FALSE)
+  
+  x
+  
+}
+
+
  get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
   #TODO Needs documentation
   nc <- nc_open(file)
