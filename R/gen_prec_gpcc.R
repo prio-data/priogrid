@@ -5,7 +5,7 @@
 #' in each grid cell using monthly statistics from the Global Precipitation Climatology Centre.
 #' Returns PRIO-GRID consistent RasterBrick of one layer for each year (1946-2016).
 #'
-#' @param gpcp_data GPCC Monthly total 1x1 NetCDF file.
+#' @param gpcc_data GPCC Monthly total 1x1 NetCDF file.
 
 
 gen_prec_gpcc <- function(gpcc_data){
