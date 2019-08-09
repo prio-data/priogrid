@@ -19,7 +19,7 @@ gen_growseas <- function(mirca_data){
 
 
 prep_growseas <- function(mirca_data){
-  mirca <- read.table(gzfile(mirca_data), header = T, sep = "\t")
+  #mirca <- read.table(gzfile(mirca_data), header = T, sep = "\t")
 
   m_small <- mirca %>%
     dplyr::group_by(lat, long, start, end) %>%
@@ -57,38 +57,88 @@ select_months <- function(start, end, drop_perennials=FALSE){
   }
 }
 
+#' Roll over Columns
+#'
+#' Calculates the sum of a rolling window over a range of columns.
+#' Only considers columns not specified in "exclude"
+#'
+#' Assumes that the columns are sorted
+#'
+#' @param data A set of data
+#' @param exclude Columns to exclude 
+#' @param winsize Size of the window 
 
+rollovercols <- function(data,exclude = c('lat','long'),winsize = 3, fun = sum){
+   if(winsize %% 2 == 0){
+      stop(glue::glue('Window size must be odd, not {winsize}!'))
+   } 
+   dnames <- names(data)
+   months <- dnames[!dnames %in% exclude]
 
+   winmid <- ceiling(winsize / 2)
+   winmargin <- (winsize - 1) / 2
+   mids <- seq(winmid,length(months) - winmid,1)
 
+   rowindices <- 1:length(months) 
+   winindices <- c(tail(rowindices,winmargin),
+                      rowindices,
+                      head(rowindices,winmargin))
+
+   sumdata <- apply(data,1,function(row){
+      row <- row[months]
+      
+      sapply(1:length(row),function(colindex){
+         mnames <- names(row)
+         wincenter  <- colindex + winmargin
+         w <- seq(colindex,(winsize + colindex) - 1)
+         window <- winindices[w]
+         if(FALSE){
+            print(glue::glue('Values: {glue::glue_collapse(row[window],sep = \',\')}'))
+            print(glue::glue('Names: {glue::glue_collapse(mnames[window],sep = \',\')}'))
+
+            print(glue::glue('Index: {colindex}'))
+            print(glue::glue('Center: {wincenter}'))
+            print(glue::glue('Sum: {sum(row[window])}'))
+         }
+         fun(row[window])
+      })
+   })
+   res <- as.data.frame(t(sumdata))
+   names(res) <- months
+   for(val in exclude){
+      res[val] <- data[val]
+   }
+   res
+}
 
 ### HER:
 
-m_small <- prep_growseas("C:/Users/villar/Dropbox/pg_v3-dev/priogrid-dev/raw_data/growing_periods_listed/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz")
+#m_small <- prep_growseas("C:/Users/villar/Dropbox/pg_v3-dev/priogrid-dev/raw_data/growing_periods_listed/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz")
 
-
-head(m_small)
-
-
-
-
-?zoo::rollapply
-?zoo::zoo
-
-
-
-m_small$jan.2 <- m_small$jan
-m_small$feb.2 <- m_small$feb
-
-
-
-
-tst <- m_small
-
-
-tst <- zoo::rollsum(tst, 3, align = "right")
-
-
-length(m_small$jan)
-rollfun <- function(x, na.rm = na.rm) {zoo::rollsum(x, 3, align = "right")}
-tst
-?zoo::rollsum
+#
+#head(m_small)
+#
+#
+#
+#
+#?zoo::rollapply
+#?zoo::zoo
+#
+#
+#
+#m_small$jan.2 <- m_small$jan
+#m_small$feb.2 <- m_small$feb
+#
+#
+#
+#
+#tst <- m_small
+#
+#
+#tst <- zoo::rollsum(tst, 3, align = "right")
+#
+#
+#length(m_small$jan)
+#rollfun <- function(x, na.rm = na.rm) {zoo::rollsum(x, 3, align = "right")}
+#tst
+#?zoo::rollsum
