@@ -18,7 +18,7 @@ gen_growseas <- function(mirca_data){
 
 
 
-prep_growseas <- function(mirca_data){
+prep_growseas <- function(mirca){
   #mirca <- read.table(gzfile(mirca_data), header = T, sep = "\t")
 
   m_small <- mirca %>%
@@ -67,8 +67,10 @@ select_months <- function(start, end, drop_perennials=FALSE){
 #' @param data A set of data
 #' @param exclude Columns to exclude 
 #' @param winsize Size of the window 
+#' @param shift Shift the window. Ex. size 3 / shift 1 gives sum FROM col instead of around
 
-rollovercols <- function(data,exclude = c('lat','long'),winsize = 3, fun = sum){
+rollovercols <- function(data, fun = sum, winsize = 3, shift = 1, 
+                         exclude = c('lat','long'), debug = FALSE){
    if(winsize %% 2 == 0){
       stop(glue::glue('Window size must be odd, not {winsize}!'))
    } 
@@ -80,9 +82,9 @@ rollovercols <- function(data,exclude = c('lat','long'),winsize = 3, fun = sum){
    mids <- seq(winmid,length(months) - winmid,1)
 
    rowindices <- 1:length(months) 
-   winindices <- c(tail(rowindices,winmargin),
+   winindices <- c(tail(rowindices,winmargin + abs(shift)),
                       rowindices,
-                      head(rowindices,winmargin))
+                      head(rowindices,winmargin + abs(shift)))
 
    sumdata <- apply(data,1,function(row){
       row <- row[months]
@@ -90,14 +92,14 @@ rollovercols <- function(data,exclude = c('lat','long'),winsize = 3, fun = sum){
       sapply(1:length(row),function(colindex){
          mnames <- names(row)
          wincenter  <- colindex + winmargin
-         w <- seq(colindex,(winsize + colindex) - 1)
+         w <- seq(colindex + shift + abs(shift),
+                  ((winsize + colindex) - 1) + shift + abs(shift))
          window <- winindices[w]
-         if(FALSE){
-            print(glue::glue('Values: {glue::glue_collapse(row[window],sep = \',\')}'))
+         if(debug){
             print(glue::glue('Names: {glue::glue_collapse(mnames[window],sep = \',\')}'))
+            print(glue::glue('Values: {glue::glue_collapse(row[window],sep = \',\')}'))
 
             print(glue::glue('Index: {colindex}'))
-            print(glue::glue('Center: {wincenter}'))
             print(glue::glue('Sum: {sum(row[window])}'))
          }
          fun(row[window])
