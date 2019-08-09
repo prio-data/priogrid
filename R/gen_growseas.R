@@ -14,12 +14,11 @@ gen_growseas <- function(mirca_data){
 }
 
 
-# test <- gen_growseas("C:/Users/villar/Dropbox/pg_v3-dev/priogrid-dev/raw_data/growing_periods_listed/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz")
 
 
 
 prep_growseas <- function(mirca){
-  #mirca <- read.table(gzfile(mirca_data), header = T, sep = "\t")
+  #mirca <- read.table(gzfile(mirca), header = T, sep = "\t")
 
   m_small <- mirca %>%
     dplyr::group_by(lat, long, start, end) %>%
@@ -113,34 +112,29 @@ rollovercols <- function(data, fun = sum, winsize = 3, shift = 1,
    res
 }
 
-### HER:
 
-#m_small <- prep_growseas("C:/Users/villar/Dropbox/pg_v3-dev/priogrid-dev/raw_data/growing_periods_listed/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz")
 
-#
-#head(m_small)
-#
-#
-#
-#
-#?zoo::rollapply
-#?zoo::zoo
-#
-#
-#
-#m_small$jan.2 <- m_small$jan
-#m_small$feb.2 <- m_small$feb
-#
-#
-#
-#
-#tst <- m_small
-#
-#
-#tst <- zoo::rollsum(tst, 3, align = "right")
-#
-#
-#length(m_small$jan)
-#rollfun <- function(x, na.rm = na.rm) {zoo::rollsum(x, 3, align = "right")}
-#tst
-#?zoo::rollsum
+
+
+### TODO 
+# Find which three consecutive months have the maximum value
+# Create dummy var?
+# grow_start and grow_end as the value of the first and last three consec months that are max
+
+
+
+# mirca <- prep_growseas(path)
+# tbl2 <- head(mirca)
+# tbl <- rollovercols(tbl2, fun = sum, winsize = 3, shift = 1)
+
+# rowSums(tbl2[3:5]) # Is this faster than rollovercols?
+# 
+
+
+# 
+# test <- tst %>%
+#   dplyr::group_by(long, lat) %>%
+#   dplyr::summarize(max = max(jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec))
+# 
+# 
+# testr <- raster::rasterFromXYZ(test) # cell sizes are not regular? Not a problem before??
