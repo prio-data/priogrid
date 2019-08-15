@@ -18,14 +18,14 @@ gen_growseas <- function(mirca_data){
 
 
 prep_growseas <- function(mirca){
-  #mirca <- read.table(gzfile(mirca), header = T, sep = "\t")
+  # mirca <- read.table(gzfile(mirca), header = T, sep = "\t")
 
   m_small <- mirca %>%
     dplyr::group_by(lat, long, start, end) %>%
     dplyr::summarize(area = sum(area))
 
   data.table::setDT(m_small)
-  m_small <- m_small[, .(lat = lat, long = long, area = area, start = start, end = end, month = select_months(start, end)),
+  m_small <- m_small[, .(lat = lat, long = long, area = area, start = start, end = end, month = priogrid::select_months(start, end)),
                      .(1:nrow(m_small))][, nrow := NULL][]
 
   m_small <- m_small[, .(area = sum(area, na.rm = T)), by = c("lat", "long", "month")]
@@ -113,28 +113,3 @@ rollovercols <- function(data, fun = sum, winsize = 3, shift = 1,
 }
 
 
-
-
-
-### TODO 
-# Find which three consecutive months have the maximum value
-# Create dummy var?
-# grow_start and grow_end as the value of the first and last three consec months that are max
-
-
-
-# mirca <- prep_growseas(path)
-# tbl2 <- head(mirca)
-# tbl <- rollovercols(tbl2, fun = sum, winsize = 3, shift = 1)
-
-# rowSums(tbl2[3:5]) # Is this faster than rollovercols?
-# 
-
-
-# 
-# test <- tst %>%
-#   dplyr::group_by(long, lat) %>%
-#   dplyr::summarize(max = max(jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec))
-# 
-# 
-# testr <- raster::rasterFromXYZ(test) # cell sizes are not regular? Not a problem before??
