@@ -1,4 +1,14 @@
 
+#' stream.table
+#'
+#' Returns a "generator function" that can be called repeatedly,
+#' yielding lines from the file (fname).
+#' Returns 0 rows when the file has been completely read.
+#'
+#' @param filename File name
+#' @param chunksize Number of lines in each chunk 
+#' @param ... Arguments passed to read.table
+
 #' Old grid to raster
 #' 
 #' Converts the .csv PrioGrid v.1 into a raster.
