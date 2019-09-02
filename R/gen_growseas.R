@@ -25,10 +25,10 @@ prep_growseas <- function(mirca){
     dplyr::summarize(area = sum(area))
 
   data.table::setDT(m_small)
-  m_small <- m_small[, alist(lat = lat, long = long, area = area, start = start, end = end, month = priogrid::select_months(start, end)),
+  m_small <- m_small[, list(lat = lat, long = long, area = area, start = start, end = end, month = priogrid::select_months(start, end)),
                      list(1:nrow(m_small))][, nrow := NULL][]
 
-  m_small <- m_small[, alist(area = sum(area, na.rm = T)), by = c("lat", "long", "month")]
+  m_small <- m_small[, list(area = sum(area, na.rm = T)), by = c("lat", "long", "month")]
 
 
   m_small <- m_small %>%
