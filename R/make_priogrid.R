@@ -5,18 +5,31 @@
 #' This is the "master function" that turns raw data
 #' into PRIOGrid.
 #' Not functional, only for illustration.
-#' @param input_folder Location of folder containing 
+#' @param input_folder Location of folder containing
 #' folders of raw data
 #' @param output_folder Output folder
 
 make_pg <- function(input_folder, output_folder){
-   intermediate_folder <- tempdir()
+   #intermediate_folder <- tempdir()
 
-   priogrid::make_gwcode(paste0(input_folder,'/cshapes/cshapes.shp'),
-                         paste0(intermediate_folder,'/gwcode.rds'))
+   priogrid::make_gwcode(paste0(input_folder,'/cshapes/data/cshapes.shp'),
+                         paste0(output_folder,'/gwcode.rds'))
+   priogrid::make_pop_gpw(paste0(input_folder,'/pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc'),
+                          paste0(output_folder,'/pop_gpw.rds'))
    #priogrid::make_other_variables(...)
-   
+
    #for(f in list.files(intermediate_folder){
-   #   ...stitch it all together... 
+   #   ...stitch it all together...
    #}
+}
+
+make_gwcode <- function(input_file, output_file){
+  infile <- sf::st_read(input_file)
+  rast <- gen_gwcode(infile)
+  saveRDS(rast, file = output_file)
+}
+
+make_pop_gpw <- function(input_file, output_file){
+  rast <- gen_pop_gpw_c(infile)
+  saveRDS(rast, file = output_file)
 }

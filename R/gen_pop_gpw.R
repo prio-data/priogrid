@@ -11,8 +11,8 @@
 gen_pop_gpw <- function(gpw_nc, rast.fun){
   gpw <- raster::brick(gpw_nc)
 
-  gpw <- gpw[[1:4]] # 1:5 to also included estimate for 2020
-  years <- c(2000, 2005, 2010, 2015)
+  gpw <- gpw[[1:5]] # 1:5 to also included estimate for 2020
+  years <- c(2000, 2005, 2010, 2015, 2020)
 
   gpw <- priogrid::prio_aggregate_raster(gpw, fun = rast.fun)
 
