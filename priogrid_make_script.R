@@ -34,15 +34,20 @@ tdim <- ncdim_def( 'year', 'integer', 0, unlim=TRUE )
 integer_mv <- -99     # missing value
 float_mv <- 1.e30     # missing value
 
-var_gwcode <- ncvar_def(name = "gwcode", units = 'gwcode', dim = list(xdim,ydim,tdim), missval = integer_mv, compression = 7)
-var_gwcode2 <- ncvar_def(name = "gwcode2", units = 'gwcode', dim = list(xdim,ydim,tdim), missval = integer_mv, compression = 7)
+gwcode <- ncvar_def(name = "gwcode", units = 'gwcode', dim = list(xdim,ydim,tdim), missval = integer_mv, compression = 7)
+pop_gpw_sum <- ncvar_def(name = "pop_gpw_sum", units = 'population', dim = list(xdim,ydim,tdim), missval = integer_mv, compression = 7)
 
 # Make new output file #
 ncid_new <- nc_create(yearly_netcdf, list(var_gwcode, var_gwcode2), force_v4 = TRUE)
 
 # Populate netcdf file #
-gwcode <- readRDS(RASTER_FILES[grepl("gwcode", RASTER_FILES)])
-ncvar_put(ncid_new, var_gwcode, as.array(gwcode), start=c(1,1,1), count=c(nx,ny,nt))
+rast <- readRDS(RASTER_FILES[grepl("gwcode", RASTER_FILES)])
+ncvar_put(ncid_new, gwcode, as.array(rast), start=c(1,1,1), count=c(nx,ny,nt))
+
+rast <- readRDS(RASTER_FILES[grepl("pop_gpw_sum", RASTER_FILES)])
+ncvar_put(ncid_new, pop_gpw_sum, as.array(rast), start=c(1,1,1), count=c(nx,ny,nt))
+
+
 
 # Close netcdf file #
 nc_close( ncid_new )
