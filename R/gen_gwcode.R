@@ -96,8 +96,12 @@ gen_gwcode <- function(cshapes, partial = FALSE, subdiv = 16, detail = 16){
          out[[i]] <- raster::merge(out[[i - 1]],out[[i]])
       }
    }
+   #out <- raster::stack(out)
+
+   # Make sure that all years have same extent by resampling to nearest neighbor.
+   out <- lapply(out, function(x) raster::resample(x, base, method = "ngb"))
    out <- raster::stack(out)
-   out
+   return(out)
 }
 
 rasterize_tilewise <- function(tiles, countries, base, detail = 2){
