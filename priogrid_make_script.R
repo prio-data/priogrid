@@ -1,5 +1,9 @@
 library(ncdf4)
 
+
+input_folder <- "c:/Users/jonves/data/priogrid_data/"
+output_folder <- "c:/Users/jonves/data/priogrid_res/"
+
 input_folder <- "~/data/priogrid_data/"
 output_folder <- "~/data/priogrid_res/"
 

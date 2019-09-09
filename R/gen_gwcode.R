@@ -60,7 +60,7 @@ gen_gwcode <- function(cshapes, partial = FALSE, subdiv = 16, detail = 16){
       print(glue::glue('Doing {start_of_year}'))
 
       current <- logical(length = nrow(cshapes))
-      current[which(cshapes$startdate < start_of_year)] <- TRUE
+      current[which(cshapes$startdate <= start_of_year)] <- TRUE
       current <- current & ! done
       exist <- current | done & !cshapes$enddate < start_of_year
 
