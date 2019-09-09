@@ -9,6 +9,8 @@ Description: Codebase for building PRIOGrid from a diverse set of raw data.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends:
+    data.table
 Imports:
     ncdf4,
     spex,
