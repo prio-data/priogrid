@@ -1,6 +1,14 @@
 
-gen_growseas <- function(mirca_data){
-  m_small <- prep_growseas(mirca_data)
+#' Generate monthly growseas variable
+#' 
+#' Function to generate the area proportion of each cell
+#' that is being harvested for each month. 
+#' 
+#' @param mirca MIRCA2000 data (.TXT)
+
+
+gen_growseas <- function(mirca){
+  m_small <- priogrid::prep_growseas(mirca)
 
   m_raster <- raster::rasterFromXYZ(m_small[c("long", "lat", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug",
                                               "sep", "oct", "nov", "dec")], crs = priogrid::prio_crs(), digits = 1)
@@ -15,7 +23,69 @@ gen_growseas <- function(mirca_data){
 
 
 
+#' Generate grow_start and grow_end variables
+#' 
+#' Function to generate grow_start and grow_end 
+#' based on MIRCA2000 data.
+#' 
+#' @param mirca MIRCA2000 data (.TXT).
+#' @param no_months Width of rolling window (number of months) used to compute maximum sum of harvested area. Defaults to 5.
+#' 
+#' @return PRIO-GRID-consistend RasterBrick with one layer for each variable.
 
+gen_grow_start_end <- function(mirca, no_months = 5){
+  mirca_prep <- priogrid::prep_growseas(mirca) # NOTE: Does not work - need to figure out data.table dependencies
+  
+  mirca_prep <- mirca_prep %>%
+    dplyr::mutate(jan2 = jan, feb2 = feb, mar2 = mar, apr2 = apr, may2 = may) %>%
+    tidyr::gather(key = "month", value = "area", -long, -lat) %>%
+    dplyr::mutate(nummonth = match(tolower(month), tolower(month.abb))) %>%
+    dplyr::mutate(nummonth = ifelse(month == "jan2", 13,
+                                    ifelse(month == "feb2", 14,
+                                           ifelse(month == "mar2", 15,
+                                                  ifelse(month == "apr2", 16,
+                                                         ifelse(month == "may2", 17, nummonth)
+                                                  ))))) %>%
+    dplyr::arrange(long, lat, nummonth) %>%
+    dplyr::mutate(id = dplyr::group_indices())
+  
+  
+  data.table::setDT(mirca_prep)
+  
+  mirca_prep[,consec_mo := zoo::rollapply(area, width = no_months, sum, align = "right", fill = NA, partial = F), by = id]
+  
+  recode_months <- function(var){
+    ifelse(var == 13, 1,
+           ifelse(var == 14, 2,
+                  ifelse(var == 15, 3,
+                         ifelse(var == 16, 4,
+                                ifelse(var == 17, 5,
+                                       var)))))
+  }
+  
+  
+  mirca_final <- mirca_prep %>%
+    dplyr::mutate(grow_start = ifelse(!is.na(consec_mo), nummonth - (no_months - 1), NA),
+                  grow_end = ifelse(!is.na(consec_mo), nummonth, NA)) %>%
+    dplyr::mutate(grow_start = recode_months(grow_start),
+                  grow_end = recode_months(grow_end)) %>%
+    dplyr::group_by(lat, long) %>%
+    dplyr::slice(which.max(consec_mo)) ### NOTE: This approach does NOT consider ties - it chooses the FIRST max for each point by default
+  
+  
+  growseas <- raster::rasterFromXYZ(mirca_final[c("long", "lat", "grow_start", "grow_end")], crs = priogrid::prio_crs(), digits = 1)
+  grow_start <- priogrid::prio_aggregate_raster(growseas[[1]], fun = first)
+  grow_end <- priogrid::prio_aggregate_raster(growseas[[2]], fun = last)
+  growseas <- raster::brick(grow_start, grow_end)
+  names(growseas) <- c("grow_start", "grow_end")
+  
+  growseas
+  
+}
+
+
+
+#' Data preparation function
 
 prep_growseas <- function(mirca){
   # mirca <- read.table(gzfile(mirca), header = T, sep = "\t")
