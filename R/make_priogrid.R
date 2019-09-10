@@ -16,6 +16,8 @@ make_pg <- function(input_folder, output_folder, overwrite = FALSE){
                          paste0(output_folder,'/gwcode.rds'), overwrite = overwrite)
    priogrid::make_pop_gpw(paste0(input_folder,'/pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc'),
                           paste0(output_folder,'/pop_gpw.rds'), overwrite = overwrite)
+   priogrid::make_diamonds(paste0(input_folder,'/diamonds/data/DIADATA.shp'),
+                          paste0(output_folder,'/diamonds.rds'), overwrite = overwrite)
    #priogrid::make_other_variables(...)
 
    #for(f in list.files(intermediate_folder){
@@ -34,12 +36,23 @@ make_gwcode <- function(input_file, output_file, overwrite){
   saveRDS(rast, file = output_file)
 }
 
-make_pop_gpw <- function(input_file, output_file){
+make_pop_gpw <- function(input_file, output_file, overwrite){
   if(!overwrite){
      if(file.exists(output_file)){
         return(paste("File", output_file, "already exists."))
      }
   }
-  rast <- gen_pop_gpw_c(infile)
+  rast <- gen_pop_gpw_c(input_file)
   saveRDS(rast, file = output_file)
+}
+
+make_diamonds <- function(input_file, output_file, overwrite){
+   if(!overwrite){
+      if(file.exists(output_file)){
+         return(paste("File", output_file, "already exists."))
+      }
+   }
+   #infile <- sf::st_read(input_file)
+   rast <- gen_diamonds_s(input_file)
+   saveRDS(rast, file = output_file)
 }
