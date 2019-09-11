@@ -18,6 +18,10 @@ make_pg <- function(input_folder, output_folder, overwrite = FALSE){
                           paste0(output_folder,'/pop_gpw.rds'), overwrite = overwrite)
    priogrid::make_diamonds(paste0(input_folder,'/diamonds/data/DIADATA.shp'),
                           paste0(output_folder,'/diamonds.rds'), overwrite = overwrite)
+   priogrid::make_growseas(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
+                           paste0(output_folder, "/mirca_growseas.rds"), overwrite = overwrite)
+   priogrid::make_grow_agg(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
+                           paste0(output_folder, "/mirca_grow_agg.rds"), overwrite = overwrite)
    #priogrid::make_other_variables(...)
 
    #for(f in list.files(intermediate_folder){
@@ -56,3 +60,26 @@ make_diamonds <- function(input_file, output_file, overwrite){
    rast <- gen_diamonds_s(input_file)
    saveRDS(rast, file = output_file)
 }
+
+make_growseas <- function(input_file, output_file, overwrite){
+   if(!overwrite){
+      if(file.exists(output_file)){
+         return(paste("File", output_file, "already exists."))
+      }
+   }
+   infile <- read.table(gzfile(input_file), header = T, sep = "\t")
+   rast <- gen_growseas(infile)
+   saveRDS(rast, file = output_file)
+}
+
+make_grow_agg <- function(input_file, output_file, overwrite){
+   if(!overwrite){
+      if(file.exists(output_file)){
+         return(paste("File", output_file, "already exists."))
+      }
+   }
+   infile <- read.table(gzfile(input_file), header = T, sep = "\t")
+   rast <- gen_grow_start_end(infile)
+   saveRDS(rast, file = output_file)
+}
+

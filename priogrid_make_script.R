@@ -101,6 +101,8 @@ ydim <- ncdim_def( 'lat', 'degrees_north', yvals )
 
 diamprim_s <- ncvar_def(name = "diamprim_s", units = "n sites", dim = list(xdim, ydim), missval = integer_mv, compression = 7)
 diamsec_s <- ncvar_def(name = "diamsec_s", units = "n sites", dim = list(xdim, ydim), missval = integer_mv, compression = 7)
+grow_start <- ncvar_def(name = "grow_start", units = "month", dim = list(xdim, ydim), missval = integer_mc, compression = 7)
+grow_end <- ncvar_def(name = "grow_end", units = "month", dim = list(xdim, ydim), missval = integer_mc, compression = 7)
 
 # Make new output file #
 ncid_new <- nc_create(static_netcdf, list(diamprim_s, diamsec_s), force_v4 = TRUE)
@@ -112,6 +114,14 @@ ncvar_put(ncid_new, diamprim_s, t(as.matrix(rast)), start=c(1,1), count=c(nx,ny)
 rast <- readRDS(RASTER_FILES[grepl("diamonds", RASTER_FILES)])
 rast <- subset(rast, which(grepl("diamsec_s", names(rast))))
 ncvar_put(ncid_new, diamsec_s, t(as.matrix(rast)), start=c(1,1), count=c(nx,ny))
+rast <- readRDS(RASTER_FILES[grepl("mirca_grow_agg", RASTER_FILES)])
+rast <- subset(rast, which(grepl("grow_start", names(rast))))
+ncvar_put(ncid_new, grow_start, t(as.matrix(rast)), start=c(1,1), count=c(nx,ny))
+rast <- readRDS(RASTER_FILES[grepl("mirca_grow_agg", RASTER_FILES)])
+rast <- subset(rast, which(grepl("grow_end", names(rast))))
+ncvar_put(ncid_new, grow_end, t(as.matrix(rast)), start=c(1,1), count=c(nx,ny))
+
+
 
 # Close netcdf file #
 nc_close( ncid_new )
@@ -123,3 +133,41 @@ tst <- priogrid::make_raster(tst, transpose = T)
 
 
 #### Seasonal NetCDF ####
+
+seasonal_netcdf <- paste(output_folder, "priogrid_seasonal.nc", sep = "")
+
+# Define dimensions #
+xvals <- seq(-179.75, 179.75, by = 0.5)
+yvals <- seq(-89.75, 89.75, by = 0.5)
+months <- 1:12
+
+nx <- length(xvals)
+ny <- length(yvals)
+nt <- length(months)
+
+xdim <- ncdim_def( 'lon', 'degrees_east', xvals )
+ydim <- ncdim_def( 'lat', 'degrees_north', yvals )
+tdim <- ncdim_def( 'month', 'integer', months)
+
+
+mirca_growseason <- ncvar_def(name = "mirca_growseason", units = "weight", dim = list(xdim, ydim, tdim), missval = float_mv, compression = 7)
+
+# Make new output file #
+ncid_new <- nc_create(seasonal_netcdf, list(mirca_growseason), force_v4 = TRUE)
+
+# Populate netcdf file #
+
+
+rast <- readRDS(RASTER_FILES[grepl("mirca_growseas", RASTER_FILES)])
+for(month in months){
+  rast_month <- subset(rast, which(tolower(month.abb[month]) == names(rast)))
+  ncvar_put(ncid_new, mirca_growseason, t(as.matrix(rast_month)), start=c(1,1,which(months == month)), count=c(nx,ny,1))
+}
+
+# Close netcdf file #
+nc_close( ncid_new )
+
+# Example of use
+tst <- priogrid::get_array(seasonal_netcdf, "mirca_growseason", fillvarname = "_FillValue", lon = "lon", lat = "lat",
+                           start = c(1, 1, which(month.abb == "Jan")), count = c(-1, -1, 1) )
+tst <- priogrid::make_raster(tst, transpose = T)
