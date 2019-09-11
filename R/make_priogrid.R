@@ -9,19 +9,29 @@
 #' folders of raw data
 #' @param output_folder Output folder
 
-make_pg <- function(input_folder, output_folder, overwrite = FALSE){
+make_pg <- function(input_folder, output_folder, overwrite = FALSE, yearly = TRUE, static = TRUE, seasonal = TRUE){
    #intermediate_folder <- tempdir()
 
-   priogrid::make_gwcode(paste0(input_folder,'/cshapes/data/cshapes.shp'),
-                         paste0(output_folder,'/gwcode.rds'), overwrite = overwrite)
-   priogrid::make_pop_gpw(paste0(input_folder,'/pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc'),
-                          paste0(output_folder,'/pop_gpw.rds'), overwrite = overwrite)
-   priogrid::make_diamonds(paste0(input_folder,'/diamonds/data/DIADATA.shp'),
-                          paste0(output_folder,'/diamonds.rds'), overwrite = overwrite)
-   priogrid::make_growseas(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
-                           paste0(output_folder, "/mirca_growseas.rds"), overwrite = overwrite)
-   priogrid::make_grow_agg(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
-                           paste0(output_folder, "/mirca_grow_agg.rds"), overwrite = overwrite)
+
+   if(yearly){
+      priogrid::make_gwcode(paste0(input_folder,'/cshapes/data/cshapes.shp'),
+                            paste0(output_folder,'/gwcode.rds'), overwrite = overwrite)
+      priogrid::make_pop_gpw(paste0(input_folder,'/pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc'),
+                             paste0(output_folder,'/pop_gpw.rds'), overwrite = overwrite)
+
+   }
+   if(static){
+      priogrid::make_grow_agg(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
+                              paste0(output_folder, "/mirca_grow_agg.rds"), overwrite = overwrite)
+      priogrid::make_diamonds(paste0(input_folder,'/diamonds/data/DIADATA.shp'),
+                              paste0(output_folder,'/diamonds.rds'), overwrite = overwrite)
+
+   }
+   if(seasonal){
+      priogrid::make_growseas(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
+                              paste0(output_folder, "/mirca_growseas.rds"), overwrite = overwrite)
+   }
+
    #priogrid::make_other_variables(...)
 
    #for(f in list.files(intermediate_folder){
