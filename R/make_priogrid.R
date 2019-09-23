@@ -27,19 +27,24 @@
 #' purrr::walk(var_messages,function(queue){sapply(queue, warning)})
 #' @export
 
-make_pg <- function(input_folder, output_folder, config = NULL){
-
+make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALSE){
    if(is.null(config)){
-      config <- paste(path.package("priogrid"),"config.yaml", sep = "/")
+      config <- priogrid::prio_config()
    }
 
-   config <- yaml::yaml.load_file(config)
+   names(config) <- sapply(config, function(e) e$name)
 
-   messages <- lapply(list.files(inputfolder), function(f){
-      dovar(f, outputfolder, conf[[f]])
+   lapply(config, function(variable_config){
+      path <- file.path(input_folder,variable_config$path)
+
+      dest <- file.path(output_folder,variable_config$name)
+      if(file.exists(dest) &! overwrite){
+         variable_config$fun <- "function(x){stop(\"Output file exists\")}"
+      }
+
+      tryCatch(dovar(path, output_folder, variable_config),
+               error = function(e){paste(variable_config$name,"ERROR:",e$message)})
    })
-
-   messages 
 }
 
 # ================================================
@@ -47,40 +52,38 @@ make_pg <- function(input_folder, output_folder, config = NULL){
 #' dovar
 #'
 #' A dispatch function that applies the function specified in variable_config
-#' to a variable_folder. Subsequently, the result is put through several
+#' to the file in path. Subsequently, the result is put through several
 #' assertions, both a base set of assertions from base_assertions and possibly
 #' also custom assertions specified in the variable_config. Then, data is
 #' written to the output_folder in RDS format.
 #' 
-#' @param variable_folder A folder that is passed to the gen function
-#' @param output_folder Where to write the data. The function creates a folder
+#' @param path A file path that is passed to the gen function 
+#' @param Where to write the data. The function creates a folder
 #' with the same name as the variable folder.
 #' @param variable_config A named list specifying fun and assert. Fun is the
 #' name of the function to apply to the input_folder, while assert (optional)
 #' is a character vector with assertions snippets to apply.
 #' 
 #' @return The function returns a character vector of messages with the results
-#' of assertions. 
-#' 
-#' @examples
-#' dovar("~/Projects/pg/pgdata/gwcodes",
-#'       "~/Projects/pg/outfolder",
-#'       pgBaseConfig(),
-#' )
-#' 
+#' of assertions. The data is written to disk.
 
-dovar <- function(variable_folder, output_folder, variable_config){
-   results <- character() 
-   rast <- eval(parse(text = variable_config$fun))(input_folder) 
+dovar <- function(path, output_folder, variable_config){
+
+
+   # ~ This is where the magic happens ~ 
+   rast <- eval(parse(text = variable_config$fun))(path) 
+
    messages <- base_assertions(rast)
 
+   # * Remove these ? * 
    if("assert" %in% names(variable_config) & length(variable_config$assert) > 0){
       messages <- c(messages , check_assertions(rast, variable_config$assert))
    }
 
-   saveRDS(rast,paste(output_folder,input_folder,"data.rds", sep = "/"))
-   messages 
+   saveRDS(rast,file.path(output_folder,variable_config$name))
+   paste(variable_config$name,messages, sep = ' | ')
 }
+
 # ================================================
 
 #' check_assertions 
@@ -95,13 +98,14 @@ dovar <- function(variable_folder, output_folder, variable_config){
 #' @return The function returns a character vector of messages with the results
 #' of the assertions. 
 
-check_assertions(rast,assertions){
+check_assertions <- function(rast,assertions){
    sapply(assertions, function(assertion){
       res <- eval(parse(text = assertion))
+      if(length(res) > 1) print(assertion)
       if(res){
-         glue("SUCCEEDED: {assertion}")
+         paste0("SUCCEEDED: ",assertion)
       } else {
-         glue("FAILED: {assertion}")
+         paste0("FAILED: ",assertion)
       }
    })
 }
@@ -118,14 +122,34 @@ check_assertions(rast,assertions){
 #' @return The function returns a character vector of messages with the results
 #' of the assertions. 
 
-base_assertions(rast){
+base_assertions <- function(rast){
    assertions <- c(
       "raster::extent(rast) == prio_extent()",
-      "nrow(rast) <- prio_nrow()",
-      "ncol(rast) <- prio_ncol()",
-      "raster::res(rast) == prio_resolution()",
-      "raster::crs(rast) == prio_crs()"
+      "nrow(rast) == prio_nrow()",
+      "ncol(rast) == prio_ncol()",
+      "all(raster::res(rast) == prio_resolution())",
+      "as.character(raster::crs(rast)) == prio_crs()"
    )
    check_assertions(rast,assertions)
+}
+
+# ================================================
+
+#' prio_config 
+#' 
+#' A helper function that returns the standard configuration for
+#' making priogrid.
+#' 
+#' Useful for substituting the standard functions with new ones,
+#' or only doing certain variables.
+#' 
+#' @return Returns a list of named lists containing configuration
+#' info.
+#' 
+#' @export
+
+prio_config <- function(){
+   file.path(find.package("priogrid"),"conf.yaml") %>%
+      yaml::yaml.load_file()
 }
 
