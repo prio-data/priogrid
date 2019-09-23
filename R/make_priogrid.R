@@ -1,95 +1,155 @@
 
+# ================================================
 
-#' Make PRIOGrid from raw data
+#' make_pg
+#' 
+#' A dispatch function that applies functions and assertions to data contained
+#' in a folder hierarchy, with each folder under input_folder containing the
+#' data needed to produce each variable. The function takes the input folder,
+#' an outputfolder which is populated with the same folders as are contained in
+#' the inputfolder, and an optional configfile, which is a YAML formatted
+#' markupfile specifying what functions and assertions pertain to each
+#' variable. The configuration file is specified per variable name, which
+#' corresponds with the names of the folders contained in the inputfolder.
+#' If no custom config file path is provided, the function tries to use the
+#' config that is supplied with the package.
+#' 
+#' @param input_folder A folder containing folders with data for each variable 
+#' @param output_folder The destination folder to which data will be written 
+#' @param config An optional custom config file for custom PRIOGrid builds 
+#' @param config An optional custom config file for custom PRIOGrid builds 
 #'
-#' This is the "master function" that turns raw data
-#' into PRIOGrid.
-#' Not functional, only for illustration.
-#' @param input_folder Location of folder containing
-#' folders of raw data
-#' @param output_folder Output folder
+#' @return The function returns a list of character vectors for each function
+#' containing info about assertions.
+#' 
+#' @examples
+#' var_messages <- make_pg("~/Projects/pg/pgdata","~/Projects/pg/outfolder"
+#' purrr::walk(var_messages,function(queue){sapply(queue, warning)})
+#' @export
 
-make_pg <- function(input_folder, output_folder, overwrite = FALSE, yearly = TRUE, static = TRUE, seasonal = TRUE){
-   #intermediate_folder <- tempdir()
-
-
-   if(yearly){
-      priogrid::make_gwcode(paste0(input_folder,'/cshapes/data/cshapes.shp'),
-                            paste0(output_folder,'/gwcode.rds'), overwrite = overwrite)
-      priogrid::make_pop_gpw(paste0(input_folder,'/pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc'),
-                             paste0(output_folder,'/pop_gpw.rds'), overwrite = overwrite)
-
-   }
-   if(static){
-      priogrid::make_grow_agg(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
-                              paste0(output_folder, "/mirca_grow_agg.rds"), overwrite = overwrite)
-      priogrid::make_diamonds(paste0(input_folder,'/diamonds/data/DIADATA.shp'),
-                              paste0(output_folder,'/diamonds.rds'), overwrite = overwrite)
-
-   }
-   if(seasonal){
-      priogrid::make_growseas(paste0(input_folder, "/mirca/data/CELL_SPECIFIC_CROPPING_CALENDARS.TXT.gz"),
-                              paste0(output_folder, "/mirca_growseas.rds"), overwrite = overwrite)
+make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALSE){
+   if(is.null(config)){
+      config <- priogrid::prio_config()
    }
 
-   #priogrid::make_other_variables(...)
+   names(config) <- sapply(config, function(e) e$name)
 
-   #for(f in list.files(intermediate_folder){
-   #   ...stitch it all together...
-   #}
-}
+   lapply(config, function(variable_config){
+      path <- file.path(input_folder,variable_config$path)
 
-make_gwcode <- function(input_file, output_file, overwrite){
-  if(!overwrite){
-     if(file.exists(output_file)){
-        return(paste("File", output_file, "already exists."))
-     }
-  }
-  infile <- sf::st_read(input_file)
-  rast <- gen_gwcode(infile)
-  saveRDS(rast, file = output_file)
-}
-
-make_pop_gpw <- function(input_file, output_file, overwrite){
-  if(!overwrite){
-     if(file.exists(output_file)){
-        return(paste("File", output_file, "already exists."))
-     }
-  }
-  rast <- gen_pop_gpw_c(input_file)
-  saveRDS(rast, file = output_file)
-}
-
-make_diamonds <- function(input_file, output_file, overwrite){
-   if(!overwrite){
-      if(file.exists(output_file)){
-         return(paste("File", output_file, "already exists."))
+      dest <- file.path(output_folder,variable_config$name)
+      if(file.exists(dest) &! overwrite){
+         variable_config$fun <- "function(x){stop(\"Output file exists\")}"
       }
-   }
-   #infile <- sf::st_read(input_file)
-   rast <- gen_diamonds_s(input_file)
-   saveRDS(rast, file = output_file)
+
+      tryCatch(dovar(path, output_folder, variable_config),
+               error = function(e){paste(variable_config$name,"ERROR:",e$message)})
+   })
 }
 
-make_growseas <- function(input_file, output_file, overwrite){
-   if(!overwrite){
-      if(file.exists(output_file)){
-         return(paste("File", output_file, "already exists."))
-      }
+# ================================================
+
+#' dovar
+#'
+#' A dispatch function that applies the function specified in variable_config
+#' to the file in path. Subsequently, the result is put through several
+#' assertions, both a base set of assertions from base_assertions and possibly
+#' also custom assertions specified in the variable_config. Then, data is
+#' written to the output_folder in RDS format.
+#' 
+#' @param path A file path that is passed to the gen function 
+#' @param Where to write the data. The function creates a folder
+#' with the same name as the variable folder.
+#' @param variable_config A named list specifying fun and assert. Fun is the
+#' name of the function to apply to the input_folder, while assert (optional)
+#' is a character vector with assertions snippets to apply.
+#' 
+#' @return The function returns a character vector of messages with the results
+#' of assertions. The data is written to disk.
+
+dovar <- function(path, output_folder, variable_config){
+
+
+   # ~ This is where the magic happens ~ 
+   rast <- eval(parse(text = variable_config$fun))(path) 
+
+   messages <- base_assertions(rast)
+
+   # * Remove these ? * 
+   if("assert" %in% names(variable_config) & length(variable_config$assert) > 0){
+      messages <- c(messages , check_assertions(rast, variable_config$assert))
    }
-   infile <- read.table(gzfile(input_file), header = T, sep = "\t")
-   rast <- gen_growseas(infile)
-   saveRDS(rast, file = output_file)
+
+   saveRDS(rast,file.path(output_folder,variable_config$name))
+   paste(variable_config$name,messages, sep = ' | ')
 }
 
-make_grow_agg <- function(input_file, output_file, overwrite){
-   if(!overwrite){
-      if(file.exists(output_file)){
-         return(paste("File", output_file, "already exists."))
+# ================================================
+
+#' check_assertions 
+#'
+#' Applies a custom battery of assertions to the provided raster layer, specified 
+#' as a list of expressions in the config file. Each expression must evaluate to either  
+#' true or false. The result is returned as a series of messages.
+#' 
+#' @param rast A raster layer.  
+#' @param assertions A character vector of valid R expressions.
+#' 
+#' @return The function returns a character vector of messages with the results
+#' of the assertions. 
+
+check_assertions <- function(rast,assertions){
+   sapply(assertions, function(assertion){
+      res <- eval(parse(text = assertion))
+      if(length(res) > 1) print(assertion)
+      if(res){
+         paste0("SUCCEEDED: ",assertion)
+      } else {
+         paste0("FAILED: ",assertion)
       }
-   }
-   infile <- read.table(gzfile(input_file), header = T, sep = "\t")
-   rast <- gen_grow_start_end(infile)
-   saveRDS(rast, file = output_file)
+   })
+}
+
+# ================================================
+
+#' base_assertions 
+#'
+#' Applies a basic battery of assertions to the provided grid, making sure it
+#' has the correct size, projection, resolution, in relation to PRIOGrid.
+#' 
+#' @param rast A raster layer.  
+#' 
+#' @return The function returns a character vector of messages with the results
+#' of the assertions. 
+
+base_assertions <- function(rast){
+   assertions <- c(
+      "raster::extent(rast) == prio_extent()",
+      "nrow(rast) == prio_nrow()",
+      "ncol(rast) == prio_ncol()",
+      "all(raster::res(rast) == prio_resolution())",
+      "as.character(raster::crs(rast)) == prio_crs()"
+   )
+   check_assertions(rast,assertions)
+}
+
+# ================================================
+
+#' prio_config 
+#' 
+#' A helper function that returns the standard configuration for
+#' making priogrid.
+#' 
+#' Useful for substituting the standard functions with new ones,
+#' or only doing certain variables.
+#' 
+#' @return Returns a list of named lists containing configuration
+#' info.
+#' 
+#' @export
+
+prio_config <- function(){
+   file.path(find.package("priogrid"),"conf.yaml") %>%
+      yaml::yaml.load_file()
 }
 
