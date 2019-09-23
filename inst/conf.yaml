@@ -1,0 +1,28 @@
+
+- name: diamonds_s
+  fun: priogrid::gen_diamonds_s
+  path: diamonds/data/DIADATA.shp
+
+- name: diamprim_y
+  fun: priogrid::gen_diamprim_y
+  path: diamonds/data/DIADATA.shp
+
+- name: diamsec_y 
+  fun: priogrid::gen_diamsec_y
+  path: diamonds/data/DIADATA.shp
+
+- name: gems_s
+  fun: priogrid::gen_gem_s
+  path: gems/data/GEMDATA.shp
+
+- name: gems_y
+  fun: priogrid::gen_gem_y
+  path: gems/data/GEMDATA.shp
+
+- name: petro_y
+  fun: priogrid::gen_petro_y
+  path: petroleum/data/Petrodata_Onshore_V1.2.shp
+
+- name: petro_s
+  fun: priogrid::gen_petro_s
+  path: petroleum/data/Petrodata_Onshore_V1.2.shp
