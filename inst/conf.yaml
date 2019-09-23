@@ -1,0 +1,10 @@
+
+var1:
+   fun: gen_var1
+   assert:
+      - "rast[10,10] == 1"
+      - "rast[100,100] == 2"
+var1:
+   fun: gen_var2
+   assert:
+      - "rast[15,1] == \"something\""
