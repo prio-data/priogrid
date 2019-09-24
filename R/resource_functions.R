@@ -1,7 +1,5 @@
 # Helper functions --------------------------------------------------------
 ### Some simplifying functions used in functions generating resource variables
-# To be updated
-
 
 ## Create time series
 prio_year <- function(startyear, endyear){
