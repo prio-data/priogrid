@@ -26,3 +26,31 @@
 - name: petro_s
   fun: priogrid::gen_petro_s
   path: petroleum/data/Petrodata_Onshore_V1.2.shp
+
+- name: drug_y 
+  fun: priogrid::gen_drug_y
+  path: drugs/data
+
+- name: goldplacer_y
+  fun: priogrid::gen_goldplacer_y
+  path: gold/data/dGOLD_L.shp
+
+- name: goldplacer_s
+  fun: priogrid::gen_goldplacer_s
+  path: gold/data/dGOLD_L.shp
+
+- name: goldsurface_y
+  fun: priogrid::gen_goldsurface_y
+  path: gold/data/dGOLD_S.shp
+
+- name: goldsurface_s
+  fun: priogrid::gen_goldsurface_s
+  path: gold/data/dGOLD_S.shp
+
+- name: goldvein_y 
+  fun: priogrid::gen_goldvein_y
+  path: gold/data/dGOLD_NL.shp
+
+- name: goldvein_s
+  fun: priogrid::gen_goldvein_s
+  path: gold/data/dGOLD_NL.shp

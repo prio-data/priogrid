@@ -12,17 +12,20 @@ LazyData: true
 Depends:
     data.table
 Imports:
+    tidyr (>= 1.0.0),
+    sf (>= 0.8),
+    glue,
     ncdf4,
     spex,
     lubridate,
     parallel,
     dplyr,
     raster,
-    sf,
     lwgeom,
     velox,
     tictoc,
     crayon,
+    janitor,
     Rcpp
 Suggests: testthat
 RoxygenNote: 6.1.0.9000
