@@ -54,3 +54,23 @@
 - name: goldvein_s
   fun: priogrid::gen_goldvein_s
   path: gold/data/dGOLD_NL.shp
+
+- name: imr_ihme_mean
+  fun: priogrid::gen_imr_ihme_mean
+  path: imr_ihme/data
+
+- name: imr_ihme_sd
+  fun: priogrid::gen_imr_ihme_sd
+  path: imr_ihme/data
+
+- name: imr_ihme_max
+  fun: priogrid::gen_imr_ihme_max
+  path: imr_ihme/data
+
+- name: imr_ihme_min
+  fun: priogrid::gen_imr_ihme_min
+  path: imr_ihme/data
+
+- name: shdi
+  fun: priogrid::gen_shdi
+  path: shdi/data
