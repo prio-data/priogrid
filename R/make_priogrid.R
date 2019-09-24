@@ -43,7 +43,7 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
       }
 
       msgs <- tryCatch(dovar(path, output_folder, variable_config),
-               error = function(e){paste(variable_config$name,"ERROR:",e$message)})
+               error = function(e){paste(variable_config$name," | ERROR:",e$message)})
       sapply(msgs, writeColored)
 
       msgs
