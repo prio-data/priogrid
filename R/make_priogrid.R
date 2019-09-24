@@ -32,6 +32,7 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
       config <- priogrid::prio_config()
    }
 
+   writeLines(priogrid::makeheader)
 
    apply(config,1,function(variable_config){
       variable_config <- as.list(variable_config)
@@ -41,7 +42,7 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
       if(file.exists(dest) &! overwrite){
          variable_config$fun <- "function(x){stop(\"Output file exists\")}"
       }
-      writeColored(glue::glue("INFO: Doing {variable_config$name}"))
+      writeColored(glue::glue("{strrep('*',64)}\nINFO: Doing {variable_config$name}"))
 
       m1 <- Sys.time()
 
@@ -134,11 +135,15 @@ dovar <- function(path, output_folder, variable_config){
 check_assertions <- function(rast,assertions){
    sapply(assertions, function(assertion){
       res <- eval(parse(text = assertion))
-      if(length(res) > 1) print(assertion)
       if(res){
          paste0("SUCCEEDED: ",assertion)
       } else {
-         paste0("FAILED: ",assertion)
+         msg <- paste0("FAILED: ",assertion)
+         if(stringr::str_detect(assertion,"\\=\\=")){
+            exp <- stringr::str_split(assertion, "==")[[1]]
+            vals <- sapply(exp,function(e){eval(parse(text = e))})
+            msg <- paste(msg,crayon::red(glue::glue("{vals[1]} {crayon::yellow('!=')} {vals[2]}")))
+         }
       }
    })
 }
@@ -160,7 +165,7 @@ base_assertions <- function(rast){
       "raster::extent(rast) == prio_extent()",
       "nrow(rast) == prio_nrow()",
       "ncol(rast) == prio_ncol()",
-      "all(raster::res(rast) == prio_resolution())",
+      "max(raster::res(rast)) == prio_resolution()",
       "as.character(raster::crs(rast)) == prio_crs()"
    )
    check_assertions(rast,assertions)

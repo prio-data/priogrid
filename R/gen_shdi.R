@@ -3,14 +3,11 @@
 #' Generate SHDI variable.
 #' Average human development index within each grid cell.
 #'
-#' @param shdi_data SHDI csv data.
-#' @param shdi_sf SHDI shapefile.
+#' @param path Path containing two data files 
 
-gen_shdi <- function(shdi_data, shdi_sf){
-
-  shdi <- read.csv(shdi_data)
-
-  geom <- sf::read_sf(shdi_sf)
+gen_shdi <- function(path){
+  shdi <- read.csv(file.path(path,"SHDI-Complete SD1.csv"))
+  geom <- sf::read_sf(file.path(path,"GDL-SHDI-SHP-2.shp"))
 
   shdi <- shdi %>%
     dplyr::filter(level == "Subnat") %>%
