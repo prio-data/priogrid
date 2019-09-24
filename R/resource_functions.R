@@ -28,10 +28,10 @@ yearly_dummy <- function(data, endyear){
   data <- data %>%
     dplyr::group_by(id) %>%
     dplyr::filter(!is.na(disc.year) | !is.na(prod.year)) %>%
-    dplyr::mutate(startyear = pmin(disc.year, prod.year, na.rm = TRUE),
+    dplyr::mutate(startyear = min(disc.year, prod.year, na.rm = TRUE),
                   year = priogrid::prio_year(startyear, endyear),
                   dummy = 1) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(year) %>%
     dplyr::ungroup()
 }
 
