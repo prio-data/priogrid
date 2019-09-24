@@ -42,9 +42,32 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
          variable_config$fun <- "function(x){stop(\"Output file exists\")}"
       }
 
-      tryCatch(dovar(path, output_folder, variable_config),
+      msgs <- tryCatch(dovar(path, output_folder, variable_config),
                error = function(e){paste(variable_config$name,"ERROR:",e$message)})
+      sapply(msgs, writeColored)
+
+      msgs
    })
+}
+
+# ================================================
+
+#' prio_config 
+#' 
+#' A helper function that returns the standard configuration for
+#' making priogrid.
+#' 
+#' Useful for substituting the standard functions with new ones,
+#' or only doing certain variables.
+#' 
+#' @return Returns a list of named lists containing configuration
+#' info.
+#' 
+#' @export
+
+prio_config <- function(){
+   file.path(find.package("priogrid"),"conf.yaml") %>%
+      yaml::yaml.load_file()
 }
 
 # ================================================
@@ -135,21 +158,27 @@ base_assertions <- function(rast){
 
 # ================================================
 
-#' prio_config 
-#' 
-#' A helper function that returns the standard configuration for
-#' making priogrid.
-#' 
-#' Useful for substituting the standard functions with new ones,
-#' or only doing certain variables.
-#' 
-#' @return Returns a list of named lists containing configuration
-#' info.
-#' 
-#' @export
+#' writeColored
+#'
+#' writeLines wrapper that colors certain things in the output
+#'
+#' @param x A string
+#'
+#'
+#' @examples
+#' writeColored("ERROR: this will be red!")
+#'
 
-prio_config <- function(){
-   file.path(find.package("priogrid"),"conf.yaml") %>%
-      yaml::yaml.load_file()
+writeColored <- function(x){
+   wrappings <- list(
+      "ERROR:" = crayon::red,
+      "SUCCEEDED:" = crayon::green,
+      "FAILED:" = crayon::yellow
+   )
+   for(i in 1:length(wrappings)){
+      color <- names(wrappings)[i]
+      fun <- wrappings[[i]]
+      x <- gsub(color,fun(color),x)
+   }
+   writeLines(x)
 }
-
