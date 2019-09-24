@@ -137,7 +137,7 @@ gen_goldvein_s <- function(golddata_nl){
 # Gold data prep function -------------------------------------------------
 
 prep_gold <- function(golddata){
-  gold <- sf::st_read(golddata)
+  gold <- sf::st_read(golddata, quiet = TRUE)
   gold <- sf::st_set_crs(gold, value = priogrid::prio_crs())
   
   gold <- gold %>%

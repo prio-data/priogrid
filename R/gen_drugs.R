@@ -12,14 +12,16 @@
 #' @param opium_data Opium poppy shapefile from the DRUGDATA dataset.
 
 
-gen_drug_y <- function(cannabis_data, coca_data, opium_data){
-  drugs <- priogrid::prep_drugs(cannabis_data, coca_data, opium_data)
+gen_drug_y <- function(data_dir){
+  files <- c("CANNABIS.shp","COCA BUSH.shp","OPIUM POPPY.shp")
+  paths <- as.list(file.path(data_dir,files))
+  drugs <- do.call(priogrid::prep_drugs, paths)
   
   drugs <- drugs %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(year = priogrid::prio_year(begin, end),
                   drug_y = 1) %>%
-    tidyr::unnest() %>%
+    tidyr::unnest(year) %>%
     dplyr::ungroup()
   
   drugs <- sf::st_cast(drugs, "MULTIPOLYGON")
@@ -36,9 +38,9 @@ gen_drug_y <- function(cannabis_data, coca_data, opium_data){
 
 prep_drugs <- function(cannabis_data, coca_data, opium_data){
   # Load three drug datasets
-  cannabis <- sf::st_read(cannabis_data, stringsAsFactors = FALSE)
-  coca <- sf::st_read(coca_data, stringsAsFactors = FALSE)
-  opium <- sf::st_read(opium_data, stringsAsFactors = FALSE)
+  cannabis <- sf::st_read(cannabis_data, stringsAsFactors = FALSE, quiet = TRUE)
+  coca <- sf::st_read(coca_data, stringsAsFactors = FALSE, quiet = TRUE)
+  opium <- sf::st_read(opium_data, stringsAsFactors = FALSE, quiet = TRUE)
   
   cleanup <- function(data, variables){
     data <- data %>%

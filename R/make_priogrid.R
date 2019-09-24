@@ -32,19 +32,30 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
       config <- priogrid::prio_config()
    }
 
-   names(config) <- sapply(config, function(e) e$name)
 
-   lapply(config, function(variable_config){
+   apply(config,1,function(variable_config){
+      variable_config <- as.list(variable_config)
       path <- file.path(input_folder,variable_config$path)
 
       dest <- file.path(output_folder,variable_config$name)
       if(file.exists(dest) &! overwrite){
          variable_config$fun <- "function(x){stop(\"Output file exists\")}"
       }
+      writeColored(glue::glue("INFO: Doing {variable_config$name}"))
+
+      m1 <- Sys.time()
 
       msgs <- tryCatch(dovar(path, output_folder, variable_config),
                error = function(e){paste(variable_config$name," | ERROR:",e$message)})
+
+      m2 <- Sys.time()
+
+      msgs <- c(msgs,glue::glue(
+         "{variable_config$name} | INFO: {format(m2-m1)} elapsed."
+      ))
+
       sapply(msgs, writeColored)
+
 
       msgs
    })
@@ -67,7 +78,8 @@ make_pg <- function(input_folder, output_folder, config = NULL, overwrite = FALS
 
 prio_config <- function(){
    file.path(find.package("priogrid"),"conf.yaml") %>%
-      yaml::yaml.load_file()
+      yaml::yaml.load_file() %>%
+      dplyr::bind_rows()
 }
 
 # ================================================
@@ -92,17 +104,15 @@ prio_config <- function(){
 
 dovar <- function(path, output_folder, variable_config){
 
-
    # ~ This is where the magic happens ~ 
    rast <- eval(parse(text = variable_config$fun))(path) 
 
    messages <- base_assertions(rast)
 
-   # * Remove these ? * 
-   if("assert" %in% names(variable_config) & length(variable_config$assert) > 0){
-      messages <- c(messages , check_assertions(rast, variable_config$assert))
+   # ! Force inmemory !
+   if(!raster::inMemory(rast)){
+      rast <- raster::readAll(rast)
    }
-
    saveRDS(rast,file.path(output_folder,variable_config$name))
    paste(variable_config$name,messages, sep = ' | ')
 }
@@ -173,7 +183,8 @@ writeColored <- function(x){
    wrappings <- list(
       "ERROR:" = crayon::red,
       "SUCCEEDED:" = crayon::green,
-      "FAILED:" = crayon::yellow
+      "FAILED:" = crayon::yellow,
+      "INFO:" = crayon::blue
    )
    for(i in 1:length(wrappings)){
       color <- names(wrappings)[i]
