@@ -69,7 +69,7 @@ gen_diamonds_s <- function(diamond_data){
 
 prep_diamonds <- function(diamond_data){
 
-  diamonds <- sf::st_read(diamond_data)
+  diamonds <- sf::st_read(diamond_data, quiet = TRUE)
   diamonds <- sf::st_transform(diamonds, crs = priogrid::prio_crs())
 
   diamonds$disc.year <- lubridate::year(diamonds$DISC)

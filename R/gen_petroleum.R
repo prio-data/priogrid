@@ -48,7 +48,7 @@ gen_petro_s <- function(petro_data){
 
 prep_petro <- function(petro_data){
   # Load data
-  petroleum <- sf::st_read(petro_data)
+  petroleum <- sf::st_read(petro_data, quiet = TRUE)
   petroleum <- sf::st_set_crs(petroleum, value = priogrid::prio_crs())
   
   petroleum <- petroleum %>%
