@@ -9,7 +9,7 @@
 gen_imr_ihme_mean <- function(path){
   agg <- priogrid::prio_aggregate_raster(get_ihme_brick(path), fun = mean)
   years <- c(2000, 2005, 2010, 2015)
-  names(agg) <- paste0("imr_ihme_mean", years)
+  names(agg) <- paste0("imr_ihme_mean_", years)
 
   agg
 }
@@ -17,7 +17,7 @@ gen_imr_ihme_mean <- function(path){
 gen_imr_ihme_sd <- function(path){
   agg <- priogrid::prio_aggregate_raster(get_ihme_brick(path), fun = sd)
   years <- c(2000, 2005, 2010, 2015)
-  names(agg) <- paste0("imr_ihme_sd", years)
+  names(agg) <- paste0("imr_ihme_sd_", years)
 
   agg
 }
@@ -26,7 +26,7 @@ gen_imr_ihme_sd <- function(path){
 gen_imr_ihme_max <- function(path){
   agg <- priogrid::prio_aggregate_raster(get_ihme_brick(path), fun = max)
   years <- c(2000, 2005, 2010, 2015)
-  names(agg) <- paste0("imr_ihme_min", years)
+  names(agg) <- paste0("imr_ihme_min_", years)
 
   agg
 }
@@ -34,7 +34,7 @@ gen_imr_ihme_max <- function(path){
 gen_imr_ihme_min <- function(path){
   agg <- priogrid::prio_aggregate_raster(get_ihme_brick(path), fun = min)
   years <- c(2000, 2005, 2010, 2015)
-  names(agg) <- paste0("imr_ihme_min", years)
+  names(agg) <- paste0("imr_ihme_min_", years)
 
   agg
 }
