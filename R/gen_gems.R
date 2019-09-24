@@ -47,7 +47,7 @@ gen_gem_s <- function(gem_data){
 # Gem data prep function --------------------------------------------------
 
 prep_gems <- function(gem_data){
-  gems <- sf::st_read(gem_data)
+  gems <- sf::st_read(gem_data, quiet = TRUE)
   gems <- sf::st_transform(gems, crs = priogrid::prio_crs())
   
   gems$DISC_Y <- priogrid::prio_NA(gems$DISC_Y, 0)
