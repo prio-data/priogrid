@@ -8,22 +8,20 @@
 
 
 
-gen_lgnic <- function(shdi_data, shdi_sf){
+gen_lgnic <- function(path){
+   shdi <- read.csv(file.path(path,"SHDI-Complete SD1.csv"))
+   geom <- sf::read_sf(file.path(path,"GDL-SHDI-SHP-2.shp"))
 
-  shdi <- read.csv(shdi_data)
-
-  geom <- sf::read_sf(shdi_sf)
-
-  shdi <- shdi %>%
-    dplyr::filter(level == "Subnat") %>%
-    dplyr::select(year, GDLCODE, lgnic)
-
-  geom <- geom %>%
-    dplyr::select(GDLCode, geometry)
-
-
-  shdi.full <- merge(geom, shdi, by.x = "GDLCode", by.y = "GDLCODE")
-  shdiyr <- priogrid::yearly_brick(shdi.full, variable = 'lgnic', raster.fun = 'mean')
+   shdi <- shdi %>%
+      dplyr::filter(level == "Subnat") %>%
+      dplyr::select(year, GDLCODE, lgnic)
+ 
+   geom <- geom %>%
+      dplyr::select(GDLCode, geometry)
+ 
+ 
+   shdi.full <- merge(geom, shdi, by.x = "GDLCode", by.y = "GDLCODE")
+   shdiyr <- priogrid::yearly_brick(shdi.full, variable = 'lgnic', raster.fun = 'mean')
 
 }
 

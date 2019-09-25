@@ -7,7 +7,6 @@
 #'
 #' @param gpcp_data GPCP Monthly Mean NetCDF file.
 
-
 gen_prec_gpcp <- function(gpcp_data){
 
   prec <- raster::brick(gpcp_data)
