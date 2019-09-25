@@ -46,7 +46,7 @@ gen_pgland <- function(fname, quiet = TRUE){
    land_gids <- sf::st_intersects(pg_poly, cshp)
    pgland <- pg_poly[lengths(land_gids)> 0,]
    pgland <- sf::st_centroid(pgland)
-   pgland <- raster::rasterize(tst, pg, field = "layer")
+   pgland <- raster::rasterize(pgland, pg, field = "layer")
    return(pgland)
 }
 
