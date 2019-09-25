@@ -74,3 +74,75 @@
 - name: shdi
   fun: priogrid::gen_shdi
   path: shdi/data
+
+- name: geoepr
+  fun: gen_geoepr
+  path: geoepr/data
+
+- name: gcp_mer
+  fun: gen_gcp_mer
+  path: gecon/data/Gecon40_post_final.xls
+
+- name: gcp_ppp
+  fun: gen_gcp_ppp
+  path: gecon/data/Gecon40_post_final.xls
+
+- name: gcp_qual
+  fun: gen_gcp_qual
+  path: gecon/data/Gecon40_post_final.xls
+
+- name: pop_hyd_sum
+  fun: gen_pop_hyd_sum
+  path: hyde_pop/data
+
+- name: pop_hyd_sd
+  fun: gen_pop_hyd_sd
+  path: hyde_pop/data
+
+- name: pop_hyd_min
+  fun: gen_pop_hyd_min
+  path: hyde_pop/data
+
+- name: pop_hyd_max
+  fun: gen_pop_hyd_max
+  path: hyde_pop/data
+
+- name: temp
+  fun: gen_temp
+  path: airmon/data/air.mon.mean.nc
+
+- name: cmr_mean
+  fun: gen_cmr_mean
+  path: hunger-grid/data/uw.asc
+
+- name: cmr_sd
+  fun: gen_cmr_sd
+  path: hunger-grid/data/uw.asc
+
+- name: cmr_min
+  fun: gen_cmr_min
+  path: hunger-grid/data/uw.asc
+
+- name: cmr_max
+  fun: gen_cmr_max
+  path: hunger-grid/data/uw.asc
+
+- name: imr
+  fun: gen_imr
+  path: povmap_cmr/data/povmap_global_subnational_infant_mortality_rates_v2.tif
+
+- name: irrig_sum
+  fun: gen_irrig_sum
+  path: irrig/data
+
+- name: irrig_sd
+  fun: gen_irrig_sd
+  path: irrig/data
+
+- name: irrig_min
+  fun: gen_irrig_min
+  path: irrig/data
+
+- name: irrig_max
+  fun: gen_irrig_max
+  path: irrig/data

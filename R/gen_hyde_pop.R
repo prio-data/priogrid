@@ -1,17 +1,11 @@
-### Hyde population data
+### Hyde poPULATION Data
 
 # Load all data, separate files (popc_xx.asc)
-pop_hyd_load <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005){
-  hyd_1950 <- raster::raster(hyde_1950)
-  hyd_1960 <- raster::raster(hyde_1960)
-  hyd_1970 <- raster::raster(hyde_1970)
-  hyd_1980 <- raster::raster(hyde_1980)
-  hyd_1990 <- raster::raster(hyde_1990)
-  hyd_2000 <- raster::raster(hyde_2000)
-  hyd_2005 <- raster::raster(hyde_2005)
-
-  hyd <- raster::brick(hyd_1950, hyd_1960, hyd_1970, hyd_1980, hyd_1990, hyd_2000, hyd_2005)
-
+pop_hyd_load <- function(path){
+  fnames <- paste0("popd_",as.character(c(seq(1950,2000,10),2005)),"AD.asc") 
+  files <- file.path(path,fnames)
+  rasters <- lapply(files,raster::raster)
+  do.call(raster::brick,rasters)
 }
 
 
@@ -19,8 +13,8 @@ pop_hyd_load <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, 
 #'
 #' Sum of number of persons within each grid cell returned as RasterBrick of all available years.
 
-gen_pop_hyd_sum <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005){
-  hyd <- pop_hyd_load(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005)
+gen_pop_hyd_sum <- function(path){
+  hyd <- pop_hyd_load(path)
 
   pop_hyd_sum <- priogrid::prio_aggregate_raster(hyd, fun = 'sum')
   names(pop_hyd_sum) <- c("pop_hyd_sum_1950", "pop_hyd_sum_1960", "pop_hyd_sum_1970", "pop_hyd_sum_1980", "pop_hyd_sum_1990",
@@ -35,8 +29,8 @@ gen_pop_hyd_sum <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_199
 #' returned as RasterBrick of all available years.
 
 
-gen_pop_hyd_sd <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005){
-  hyd <- pop_hyd_load(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005)
+gen_pop_hyd_sd <- function(path){
+  hyd <- pop_hyd_load(path)
 
 
   pop_hyd_sd <- priogrid::prio_aggregate_raster(hyd, fun = 'sd')
@@ -53,8 +47,8 @@ gen_pop_hyd_sd <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990
 #' Minimum of original pixel values within each grid cell
 #' returned as RasterBrick of all available years.
 
-gen_pop_hyd_min <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005){
-  hyd <- pop_hyd_load(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005)
+gen_pop_hyd_min <- function(path){
+  hyd <- pop_hyd_load(path)
 
   pop_hyd_min <- priogrid::prio_aggregate_raster(hyd, fun = 'min')
   names(pop_hyd_min) <- c("pop_hyd_min_1950", "pop_hyd_min_1960", "pop_hyd_min_1970", "pop_hyd_min_1980", "pop_hyd_min_1990",
@@ -69,8 +63,8 @@ gen_pop_hyd_min <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_199
 #' Maximum of original pixel values within each grid cell
 #' returned as RasterBrick of all available years.
 
-gen_pop_hyd_max <- function(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005){
-  hyd <- pop_hyd_load(hyde_1950, hyde_1960, hyde_1970, hyde_1980, hyde_1990, hyde_2000, hyde_2005)
+gen_pop_hyd_max <- function(path){
+  hyd <- pop_hyd_load(path)
 
   pop_hyd_max <- priogrid::prio_aggregate_raster(hyd, fun = 'max')
 
