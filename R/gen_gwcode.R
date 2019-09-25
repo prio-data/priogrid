@@ -132,7 +132,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    unique_crossections[sapply(unique_crossections, is.null)] <- NULL
 
    pg <- priogrid::prio_blank_grid()
-   pgland <- gen_pgland(fname, quiet = quiet)
+   pgland <- priogrid::gen_pgland(fname, quiet = quiet)
 
    # ca 22 minutter på 1 kjerne
    # Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.
