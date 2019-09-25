@@ -146,3 +146,31 @@
 - name: irrig_max
   fun: gen_irrig_max
   path: irrig/data
+
+- name: lgnic
+  fun: gen_lgnic
+  path: shdi/data
+
+- name: pop_gpw_sum
+  fun: gen_pop_gpw_sum
+  path: pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc
+
+- name: pop_gpw_sd
+  fun: gen_pop_gpw_sd
+  path: pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc
+
+- name: pop_gpw_min
+  fun: gen_pop_gpw_min
+  path: pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc
+
+- name: pop_gpw_max
+  fun: gen_pop_gpw_max
+  path: pop_gpw/data/gpw_v4_population_count_rev11_2pt5_min.nc
+
+- name: prec_gpcc
+  fun: gen_prec_gpcc
+  path: precip/data/precip.mon.total.1x1.v2018.nc
+
+- name: prec_gpcp
+  fun: gen_prec_gpcp
+  path: precip/data/precip.mon.mean.nc
