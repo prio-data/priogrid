@@ -8,21 +8,21 @@
 
 #' Map changes
 #'
-#' Determines which months a set of geometries has changed 
+#' Determines which months a set of geometries has changed
 #' Used to determine when to reraster, such as in
 #' make_gwcodes.
-compare_crossection <- function(crossection_date, cshp){
-  if(crossection_date - months(1) < min(cshp$startdate)){
-    res <- tibble::tibble(date = crossection_date, change = 1)
-  } else {
-    past_crossection <- sf::st_combine(cshp[(crossection_date - months(1)) %within% cshp$date_interval,])
-    cshp_crossection <- sf::st_combine(cshp[crossection_date %within% cshp$date_interval,])
-
-    if(sf::st_equals_exact(cshp_crossection, past_crossection, par = 0, sparse = F) ){
-      res <- tibble::tibble(date = crossection_date, change = 0)
-    } else{
-      res <- tibble::tibble(date = crossection_date, change = 1)
-    }
-  }
-  res
-}
+# compare_crossection <- function(crossection_date, cshp){
+#   if(crossection_date - months(1) < min(cshp$startdate)){
+#     res <- tibble::tibble(date = crossection_date, change = 1)
+#   } else {
+#     past_crossection <- sf::st_combine(cshp[(crossection_date - months(1)) %within% cshp$date_interval,])
+#     cshp_crossection <- sf::st_combine(cshp[crossection_date %within% cshp$date_interval,])
+#
+#     if(sf::st_equals_exact(cshp_crossection, past_crossection, par = 0, sparse = F) ){
+#       res <- tibble::tibble(date = crossection_date, change = 0)
+#     } else{
+#       res <- tibble::tibble(date = crossection_date, change = 1)
+#     }
+#   }
+#   res
+# }
