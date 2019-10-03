@@ -1,4 +1,5 @@
 gen_gwcode <- function(fname, numCores = 1, quiet = TRUE){
+   # Is this the correct way to select?
    gwcode <- gen_gwcode_month(fname, numCores, quiet)
    crossection_dates <- names(gwcode)
    crossection_dates <- lubridate::ymd(sub("X", "", crossection_dates))
@@ -64,9 +65,9 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    calc_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
       if(length(crossection_date) != 1){
-         print("Non-unique crossection date!")
+         message("Non-unique crossection date!")
       }
-      print(crossection_date)
+      message(crossection_date)
 
       # Global crossection of cshapes used to determine correct gwcode
       cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
@@ -76,7 +77,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
       pg_crossection <- pgland[lengths(gids_in_crossection) > 0,]
 
       # Returns the inner join with the largest area owned in each pg cell that have changed since last month.
-      gwcode <- st_join(pg_crossection, cshp_crossection, join = st_intersects, left = FALSE, largest = TRUE) %>%
+      gwcode <- sf::st_join(pg_crossection, cshp_crossection, join = sf::st_intersects, left = FALSE, largest = TRUE) %>%
          dplyr::select(layer, GWCODE)
 
       return(gwcode)
@@ -84,7 +85,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
 
 
    compare_crossection <- function(crossection_date, cshp){
-      print(crossection_date)
+      message(crossection_date)
       if(crossection_date - lubridate::month(1) < min(cshp$startdate)){
          changed_areas <- cshp[crossection_date %within% cshp$date_interval,]
          changed_areas$crossection_date <- crossection_date
@@ -111,7 +112,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    }
 
 
-
+   message("Loading cshapes")
    cshp <- sf::st_read(fname, quiet = quiet)
 
    # Setting day to first in month to ensure all changes are included.
@@ -127,15 +128,17 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
       )
 
    all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
-   # unique_crossections are areas where there have been changes since last month.
+   message("Find all areas and dates where there have been changes since last month.")
    unique_crossections <- parallel::mclapply(all_months, compare_crossection, cshp, mc.cores = numCores)
    unique_crossections[sapply(unique_crossections, is.null)] <- NULL
 
    pg <- priogrid::prio_blank_grid()
+   message("Get the set of grid cells that intersect with land. [priogrid::gen_pgland()] ")
    pgland <- priogrid::gen_pgland(fname, quiet = quiet)
+   pgland <- spex::polygonize(pgland)
 
    # ca 22 minutter på 1 kjerne
-   # Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.
+   message("Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.")
    gwcodes <- parallel::mclapply(unique_crossections, calc_crossection, mc.cores = numCores)
 
    # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
