@@ -161,3 +161,27 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    names(gwcode) <- crossection_dates
    return(gwcode)
 }
+
+gen_dist <- function(ncol = FALSE, nrow = FALSE){
+   pg <- priogrid::prio_blank_grid()
+   pg <- raster::rasterToPoints(pg)
+
+
+   # find smart way to find all combinations on the fly to reduce memory requirement.
+   spg <- pg[c(1:2000),]
+   spg_comb <- expand.grid(spg[,3], spg[,3])
+   spg_comb <- dplyr::tibble("origin" = spg_comb[,1], "dest" = spg_comb[,2])
+   spg <- dplyr::tibble("gid" = spg[,3], "x" = spg[,1], "y" = spg[,2])
+   spg_comb <- dplyr::left_join(spg_comb, spg, by = c("origin" = "gid"))
+   spg_comb <- dplyr::left_join(spg_comb, spg, by = c("dest" = "gid"))
+   names(spg_comb) <- c("origin", "dest", "xorig", "yorig", "xdest", "ydest")
+
+   dt <- data.table::data.table(spg_comb)
+
+   dmat <- geosphere::distm(spg[,1:2], fun=geosphere::distCosine)
+
+   #dt[ , dist := geosphere::distHaversine(matrix(c(xorig, yorig), ncol = 2),
+   #                             matrix(c(xdest, ydest), ncol = 2))]
+
+
+}
