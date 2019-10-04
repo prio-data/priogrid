@@ -1,23 +1,32 @@
+#' gen_gwcode
+#'
+#' Takes the weidmann cshapes data set and returns a
+#' rasterstack for each year that codes the country ownership of each cell
+#' as it looked like 1 January each year.
+#'
+#' @param fname File path to Weidmann cshapes data
+#' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
+#' @param quiet Whether or not sf::st_ functions should print warnings.
 gen_gwcode <- function(fname, numCores = 1, quiet = TRUE){
    # Is this the correct way to select?
    gwcode <- gen_gwcode_month(fname, numCores, quiet)
    crossection_dates <- names(gwcode)
    crossection_dates <- lubridate::ymd(sub("X", "", crossection_dates))
 
-   crossection_dates <- dplyr::tibble("crossection_date" = crossection_dates, "year" = lubridate::year(crossection_dates))
+   all_dates <- seq(lubridate::ymd("1946-1-1"), lubridate::ymd("2019-1-1"), by = "1 year")
+   all <- dplyr::tibble("mydate" = all_dates, "crossection_date" = NA)
 
-   first_crossection_in_year <- dplyr::group_by(crossection_dates, year) %>%
-      dplyr::arrange(crossection_date) %>%
-      dplyr::summarize(crossection_date = first(crossection_date))
-
-   all_years <- dplyr::tibble("year" = 1946:2019)
-   all_years <- dplyr::left_join(all_years, first_crossection_in_year, by = "year") %>%
-      tidyr::fill(crossection_date)
+   for(current_date in all$mydate){
+      closest_matching_date <- max(crossection_dates[crossection_dates <= current_date])
+      all$crossection_date[which(all$mydate == current_date)] <- closest_matching_date
+   }
+   all$year <- lubridate::year(all$mydate)
+   all$crossection_date <- as.Date(all$crossection_date, origin = as.Date("1970-1-1"))
 
    i <- 1
    gwcode_year <- list()
    for(year in 1946:2019){
-      gwcode_index <- which(crossection_dates$crossection_date == all_years$crossection_date[which(all_years$year == year)])
+      gwcode_index <- which(crossection_dates == all$crossection_date[which(all$year == year)])
 
       gwcode_year[[i]] <- subset(gwcode, gwcode_index)
       i <- i + 1
@@ -54,14 +63,13 @@ gen_pgland <- function(fname, quiet = TRUE){
 #' gen_gwcode_month
 #'
 #' Takes the weidmann cshapes data set and returns a
-#' list of rasterlayers for each _changed_ country-
-#' border month. Arguments are passed to rasterize_tile and rasterize_worldtiles.
-#' Useful arguments to specify
+#' rasterstack that encodes the country ownership of a cell as it looked like on the 1st each month.
+#' The rasterstack only includes the months where there was a change from one month to the next.
 #'
 #' @param fname File path to Weidmann cshapes data
 #' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
 #' @param quiet Whether or not sf::st_ functions should print warnings.
-gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
+gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder = NULL){
    calc_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
       if(length(crossection_date) != 1){
@@ -111,6 +119,14 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
       return(changed_areas)
    }
 
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+   pgland <- spex::polygonize(pgland)
 
    message("Loading cshapes")
    cshp <- sf::st_read(fname, quiet = quiet)
@@ -133,9 +149,6 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    unique_crossections[sapply(unique_crossections, is.null)] <- NULL
 
    pg <- priogrid::prio_blank_grid()
-   message("Get the set of grid cells that intersect with land. [priogrid::gen_pgland()] ")
-   pgland <- priogrid::gen_pgland(fname, quiet = quiet)
-   pgland <- spex::polygonize(pgland)
 
    # ca 22 minutter på 1 kjerne
    message("Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.")
@@ -162,26 +175,136 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet){
    return(gwcode)
 }
 
-gen_dist <- function(ncol = FALSE, nrow = FALSE){
+gen_bdist <- function(fname, quiet = TRUE, fun = geosphere::distCosine){
+   message("Get gwcodes for each cell from file.")
+   gwcode_file <- paste0(output_folder, "gwcode.rds")
+   if(!is.null(output_folder) &  file.exists(gwcode_file)){
+      gwcode <- readRDS(gwcode_file)
+   } else{
+      break(paste(gwcode_file, "does not exist. Please calculate gwcode first."))
+   }
+
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+
+   message("Loading cshapes")
+   cshp <- sf::st_read(fname, quiet = quiet)
+
+   # Setting day to first in month to ensure all changes are included.
+   cshp <- cshp %>%
+      dplyr::filter(GWCODE != -1) %>%
+      dplyr::mutate(GWEDAY = 1,
+                    GWSDAY = 1) %>%
+      dplyr::mutate(
+         startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
+         enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
+      dplyr::mutate(
+         date_interval = lubridate::interval(startdate, enddate)
+      )
+
+   message("Calculate the minimum distance between each pgland cell and any country border.")
+   cshp <- sf::st_simplify(sf::st_boundary(cshp), dTolerance = 0.1)
+   pgland <- raster::rasterToPoints(pgland)
+   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
+   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
+   sf::st_crs(pgland) <- sf::st_crs(cshp)
+
    pg <- priogrid::prio_blank_grid()
    pg <- raster::rasterToPoints(pg)
+   pg <- dplyr::tibble("gid" = pg[,3], "lon" = pg[,1], "lat" = pg[,2])
+   pgsea <- pg[!(pg$gid %in% pgland$gid),]
+   pgsea <- sf::st_as_sf(pgsea, coords = c("lon", "lat"))
+   sf::st_crs(pgsea) <- sf::st_crs(cshp)
+   pgsea_buf <- sf::st_buffer(pgsea, dist = 0.8, endCapStyle = "SQUARE")
+   sea_border <- sf::st_intersects(pgland, pgsea_buf)
+   pg_seaborder <- pgland[lengths(sea_border) > 0,]
 
+   dmat_sea <- geosphere::distm(sf::st_coordinates(pgland)[1:10,], sf::st_coordinates(pg_seaborder), fun=geosphere::distCosine)
 
-   # find smart way to find all combinations on the fly to reduce memory requirement.
-   spg <- pg[c(1:2000),]
-   spg_comb <- expand.grid(spg[,3], spg[,3])
-   spg_comb <- dplyr::tibble("origin" = spg_comb[,1], "dest" = spg_comb[,2])
-   spg <- dplyr::tibble("gid" = spg[,3], "x" = spg[,1], "y" = spg[,2])
-   spg_comb <- dplyr::left_join(spg_comb, spg, by = c("origin" = "gid"))
-   spg_comb <- dplyr::left_join(spg_comb, spg, by = c("dest" = "gid"))
-   names(spg_comb) <- c("origin", "dest", "xorig", "yorig", "xdest", "ydest")
+   spg <- pgland[1:2,]
 
-   dt <- data.table::data.table(spg_comb)
+   crossection_date <- lubridate::ymd("1946-1-1")
 
-   dmat <- geosphere::distm(spg[,1:2], fun=geosphere::distCosine)
+   cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
+
+   nearest_points <- sf::st_nearest_points(spg, cshp_crossection)
+   dmat <- geosphere::distm(nearest_points, fun=geosphere::distCosine)
 
    #dt[ , dist := geosphere::distHaversine(matrix(c(xorig, yorig), ncol = 2),
    #                             matrix(c(xdest, ydest), ncol = 2))]
-
-
 }
+
+gen_bdist1 <- function(fname, quiet = TRUE){
+   message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
+
+   message("Get the shortest distance from each pgland cell to any country border.")
+   bdist_file <- paste0(output_folder, "bidst.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(bdist_file)
+   } else{
+      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
+   }
+
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+}
+
+
+gen_bdist2 <- function(fname, quiet = TRUE){
+   message("bdist2: distance in km from the centroid to the border of the nearest neighboring country.")
+
+   message("Get the shortest distance from each pgland cell to any country border.")
+   bdist_file <- paste0(output_folder, "bidst.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(bdist_file)
+   } else{
+      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
+   }
+
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+}
+
+gen_bdist3 <- function(fname, quiet = TRUE){
+   message("bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.")
+
+   message("Get the shortest distance from each pgland cell to any country border.")
+   bdist_file <- paste0(output_folder, "bidst.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(bdist_file)
+   } else{
+      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
+   }
+
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+}
+
+
+
+
+
+#message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
+#message("seadist: distance in km to the nearest ocean")
+#message("riverdist: distance in km to the nearest major river")
+
