@@ -175,13 +175,45 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
    return(gwcode)
 }
 
-gen_bdist <- function(fname, quiet = TRUE, fun = geosphere::distCosine){
+gen_dcoast <- function(fname, quiet = TRUE){
+
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      return(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+
+   pgland <- raster::rasterToPoints(pgland)
+   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
+   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
+   sf::st_crs(pgland) <- sf::st_crs(4326)
+
+   coastline <- rnaturalearth::ne_coastline(returnclass = "sf")
+
+   get_closest_distance <- function(points, features){
+      nearest_feature <- sf::st_nearest_feature(points, features)
+      nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
+      return(sf::st_length(nearest_point))
+   }
+
+   pgland$dcoast <- get_closest_distance(pgland, coastline)
+   pg <- priogrid::prio_blank_grid()
+   dcoast <- raster::rasterize(pgland, pg, field = "dcoast")
+
+   return(dcoast)
+}
+
+gen_bdist1 <- function(fname, quiet = TRUE){
+   message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
+
    message("Get gwcodes for each cell from file.")
    gwcode_file <- paste0(output_folder, "gwcode.rds")
    if(!is.null(output_folder) &  file.exists(gwcode_file)){
       gwcode <- readRDS(gwcode_file)
    } else{
-      break(paste(gwcode_file, "does not exist. Please calculate gwcode first."))
+      return(paste(gwcode_file, "does not exist. Please calculate gwcode first."))
    }
 
    message("Get the set of grid cells that intersect with land from file.")
@@ -209,54 +241,8 @@ gen_bdist <- function(fname, quiet = TRUE, fun = geosphere::distCosine){
 
    message("Calculate the minimum distance between each pgland cell and any country border.")
    cshp <- sf::st_simplify(sf::st_boundary(cshp), dTolerance = 0.1)
-   pgland <- raster::rasterToPoints(pgland)
-   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
-   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
-   sf::st_crs(pgland) <- sf::st_crs(cshp)
 
-   pg <- priogrid::prio_blank_grid()
-   pg <- raster::rasterToPoints(pg)
-   pg <- dplyr::tibble("gid" = pg[,3], "lon" = pg[,1], "lat" = pg[,2])
-   pgsea <- pg[!(pg$gid %in% pgland$gid),]
-   pgsea <- sf::st_as_sf(pgsea, coords = c("lon", "lat"))
-   sf::st_crs(pgsea) <- sf::st_crs(cshp)
-   pgsea_buf <- sf::st_buffer(pgsea, dist = 0.8, endCapStyle = "SQUARE")
-   sea_border <- sf::st_intersects(pgland, pgsea_buf)
-   pg_seaborder <- pgland[lengths(sea_border) > 0,]
 
-   dmat_sea <- geosphere::distm(sf::st_coordinates(pgland)[1:10,], sf::st_coordinates(pg_seaborder), fun=geosphere::distCosine)
-
-   spg <- pgland[1:2,]
-
-   crossection_date <- lubridate::ymd("1946-1-1")
-
-   cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
-
-   nearest_points <- sf::st_nearest_points(spg, cshp_crossection)
-   dmat <- geosphere::distm(nearest_points, fun=geosphere::distCosine)
-
-   #dt[ , dist := geosphere::distHaversine(matrix(c(xorig, yorig), ncol = 2),
-   #                             matrix(c(xdest, ydest), ncol = 2))]
-}
-
-gen_bdist1 <- function(fname, quiet = TRUE){
-   message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
-
-   message("Get the shortest distance from each pgland cell to any country border.")
-   bdist_file <- paste0(output_folder, "bidst.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(bdist_file)
-   } else{
-      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
-   }
-
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
 }
 
 
