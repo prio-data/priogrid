@@ -206,6 +206,13 @@ gen_dcoast <- function(fname, quiet = TRUE){
 }
 
 gen_bdist1 <- function(fname, quiet = TRUE){
+   get_closest_distance <- function(points, features){
+      nearest_feature <- sf::st_nearest_feature(points, features)
+      nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
+      return(sf::st_length(nearest_point))
+   }
+
+
    message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
 
    message("Get gwcodes for each cell from file.")
@@ -224,6 +231,12 @@ gen_bdist1 <- function(fname, quiet = TRUE){
       break(paste(pgland_file, "does not exist. Please calculate pgland first."))
    }
 
+   pgland <- raster::rasterToPoints(pgland)
+   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
+   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
+   sf::st_crs(pgland) <- sf::st_crs(4326)
+
+
    message("Loading cshapes")
    cshp <- sf::st_read(fname, quiet = quiet)
 
@@ -239,8 +252,46 @@ gen_bdist1 <- function(fname, quiet = TRUE){
          date_interval = lubridate::interval(startdate, enddate)
       )
 
-   message("Calculate the minimum distance between each pgland cell and any country border.")
-   cshp <- sf::st_simplify(sf::st_boundary(cshp), dTolerance = 0.1)
+   all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
+
+   crossection_date <- all_months[1]
+   cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
+
+   land_intersections <- sf::st_intersects(cshp_cross)
+
+   # Drop self-reference
+   for(i in 1:length(land_intersections)){
+      land_intersections[i][[1]] <- land_intersections[i][[1]][land_intersections[i][[1]] != i]
+   }
+
+   # only measure distance between the cell and the land contigous neighbors for that country.
+   gwmonth <- subset(gwcode, 1)
+
+   gwmonth <- raster::rasterToPoints(gwmonth)
+   gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
+   gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
+   sf::st_crs(gwmonth) <- sf::st_crs(4326)
+
+   gwmonth <- st_join(pgland, gwmonth)
+
+   # drop cells without any country
+   gwmonth <- na.omit(gwmonth)
+
+
+   gwmonth$bdist1 <- NA
+   for(land_code in unique(gwmonth$gwcode)){
+      land_intersection_index <- which(cshp_cross$GWCODE == land_code)
+      neighbor_index <- land_intersections[land_intersection_index][[1]]
+      neighbors <- cshp_cross[neighbor_index, ]
+      gwmonth[gwmonth$gwcode==land_code,"bdist1"] <- get_closest_distance(dplyr::filter(gwmonth, gwcode == land_code),
+                                     neighbors)
+
+   }
+
+   pg <- priogrid::prio_blank_grid()
+   bdist1 <- raster::rasterize(gwmonth, pg, field = "bdist1")
+
+   return(dcoast)
 
 
 }
