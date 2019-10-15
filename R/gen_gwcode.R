@@ -175,6 +175,13 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
    return(gwcode)
 }
 
+get_closest_distance <- function(points, features){
+   nearest_feature <- sf::st_nearest_feature(points, features)
+   nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
+   return(sf::st_length(nearest_point))
+}
+
+
 gen_dcoast <- function(fname, quiet = TRUE){
 
    message("Get the set of grid cells that intersect with land from file.")
@@ -192,13 +199,8 @@ gen_dcoast <- function(fname, quiet = TRUE){
 
    coastline <- rnaturalearth::ne_coastline(returnclass = "sf")
 
-   get_closest_distance <- function(points, features){
-      nearest_feature <- sf::st_nearest_feature(points, features)
-      nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
-      return(sf::st_length(nearest_point))
-   }
 
-   pgland$dcoast <- get_closest_distance(pgland, coastline)
+   pgland$dcoast <- priogrid::get_closest_distance(pgland, coastline)
    pg <- priogrid::prio_blank_grid()
    dcoast <- raster::rasterize(pgland, pg, field = "dcoast")
 
@@ -206,11 +208,6 @@ gen_dcoast <- function(fname, quiet = TRUE){
 }
 
 gen_bdist1 <- function(fname, quiet = TRUE){
-   get_closest_distance <- function(points, features){
-      nearest_feature <- sf::st_nearest_feature(points, features)
-      nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
-      return(sf::st_length(nearest_point))
-   }
 
 
    message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
@@ -283,7 +280,7 @@ gen_bdist1 <- function(fname, quiet = TRUE){
       land_intersection_index <- which(cshp_cross$GWCODE == land_code)
       neighbor_index <- land_intersections[land_intersection_index][[1]]
       neighbors <- cshp_cross[neighbor_index, ]
-      gwmonth[gwmonth$gwcode==land_code,"bdist1"] <- get_closest_distance(dplyr::filter(gwmonth, gwcode == land_code),
+      gwmonth[gwmonth$gwcode==land_code,"bdist1"] <- priogrid::get_closest_distance(dplyr::filter(gwmonth, gwcode == land_code),
                                      neighbors)
 
    }
