@@ -60,6 +60,25 @@ gen_pgland <- function(fname, quiet = TRUE){
    return(pgland)
 }
 
+gen_landarea <- function(fname, quiet = TRUE){
+   message("Get the set of grid cells that intersect with land from file.")
+   pgland_file <- paste0(output_folder, "pgland.rds")
+   if(!is.null(output_folder) &  file.exists(pgland_file)){
+      pgland <- readRDS(pgland_file)
+   } else{
+      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
+   }
+   pgland <- spex::polygonize(pgland)
+
+   cshp <- sf::st_read(fname, quiet = quiet)
+   cshp <- cshp %>%
+      dplyr::filter(GWCODE != -1, GWEYEAR == max(GWEYEAR))
+
+   land_polyons <- sf::st_intersection(pgland, cshp)
+   #...
+
+}
+
 #' gen_gwcode_month
 #'
 #' Takes the weidmann cshapes data set and returns a
