@@ -60,7 +60,7 @@ gen_pgland <- function(fname, quiet = TRUE){
    return(pgland)
 }
 
-gen_landarea <- function(fname, quiet = TRUE){
+gen_landarea <- function(fname, output_folder, quiet = TRUE){
    message("Get the set of grid cells that intersect with land from file.")
    pgland_file <- paste0(output_folder, "pgland.rds")
    if(!is.null(output_folder) &  file.exists(pgland_file)){
@@ -74,9 +74,20 @@ gen_landarea <- function(fname, quiet = TRUE){
    cshp <- cshp %>%
       dplyr::filter(GWCODE != -1, GWEYEAR == max(GWEYEAR))
 
-   land_polyons <- sf::st_intersection(pgland, cshp)
-   #...
+   land_polygons <- sf::st_intersection(pgland, cshp)
+   land_polygons$pgarea <- sf::st_area(land_polygons)
 
+   sf::st_geometry(land_polygons) <- NULL
+
+   land_polygons <- dplyr::group_by(land_polygons, layer) %>%
+     dplyr::summarise(pgarea = sum(pgarea, na.rm = T))
+   #...
+   pgland <- dplyr::left_join(pgland, land_polygons, by = "layer")
+   pgland <- sf::st_centroid(pgland)
+
+   pg <- priogrid::prio_blank_grid()
+   landarea <- raster::rasterize(pgland, pg, field = "pgarea")
+   return(landarea)
 }
 
 #' gen_gwcode_month
