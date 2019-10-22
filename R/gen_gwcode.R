@@ -207,10 +207,102 @@ gen_dcoast <- function(fname, quiet = TRUE){
    return(dcoast)
 }
 
-gen_bdist1 <- function(fname, quiet = TRUE){
+gen_bdists <- function(fname, quiet = TRUE){
+
+   gen_bdist1_month <- function(crossection_date){
+      #bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.
+
+      cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
+      land_intersections <- sf::st_intersects(cshp_cross)
+
+      # Drop self-reference
+      for(i in 1:length(land_intersections)){
+         land_intersections[i][[1]] <- land_intersections[i][[1]][land_intersections[i][[1]] != i]
+      }
+
+      # only measure distance between the cell and the land contigous neighbors for that country.
+      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- raster::rasterToPoints(gwmonth)
+      gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
+      gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
+      sf::st_crs(gwmonth) <- sf::st_crs(4326)
+      gwmonth <- st_join(pgland, gwmonth)
+      gwmonth <- na.omit(gwmonth) # drop cells without any country
 
 
-   message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
+      # Iterate over each country, and calculate the nearest distance to contiguos neighbor for all gis in country.
+      gwmonth$bdist1 <- NA
+      for(land_code in unique(gwmonth$gwcode)){
+         land_intersection_index <- which(cshp_cross$GWCODE == land_code)
+         neighbor_index <- land_intersections[land_intersection_index][[1]]
+         neighbors <- cshp_cross[neighbor_index, ]
+         gwmonth[gwmonth$gwcode==land_code,"bdist1"] <- priogrid::get_closest_distance(
+                                    dplyr::filter(gwmonth, gwcode == land_code), neighbors)
+      }
+
+      # Rasterize results and return
+      pg <- priogrid::prio_blank_grid()
+      bdist1 <- raster::rasterize(gwmonth, pg, field = "bdist1")
+      return(bdist1)
+   }
+
+   gen_bdist2_month <- function(crossection_date){
+      #bdist2: distance in km from the centroid to the border of the nearest neighboring country.
+      cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
+
+      # only measure distance between the cell and the land contigous neighbors for that country.
+      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- raster::rasterToPoints(gwmonth)
+      gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
+      gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
+      sf::st_crs(gwmonth) <- sf::st_crs(4326)
+      gwmonth <- st_join(pgland, gwmonth)
+      gwmonth <- na.omit(gwmonth) # drop cells without any country
+
+      # Iterate over each country, and calculate the nearest distance to nearest neighbor for all gis in country.
+      gwmonth$bdist2 <- NA
+      for(land_code in unique(gwmonth$gwcode)){
+         neighbors <- cshp_cross[which(cshp_cross$GWCODE != land_code), ]
+         gwmonth[gwmonth$gwcode==land_code,"bdist2"] <- priogrid::get_closest_distance(
+            dplyr::filter(gwmonth, gwcode == land_code), neighbors)
+      }
+
+      # Rasterize results and return
+      pg <- priogrid::prio_blank_grid()
+      bdist2 <- raster::rasterize(gwmonth, pg, field = "bdist2")
+      return(bdist2)
+   }
+
+   gen_bdist3_month <- function(crossection_date){
+      #bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.
+
+      cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
+
+      # only measure distance between the cell and the land contigous neighbors for that country.
+      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- raster::rasterToPoints(gwmonth)
+      gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
+      gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
+      sf::st_crs(gwmonth) <- sf::st_crs(4326)
+      gwmonth <- st_join(pgland, gwmonth)
+      gwmonth <- na.omit(gwmonth) # drop cells without any country
+
+      # Iterate over each country, and calculate the nearest distance to nearest neighbor for all gis in country.
+      gwmonth$bdist3 <- NA
+      for(land_code in unique(gwmonth$gwcode)){
+         this_country <- cshp_cross[which(cshp_cross$GWCODE == land_code), ]
+         gwmonth[gwmonth$gwcode==land_code,"bdist3"] <- priogrid::get_closest_distance(
+            dplyr::filter(gwmonth, gwcode == land_code), this_country)
+      }
+
+      # Rasterize results and return
+      pg <- priogrid::prio_blank_grid()
+      bdist3 <- raster::rasterize(gwmonth, pg, field = "bdist3")
+      return(bdist3)
+
+   }
+
+
 
    message("Get gwcodes for each cell from file.")
    gwcode_file <- paste0(output_folder, "gwcode.rds")
@@ -251,91 +343,24 @@ gen_bdist1 <- function(fname, quiet = TRUE){
 
    all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
 
-   crossection_date <- all_months[1]
-   cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
+   message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
+   bdist1 <- parallel::mclapply(all_months, gen_bdist1_month, mc.cores = numCores)
+   bdist1 <- raster::stack(bdist1)
+   names(bdist1) <- all_months
 
-   land_intersections <- sf::st_intersects(cshp_cross)
-
-   # Drop self-reference
-   for(i in 1:length(land_intersections)){
-      land_intersections[i][[1]] <- land_intersections[i][[1]][land_intersections[i][[1]] != i]
-   }
-
-   # only measure distance between the cell and the land contigous neighbors for that country.
-   gwmonth <- subset(gwcode, 1)
-
-   gwmonth <- raster::rasterToPoints(gwmonth)
-   gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
-   gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
-   sf::st_crs(gwmonth) <- sf::st_crs(4326)
-
-   gwmonth <- st_join(pgland, gwmonth)
-
-   # drop cells without any country
-   gwmonth <- na.omit(gwmonth)
-
-
-   gwmonth$bdist1 <- NA
-   for(land_code in unique(gwmonth$gwcode)){
-      land_intersection_index <- which(cshp_cross$GWCODE == land_code)
-      neighbor_index <- land_intersections[land_intersection_index][[1]]
-      neighbors <- cshp_cross[neighbor_index, ]
-      gwmonth[gwmonth$gwcode==land_code,"bdist1"] <- priogrid::get_closest_distance(dplyr::filter(gwmonth, gwcode == land_code),
-                                     neighbors)
-
-   }
-
-   pg <- priogrid::prio_blank_grid()
-   bdist1 <- raster::rasterize(gwmonth, pg, field = "bdist1")
-
-   return(dcoast)
-
-
-}
-
-
-gen_bdist2 <- function(fname, quiet = TRUE){
    message("bdist2: distance in km from the centroid to the border of the nearest neighboring country.")
+   bdist2 <- parallel::mclapply(all_months, gen_bdist2_month, mc.cores = numCores)
+   bdist2 <- raster::stack(bdist2)
+   names(bdist2) <- all_months
 
-   message("Get the shortest distance from each pgland cell to any country border.")
-   bdist_file <- paste0(output_folder, "bidst.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(bdist_file)
-   } else{
-      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
-   }
-
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
-}
-
-gen_bdist3 <- function(fname, quiet = TRUE){
    message("bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.")
+   bdist3 <- parallel::mclapply(all_months, gen_bdist3_month, mc.cores = numCores)
+   bdist3 <- raster::stack(bdist3)
+   names(bdist3) <- all_months
 
-   message("Get the shortest distance from each pgland cell to any country border.")
-   bdist_file <- paste0(output_folder, "bidst.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(bdist_file)
-   } else{
-      break(paste(bdist_file, "does not exist. Please calculate bdist first."))
-   }
 
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
+   return(list(bdist1, bdist2, bdist3))
 }
-
-
-
 
 
 #message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
