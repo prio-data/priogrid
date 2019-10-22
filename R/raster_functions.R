@@ -39,8 +39,7 @@ prio_raster <- function(x){
 }
 
 
- get_array <- function(file, variable, fillvarname, lon=NULL, lat=NULL, ...){
-  #TODO Needs documentation
+get_array <- function(file, variable, fillvalue, lon=NULL, lat=NULL, ...){
   nc <- nc_open(file)
 
   if(missing(lon) & missing(lat)){
@@ -48,41 +47,31 @@ prio_raster <- function(x){
     lat <- NA
     res <- NA
   } else{
-    longitudes <- ncvar_get(nc, lon, verbose = F)
-    latitudes <- ncvar_get(nc, lat, verbose = F)
-    lonres <- 360 / length(longitudes)
-    latres <- 180 / length(latitudes)
+    lon <- ncvar_get(nc, lon, verbose = F)
+    lat <- ncvar_get(nc, lat, verbose = F)
+    res <- (lon[2]-lon[1])/2
 
-  }
+  } # If I want to add spatial indexing to the function, this information is necessary.
 
-  fillvarname <- ncatt_get(nc, varid=variable, attname=fillvarname)
+  fillvalue <- ncatt_get(nc, varid=variable, attname=fillvalue)
 
   nc_array <- ncvar_get(nc, variable, ...)
-
-  nc_array[nc_array == fillvarname$value] <- NA
+  nc_array[nc_array == fillvalue$value] <- NA
   nc_close(nc)
 
-  return(list("data" = nc_array,
-              "lon" = longitudes, "lat" = latitudes,
-              "lonres" = lonres, "latres" = latres))
+  return(list("data" = nc_array, "lon" = lon, "lat" = lat, "res" = res))
 }
 
-make_raster <- function(nclist, transpose=FALSE, crs=NULL){
-  #TODO Needs documentation
-  #TODO perhaps a better name? make_raster is too generic
+make_raster <- function(nclist, flip_poles=FALSE, transpose=FALSE, crs=NULL){
+  if(transpose){nclist$data <- t(nclist$data)}
 
-  if(transpose){
-     data <- t(nclist$data)
-  } else {
-     data <- nclist$data
-  }
+  res <- raster(nclist$data, xmn =  min(nclist$lon)-nclist$res, xmx = max(nclist$lon)+nclist$res,
+                ymn = min(nclist$lat)-nclist$res, ymx = max(nclist$lat)+nclist$res,
+                crs=crs)
 
-  raster(data,
-      xmn =  min(nclist$lon)-nclist$lonres,
-      xmx = max(nclist$lon)+nclist$lonres,
-      ymn = min(nclist$lat)-nclist$latres,
-      ymx = max(nclist$lat)+nclist$latres,
-      crs=crs)
+  if(flip_poles){res <- flip(res, direction="y")}
+
+  return(res)
 }
 
 #' Raster points
