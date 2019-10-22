@@ -212,7 +212,7 @@ get_closest_distance <- function(points, features){
 }
 
 
-gen_dcoast <- function(fname, quiet = TRUE){
+gen_dcoast <- function(output_folder, quiet = TRUE){
 
    message("Get the set of grid cells that intersect with land from file.")
    pgland_file <- paste0(output_folder, "pgland.rds")
@@ -227,6 +227,7 @@ gen_dcoast <- function(fname, quiet = TRUE){
    pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
    sf::st_crs(pgland) <- sf::st_crs(4326)
 
+   # this should be swapped with cshapes. we miss several islands here.
    coastline <- rnaturalearth::ne_coastline(returnclass = "sf")
 
 
