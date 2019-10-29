@@ -134,7 +134,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
 
          if(any(new_changes)){
             cshp_crossection$changes <- new_changes
-            past_crossection$changes <- lengths(sf::st_equals_exact(past_crossection, cshp_crossection, par = 0)) == 0
+            past_crossection$changes <- lengths(sf::st_equals(past_crossection, cshp_crossection)) == 0
 
             cshp_crossection <- dplyr::filter(cshp_crossection, changes)
             past_crossection <- dplyr::filter(past_crossection, changes)
@@ -163,13 +163,23 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
 
    # Setting day to first in month to ensure all changes are included.
    cshp <- cshp %>%
-      dplyr::filter(GWCODE != -1) %>%
-      dplyr::mutate(GWEDAY = 1,
-                    GWSDAY = 1) %>%
-      dplyr::mutate(
+     dplyr::filter(GWCODE != -1) %>%
+     dplyr::mutate(
+       startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
+       enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
+     dplyr::mutate(
+       same_month = year(startdate) == year(enddate) & month(startdate) == month(enddate)
+     ) %>%
+     dplyr::filter(same_month == F & startdate != "1991-12-16") %>% # Hack for now. Multiple changes within each month.
+     dplyr::mutate(GWSDAY = 1,
+                    GWEDAY = 1) %>%
+     dplyr::mutate(
          startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
          enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-      dplyr::mutate(
+     dplyr::mutate(
+       enddate = enddate - lubridate::days(1) # End up until, but not including
+     ) %>%
+     dplyr::mutate(
          date_interval = lubridate::interval(startdate, enddate)
       )
 
@@ -238,9 +248,9 @@ gen_dcoast <- function(output_folder, quiet = TRUE){
    return(dcoast)
 }
 
-gen_bdists <- function(fname, quiet = TRUE){
+gen_bdists <- function(fname, output_folder, numCores = 1, quiet = TRUE){
 
-   gen_bdist1_month <- function(crossection_date){
+   gen_bdist1_month <- function(crossection_date, monthlist){
       #bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.
 
       cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
@@ -252,7 +262,7 @@ gen_bdists <- function(fname, quiet = TRUE){
       }
 
       # only measure distance between the cell and the land contigous neighbors for that country.
-      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- subset(gwcode, which(crossection_date %in% monthlist))
       gwmonth <- raster::rasterToPoints(gwmonth)
       gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
       gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
@@ -274,15 +284,18 @@ gen_bdists <- function(fname, quiet = TRUE){
       # Rasterize results and return
       pg <- priogrid::prio_blank_grid()
       bdist1 <- raster::rasterize(gwmonth, pg, field = "bdist1")
+
+      if(is.null(bdist1)) bdist1 <- "was null"
+
       return(bdist1)
    }
 
-   gen_bdist2_month <- function(crossection_date){
+   gen_bdist2_month <- function(crossection_date, monthlist){
       #bdist2: distance in km from the centroid to the border of the nearest neighboring country.
       cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
 
       # only measure distance between the cell and the land contigous neighbors for that country.
-      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- subset(gwcode, which(crossection_date %in% monthlist))
       gwmonth <- raster::rasterToPoints(gwmonth)
       gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
       gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
@@ -304,13 +317,13 @@ gen_bdists <- function(fname, quiet = TRUE){
       return(bdist2)
    }
 
-   gen_bdist3_month <- function(crossection_date){
+   gen_bdist3_month <- function(crossection_date, monthlist){
       #bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.
 
       cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
 
       # only measure distance between the cell and the land contigous neighbors for that country.
-      gwmonth <- subset(gwcode, which(crossection_date %in% all_months))
+      gwmonth <- subset(gwcode, which(crossection_date %in% monthlist))
       gwmonth <- raster::rasterToPoints(gwmonth)
       gwmonth <- dplyr::tibble("gwcode" = gwmonth[,3], "lon" = gwmonth[,1], "lat" = gwmonth[,2])
       gwmonth <- sf::st_as_sf(gwmonth, coords = c("lon", "lat"))
@@ -343,6 +356,18 @@ gen_bdists <- function(fname, quiet = TRUE){
       return(paste(gwcode_file, "does not exist. Please calculate gwcode first."))
    }
 
+   message("Get monthly gwcodes for each cell from file.")
+   gwcode_m_file <- paste0(output_folder, "gwcode_month.rds")
+   if(!is.null(output_folder) &  file.exists(gwcode_m_file)){
+     gwcode_m <- readRDS(gwcode_m_file)
+   } else{
+     return(paste(gwcode_m_file, "does not exist. Please calculate gwcode_month first."))
+   }
+
+   months_with_changes <- names(gwcode_m)
+   rm(gwcode_m)
+   months_with_changes <- lubridate::ymd(sub("X", "", months_with_changes))
+
    message("Get the set of grid cells that intersect with land from file.")
    pgland_file <- paste0(output_folder, "pgland.rds")
    if(!is.null(output_folder) &  file.exists(pgland_file)){
@@ -372,22 +397,24 @@ gen_bdists <- function(fname, quiet = TRUE){
          date_interval = lubridate::interval(startdate, enddate)
       )
 
-   all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
 
    message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
-   bdist1 <- parallel::mclapply(all_months, gen_bdist1_month, mc.cores = numCores)
+   #bdist1 <- parallel::mclapply(months_with_changes, gen_bdist1_month, monthlist = months_with_changes, mc.cores = 11, mc.preschedule = FALSE)
+   bdist1 <- lapply(months_with_changes, gen_bdist1_month, monthlist = months_with_changes)
    bdist1 <- raster::stack(bdist1)
-   names(bdist1) <- all_months
+   names(bdist1) <- months_with_changes
 
    message("bdist2: distance in km from the centroid to the border of the nearest neighboring country.")
-   bdist2 <- parallel::mclapply(all_months, gen_bdist2_month, mc.cores = numCores)
+   #bdist2 <- parallel::mclapply(months_with_changes, gen_bdist2_month, monthlist = months_with_changes, mc.cores = numCores)
+   bdist2 <- lapply(months_with_changes, gen_bdist2_month, monthlist = months_with_changes)
    bdist2 <- raster::stack(bdist2)
-   names(bdist2) <- all_months
+   names(bdist2) <- months_with_changes
 
    message("bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.")
-   bdist3 <- parallel::mclapply(all_months, gen_bdist3_month, mc.cores = numCores)
+   #bdist3 <- parallel::mclapply(months_with_changes, gen_bdist3_month, monthlist = months_with_changes, mc.cores = numCores)
+   bdist3 <- lapply(months_with_changes, gen_bdist3_month, monthlist = months_with_changes)
    bdist3 <- raster::stack(bdist3)
-   names(bdist3) <- all_months
+   names(bdist3) <- months_with_changes
 
 
    return(list(bdist1, bdist2, bdist3))
