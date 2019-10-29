@@ -141,7 +141,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
 
             changed_areas <- rbind(cshp_crossection, past_crossection)
             # Combine and buffer to make sure area-calculations are done again for bordering cells. st_union to check validity.
-            changed_areas <- st_as_sf(st_union(st_buffer(st_combine(changed_areas), 1)))
+            changed_areas <- sf::st_as_sf(sf::st_union(sf::st_buffer(sf::st_combine(changed_areas), 1)))
             changed_areas$crossection_date <- crossection_date
 
          } else{
