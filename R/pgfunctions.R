@@ -1,10 +1,10 @@
 # ================================
-# Useful utility functions for 
-# working with PRIOGrid 
+# Useful utility functions for
+# working with PRIOGrid
 # ================================
 
 #' Get column and row number based on PRIO-GRID ID with ncol and nrow.
-#' 
+#'
 #' @param gid An integer cell id.
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
@@ -12,21 +12,21 @@
 #' \itemize{
 #'   \item X Column number.
 #'   \item Y Row number.
-#' } 
+#' }
 #' @examples
 #' pg <- create_pg_indices(3, 3)
 #' getXY(5, 3, 3)
 getXY <- function(gid, ncol, nrow){
   rownum <- ceiling(gid/ncol)
-  
+
   colnum <- gid %% ncol
   if(colnum == 0){colnum = ncol}
-  
+
   return(c("X"=colnum, "Y"=rownum))
 }
 
 #' Create matrix with index numbering conventions as for PRIO-GRID.
-#' 
+#'
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
 #' @return A ncol*nrow matrix with integer indices.
@@ -48,7 +48,7 @@ create_pg_indices <- function(ncol, nrow){
 
 #' Get nth order neighbors in PRIO-GRID.
 #' NB! This does not work!
-#' 
+#'
 #' @param gid The GID to the cell that you would like to find the neighbors of.
 #' @param norder The nth order of neighbors.
 #' @param ncol The number of columns in the grid.
@@ -65,20 +65,20 @@ getNeighbors <- function(gid, norder=1, ncol=720, nrow=360, includeSelf=FALSE){
   Y <- (XY[2]-norder):(XY[2]+norder)
   XY <- expand.grid(X, Y)
   names(XY) <- c("X", "Y")
-  
-  
+
+
   XY$gid <- XY$Y*ncol - (ncol-XY$X)
   if(includeSelf){
     return(XY$gid)
   } else{
-    return(XY$gid[XY$gid!=gid])  
+    return(XY$gid[XY$gid!=gid])
   }
-  
+
 }
 
 #' Get first order neighbors in PRIO-GRID.
 #' TODO: does this work as cell2nb in spdep? Must probably map to PG indices?
-#' 
+#'
 #' @param x The GID to the cell that you would like to find the neighbors of.
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
@@ -89,29 +89,29 @@ getNeighbors <- function(gid, norder=1, ncol=720, nrow=360, includeSelf=FALSE){
 #' pgneighbors(1, ncol=5, nrow=5)
 
 pgneighbors <- function(x, ncol, nrow, asmat=TRUE){
-  
+
   farright <- ncol*1:nrow
   farleft <- c(1, farright[-length(farright)]+1)
   toprow <- ncol*nrow - ncol:1 + 1
   bottomrow <- 1:ncol
-  
+
   #all(farleft + ncol-1 == farright
   if (x %in% farright){
     # x on the far right side
     uppern <- c(x+ncol-1, x+ncol, x+1)
-    midn <- c(x-1, x-ncol+1) 
+    midn <- c(x-1, x-ncol+1)
     lown <- c(x-ncol-1, x-ncol, x-(2*ncol)+1)
   } else if (x %in% farleft){
     # x on the far left side
     uppern <- c(x+(2*ncol)-1, x+ncol, x+ncol+1)
-    midn <- c(x+ncol-1, x+1) 
+    midn <- c(x+ncol-1, x+1)
     lown <- c(x-1, x-ncol, x-ncol+1)
   } else {
     uppern <- c(x+ncol-1, x+ncol, x+ncol+1)
-    midn <- c(x-1, x+1) 
+    midn <- c(x-1, x+1)
     lown <- c(x-ncol-1, x-ncol, x-ncol+1)
   }
-  
+
   if(asmat==TRUE){
     midn <- c(midn[1], NA, midn[2])
     if(x %in% toprow){
@@ -121,7 +121,7 @@ pgneighbors <- function(x, ncol, nrow, asmat=TRUE){
     } else{
       return(rbind(uppern, midn, lown))
     }
-    
+
   } else {
     if(x %in% toprow){
       return(c(midn, lown))
@@ -136,7 +136,7 @@ pgneighbors <- function(x, ncol, nrow, asmat=TRUE){
 pgneighbors_v <- Vectorize(pgneighbors, vectorize.args=c("x"))
 
 #' Get first order neighbors in PRIO-GRID, vectorized version.
-#' 
+#'
 #' @param gids The GIDs to the cells that you would like to find the neighbors of.
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
@@ -152,14 +152,14 @@ pgneighbors_nnb <- function(gids, ncol, nrow){
   return(df)
 }
 
-#' Blank GRID 
+#' Blank GRID
 #' Returns a blank grid with default PRIOGrid dimensions
 #'
 #' @param ncol Number of columns, defaults to prio_ncol
 #' @param nrow Number of rows, defaults to prio_nrow
 #' @param crs CRS string, defaults to prio_crs
-#' 
-#' @return A blank grid 
+#'
+#' @return A blank grid
 #' @export
 prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE){
    if(!ncol){
@@ -181,13 +181,13 @@ prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FA
    pg
 }
 
-#' Polygonize grid 
+#' Polygonize grid
 #'
 #' Returns a polygon version of PRIOGrid, meaning a grid of square polygons
 #'
-#' @param rastergrid A raster 
-#' 
-#' @return A polygon grid 
+#' @param rastergrid A raster
+#'
+#' @return A polygon grid
 prio_polygonize_grid <- function(rastergrid){
    poly <- spex::polygonize(rastergrid)
    poly$pgid <- poly$layer
@@ -197,8 +197,8 @@ prio_polygonize_grid <- function(rastergrid){
    poly
 }
 
-#' Raster layers 
-#' 
+#' Raster layers
+#'
 #' Returns a list of n rasters where n = length(unique(values(raster)))
 #' (Might be) useful for partitioning a raster into separate instances for
 #' more effective computation.
@@ -209,7 +209,7 @@ prio_raster_layers <- function(raster){
    unique_values <- unique_values[!is.na(unique_values)]
 
    lapply(unique_values, function(x){
-      copy <- raster 
+      copy <- raster
       values(copy) <- ifelse(values(copy) == x,values(copy),NA)
       copy
    })
@@ -217,7 +217,7 @@ prio_raster_layers <- function(raster){
 
 
 #' Raster points
-#' 
+#'
 #' Converts a raster to a set of points, optionally
 #' removing missing values.
 #' @return An sf with column val = values(raster)
@@ -235,6 +235,18 @@ raster_points <- function(raster, na.rm = TRUE){
       })
 
    tibble::tibble(val = raster_values) %>%
-     st_sf(geometry = pts) 
+     st_sf(geometry = pts)
 }
 
+#' raster_to_table
+#'
+#' Converts a raster to a tibble with x, y, mydate and raster value
+#' @return A tibble with columns x, y, mydate, and value
+raster_to_table <- function(raster){
+  df <- raster::rasterToPoints(raster)
+  df <- dplyr::as_tibble(df)
+  df <- tidyr::gather(df, key = "mydate", value = "value", -x, -y)
+  df$mydate <- sub("X", "", df$mydate)
+  df$mydate <- lubridate::ymd(df$mydate)
+  return(df)
+}
