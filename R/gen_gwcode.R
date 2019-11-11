@@ -284,7 +284,6 @@ gen_dcoast <- function(fname, output_folder, quiet = TRUE){
    pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
    sf::st_crs(pgland) <- sf::st_crs(4326)
 
-
    # We use GSHHG, with the "low" resolution (GSHHS_l_L1.shp)
    coastline <- sf::st_read(fname, quiet = quiet)
    coastline <- sf::st_boundary(coastline)
