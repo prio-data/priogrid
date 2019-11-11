@@ -111,14 +111,14 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
 
          if(any(new_changes)){
             cshp_crossection$changes <- new_changes
-            past_crossection$changes <- lengths(sf::st_equals_exact(past_crossection, cshp_crossection, par = 0)) == 0
+            #past_crossection$changes <- lengths(sf::st_equals_exact(past_crossection, cshp_crossection, par = 0)) == 0
 
             cshp_crossection <- dplyr::filter(cshp_crossection, changes)
-            past_crossection <- dplyr::filter(past_crossection, changes)
+            #past_crossection <- dplyr::filter(past_crossection, changes)
 
-            changed_areas <- rbind(cshp_crossection, past_crossection)
+            #changed_areas <- rbind(cshp_crossection, past_crossection)
             # Combine and buffer to make sure area-calculations are done again for bordering cells. st_union to check validity.
-            geometry <- sf::st_union(sf::st_buffer(sf::st_combine(changed_areas), 1))
+            geometry <- sf::st_union(sf::st_buffer(sf::st_combine(cshp_crossection), 1))
             changed_areas <- sf::st_sf(geometry)
             changed_areas$crossection_date <- crossection_date
 
@@ -147,9 +147,9 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
       dplyr::mutate(
          startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
          enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-      dplyr::mutate(
-         enddate = enddate - lubridate::days(1) # End up until, but not including
-      ) %>%
+#      dplyr::mutate(
+#         enddate = enddate - lubridate::days(1) # End up until, but not including
+#      ) %>%
       dplyr::mutate(
          date_interval = lubridate::interval(startdate, enddate)
       )
@@ -228,9 +228,9 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
      dplyr::mutate(
          startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
          enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-     dplyr::mutate(
-       enddate = enddate - lubridate::days(1) # End up until, but not including
-     ) %>%
+#     dplyr::mutate(
+#       enddate = enddate - lubridate::days(1) # End up until, but not including
+#     ) %>%
      dplyr::mutate(
          date_interval = lubridate::interval(startdate, enddate)
       )
@@ -579,9 +579,9 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
       dplyr::mutate(
          startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
          enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-      dplyr::mutate(
-         enddate = enddate - lubridate::days(1) # End up until, but not including
-      ) %>%
+ #     dplyr::mutate(
+ #        enddate = enddate - lubridate::days(1) # End up until, but not including
+ #     ) %>%
       dplyr::mutate(
          date_interval = lubridate::interval(startdate, enddate)
       )
