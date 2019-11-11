@@ -296,7 +296,7 @@ gen_dcoast <- function(fname, output_folder, quiet = TRUE){
    return(dcoast)
 }
 
-gen_driver(fnames, output_folder, quiet = TRUE){
+gen_driver <- function(fnames, output_folder, quiet = TRUE){
    river1 <- fnames[1]
    river2 <- fnames[2]
    river3 <- fnames[3]
