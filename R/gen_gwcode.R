@@ -118,8 +118,8 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
 
             changed_areas <- rbind(cshp_crossection, past_crossection)
             # Combine and buffer to make sure area-calculations are done again for bordering cells. st_union to check validity.
-            changed_areas <- sf::st_union(sf::st_buffer(sf::st_combine(changed_areas), 1))
-            changed_areas <- sf::st_sf(sf::st_union(sf::st_buffer(sf::st_combine(changed_areas), 1)))
+            geometry <- sf::st_union(sf::st_buffer(sf::st_combine(changed_areas), 1))
+            changed_areas <- sf::st_sf(geometry)
             changed_areas$crossection_date <- crossection_date
 
          } else{
@@ -521,7 +521,7 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
 
       cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
 
-      gwcode_index <- which(crossection_date %in% all_months)
+      gwcode_index <- which(all_months %in% crossection_date)
       gw_crossection <- subset(gwcode, gwcode_index)
 
       gw_crossection <- raster::rasterToPoints(gw_crossection)
@@ -535,10 +535,10 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
 
 
       gw_crossection$capdist <- NA
-      for(gwcode in unique(gw_crossection$gwcode)){
-         gw_crossection$capdist[which(gw_crossection$gwcode == gwcode)] <- priogrid::get_closest_distance(
-            gw_crossection[which(gw_crossection$gwcode == gwcode),],
-            cshp_crossection[which(cshp_crossection$GWCODE == gwcode),])
+      for(country_id in unique(gw_crossection$gwcode)){
+         gw_crossection$capdist[which(gw_crossection$gwcode == country_id)] <- priogrid::get_closest_distance(
+            gw_crossection[which(gw_crossection$gwcode == country_id),],
+            cshp_crossection[which(cshp_crossection$GWCODE == country_id),])
       }
 
 
@@ -548,8 +548,10 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
    }
 
    cshp <- sf::st_read(fname, quiet = T)
+   cshp_crs <- sf::st_crs(cshp)
    sf::st_geometry(cshp) <- NULL
    cshp <- sf::st_as_sf(cshp, coords = c("CAPLONG", "CAPLAT"))
+   sf::st_crs(cshp) <- cshp_crs
 
    # Setting day to first in month to ensure all changes are included.
    cshp <- cshp %>%
@@ -591,7 +593,7 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
 
    all_months <- lubridate::ymd(sub("X", "", names(gwcode)))
 
-   capdist <- parallel::mclapply(changed_areas, calc_crossection, all_months = all_months, mc.cores = 1)
+   capdist <- parallel::mclapply(changed_areas, calc_crossection, all_months = all_months, mc.cores = numCores)
 
    pg <- priogrid::prio_blank_grid()
    # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
@@ -601,7 +603,8 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
    current_raster[] <- NA
    for(j in 1:length(capdist)){
       dc <- capdist[[j]]
-      current_raster[match(dc$layer, pg[])] <- dc$capdist
+
+      current_raster[!is.na(dc)] <- dc[!is.na(dc)]
       rasters[[i]] <- current_raster
       i <- i + 1
    }
@@ -614,6 +617,3 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
    names(capdist) <- crossection_dates
    return(capdist)
 }
-#message("seadist: distance in km to the nearest ocean")
-#message("riverdist: distance in km to the nearest major river")
-
