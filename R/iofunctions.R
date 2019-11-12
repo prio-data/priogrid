@@ -11,7 +11,7 @@ stream.table <- function(filename, chunksize, ...){
          tabletext <- header
       }
       print(tabletext)
-      read.table(text = tabletext, 
+      read.table(text = tabletext,
                  header = T,
                  ...)
    }
@@ -35,3 +35,10 @@ stream.file <- function(filename, chunksize, ...){
       }
    }
 }
+
+get_rds_file <- function(fname, output_folder){
+   file_path <- paste0(output_folder, fname)
+   robj <- readRDS(file_path)
+   return(robj)
+}
+

@@ -156,10 +156,16 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
 
    all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
    message("Find all areas and dates where there have been changes since last month.")
-   unique_crossections <- parallel::mclapply(all_months, compare_crossection, cshp, mc.cores = numCores)
-   unique_crossections[sapply(unique_crossections, is.null)] <- NULL
+   changed_areas <- parallel::mclapply(all_months, compare_crossection, cshp, mc.cores = numCores)
+   changed_areas[sapply(changed_areas, is.null)] <- NULL
 
-   return(unique_crossections)
+   crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
+   crossection_dates <- as.character(as.Date(crossection_dates, origin = as.Date("1970-1-1")))
+
+   names(changed_areas) <- crossection_dates
+
+
+   return(changed_areas)
 }
 
 #' gen_gwcode_month
@@ -445,49 +451,33 @@ gen_bdist3_month <- function(crossection, gwcode, cshp){
 
 gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet = TRUE){
 
-  message("Get monthly gwcodes for each cell from file.")
-  gwcode_file <- paste0(output_folder, "gwcode_month.rds")
-  if(!is.null(output_folder) &  file.exists(gwcode_file)){
-    gwcode <- readRDS(gwcode_file)
-  } else{
-    return(paste(gwcode_file, "does not exist. Please calculate gwcode_month first."))
-  }
 
-  message("Get the countries where the border changed from one month to the next.")
-  changed_areas_file <- paste0(output_folder, "changed_areas.rds")
-  if(!is.null(output_folder) &  file.exists(changed_areas_file)){
-    changed_areas <- readRDS(changed_areas_file)
-  } else{
-    break(paste(changed_areas_file, "does not exist. Please calculate changed_areas first."))
-  }
+  gwcode <- priogrid::get_rds_file("gwcode_month.rds", output_folder = output_folder)
+  changed_areas <- priogrid::get_rds_file("changed_areas.rds", output_folder = output_folder)
+  cshp <- sf::st_read(fname, quiet = quiet)
 
-
-
-   message("Loading cshapes")
-   cshp <- sf::st_read(fname, quiet = quiet)
-
-   # Setting day to first in month to ensure all changes are included.
-   cshp <- cshp %>%
+  # Setting day to first in month to ensure all changes are included.
+  cshp <- cshp %>%
      dplyr::filter(GWCODE != -1) %>%
-     dplyr::mutate(
+      dplyr::mutate(
        startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
        enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
      dplyr::mutate(
        same_month = year(startdate) == year(enddate) & month(startdate) == month(enddate)
-     ) %>%
-     dplyr::filter(same_month == F & startdate != "1991-12-16") %>% # Hack for now. Multiple changes within each month.
-     dplyr::mutate(GWSDAY = 1,
+      ) %>%
+      dplyr::filter(same_month == F & startdate != "1991-12-16") %>% # Hack for now. Multiple changes within each month.
+      dplyr::mutate(GWSDAY = 1,
                    GWEDAY = 1) %>%
-     dplyr::mutate(
+      dplyr::mutate(
        startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
        enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-# This causes error for Indonesia 1976-06-01. Check.
-#     dplyr::mutate(
-#       enddate = enddate - lubridate::days(1) # End up until, but not including
-#     ) %>%
-     dplyr::mutate(
+      # This causes error for Indonesia 1976-06-01. Check.
+      #     dplyr::mutate(
+      #       enddate = enddate - lubridate::days(1) # End up until, but not including
+      #     ) %>%
+      dplyr::mutate(
        date_interval = lubridate::interval(startdate, enddate)
-     )
+      )
 
    if(distance_type == 1){
      message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
