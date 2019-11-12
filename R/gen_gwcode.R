@@ -506,7 +506,7 @@ gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet 
      bdist <- lapply(changed_areas, priogrid::gen_bdist1_month, gwcode = gwcode, cshp = cshp, numCores = numCores)
    } else if (distance_type == 2){
      message("bdist2: distance in km from the centroid to the border of the nearest neighboring country.")
-     bdist <- lapply(changed_areas[44], priogrid::gen_bdist2_month, gwcode = gwcode, cshp = cshp, numCores = numCores)
+     bdist <- lapply(changed_areas, priogrid::gen_bdist2_month, gwcode = gwcode, cshp = cshp, numCores = numCores)
    } else if (distance_type == 3){
      message("bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.")
      bdist <- parallel::mclapply(changed_areas, priogrid::gen_bdist3_month, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
