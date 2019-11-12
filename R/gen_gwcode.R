@@ -186,7 +186,11 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
       message(crossection_date)
 
       # Global crossection of cshapes used to determine correct gwcode
+      past_crossection <- cshp[(crossection_date - lubridate::month(1)) %within% cshp$date_interval,]
       cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
+      new_changes <- lengths(sf::st_equals_exact(cshp_crossection, past_crossection, par = 0)) == 0
+      cshp_crossection$changes <- new_changes
+      cshp_crossection <- dplyr::filter(cshp_crossection, changes)
 
       # Gids that have changed since last month
       gids_in_crossection <- sf::st_intersects(pgland, crossection)
@@ -268,10 +272,21 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
    return(gwcode)
 }
 
-get_closest_distance <- function(points, features){
+get_closest_distance <- function(points, features, check_dateline=TRUE){
    nearest_feature <- sf::st_nearest_feature(points, features)
    nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
-   return(sf::st_length(nearest_point))
+
+   distances <- sf::st_length(nearest_point)
+
+   if(check_dateline){
+      pointsT <- st_transform(points,"+proj=longlat +datum=WGS84 +pm=180") %>% st_wrap_dateline()
+      featuresT <- st_transform(features,"+proj=longlat +datum=WGS84 +pm=180") %>% st_wrap_dateline()
+      nearest_featureT <- sf::st_nearest_feature(pointsT, featuresT)
+      nearest_pointT <- sf::st_nearest_points(pointsT, featuresT[nearest_featureT,], pairwise = TRUE)
+      distancesT <- sf::st_length(nearest_pointT)
+      distances <- apply(cbind(distances, distancesT), 1, min)
+   }
+   return(distances)
 }
 
 
@@ -345,7 +360,7 @@ gen_driver <- function(fnames, output_folder, quiet = TRUE){
    return(driver)
 }
 
-gen_bdist1_month <- function(crossection, gwcode, cshp){
+gen_bdist1_month <- function(crossection, gwcode, cshp, numCores = 1){
   #bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.
   crossection_date <- unique(crossection$crossection_date)
   message(crossection_date)
@@ -366,29 +381,32 @@ gen_bdist1_month <- function(crossection, gwcode, cshp){
   gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("lon", "lat"))
   sf::st_crs(gw_crossection) <- sf::st_crs(4326)
 
-  gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
-  gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
+  #gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
+  #gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
   # Iterate over each country, and calculate the nearest distance to contiguos neighbor for all gis in country.
+  land_codes <- unique(gw_crossection$gwcode)
+  get_distances <- function(land_code){
+     land_intersection_index <- which(cshp_cross$GWCODE == land_code)
+     neighbor_index <- land_intersections[land_intersection_index][[1]]
+     neighbors <- cshp_cross[neighbor_index, ]
+     return(priogrid::get_closest_distance(dplyr::filter(gw_crossection, gwcode == land_code), neighbors))
+  }
+  distances_cross <- parallel::mclapply(land_codes, get_distances, mc.cores = numCores)
+
   gw_crossection$bdist1 <- NA
-  for(land_code in unique(gw_crossection$gwcode)){
-    land_intersection_index <- which(cshp_cross$GWCODE == land_code)
-    neighbor_index <- land_intersections[land_intersection_index][[1]]
-    neighbors <- cshp_cross[neighbor_index, ]
-    gw_crossection[gw_crossection$gwcode==land_code,"bdist1"] <- priogrid::get_closest_distance(
-      dplyr::filter(gw_crossection, gwcode == land_code), neighbors)
+  for(i in 1:length(land_codes)){
+    gw_crossection[gw_crossection$gwcode==land_codes[i],"bdist1"] <- distances_cross[[i]]
   }
 
   # Rasterize results and return
   pg <- priogrid::prio_blank_grid()
   bdist1 <- raster::rasterize(gw_crossection, pg, field = "bdist1")
 
-  if(is.null(bdist1)) bdist1 <- "was null"
-
   return(bdist1)
 }
 
-gen_bdist2_month <- function(crossection, gwcode, cshp){
+gen_bdist2_month <- function(crossection, gwcode, cshp, numCores = 1){
   #bdist2: distance in km from the centroid to the border of the nearest neighboring country.
   crossection_date <- unique(crossection$crossection_date)
   cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
@@ -401,15 +419,20 @@ gen_bdist2_month <- function(crossection, gwcode, cshp){
   gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("lon", "lat"))
   sf::st_crs(gw_crossection) <- sf::st_crs(4326)
 
-  gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
-  gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
+  #gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
+  #gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
-  # Iterate over each country, and calculate the nearest distance to nearest neighbor for all gis in country.
+  # Iterate over each country, and calculate the nearest distance to contiguos neighbor for all gis in country.
+  land_codes <- unique(gw_crossection$gwcode)
+  get_distances <- function(land_code){
+     neighbors <- cshp_cross[which(cshp_cross$GWCODE != land_code), ]
+     return(priogrid::get_closest_distance(dplyr::filter(gw_crossection, gwcode == land_code), neighbors))
+  }
+  distances_cross <- parallel::mclapply(land_codes, get_distances, mc.cores = numCores)
+
   gw_crossection$bdist2 <- NA
-  for(land_code in unique(gw_crossection$gwcode)){
-    neighbors <- cshp_cross[which(cshp_cross$GWCODE != land_code), ]
-    gw_crossection[gw_crossection$gwcode==land_code,"bdist2"] <- priogrid::get_closest_distance(
-      dplyr::filter(gw_crossection, gwcode == land_code), neighbors)
+  for(i in 1:length(land_codes)){
+     gw_crossection[gw_crossection$gwcode==land_codes[i],"bdist2"] <- distances_cross[[i]]
   }
 
   # Rasterize results and return
@@ -451,7 +474,6 @@ gen_bdist3_month <- function(crossection, gwcode, cshp){
 
 gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet = TRUE){
 
-
   gwcode <- priogrid::get_rds_file("gwcode_month.rds", output_folder = output_folder)
   changed_areas <- priogrid::get_rds_file("changed_areas.rds", output_folder = output_folder)
   cshp <- sf::st_read(fname, quiet = quiet)
@@ -481,10 +503,10 @@ gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet 
 
    if(distance_type == 1){
      message("bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.")
-     bdist <- parallel::mclapply(changed_areas, priogrid::gen_bdist1_month, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
+     bdist <- lapply(changed_areas, priogrid::gen_bdist1_month, gwcode = gwcode, cshp = cshp, numCores = numCores)
    } else if (distance_type == 2){
      message("bdist2: distance in km from the centroid to the border of the nearest neighboring country.")
-     bdist <- parallel::mclapply(changed_areas, priogrid::gen_bdist2_month, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
+     bdist <- lapply(changed_areas[44], priogrid::gen_bdist2_month, gwcode = gwcode, cshp = cshp, numCores = numCores)
    } else if (distance_type == 3){
      message("bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.")
      bdist <- parallel::mclapply(changed_areas, priogrid::gen_bdist3_month, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
@@ -493,13 +515,13 @@ gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet 
    }
 
    pg <- priogrid::prio_blank_grid()
-   # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
+   # Update classification scheme iteratively. Add the values that are not missing to the current raster.
    rasters <- list()
    i <- 1
    current_raster <- pg
    current_raster[] <- NA
-   for(j in 1:length(capdist)){
-     dc <- capdist[[j]]
+   for(j in 1:length(bdist)){
+     dc <- bdist[[j]]
 
      current_raster[!is.na(dc)] <- dc[!is.na(dc)]
      rasters[[i]] <- current_raster
@@ -507,7 +529,7 @@ gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet 
    }
 
 
-   bdist <- raster::stack(bdist)
+   bdist <- raster::stack(rasters)
    names(bdist) <- names(changed_areas)
 
    return(bdist)
@@ -516,14 +538,14 @@ gen_bdists <- function(fname, distance_type, output_folder, numCores = 1, quiet 
 
 #message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
 gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
-   calc_crossection <- function(crossection, all_months){
+   calc_crossection <- function(crossection, all_months, gwcode, cshp){
       crossection_date <- unique(crossection$crossection_date)
       message(crossection_date)
 
       cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
 
       gwcode_index <- which(all_months %in% crossection_date)
-      gw_crossection <- subset(gwcode, gwcode_index)
+      gw_crossection <- raster::subset(gwcode, gwcode_index)
 
       gw_crossection <- raster::rasterToPoints(gw_crossection)
       gw_crossection <- dplyr::tibble("gwcode" = gw_crossection[,3], "lon" = gw_crossection[,1], "lat" = gw_crossection[,2])
@@ -594,7 +616,7 @@ gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
 
    all_months <- lubridate::ymd(sub("X", "", names(gwcode)))
 
-   capdist <- parallel::mclapply(changed_areas, calc_crossection, all_months = all_months, mc.cores = numCores)
+   capdist <- parallel::mclapply(changed_areas, calc_crossection, all_months = all_months, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
 
    pg <- priogrid::prio_blank_grid()
    # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
