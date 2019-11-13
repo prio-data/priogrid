@@ -446,6 +446,7 @@ gen_bdist3_month <- function(crossection, gwcode, cshp){
   crossection_date <- unique(crossection$crossection_date)
   cshp_cross <- cshp[crossection_date %within% cshp$date_interval,]
 
+  months_in_gwcode <- lubridate::ymd(sub("X", "", names(gwcode)))
   # only measure distance between the cell and the land contigous neighbors for that country.
   gw_crossection <- raster::subset(gwcode, which(months_in_gwcode %in% crossection_date))
   gw_crossection <- raster::rasterToPoints(gw_crossection)
@@ -456,19 +457,29 @@ gen_bdist3_month <- function(crossection, gwcode, cshp){
   gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
   gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
-  # Iterate over each country, and calculate the nearest distance to nearest neighbor for all gids in country.
-  gwmonth$bdist3 <- NA
-  for(land_code in unique(gwmonth$gwcode)){
-    this_country <- cshp_cross[which(cshp_cross$GWCODE == land_code), ]
-    gwmonth[gwmonth$gwcode==land_code,"bdist3"] <- priogrid::get_closest_distance(
-      dplyr::filter(gwmonth, gwcode == land_code), this_country)
+  # Iterate over each country, and calculate distance in km from the centroid to the territorial outline of the country the cell belongs to.
+  land_codes <- unique(gw_crossection$gwcode)
+  gw_crossection$bdist2 <- NA
+
+  for(i in 1:length(land_codes)){
+     this_country <- cshp_cross[which(cshp_cross$GWCODE == land_codes[i]), ]
+     centroid_within_country <- sf::st_within(dplyr::filter(gw_crossection, gwcode == land_codes[i]), this_country)
+     this_country <- sf::st_boundary(this_country)
+     gw_crossection$cwc <- NA
+     gw_crossection$cwc[gw_crossection$gwcode == land_codes[i]] <- lengths(centroid_within_country) > 0
+
+     # Cells belonging to a country, but with a centroid outside the border will have 0 distance to the outline of the country.
+     gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == FALSE), "bdist3"] <- 0
+
+     gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == TRUE),"bdist3"] <- priogrid::get_closest_distance(
+        gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == TRUE),], this_country)
+
   }
 
   # Rasterize results and return
   pg <- priogrid::prio_blank_grid()
-  bdist3 <- raster::rasterize(gwmonth, pg, field = "bdist3")
+  bdist3 <- raster::rasterize(gw_crossection, pg, field = "bdist3")
   return(bdist3)
-
 }
 
 
