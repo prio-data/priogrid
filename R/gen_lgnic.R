@@ -15,17 +15,17 @@ gen_lgnic <- function(path){
    shdi <- shdi %>%
       dplyr::filter(level == "Subnat") %>%
       dplyr::select(year, GDLCODE, lgnic)
- 
+
    geom <- geom %>%
       dplyr::select(GDLCode, geometry)
- 
- 
+
+
    shdi.full <- merge(geom, shdi, by.x = "GDLCode", by.y = "GDLCODE")
    shdiyr <- priogrid::yearly_brick(shdi.full, variable = 'lgnic', raster.fun = 'mean')
 
 }
 
 
-
+# ~9 minutes run time
 
 
