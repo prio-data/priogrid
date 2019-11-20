@@ -17,7 +17,7 @@
 #' pg <- create_pg_indices(3, 3)
 #' getXY(5, 3, 3)
 getXY <- function(gid, ncol, nrow){
-  rownum <- ceiling(gid/ncol)
+  rownum <- nrow - ceiling(gid/ncol) + 1
 
   colnum <- gid %% ncol
   if(colnum == 0){colnum = ncol}
@@ -46,35 +46,6 @@ create_pg_indices <- function(ncol, nrow){
   return(pg)
 }
 
-#' Get nth order neighbors in PRIO-GRID.
-#' NB! This does not work!
-#'
-#' @param gid The GID to the cell that you would like to find the neighbors of.
-#' @param norder The nth order of neighbors.
-#' @param ncol The number of columns in the grid.
-#' @param nrow The number of rows in the grid.
-#' @param includeSelf Whether self should be part of the result or not.
-#' @return A vector with gid's of neighbors.
-#' @examples
-#' pg <- create_pg_indices(3, 3)
-#' getNeighbors(5, 1, ncol=3, nrow=3)
-
-getNeighbors <- function(gid, norder=1, ncol=720, nrow=360, includeSelf=FALSE){
-  XY <- getXY(gid, ncol, nrow)
-  X <- (XY[1]-norder):(XY[1]+norder)
-  Y <- (XY[2]-norder):(XY[2]+norder)
-  XY <- expand.grid(X, Y)
-  names(XY) <- c("X", "Y")
-
-
-  XY$gid <- XY$Y*ncol - (ncol-XY$X)
-  if(includeSelf){
-    return(XY$gid)
-  } else{
-    return(XY$gid[XY$gid!=gid])
-  }
-
-}
 
 #' Get first order neighbors in PRIO-GRID.
 #' TODO: does this work as cell2nb in spdep? Must probably map to PG indices?
@@ -150,6 +121,21 @@ pgneighbors_nnb <- function(gids, ncol, nrow){
   df <- as.data.frame(unlist(lapply(format(nnb, scientific=F), paste, collapse=" ")))
   names(df) <- c("neighbors")
   return(df)
+}
+
+nth_order_pgneighbors <- function(gid, order, ncol, nrow, include_self = FALSE){
+  gids <- gid
+  for(i in 1:order){
+    gids <- unique(as.vector(unlist(gids)))
+    gids <- pgneighbors_v(gids, ncol, nrow)
+  }
+  gids <- sort(unique(as.numeric(as.vector(unlist(gids)))))
+
+  if(include_self == FALSE){
+    gids <- gids[gids != gid]
+  }
+
+  return(gids)
 }
 
 #' Blank GRID
