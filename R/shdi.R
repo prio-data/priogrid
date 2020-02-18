@@ -3,12 +3,9 @@
 #'
 #' Average Expected years schooling children aged 6 within each grid cell.
 #'
-#' @param shdi_data SHDI .csv data.
-#' @param shdi_sf SHDI MultiPolygon shapefile.
-
-
-
-gen_esch <- function(path){
+#' @param path path to SHDI data.
+#' @param variable one of c("msch", "esch", "lifexp", "lgnic", "shdi")
+gen_shdi <- function(path, variable = "shdi"){
   shdi <- read.csv(file.path(path,"SHDI-Complete SD1.csv"))
   geom <- sf::read_sf(file.path(path,"GDL-SHDI-SHP-2.shp"))
 
@@ -21,9 +18,11 @@ gen_esch <- function(path){
 
 
   shdi.full <- merge(geom, shdi, by.x = "GDLCode", by.y = "GDLCODE")
-  shdiyr <- priogrid::yearly_brick(shdi.full, variable = 'esch', raster.fun = 'mean')
+  shdiyr <- priogrid::yearly_brick(shdi.full, variable = variable, raster.fun = 'mean')
 
 }
 
-
-# ~9 minutes run time
+gen_msch <- gen_shdi(path, variable == "msch")
+gen_esch <- gen_shdi(path, variable == "esch")
+gen_lifexp <- gen_shdi(path, variable == "lifexp")
+gen_lgnic <- gen_shdi(path, variable == "lgnic")
