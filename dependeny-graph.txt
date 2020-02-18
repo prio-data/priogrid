@@ -1,0 +1,52 @@
+--- # no dependencies
+cshp::gen_pgland
+cshp::gen_changed_areas
+resource::gen_diamprim_y
+resource::gen_diamsec_y
+resource::gen_diamonds_s # brick with prim_s and sec_s
+resource::gen_drug_y
+resource::gen_gems_y # gen_gem_y
+resource::gen_gems_s
+resource::gen_goldplacer_y
+resource::gen_goldsurface_y
+resource::gen_goldvein_y
+resource::gen_goldplacer_s
+resource::gen_goldsurface_s
+resource::gen_goldvein_s
+resource::gen_petro_y
+resource::gen_petry_s
+shdi::gen_esch # reads csv and geometry in function
+shdi::gen_msch # reads csv and geometry in function
+shdi::gen_lgnic # reads csv and geometry in function
+shdi::gen_lifeexp # reads csv and geometry in function
+epr::gen_excluded # is now called gen_geoepr, reads files in function
+nordhaus::gen_gcp_mer
+nordhaus::gen_gcp_ppp
+nordhaus::gen_gcp_qual
+cru::gen_cru # returns dataframe, what about infinite values?
+mirca::gen_grow_start_end # brick start, end
+# mirca:: contains several generically named functions (perhaps make as local functions)
+gpw::gen_pop_gpw # should add function to extrapolate to 1990...
+
+
+--- # dependencies
+cshp::gen_pgland
+cshp::gen_landarea
+cshp::gen_changed_areas
+cshp::gen_gwcode_month
+cshp::gen_gwcode
+---
+cshp::gen_gwcode_month
+cshp::gen_bdists
+---
+cshp::gen_gwcode_month
+cshp::gen_capdist
+---
+#gwcode::get_closest_distance (move to another place)
+cshp::gen_pgland
+cshp::gen_dcoast
+---
+cshp::gen_pgland
+cshp::gen_driver
+
+
