@@ -42,3 +42,22 @@ get_rds_file <- function(fname, output_folder){
    return(robj)
 }
 
+memoize <- function(fn,...,cache = "cache"){
+   if(file.info(cache)$isdir){
+      fnName <- as.character(substitute(fn))
+      args <- sapply(as.list(...),as.character)
+      repr <- paste0(c(fnName,args))
+      cache <- file.path(cache,digest::sha1(repr))
+   } else {
+
+   }
+
+   if(!file.exists(cache)){
+
+      res <- fn(...)
+      arrow::write_parquet(res,cache)
+      res
+   } else {
+      arrow::read_parquet(cache)
+   }
+}
