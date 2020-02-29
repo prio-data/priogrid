@@ -164,6 +164,7 @@ prio_blank_grid <- function(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FA
    pg <- create_pg_indices(ncol,nrow)
    pg <- raster::raster(pg, crs = crs)
    raster::extent(pg) <- extent
+   names(pg) <- "pgid"
    pg
 }
 
