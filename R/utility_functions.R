@@ -32,6 +32,8 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   nothing_needed <- all(resolution_factor == 1)
   assertthat::assert_that( xor(xor(aggregation_needed, disaggregation_needed), nothing_needed) )
 
+  assertthat::assert_that( extent(rast) == priogrid::prio_extent())
+
   if(aggregation_needed){
     rast <- raster::aggregate(rast, fact = resolution_factor, fun = aggregation_function)
   }
@@ -41,6 +43,11 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
 
   raster::crs(rast) <- priogrid::prio_crs()
   raster::extent(rast) <- priogrid::prio_extent()
+  return(rast)
+}
+
+rasterextent_to_pg <- function(rast){
+  rast <- raster::resample(rast, priogrid::prio_blank_grid(), method = "ngb")
   return(rast)
 }
 
@@ -81,19 +88,22 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   return(pg_tibble)
 }
 
-map_pg_crossection <- function(pgdf, variable, year, month = NULL){
+map_pg_crossection <- function(pgdf, variable, year = NULL, month = NULL){
   if(!is.null(month)){
     cs <- dplyr::filter(pgdf, year == year, month == month) %>% dplyr::select(x, y, !!variable)
     mydate <- as.Date(paste(year, month, "01", sep = "-"))
-  } else {
+  } else if(!is.null(year)){
     cs <- dplyr::filter(pgdf, year == year) %>% dplyr::select(x, y, !!variable)
     mydate <- as.Date(paste(year, "01", "01", sep = "-"))
+  } else {
+    cs <- dplyr::select(pgdf, x, y, !!variable)
   }
 
   rast <- raster::rasterFromXYZ(cs)
 
   plot(rast)
 }
+
 
 # previous get_array
 get_ncarray <- function(ncfile, variable, fillvalue, lon=NULL, lat=NULL, ...){
