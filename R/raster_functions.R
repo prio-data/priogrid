@@ -39,41 +39,6 @@ prio_raster <- function(x){
 }
 
 
-get_array <- function(file, variable, fillvalue, lon=NULL, lat=NULL, ...){
-  nc <- nc_open(file)
-
-  if(missing(lon) & missing(lat)){
-    lon <- NA
-    lat <- NA
-    res <- NA
-  } else{
-    lon <- ncvar_get(nc, lon, verbose = F)
-    lat <- ncvar_get(nc, lat, verbose = F)
-    res <- (lon[2]-lon[1])/2
-
-  } # If I want to add spatial indexing to the function, this information is necessary.
-
-  fillvalue <- ncatt_get(nc, varid=variable, attname=fillvalue)
-
-  nc_array <- ncvar_get(nc, variable, ...)
-  nc_array[nc_array == fillvalue$value] <- NA
-  nc_close(nc)
-
-  return(list("data" = nc_array, "lon" = lon, "lat" = lat, "res" = res))
-}
-
-make_raster <- function(nclist, flip_poles=FALSE, transpose=FALSE, crs=NULL){
-  if(transpose){nclist$data <- t(nclist$data)}
-
-  res <- raster(nclist$data, xmn =  min(nclist$lon)-nclist$res, xmx = max(nclist$lon)+nclist$res,
-                ymn = min(nclist$lat)-nclist$res, ymx = max(nclist$lat)+nclist$res,
-                crs=crs)
-
-  if(flip_poles){res <- flip(res, direction="y")}
-
-  return(res)
-}
-
 #' Raster points
 #'
 #' Simple function that returns a raster as a sf set of points
@@ -151,27 +116,4 @@ yearly_brick <- function(data, variable, raster.fun){
   return(brick)
 } ## NOTE: This is fairly quick on smaller point data, but takes a lot of time on larger data.
 
-
-
-
-#' Rotate extent of raster
-#'
-#' Function to change raster latitudes from (0, 360) to (-180, 180),
-#' the former is commonly used in climate data.
-#'
-#' @param raster RasterLayer or RasterBrick.
-
-rotateExtent <- function(raster){
-  ext1 <- raster::extent(0, 180, -90, 90)
-  ext2 <- raster::extent(180, 360, -90, 90)
-
-  rightCrop <- raster::crop(raster, ext1)
-
-  leftCrop <- raster::crop(raster, ext2)
-
-  full <- raster::merge(rightCrop, leftCrop)
-  full <- raster::rotate(full)
-
-  full
-}
 

@@ -44,21 +44,40 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   return(rast)
 }
 
-vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, background = -1, fun = "mean"){
+vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, missval = -1, fun = fun){
   pg <- priogrid::prio_blank_grid()
 
   if(!need_aggregation){
     vx <- velox::velox(pg)
-    vx$rasterize(spdf = sfdf, field = variable, background = background, small = TRUE)
+    vx$rasterize(spdf = sfdf, field = variable, background = missval, small = TRUE)
 
     rast <- vx$as.RasterLayer(band = 1)
-    rast[rast == background] <- NA
+    rast[rast == missval] <- NA
     return(rast)
   }
   # backup solution when rasterization needs to aggregate values over many polygons/points
   rast <- raster::rasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
+  names(rast) <- variable
   crs(rast) <- sf::st_crs(pg)$proj4string
   return(rast)
+}
+
+panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
+  time_fact <- factor(df[[timevar]])
+
+  sdf <- dplyr::select(df, !!variable)
+  sdf_list <- base::split(sdf, time_fact, sep = "_")
+  rast_list <- parallel::mclapply(sdf_list, vector_to_pg, variable = variable, need_aggregation = need_aggregation, missval = missval, fun = fun)
+
+  pg_tibble <- parallel::mclapply(rast_list, raster_to_tibble, add_pg_index = TRUE)
+
+  add_timevar <- function(df, time, timevar){
+    df[[timevar]] <- time
+    return(df)
+  }
+
+  pg_tibble <- purrr::map2_dfr(pg_tibble, names(pg_tibble), add_timevar, timevar = timevar)
+  return(pg_tibble)
 }
 
 # previous get_array
