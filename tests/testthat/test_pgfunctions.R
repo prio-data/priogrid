@@ -1,5 +1,5 @@
 
 test_that("Blank priogrid is right size",{
-   grid <- priogrid::blank_pgrid()
+   grid <- priogrid::prio_blank_grid()
    expect_equal(length(grid), 259200)
 })
