@@ -14,6 +14,7 @@ Depends:
 Imports:
     tidyr (>= 1.0.0),
     sf (>= 0.8),
+    digest (>= 0.6.25),
     glue,
     ncdf4,
     spex,
@@ -28,6 +29,6 @@ Imports:
     janitor,
     Rcpp
 Suggests: testthat
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 LinkingTo: 
     Rcpp
