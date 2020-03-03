@@ -7,3 +7,5 @@
 
 R/.depr/*
 tests/testthat/.depr/*
+
+wtt.yaml
