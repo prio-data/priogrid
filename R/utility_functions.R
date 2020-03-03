@@ -44,7 +44,7 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   return(rast)
 }
 
-vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, missval = -1, fun = fun){
+vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval = -1){
   pg <- priogrid::prio_blank_grid()
 
   if(!need_aggregation){
