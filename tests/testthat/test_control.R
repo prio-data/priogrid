@@ -1,7 +1,7 @@
 
 test_that("test auxillary control functions",{
 
-   expect_error(lookup("variable","myVar"),NA)
+   expect_error(lookup("variable","gcp_mer"),NA)
    expect_error(lookup("foo","myVar"),"Lookup type must be one of")
    expect_error(lookup("variable","foo"),"specification in")
 

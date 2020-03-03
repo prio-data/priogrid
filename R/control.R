@@ -1,16 +1,10 @@
 
 #' @title make_priogrid 
-#' @description 
-#' @param
-#' @param
 make_priogrid <- function(){
     
 }
 
 #' @title wrap_procedure
-#' @description 
-#' @param
-#' @param
 wrap_procedure<- function(variable_name,
    input_folder,output_folder,format = "parquet"){
 
@@ -32,9 +26,6 @@ wrap_procedure<- function(variable_name,
 }
 
 #' @title lookup 
-#' @description
-#' @param
-#' @param
 lookup <- function(type,what){
    if(!type %in% c("variable","format")){
       stop("Lookup type must be one of [variable, format]")
@@ -63,29 +54,17 @@ lookup <- function(type,what){
 }
 
 #' @title variable_lookup 
-#' @description
-#' @param
-#' @param
 variable_lookup <- function(...){lookup(type="variable",...)}
 
 #' @title format_lookup 
-#' @description
-#' @param
-#' @param
 format_lookup <- function(...){lookup(type="format",...)}
 
 #' @title get_in_path 
-#' @description
-#' @param
-#' @param
 get_in_path <- function(folder,name){
    file.path(folder,name,"data")
 }
 
 #' @title get_out_path 
-#' @description
-#' @param
-#' @param
 get_out_path <- function(folder,name,ext){
    if(!grepl("^\\.",ext)){
       ext <- paste0(".",ext)
@@ -95,9 +74,6 @@ get_out_path <- function(folder,name,ext){
 }
 
 #' @title get_var_function 
-#' @description
-#' @param
-#' @param
 get_var_function <- function(variable_name){
    var_info <- variable_lookup(variable_name)
    function_name <- paste0(var_info$fn)
@@ -105,11 +81,16 @@ get_var_function <- function(variable_name){
 }
 
 #' @title get_format_spec 
-#' @description
-#' @param
-#' @param
 get_format_spec <- function(format_name){
    format_info <- format_lookup(format_name)
    format_info$fn <- eval(parse(text=var_info$fn))
    format_info
 }
+
+#' @title datapath 
+#' @export
+
+datapath <- function(folder){
+   file.path(folder,"data")
+}
+
