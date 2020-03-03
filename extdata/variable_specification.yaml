@@ -4,6 +4,7 @@
 # to do. 
 # =&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&
 
-myVar:
-   fn: "priogrid::gen_myvar"
-
+gcp_mer:
+   fn: "priogrid::gen_gcp_mer"
+   grpPath: "gecon"
+   hash: 
