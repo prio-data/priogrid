@@ -53,6 +53,7 @@ vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, missval = -1,
 
     rast <- vx$as.RasterLayer(band = 1)
     rast[rast == missval] <- NA
+    names(rast) <- variable
     return(rast)
   }
   # backup solution when rasterization needs to aggregate values over many polygons/points
