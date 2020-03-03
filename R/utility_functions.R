@@ -44,7 +44,7 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   return(rast)
 }
 
-vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, missval = -1, fun = fun){
+vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval = -1){
   pg <- priogrid::prio_blank_grid()
 
   if(!need_aggregation){
@@ -53,6 +53,7 @@ vector_to_pg <- function(sfdf, variable, need_aggregation = FALSE, missval = -1,
 
     rast <- vx$as.RasterLayer(band = 1)
     rast[rast == missval] <- NA
+    names(rast) <- variable
     return(rast)
   }
   # backup solution when rasterization needs to aggregate values over many polygons/points
@@ -78,6 +79,20 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 
   pg_tibble <- purrr::map2_dfr(pg_tibble, names(pg_tibble), add_timevar, timevar = timevar)
   return(pg_tibble)
+}
+
+map_pg_crossection <- function(pgdf, variable, year, month = NULL){
+  if(!is.null(month)){
+    cs <- dplyr::filter(pgdf, year == year, month == month) %>% dplyr::select(x, y, !!variable)
+    mydate <- as.Date(paste(year, month, "01", sep = "-"))
+  } else {
+    cs <- dplyr::filter(pgdf, year == year) %>% dplyr::select(x, y, !!variable)
+    mydate <- as.Date(paste(year, "01", "01", sep = "-"))
+  }
+
+  rast <- raster::rasterFromXYZ(cs)
+
+  plot(rast)
 }
 
 # previous get_array
