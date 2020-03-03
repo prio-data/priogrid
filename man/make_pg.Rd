@@ -2,15 +2,36 @@
 % Please edit documentation in R/make_priogrid.R
 \name{make_pg}
 \alias{make_pg}
-\title{Make PRIOGrid from raw data}
+\title{make_pg}
 \usage{
-make_pg(input_folder, output_folder)
+make_pg(input_folder, output_folder, config = NULL, overwrite = FALSE)
+}
+\arguments{
+\item{input_folder}{A folder containing folders with data for each variable}
+
+\item{output_folder}{The destination folder to which data will be written}
+
+\item{config}{An optional custom config file for custom PRIOGrid builds}
+
+\item{config}{An optional custom config file for custom PRIOGrid builds}
+}
+\value{
+The function returns a list of character vectors for each function
+containing info about assertions.
 }
 \description{
-This is the "master function" that turns raw data
-into PRIOGrid.
-Not functional, only for illustration.
- @param input_folder Location of folder containing 
-folders of raw data
- @param output_folder Output folder
+A dispatch function that applies functions and assertions to data contained
+in a folder hierarchy, with each folder under input_folder containing the
+data needed to produce each variable. The function takes the input folder,
+an outputfolder which is populated with the same folders as are contained in
+the inputfolder, and an optional configfile, which is a YAML formatted
+markupfile specifying what functions and assertions pertain to each
+variable. The configuration file is specified per variable name, which
+corresponds with the names of the folders contained in the inputfolder.
+If no custom config file path is provided, the function tries to use the
+config that is supplied with the package.
+}
+\examples{
+var_messages <- make_pg("~/Projects/pg/pgdata","~/Projects/pg/outfolder"
+purrr::walk(var_messages,function(queue){sapply(queue, warning)})
 }
