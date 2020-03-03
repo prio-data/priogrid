@@ -22,7 +22,7 @@ gen_shdi <- function(path, variable = "shdi"){
 
 }
 
-gen_msch <- gen_shdi(path, variable == "msch")
-gen_esch <- gen_shdi(path, variable == "esch")
-gen_lifexp <- gen_shdi(path, variable == "lifexp")
-gen_lgnic <- gen_shdi(path, variable == "lgnic")
+#gen_msch <- gen_shdi(path, variable == "msch")
+#gen_esch <- gen_shdi(path, variable == "esch")
+#gen_lifexp <- gen_shdi(path, variable == "lifexp")
+#gen_lgnic <- gen_shdi(path, variable == "lgnic")
