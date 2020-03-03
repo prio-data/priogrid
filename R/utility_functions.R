@@ -80,6 +80,20 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   return(pg_tibble)
 }
 
+map_pg_crossection <- function(pgdf, variable, year, month = NULL){
+  if(!is.null(month)){
+    cs <- dplyr::filter(pgdf, year == year, month == month) %>% dplyr::select(x, y, !!variable)
+    mydate <- as.Date(paste(year, month, "01", sep = "-"))
+  } else {
+    cs <- dplyr::filter(pgdf, year == year) %>% dplyr::select(x, y, !!variable)
+    mydate <- as.Date(paste(year, "01", "01", sep = "-"))
+  }
+
+  rast <- raster::rasterFromXYZ(cs)
+
+  plot(rast)
+}
+
 # previous get_array
 get_ncarray <- function(ncfile, variable, fillvalue, lon=NULL, lat=NULL, ...){
   nc <- nc_open(ncfile)
