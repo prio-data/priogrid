@@ -14,6 +14,7 @@ Depends:
 Imports:
     tidyr (>= 1.0.0),
     sf (>= 0.8),
+    digest (>= 0.6.25),
     glue,
     ncdf4,
     spex,

@@ -1,22 +1,31 @@
 
-#' @title wrapProcedure
+#' @title make_priogrid 
 #' @description 
 #' @param
 #' @param
-makeVariable <- function(variableName,inputFolder,outputFolder,format = "parquet"){
+make_priogrid <- function(){
+    
+}
 
-   variableFunction <- getVarFunction(variableName) 
-   formatSpec <- getFormatSpec(format)
+#' @title wrap_procedure
+#' @description 
+#' @param
+#' @param
+wrap_procedure<- function(variable_name,
+   input_folder,output_folder,format = "parquet"){
 
-   infolder <- getInPath(inputFolder,variableName)
-   outpath <- getOutPath(outputFolder,variableName,formatSpec$ext)
+   variable_function <- get_var_function(variable_name) 
+   format_spec <- get_format_spec(format)
+
+   infolder <- get_in_path(input_folder,variable_name)
+   outpath <- get_out_path(output_folder,variable_name,format_spec$ext)
 
    # Check cache?
    if(file.exists(outpath)){
-      data <- formatSpec$read(outpath)
+      data <- format_spec$read(outpath)
    } else {
-      data <- variableFunction(infolder)
-      formatSpec$write(data,outpath)
+      data <- variable_function(infolder)
+      format_spec$write(data,outpath)
    }
 
    data
@@ -32,8 +41,8 @@ lookup <- function(type,what){
    }
    
    fname <- switch(type,
-      variable = "variableSpecification.yaml",
-      format = "formatSpecification.yaml"
+      variable = "variable_specification.yaml",
+      format = "format_specification.yaml"
    )
    fname <- system.file(
       "extdata",
@@ -41,43 +50,43 @@ lookup <- function(type,what){
       package = "priogrid",
       mustWork = TRUE
    )
-   tryCatch({lookupList <- yaml::yaml.load_file(fname)},
+   tryCatch({lookup_list <- yaml::yaml.load_file(fname)},
       error = function(e){
          stop("Spec file not found. Was the package installed correctly?")
       })
-   lookupEntry <- lookupList[[what]]
-   if(is.null(lookupEntry)){
+   lookup_entry <- lookup_list[[what]]
+   if(is.null(lookup_entry)){
       stop(glue::glue("{what} has no {type} specification in {fname}"))
    }
 
-   lookupEntry
+   lookup_entry
 }
 
-#' @title variableLookup 
+#' @title variable_lookup 
 #' @description
 #' @param
 #' @param
-variableLookup <- function(...){lookup(type="variable",...)}
+variable_lookup <- function(...){lookup(type="variable",...)}
 
-#' @title formatLookup 
+#' @title format_lookup 
 #' @description
 #' @param
 #' @param
-formatLookup <- function(...){lookup(type="format",...)}
+format_lookup <- function(...){lookup(type="format",...)}
 
-#' @title getInPath 
+#' @title get_in_path 
 #' @description
 #' @param
 #' @param
-getInPath <- function(folder,name){
+get_in_path <- function(folder,name){
    file.path(folder,name,"data")
 }
 
-#' @title getOutPath 
+#' @title get_out_path 
 #' @description
 #' @param
 #' @param
-getOutPath <- function(folder,name,ext){
+get_out_path <- function(folder,name,ext){
    if(!grepl("^\\.",ext)){
       ext <- paste0(".",ext)
    }
@@ -85,22 +94,22 @@ getOutPath <- function(folder,name,ext){
    file.path(folder,paste0(name,ext))
 }
 
-#' @title getVarFunction 
+#' @title get_var_function 
 #' @description
 #' @param
 #' @param
-getVarFunction <- function(variableName){
-   varInfo <- variableLookup(variableName)
-   functionName <- paste0(varInfo$fn)
-   eval(parse(text=functionName))
+get_var_function <- function(variable_name){
+   var_info <- variable_lookup(variable_name)
+   function_name <- paste0(var_info$fn)
+   eval(parse(text=function_name))
 }
 
-#' @title getFormatSpec 
+#' @title get_format_spec 
 #' @description
 #' @param
 #' @param
-getFormatSpec <- function(formatName){
-   formatInfo <- formatLookup(formatName)
-   formatInfo$fn <- eval(parse(text=varInfo$fn))
-   formatInfo
+get_format_spec <- function(format_name){
+   format_info <- format_lookup(format_name)
+   format_info$fn <- eval(parse(text=var_info$fn))
+   format_info
 }
