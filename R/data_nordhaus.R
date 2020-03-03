@@ -8,35 +8,42 @@
 #'
 #' @param gecon_data G-Econ v. 4.0 excel data
 
-gen_gcp_mer <- function(gecon_data){
+gen_gcp_mer <- function(input_folder, variable = "GCP_MER"){
+  gcp <- readxl::read_xls(file.path(input_folder, "Gecon40_post_final.xls"), sheet = 1, progress = FALSE)
 
-  gcp <- readxl::read_xls(gecon_data, sheet = 1)
+  suffix <- sub("GCP_", "", variable)
 
-  gcp$LAT <- gcp$LAT+0.5
-  gcp$LONGITUDE <- gcp$LONGITUDE+0.5
+  gcp <- gcp %>%
+    dplyr::select(LAT, LONGITUDE, AREA, MER1990_40, MER1995_40, MER2000_40, MER2005_40, PPP1990_40, PPP1995_40, PPP2000_40, PPP2005_40) %>%
+    dplyr::filter(AREA > 0) %>%
+    tidyr::pivot_longer(cols = tidyselect::starts_with(suffix)) %>%
+    dplyr::group_by(LAT, LONGITUDE, name) %>%
+    dplyr::mutate(area_share = AREA / sum(AREA, na.rm = T)) %>%
+    dplyr::mutate(value = log(value+1)*area_share) %>%
+    dplyr::summarise(value = exp(sum(value, na.rm = T))-1) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(grepl(suffix, name))
 
-  gcp_1990 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, gcp_1990 = MER1990_40)
+  gcp$year <- as.numeric(sub("_40", "", sub(suffix, "", gcp$name)))
+  time_fact <- factor(gcp$year)
 
-  gcp_1995 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, gcp_1995 = MER1995_40)
+  gcp_list <- dplyr::select(gcp, LONGITUDE, LAT, value)
+  gcp_list <- base::split(gcp_list, time_fact, sep = "_")
+  rast_list <- parallel::mclapply(gcp_list, raster::rasterFromXYZ, crs = priogrid::prio_crs())
+  rast_list <- parallel::mclapply(rast_list, priogrid::rasterextent_to_pg)
+  rast_list <- parallel::mclapply(rast_list, priogrid::raster_to_pg)
+  pg_tibble <- parallel::mclapply(rast_list, priogrid::raster_to_tibble, add_pg_index = TRUE)
 
-  gcp_2000 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, gcp_2000 = MER2000_40)
+  add_timevar <- function(df, time, timevar){
+    df[[timevar]] <- time
+    return(df)
+  }
 
-  gcp_2005 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, gcp_2005 = MER2005_40)
+  pg_tibble <- purrr::map2_dfr(pg_tibble, names(pg_tibble), add_timevar, timevar = "year")
 
-  gcp_1990 <- raster::rasterFromXYZ(gcp_1990, crs = priogrid::prio_crs())
-  gcp_1995 <- raster::rasterFromXYZ(gcp_1995, crs = priogrid::prio_crs())
-  gcp_2000 <- raster::rasterFromXYZ(gcp_2000, crs = priogrid::prio_crs())
-  gcp_2005 <- raster::rasterFromXYZ(gcp_2005, crs = priogrid::prio_crs())
+  names(pg_tibble) <- c("x", "y", tolower(variable), "pgid", "year")
 
-
-  test <- raster::brick(gcp_1990, gcp_1995, gcp_2000, gcp_2005)
-
-  tt <- raster::disaggregate(test, fact = 2)
-  return(tt)
+  return(pg_tibble)
 }
 
 
@@ -47,39 +54,10 @@ gen_gcp_mer <- function(gecon_data){
 #' Generate gross cell product (USD adjusted for purchasing-power-parity) variable,
 #' based on the G-Econ dataset v. 4.0.
 #'
-#' @param gecon_data G-Econ v. 4.0 excel data
-
-gen_gcp_ppp <- function(gecon_data){
-
-  gcp <- readxl::read_xls(gecon_data, sheet = 1)
-
-  gcp$LAT <- gcp$LAT+0.5
-  gcp$LONGITUDE <- gcp$LONGITUDE+0.5
-
-  gcp_1990 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, ppp_1990 = PPP1990_40)
-
-  gcp_1995 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, ppp_1995 = PPP1995_40)
-
-  gcp_2000 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, ppp_2000 = PPP2000_40)
-
-  gcp_2005 <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, ppp_2005 = PPP2005_40)
-
-  gcp_1990 <- raster::rasterFromXYZ(gcp_1990, crs = priogrid::prio_crs())
-  gcp_1995 <- raster::rasterFromXYZ(gcp_1995, crs = priogrid::prio_crs())
-  gcp_2000 <- raster::rasterFromXYZ(gcp_2000, crs = priogrid::prio_crs())
-  gcp_2005 <- raster::rasterFromXYZ(gcp_2005, crs = priogrid::prio_crs())
-
-
-  test <- raster::brick(gcp_1990, gcp_1995, gcp_2000, gcp_2005)
-
-  tt <- raster::disaggregate(test, fact = 2)
-  return(tt)
+#' @param input_folder
+gen_gcp_ppp <- function(input_folder){
+  gen_gcp_mer(input_folder, variable = "GCP_PPP")
 }
-
 
 
 #' Generate gcp_qual variable
@@ -87,22 +65,23 @@ gen_gcp_ppp <- function(gecon_data){
 #' Generate quality of GCP values variable,
 #' based on the G-Econ dataset v. 4.0.
 #'
-#' @param gecon_data G-Econ v. 4.0 excel data
-
-gen_gcp_qual <- function(gecon_data){
-
-  gcp <- readxl::read_xls(gecon_data, sheet = 1)
-
-  gcp$LAT <- gcp$LAT+0.5
-  gcp$LONGITUDE <- gcp$LONGITUDE+0.5
+#' @param input_folder
+gen_gcp_qual <- function(input_folder){
+  gcp <- readxl::read_xls(file.path(input_folder, "Gecon40_post_final.xls"), sheet = 1, progress = FALSE)
 
   gcp <- gcp %>%
-    dplyr::select(LONGITUDE, LAT, qual = QUALITY)
+    dplyr::select(LAT, LONGITUDE, QUALITY) %>%
+    dplyr::group_by(LAT, LONGITUDE) %>%
+    dplyr::summarise(quality = mean(QUALITY, na.rm = T))
 
-  gcp <- raster::rasterFromXYZ(gcp, crs = priogrid::prio_crs())
+  gcp <- dplyr::select(gcp, LONGITUDE, LAT, quality)
+  gcp$quality <- dplyr::if_else(gcp$quality <= -499, NA_real_, gcp$quality)
 
-  tt <- raster::disaggregate(gcp, fact = 2)
-  return(tt)
+  pg_tibble <- raster::rasterFromXYZ(gcp, crs = priogrid::prio_crs()) %>%
+    priogrid::rasterextent_to_pg() %>%
+    priogrid::raster_to_pg() %>%
+    priogrid::raster_to_tibble(add_pg_index = T)
+  return(pg_tibble)
 }
 
 
