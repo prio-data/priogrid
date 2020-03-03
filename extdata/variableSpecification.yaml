@@ -1,0 +1,9 @@
+# =&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&
+# This file contains the mapping of variable names to functions. 
+# It is used by the dispatch wrapper when it is figuring out what
+# to do. 
+# =&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&
+
+myVar:
+   fn: "priogrid::gen_myvar"
+

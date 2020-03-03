@@ -28,6 +28,6 @@ Imports:
     janitor,
     Rcpp
 Suggests: testthat
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 LinkingTo: 
     Rcpp

@@ -1,0 +1,16 @@
+
+# =%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%
+# This file contains information about how to handle different
+# file formats; specifically functions to read and write from / to
+# different kinds of format
+# 
+# All read functions must take a single argument: filename
+#
+# All write functions must take two arguments: a data frame and a 
+# filename
+# =%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%=%
+
+parquet:
+   read: "parquet::read_parquet"
+   write: "parquet::write_parquet"
+   ext: ".parquet.gz"

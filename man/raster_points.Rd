@@ -15,5 +15,5 @@ An sf with column val = values(raster)
 Converts a raster to a set of points, optionally
 removing missing values.
 
-Simple function that returns a raster as a sf set of
+Simple function that returns a raster as a sf set of points
 }
