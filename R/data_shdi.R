@@ -7,8 +7,8 @@
 #' @param variable one of c("msch", "esch", "lifexp", "lgnic", "shdi")
 #' @export
 gen_shdi <- function(input_folder, variable = "shdi"){
-  shdi <- read.csv(file.path(input_folder, "data", "SHDI-Complete SD1.csv"))
-  geom <- sf::read_sf(file.path(input_folder, "data", "GDL-SHDI-SHP-2.shp"))
+  shdi <- read.csv(file.path(input_folder, "shdi", "data", "SHDI-Complete SD1.csv"))
+  geom <- sf::read_sf(file.path(input_folder, "shdi", "data", "GDL-SHDI-SHP-2.shp"))
 
   shdi <- shdi %>%
     dplyr::filter(level == "Subnat") %>%
