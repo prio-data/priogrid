@@ -4,10 +4,7 @@
 \alias{gen_goldsurface_y}
 \title{Generate yearly dummy identifying semi-lootable surface gold deposits.}
 \usage{
-gen_goldsurface_y(golddata_s)
-}
-\arguments{
-\item{golddata_s}{GOLDATA 1.2 v semi-lootable gold shapefile.}
+gen_goldsurface_y(input_folder)
 }
 \description{
 Generate yearly dummy identifying semi-lootable surface gold deposits.

@@ -4,7 +4,7 @@
 \alias{gen_diamprim_y}
 \title{Generate yearly primary diamond presence dummy.}
 \usage{
-gen_diamprim_y(diamond_data)
+gen_diamprim_y(input_folder, variable = "diamprim_y")
 }
 \arguments{
 \item{diamond_data}{DIADATA shapefile from the PRIO Diamond Resources dataset.}

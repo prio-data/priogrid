@@ -4,10 +4,7 @@
 \alias{gen_goldplacer_y}
 \title{Generate yearly dummy identifying lootable placer gold deposits.}
 \usage{
-gen_goldplacer_y(golddata_l)
-}
-\arguments{
-\item{golddata_l}{GOLDATA 1.2 v lootable gold shapefile.}
+gen_goldplacer_y(input_folder)
 }
 \description{
 Generate yearly dummy identifying lootable placer gold deposits.

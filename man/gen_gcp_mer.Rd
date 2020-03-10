@@ -4,7 +4,7 @@
 \alias{gen_gcp_mer}
 \title{Generate gcp_mer variable}
 \usage{
-gen_gcp_mer(gecon_data)
+gen_gcp_mer(input_folder, variable = "GCP_MER")
 }
 \arguments{
 \item{gecon_data}{G-Econ v. 4.0 excel data}

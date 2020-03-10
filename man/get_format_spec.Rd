@@ -7,5 +7,8 @@
 get_format_spec(format_name)
 }
 \description{
-get_format_spec
+Returns the spec for a format, with functions for reading and
+writing as well as the file extension to use.
+Used for dispatching gen functions with different file formats.
+See extdata/format_specification.yaml for further information.
 }

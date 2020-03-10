@@ -4,13 +4,7 @@
 \alias{gen_gem_s}
 \title{Generate static gem dummy.}
 \usage{
-gen_gem_s(gem_data)
-}
-\arguments{
-\item{gemdata}{GEMDATA shapefile.}
-}
-\value{
-RasterLayer.
+gen_gem_s(input_folder)
 }
 \description{
 Function to generate static gem presence dummy for records without known discovery or start of production year.

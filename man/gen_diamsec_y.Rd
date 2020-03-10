@@ -4,10 +4,7 @@
 \alias{gen_diamsec_y}
 \title{Generate yearly secondary diamond presence dummy.}
 \usage{
-gen_diamsec_y(diamond_data)
-}
-\arguments{
-\item{diamond_data}{DIADATA shapefile from the PRIO Diamond Resources dataset.}
+gen_diamsec_y(input_folder)
 }
 \description{
 Generate yearly secondary diamond presence dummy.
