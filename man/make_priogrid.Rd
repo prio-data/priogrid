@@ -4,8 +4,29 @@
 \alias{make_priogrid}
 \title{make_priogrid}
 \usage{
-make_priogrid()
+make_priogrid(input_folder, output_folder, specfile = NULL,
+  format = "parquet")
+}
+\arguments{
+\item{input_folder}{The folder containing the raw data file structure (see
+vignette('pg_raw_data')}
+
+\item{output_folder}{The folder where the finished data will be written.}
+
+\item{specfile}{A specification file which tells the function what to make.
+THis file must follow a format laid out in vignette('pg_specification')}
+
+\item{format}{What file format to write out. Currently supported formats are
+'parquet' (default) and 'rds'.}
 }
 \description{
-make_priogrid
+Make priogrid.
+This function is the main entrypoint for the priogrid package. It compiles
+the files that make up priogrid by following several different specification
+files located under extdata (or specified).  
+
+This function is responsible for figuring out which function to run for each
+variable, and providing these functions with the location of the raw data,
+as well as the location to which the resulting data will be written, and in
+what file format.
 }

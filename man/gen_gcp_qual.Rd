@@ -4,10 +4,7 @@
 \alias{gen_gcp_qual}
 \title{Generate gcp_qual variable}
 \usage{
-gen_gcp_qual(gecon_data)
-}
-\arguments{
-\item{gecon_data}{G-Econ v. 4.0 excel data}
+gen_gcp_qual(input_folder)
 }
 \description{
 Generate quality of GCP values variable,
