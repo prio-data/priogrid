@@ -2,7 +2,7 @@
 % Please edit documentation in R/util.R
 \name{refToRaster}
 \alias{refToRaster}
-\title{Old grid to raster}
+\title{stream.table}
 \usage{
 refToRaster(timeseries, year = 1970, variable = "gwno")
 }
@@ -12,13 +12,24 @@ refToRaster(timeseries, year = 1970, variable = "gwno")
 \item{year}{The desired year. Currently only yields a single raster for a single year.}
 
 \item{variable}{A vector of variable[s] to return in a stack}
+
+\item{filename}{File name}
+
+\item{chunksize}{Number of lines in each chunk}
+
+\item{...}{Arguments passed to read.table
+Old grid to raster
+
+Converts the .csv PrioGrid v.1 into a raster.
+Useful for testing equivalency.}
 }
 \value{
 A raster stack with rasters for each variable
 }
 \description{
-Converts the .csv PrioGrid v.1 into a raster.
-Useful for testing equivalency.
+Returns a "generator function" that can be called repeatedly,
+yielding lines from the file (fname).
+Returns 0 rows when the file has been completely read.
 }
 \examples{
 prioTimeseries <- read.csv('timeseries.csv') 
