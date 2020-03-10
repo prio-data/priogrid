@@ -4,10 +4,7 @@
 \alias{gen_gcp_ppp}
 \title{Generate gcp_ppp variable}
 \usage{
-gen_gcp_ppp(gecon_data)
-}
-\arguments{
-\item{gecon_data}{G-Econ v. 4.0 excel data}
+gen_gcp_ppp(input_folder)
 }
 \description{
 Generate gross cell product (USD adjusted for purchasing-power-parity) variable,

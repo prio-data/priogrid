@@ -22,7 +22,8 @@ prep_resource <- function(data, endyear = NULL, static = TRUE){
 
 prep_diamonds <- function(input_folder){
 
-  diamonds <- sf::st_read(file.path(input_folder, "DIADATA.shp"), quiet = TRUE)
+  diamonds <- sf::st_read(file.path(input_folder, "resource",
+                                    "data", "DIADATA.shp"), quiet = TRUE)
   diamonds <- sf::st_transform(diamonds, crs = priogrid::prio_crs())
 
   diamonds$disc.year <- lubridate::year(diamonds$DISC)
@@ -39,14 +40,26 @@ prep_diamonds <- function(input_folder){
 }
 
 
-#' Generate yearly primary diamond presence dummy.
+
+#' @title diamprim_y
 #'
-#' @param diamond_data DIADATA shapefile from the PRIO Diamond Resources dataset.
+#' @description Generate dummy variable for whether
+#' primary (kimberlite or lamproite) diamond deposits have
+#' been found within the given grid cell for any given year,
+#' based on the Diamond Resources dataset v1a.
+#' This variable only codes deposits that have a known year of
+#' discovery or start of production. For a complete picture,
+#' these data must therefore be combined with the diamprim_s data.
+#' Available only until 2005.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_diamprim_y <- function(input_folder, variable = "diamprim_y"){
 
-  diamonds <- prep_diamonds(input_folder) %>%
+  diamonds <- priogrid::prep_diamonds(input_folder) %>%
   dplyr::rename(diamprim_y = diamprim, diamsec_y = diamsec) %>%
-  prep_resource(endyear = 2005, static = FALSE)
+  priogrid::prep_resource(endyear = 2005, static = FALSE)
 
   diamonds <- priogrid::panel_to_pg(diamonds, timevar = "year", variable = variable,
                                need_aggregation = TRUE, fun = "first")
@@ -55,18 +68,42 @@ gen_diamprim_y <- function(input_folder, variable = "diamprim_y"){
 
 }
 
-#' Generate yearly secondary diamond presence dummy.
+#' @title diamsec_y
+#'
+#' @description Generate dummy variable for whether
+#' secondary (alluvial) diamond deposits have been found
+#' within the given grid cell for any given year, based on
+#' the Diamond Resources dataset v1a. This variable only codes
+#' those deposits that have a known year of discovery or start
+#' of production. For a complete picture, these data must
+#' therefore be combined with the diamsec_s data.
+#' Available only until 2005.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_diamsec_y <- function(input_folder){
-  diamonds <- gen_diamprim_y(input_folder, variable = "diamsec_y")
+  diamonds <- priogrid::gen_diamprim_y(input_folder, variable = "diamsec_y")
 
   return(diamonds)
 }
 
-#' Generate static diamond presence dummy
-#' including records without known start year.
 
+#' @title diamprim_s
+#'
+#' @description Generate dummy variable for whether
+#' primary (kimberlite or lamproite) diamond deposits have
+#' been found within the given grid cell, based on the
+#' Diamond Resources dataset v1a. This variable only codes
+#' those deposits that do now have a known year of discovery
+#' or start of production. For a complete picture, these data
+#' must therefore be combined with the diamprim_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_diamprim_s <- function(input_folder, variable = "diamprim_s"){
-  diamonds <- prep_diamonds(input_folder) %>%
+  diamonds <- priogrid::prep_diamonds(input_folder) %>%
     dplyr::rename(diamsec_s = diamsec, diamprim_s = diamprim)
 
   diamonds <- priogrid::vector_to_pg(diamonds, variable = variable, need_aggregation = TRUE, fun = "first")
@@ -76,21 +113,42 @@ gen_diamprim_s <- function(input_folder, variable = "diamprim_s"){
   return(diamonds)
 }
 
+#' @title Generate diamsec_s
+#'
+#' @description Generate dummy variable for whether
+#' secondary (alluvial) diamond deposits have been found within
+#' the given grid cell, based on the Diamond Resources dataset v1a.
+#' This variable only codes those deposits that do not have a known
+#' year of discovery or start of production. For a complete picture,
+#' these data must therefore be combined with the diamsec_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_diamsec_s <- function(input_folder){
-  gen_diamonds_s(input_folder, "diamsec")
+  priogrid::gen_diamonds_s(input_folder, "diamsec")
 }
 
 
 # Drug data
 
-#' Generate yearly dummy identifying ongoing large-scale drug cultivation
-#' (coca bush, opium poppy and/or cannabis).
+#' @title drug_y
 #'
-
+#' @description Generate dummy variable for whether large-scale
+#' drug cultivation (coca bush, opium poppy, or cannabis) is ongoing
+#' within the given grid cell, based on the DRUGDATA dataset.
+#' Available only until 2002.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_drug_y <- function(input_folder){
-  cannabis <- sf::st_read(file.path(input_folder, "CANNABIS.shp"), stringsAsFactors = FALSE, quiet = TRUE)
-  coca <- sf::st_read(file.path(input_folder, "COCA BUSH.shp"), stringsAsFactors = FALSE, quiet = TRUE)
-  opium <- sf::st_read(file.path(input_folder, "OPIUM POPPY.shp"), stringsAsFactors = FALSE, quiet = TRUE)
+  cannabis <- sf::st_read(file.path(input_folder, "resource", "data",
+                                    "CANNABIS.shp"), stringsAsFactors = FALSE, quiet = TRUE)
+  coca <- sf::st_read(file.path(input_folder, "resource", "data",
+                                "COCA BUSH.shp"), stringsAsFactors = FALSE, quiet = TRUE)
+  opium <- sf::st_read(file.path(input_folder, "resource", "data",
+                                 "OPIUM POPPY.shp"), stringsAsFactors = FALSE, quiet = TRUE)
 
   cleanup <- function(data, vars){
     data <- data %>%
@@ -103,11 +161,10 @@ gen_drug_y <- function(input_folder){
                  cleanup(coca, vars),
                  cleanup(opium, vars))
 
-  drugs$end[which(is.na(drugs$end))] <- 2002
-  drugs$begin[drugs$begin < 1946] <- 1946
-
   drugs <- drugs %>%
-    sf::st_set_crs(value = priogrid::prio_crs())
+    dplyr::mutate(end = tidyr::replace_na(end, 2002),
+           begin = ifelse(begin < 1946, 1946, begin)) %>%
+    sf::st_set_crs(value = priogrid::prio_crs()) %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(year = purrr::map2(begin, end, `:`),
                   drug_y = 1) %>%
@@ -126,25 +183,37 @@ gen_drug_y <- function(input_folder){
 # Gem data
 
 prep_gems <- function(input_folder){
-  gems <- sf::st_read(file.path(input_folder, "GEMDATA.shp"), quiet = TRUE)
+  gems <- sf::st_read(file.path(input_folder, "resource", "data",
+                                "GEMDATA.shp"), quiet = TRUE)
 
   gems <- gems %>%
-    dplyr::select(id = PRIMKEY, disc.year = DISC_Y, prod.year = PRO_Y, geometry)
-
-  gems$disc.year[gems$disc.year == 0] <- NA
-  gems$prod.year[gems$prod.year == 0] <- NA
-
-  gems$disc.year[gems$disc.year < 1946] <- 1946
-  gems$prod.year[gems$prod.year < 1946] <- 1946
+    dplyr::select(id = PRIMKEY, disc.year = DISC_Y, prod.year = PRO_Y, geometry) %>%
+    dplyr::mutate(disc.year = dplyr::na_if(disc.year, 0),
+                  prod.year = dplyr::na_if(prod.year, 0),
+                  disc.year = ifelse(disc.year < 1946, 1946, disc.year),
+                  prod.year = ifelse(prod.year < 1946, 1946, prod.year))
 
   return(gems)
 }
 
 
+#' @title gem_y
+#'
+#' @description Generate dummy variable for whether
+#' gem deposits have been found within the given grid cell,
+#' based on the GEMDATA dataset. This variable only codes
+#' those deposits that have a known year of discovery or
+#' start of production. For a complete picture, these data
+#' must therefore be combined with the gem_s data.
+#' Available only until 2004.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_gem_y <- function(input_folder){
-  gems <- prep_gems(input_folder)
+  gems <- priogrid::prep_gems(input_folder)
 
-  gems <- prep_resource(gems, endyear = 2004, static = FALSE) %>%
+  gems <- priogrid::prep_resource(gems, endyear = 2004, static = FALSE) %>%
     dplyr::mutate(gem_y = 1)
 
   gems <- priogrid::panel_to_pg(gems, timevar = "year", variable = "gem_y",
@@ -155,15 +224,22 @@ gen_gem_y <- function(input_folder){
 }
 
 
-
-#' Generate static gem dummy.
+#' @title gem_s
 #'
-#' Function to generate static gem presence dummy for records without known discovery or start of production year.
-
+#' @description Generate dummy variable for whether
+#' gem deposits have been found within the given grid cell,
+#' based on the GEMDATA dataset. This variable only codes
+#' those deposits that do not have a known year of discovery
+#' or start of production. For a complete picture, these data
+#' must therefore be combined with the gem_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_gem_s <- function(input_folder){
-  gems <- prep_gems(input_folder)
+  gems <- priogrid::prep_gems(input_folder)
 
-  gems <- prep_resource(gems, static = TRUE) %>%
+  gems <- priogrid::prep_resource(gems, static = TRUE) %>%
     dplyr::mutate(gem_s = 1)
 
   gems <- priogrid::vector_to_pg(gems, variable = "gem_s", fun = "first", need_aggregation = TRUE)
@@ -176,27 +252,35 @@ gen_gem_s <- function(input_folder){
 
 
 # Gold data
-input_folder <- "~/Dropbox/formatted_raw/gold/data/"
+
 prep_gold <- function(input_folder, data_file = "dGOLD_L.shp"){
-  gold <- sf::st_read(file.path(input_folder, data_file), quiet = TRUE)
+  gold <- sf::st_read(file.path(input_folder, "resource",
+                                "data", data_file), quiet = TRUE)
   gold <- sf::st_set_crs(gold, value = priogrid::prio_crs())
 
   gold <- gold %>%
-    dplyr::select(id = PRIMKEY, gwno = COWcode, prod.year = PRODyear, disc.year = DISCyear, geometry)
-
-  gold$disc.year[gold$disc.year == 9999] <- NA
-  gold$prod.year[gold$prod.year == 9999] <- NA
+    dplyr::select(id = PRIMKEY, gwno = COWcode, prod.year = PRODyear, disc.year = DISCyear, geometry) %>%
+    dplyr::mutate(disc.year = dplyr::na_if(disc.year, 9999),
+                  prod.year = dplyr::na_if(prod.year, 9999))
 
   return(gold)
 
 }
 
-#' Generate yearly dummy identifying lootable placer gold deposits.
-
+#' @title goldplacer_y
+#'
+#' @description Generate dummy variable for whether
+#' placer gold deposits have been found within the given
+#' grid cell, based om the dGOLD_L subset of the
+#' GOLDATA dataset v1.2. Available only until 2012.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_goldplacer_y <- function(input_folder){
-  gold <- prep_gold(input_folder, data_file = "dGOLD_L.shp")
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_L.shp")
 
-  gold <- prep_resource(gold, endyear = 2012, static = FALSE) %>%
+  gold <- priogrid::prep_resource(gold, endyear = 2012, static = FALSE) %>%
     dplyr::mutate(goldplacer_y = 1)
 
   gold <- priogrid::panel_to_pg(gold, timevar = "year", variable = "goldplacer_y", need_aggregation = TRUE,
@@ -205,11 +289,26 @@ gen_goldplacer_y <- function(input_folder){
   return(gold)
 }
 
-#' Generate yearly dummy identifying semi-lootable surface gold deposits.
-gen_goldsurface_y <- function(input_folder){
-  gold <- prep_gold(input_folder, data_file = "dGOLD_S.shp")
 
-  gold <- prep_resource(gold_semiloot, endyear = 2012, static = FALSE) %>%
+#' @title goldsurface_y
+#'
+#' @description Generate dummy variable for whether
+#' surface gold deposits, defined as deposits that are
+#' located near the surfaec but "do not hold enough information
+#' to be properly defined as lootable" have been found within
+#' the given grid cell, based on the dGOLD_S subset of the
+#' GOLDATA dataset v1.2. This variable only codes the deposits
+#' that have a known year of discovery or start of production.
+#' For a complete picture, these data must therefore be combined
+#' with the goldsurface_s data. Available only until 2012.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_goldsurface_y <- function(input_folder){
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_S.shp")
+
+  gold <- priogrid::prep_resource(gold, endyear = 2012, static = FALSE) %>%
     dplyr::mutate(goldsurface_y = 1)
 
   gold <- priogrid::panel_to_pg(gold, timevar = "year", variable = "goldsurface_y",
@@ -220,11 +319,23 @@ gen_goldsurface_y <- function(input_folder){
 }
 
 
-#' Generate yearly dummy identifying non-lootable vein gold deposits.
+#' @title goldvein_y
+#'
+#' @description Generate dummy variable for whether
+#' vein gold deposits have been found within the given grid cell,
+#' based on the dGOLD_NL subset of the GOLDATA dataset v1.2.
+#' This variable only codes those deposits that have a known
+#' year of discovery or start of production. For a complete picture
+#' these data must therefore be combined with the goldvein_s data.
+#' Available only until 2012.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_goldvein_y <- function(input_folder){
-  gold <- prep_gold(input_folder, data_file = "dGOLD_NL.shp")
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_NL.shp")
 
-  gold <- prep_resource(gold, endyear = 2012, static = FALSE) %>%
+  gold <- priogrid::prep_resource(gold, endyear = 2012, static = FALSE) %>%
     dplyr::mutate(goldvein_y = 1)
 
   gold <- priogrid::panel_to_pg(gold, timevar = "year", variable = "goldvein_y",
@@ -234,13 +345,24 @@ gen_goldvein_y <- function(input_folder){
 
 }
 
-# Static gold
 
+#' @title goldplacer_s
+#'
+#' @description Generate dummt variable for whether
+#' placer gold deposits have been found within the given grid cell,
+#' based on the dGOLD_L subset of the GOLDATA v1.2 dataset.
+#' This variable only codes those deposits that do not have a known
+#' year of discovery or start of production. For a complete picture,
+#' these data must therefore be combined with the goldplacer_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_goldplacer_s <- function(input_folder){
 
-  gold <- prep_gold(input_folder, data_file = "dGOLD_L.shp")
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_L.shp")
 
-  gold <- prep_resource(gold, static = TRUE) %>%
+  gold <- priogrid::prep_resource(gold, static = TRUE) %>%
     dplyr::mutate(goldplacer_s = 1)
 
   gold <- priogrid::vector_to_pg(gold, variable = "goldplacer_s", fun = "first", need_aggregation = TRUE)
@@ -251,11 +373,23 @@ gen_goldplacer_s <- function(input_folder){
 
 }
 
+#' @title goldsurface_s
+#'
+#' @description Generate dummy variable for whether
+#' surface gold deposits have been found within the given grid cell,
+#' based on the dGOLD_S subset of the GOLDATA v1.2 dataset.
+#' This variable only codes those deposits that do not have a known
+#' year of discovery or start of production. For a complete picture,
+#' these data must therefore be combined with the goldsurface_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_goldsurface_s <- function(input_folder){
 
-  gold <- prep_gold(input_folder, data_file = "dGOLD_S.shp")
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_S.shp")
 
-  gold <- prep_resource(gold, static = TRUE) %>%
+  gold <- priogrid::prep_resource(gold, static = TRUE) %>%
     dplyr::mutate(goldsurface_s = 1)
 
   gold <- priogrid::vector_to_pg(gold, variable = "goldsurface_s", fun = "first", need_aggregation = TRUE)
@@ -267,12 +401,23 @@ gen_goldsurface_s <- function(input_folder){
 }
 
 
-
+#' @title goldvein_s
+#'
+#' @description Generate dummy variable for whether
+#' vein gold deposits have been found within the given grid cell,
+#' based on the dGOLD_NL subset of the GOLDATA v1.2 dataset.
+#' This variable only codes those deposits that do not have a known
+#' year of discovery or start of production. For a complete picture,
+#' these data must therefore be combined with the goldvein_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
 gen_goldvein_s <- function(input_folder){
 
-  gold <- prep_gold(input_folder, data_file = "dGOLD_NL.shp")
+  gold <- priogrid::prep_gold(input_folder, data_file = "dGOLD_NL.shp")
 
-  gold <- prep_resource(gold, static = TRUE) %>%
+  gold <- priogrid::prep_resource(gold, static = TRUE) %>%
     dplyr::mutate(goldvein_s = 1)
 
   gold <- priogrid::vector_to_pg(gold, variable = "goldvein_s", fun = "first", need_aggregation = TRUE)
@@ -287,41 +432,65 @@ gen_goldvein_s <- function(input_folder){
 # Petroleum data
 
 prep_petro <- function(input_folder){
-  petroleum <- sf::st_read(file.path(input_folder, "Petrodata_Onshore_V1.2.shp"), quiet = TRUE)
+  petroleum <- sf::st_read(file.path(input_folder, "resource", "data",
+                                     "Petrodata_Onshore_V1.2.shp"), quiet = TRUE)
 
   petroleum <- petroleum %>%
-    dplyr::select(id = PRIMKEY, gwno = COWCODE, disc.year = DISC, prod.year = PROD, geometry)
-
-  petroleum$disc.year[petroleum$disc.year == -9999] <- NA
-  petroleum$prod.year[petroleum$prod.year == -9999] <- NA
-
-  petroleum$disc.year[petroleum$disc.year < 1946] <- 1946
-  petroleum$prod.year[petroleum$prod.year < 1946] <- 1946
+    dplyr::select(id = PRIMKEY, gwno = COWCODE, disc.year = DISC, prod.year = PROD, geometry) %>%
+    dplyr::mutate(disc.year = dplyr::na_if(disc.year, -9999),
+                  prod.year = dplyr::na_if(prod.year, -9999),
+                  disc.year = ifelse(disc.year < 1946, 1946, disc.year),
+                  prod.year = ifelse(prod.year < 1946, 1946, prod.year))
 
   return(petroleum)
 }
 
 
-#' Generate yearly petroleum presence dummy variable.
+#' @title petroleum_y
+#'
+#' @description Generate dummy variable for whether
+#' onshore petroleum deposits have been found within
+#' the given grid cell for any given year, based on the
+#' Petroleum Dataset v1.2. This variable only codes those
+#' petroleum deposits that have a known year of discovery or
+#' start of production. For a complete picture, these data
+#' must therefore be combined with the petroleum_s data.
+#' Available only until 2003.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_petroleum_y <- function(input_folder){
+  petroleum <- priogrid::prep_petro(input_folder)
 
-gen_petro_y <- function(input_folder){
-  petroleum <- prep_petro(input_folder)
-
-  petroleum <- prep_resource(petroleum, endyear = 2003, static = FALSE) %>%
+  petroleum <- priogrid::prep_resource(petroleum, endyear = 2003, static = FALSE) %>%
     dplyr::mutate(petroleum_y = 1)
 
   petroleum <- priogrid::panel_to_pg(petroleum, timevar = "year", variable = "petroleum_y", fun = "first",
                                      need_aggregation = TRUE)
 
+  return(petroleum)
+
 }
 
-#' Generate static petroleum presence dummy variable
-#' for records without known year of discovery or production start.
 
-gen_petro_s <- function(input_folder){
-  petroleum <- prep_petro(input_folder)
+#' @title petroleum_s
+#'
+#' @description Generate dummy variable for whether
+#' onshore petroleum deposits have been found within
+#' the given grid cell, based on the Petroleum Dataset v1.2.
+#' This variable only codes those petroleum deposits that do not
+#' have a known year of discovery or start of production.
+#' For a complete picture, these data must therefore be
+#' combined with the petroleum_y data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_petroleum_s <- function(input_folder){
+  petroleum <- priogrid::prep_petro(input_folder)
 
-  petroleum <- prep_resource(petroleum, static = TRUE) %>%
+  petroleum <- priogrid::prep_resource(petroleum, static = TRUE) %>%
     dplyr::mutate(petroleum_s = 1)
 
   petroleum <- priogrid::vector_to_pg(petroleum, variable = "petroleum_s", fun = "first",
@@ -332,15 +501,3 @@ gen_petro_s <- function(input_folder){
   return(petroleum)
 
 }
-
-
-
-
-
-
-
-
-
-
-
-

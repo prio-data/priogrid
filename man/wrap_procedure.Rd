@@ -4,9 +4,30 @@
 \alias{wrap_procedure}
 \title{wrap_procedure}
 \usage{
-wrap_procedure(variable_name, input_folder, output_folder,
-  format = "parquet")
+wrap_procedure(fn, input_folder, output_folder, format)
+}
+\arguments{
+\item{fn}{The function to apply}
+
+\item{input_folder}{The folder containing the priogrid raw data.}
+
+\item{output_folder}{Where to write the output data files}
+
+\item{format}{What format to write the output data to}
 }
 \description{
-wrap_procedure
+This function manages a procedure, which is defined as the
+application of a (gen) function to raw data, yielding a data frame. This
+data frame is then saved in the given format.
+
+Each gen function must manage its own raw data path. The wrap procedure only
+provides the folder containing the file structure that hosts the raw data
+folders.
+
+The wrapper also avoids doing any work if the output file exists. If the
+output file should be remade, delete it before running the make function. 
+
+This function should not be called directly, but is rather called by the
+make function. If you want to build a single variable, call the gen function
+directly instead.
 }

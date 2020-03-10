@@ -5,10 +5,7 @@
 \title{Generate static petroleum presence dummy variable
 for records without known year of discovery or production start.}
 \usage{
-gen_petro_s(petro_data)
-}
-\arguments{
-\item{petro_data}{PRIO Petroleum Dataset v. 1.2 onshore shapefile}
+gen_petro_s(input_folder)
 }
 \description{
 Generate static petroleum presence dummy variable

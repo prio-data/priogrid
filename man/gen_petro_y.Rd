@@ -4,10 +4,7 @@
 \alias{gen_petro_y}
 \title{Generate yearly petroleum presence dummy variable.}
 \usage{
-gen_petro_y(petro_data)
-}
-\arguments{
-\item{petro_data}{PRIO Petroleum Dataset v. 1.2 onshore shapefile}
+gen_petro_y(input_folder)
 }
 \description{
 Generate yearly petroleum presence dummy variable.

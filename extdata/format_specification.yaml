@@ -14,3 +14,8 @@ parquet:
    read: "parquet::read_parquet"
    write: "parquet::write_parquet"
    ext: ".parquet.gz"
+
+rds:
+   read: "readRDS"
+   write: "saveRDS"
+   ext: ".rds"

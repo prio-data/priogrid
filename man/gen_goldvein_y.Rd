@@ -4,10 +4,7 @@
 \alias{gen_goldvein_y}
 \title{Generate yearly dummy identifying non-lootable vein gold deposits.}
 \usage{
-gen_goldvein_y(golddata_nl)
-}
-\arguments{
-\item{golddata_nl}{GOLDATA 1.2 v non-lootable gold shapefile.}
+gen_goldvein_y(input_folder)
 }
 \description{
 Generate yearly dummy identifying non-lootable vein gold deposits.
