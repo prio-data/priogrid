@@ -22,8 +22,8 @@ prep_resource <- function(data, endyear = NULL, static = TRUE){
 
 prep_diamonds <- function(input_folder){
 
-  diamonds <- sf::st_read(file.path(input_folder, "resource",
-                                    "data", "DIADATA.shp"), quiet = TRUE)
+  diamonds <- sf::read_sf(file.path(input_folder, "resource",
+                                    "data", "DIADATA.shp"))
   diamonds <- sf::st_transform(diamonds, crs = priogrid::prio_crs())
 
   diamonds$disc.year <- lubridate::year(diamonds$DISC)
@@ -143,12 +143,12 @@ gen_diamsec_s <- function(input_folder){
 #'
 #' @export
 gen_drug_y <- function(input_folder){
-  cannabis <- sf::st_read(file.path(input_folder, "resource", "data",
-                                    "CANNABIS.shp"), stringsAsFactors = FALSE, quiet = TRUE)
-  coca <- sf::st_read(file.path(input_folder, "resource", "data",
-                                "COCA BUSH.shp"), stringsAsFactors = FALSE, quiet = TRUE)
-  opium <- sf::st_read(file.path(input_folder, "resource", "data",
-                                 "OPIUM POPPY.shp"), stringsAsFactors = FALSE, quiet = TRUE)
+  cannabis <- sf::read_sf(file.path(input_folder, "resource", "data",
+                                    "CANNABIS.shp"))
+  coca <- sf::read_sf(file.path(input_folder, "resource", "data",
+                                "COCA BUSH.shp"))
+  opium <- sf::read_sf(file.path(input_folder, "resource", "data",
+                                 "OPIUM POPPY.shp"))
 
   cleanup <- function(data, vars){
     data <- data %>%
@@ -183,8 +183,8 @@ gen_drug_y <- function(input_folder){
 # Gem data
 
 prep_gems <- function(input_folder){
-  gems <- sf::st_read(file.path(input_folder, "resource", "data",
-                                "GEMDATA.shp"), quiet = TRUE)
+  gems <- sf::read_sf(file.path(input_folder, "resource", "data",
+                                "GEMDATA.shp"))
 
   gems <- gems %>%
     dplyr::select(id = PRIMKEY, disc.year = DISC_Y, prod.year = PRO_Y, geometry) %>%
@@ -254,8 +254,8 @@ gen_gem_s <- function(input_folder){
 # Gold data
 
 prep_gold <- function(input_folder, data_file = "dGOLD_L.shp"){
-  gold <- sf::st_read(file.path(input_folder, "resource",
-                                "data", data_file), quiet = TRUE)
+  gold <- sf::read_sf(file.path(input_folder, "resource",
+                                "data", data_file))
   gold <- sf::st_set_crs(gold, value = priogrid::prio_crs())
 
   gold <- gold %>%
@@ -432,8 +432,8 @@ gen_goldvein_s <- function(input_folder){
 # Petroleum data
 
 prep_petro <- function(input_folder){
-  petroleum <- sf::st_read(file.path(input_folder, "resource", "data",
-                                     "Petrodata_Onshore_V1.2.shp"), quiet = TRUE)
+  petroleum <- sf::read_sf(file.path(input_folder, "resource", "data",
+                                     "Petrodata_Onshore_V1.2.shp"))
 
   petroleum <- petroleum %>%
     dplyr::select(id = PRIMKEY, gwno = COWCODE, disc.year = DISC, prod.year = PROD, geometry) %>%
