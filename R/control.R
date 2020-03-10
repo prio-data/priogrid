@@ -1,13 +1,56 @@
 
 #' @title make_priogrid 
-make_priogrid <- function(){
-    
+#' @description Make priogrid by following a specification that determines what functions are used for each variable, and where the data for each variable is located. The raw data are grouped under common names, since many variables use the same raw data.
+#' @export
+#' @importFrom magrittr %>%
+make_priogrid <- function(input_folder,output_folder,
+   specfile = NULL,format = "parquet"){
+
+   # TODO Mockup
+   input_folder <- "/tmp/in"
+   output_folder <- "/tmp/out"
+   specfile <- "/tmp/spec.csv"
+
+   # Read the included specfile by default
+   if(is.null(specfile)){
+      specfile <- system.file(
+         "extdata",
+         "authorative_variable_names.csv",
+         package = "priogrid",
+         mustWork = TRUE
+      )
+   }
+   spec <- read.csv(specfile,stringsAsFactors = FALSE)
+
+   # TODO Mockup
+   spec <- spec[!is.na(spec$ready),]
+
+   spec <- spec %>%
+      apply(1,as.list) 
+
+
+   for(varspec in spec){
+      #call$fn <- eval(parse(text=paste0("priogrid::",varspec$genfunction)))
+      procedure_call <- list(
+         fn = varspec$genfunction,
+         input_folder <- input_folder,
+         output_folder <- output_folder,
+         format <- format
+      )
+
+      do.call(mock_wrap_procedure,procedure_call)
+   }
+}
+
+mock_wrap_procedure <- function(
+   fn,
+   input_folder,output_folder,
+   format) {
+   print(glue::glue("{deparse(fn)}: {input_folder}, {output_folder} to {format}"))
 }
 
 #' @title wrap_procedure
-wrap_procedure<- function(variable_name,
-   input_folder,output_folder,format = "parquet"){
-
+wrap_procedure<- function(fn,input_folder,output_folder,format = "parquet"){
    variable_function <- get_var_function(variable_name) 
    format_spec <- get_format_spec(format)
 
