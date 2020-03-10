@@ -45,7 +45,7 @@ gen_gwcode <- function(fname, numCores = 1, quiet = TRUE){
 #' @param fname File path to Weidmann cshapes data
 #' @param quiet Whether or not sf::st_ functions should print warnings.
 gen_pgland <- function(input_folder, quiet = TRUE){
-   cshp <- sf::read_sf(file.path(input_folder, "cshapes.shp"))
+   cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
    cshp <- cshp %>%
       dplyr::filter(GWCODE != -1)
@@ -59,34 +59,34 @@ gen_pgland <- function(input_folder, quiet = TRUE){
    return(pgland)
 }
 
-gen_landarea <- function(fname, output_folder, quiet = TRUE){
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
-   pgland <- spex::polygonize(pgland)
+gen_landarea_sf <- function(input_folder){
+   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+   assertthat::assert_that(file.exists(pgland))
+   pgland <- arrow::read_parquet(pgland)
 
-   cshp <- sf::st_read(fname, quiet = quiet)
+   pg <- priogrid::prio_blank_grid()
+   pg[!(values(pg) %in% pgland$pgid)] <- NA
+
+   pgland <- spex::polygonize(pg)
+
+   cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
+
    cshp <- cshp %>%
       dplyr::filter(GWCODE != -1, GWEYEAR == max(GWEYEAR))
 
    land_polygons <- sf::st_intersection(pgland, cshp)
    land_polygons$pgarea <- sf::st_area(land_polygons)
+   st_crs(land_polygons) <- st_crs(pg)
+   return(land_polygons)
+}
 
-   sf::st_geometry(land_polygons) <- NULL
+gen_landarea <- function(input_folder){
+   pgarea <- gen_landarea_sf(input_folder)
+   sf::st_geometry(pgarea) <- NULL
 
-   land_polygons <- dplyr::group_by(land_polygons, layer) %>%
+   pgarea <- dplyr::group_by(pgarea, pgid) %>%
      dplyr::summarise(pgarea = sum(pgarea, na.rm = T))
-   #...
-   pgland <- dplyr::left_join(pgland, land_polygons, by = "layer")
-   pgland <- sf::st_centroid(pgland)
-
-   pg <- priogrid::prio_blank_grid()
-   landarea <- raster::rasterize(pgland, pg, field = "pgarea")
-   return(landarea)
+   return(pgarea)
 }
 
 #' gen_changed_areas
@@ -97,7 +97,7 @@ gen_landarea <- function(fname, output_folder, quiet = TRUE){
 #' @param fname File path to Weidmann cshapes data
 #' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
 #' @param quiet Whether or not sf::st_ functions should print warnings.
-gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
+gen_changed_areas <- function(input_folder){
    compare_crossection <- function(crossection_date, cshp){
       message(crossection_date)
       if(crossection_date - lubridate::month(1) < min(cshp$startdate)){
@@ -128,8 +128,7 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
       return(changed_areas)
    }
 
-   message("Loading cshapes")
-   cshp <- sf::st_read(fname, quiet = quiet)
+   cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
    # Setting day to first in month to ensure all changes are included.
    cshp <- cshp %>%
@@ -154,8 +153,8 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
       )
 
    all_months <- seq(min(cshp$startdate), max(cshp$enddate), by = "1 month")
-   message("Find all areas and dates where there have been changes since last month.")
-   changed_areas <- parallel::mclapply(all_months, compare_crossection, cshp, mc.cores = numCores)
+   #Find all areas and dates where there have been changes since last month.
+   changed_areas <- parallel::mclapply(all_months, compare_crossection, cshp)
    changed_areas[sapply(changed_areas, is.null)] <- NULL
 
    crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
@@ -174,9 +173,8 @@ gen_changed_areas <- function(fname, numCores = 1, quiet = TRUE){
 #' The rasterstack only includes the months where there was a change from one month to the next.
 #'
 #' @param fname File path to Weidmann cshapes data
-#' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
-#' @param quiet Whether or not sf::st_ functions should print warnings.
-gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder = NULL){
+#' @importFrom lubridate %within%
+gen_gwcode_month <- function(input_folder){
    calc_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
       if(length(crossection_date) != 1){
@@ -197,30 +195,21 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
 
       # Returns the inner join with the largest area owned in each pg cell that have changed since last month.
       gwcode <- sf::st_join(pg_crossection, cshp_crossection, join = sf::st_intersects, left = FALSE, largest = TRUE) %>%
-         dplyr::select(layer, GWCODE)
+         dplyr::select(pgid, GWCODE)
 
       return(gwcode)
    }
 
-   message("Get the countries where the border changed from one month to the next.")
-   changed_areas_file <- paste0(output_folder, "changed_areas.rds")
-   if(!is.null(output_folder) &  file.exists(changed_areas_file)){
-      changed_areas <- readRDS(changed_areas_file)
-   } else{
-      break(paste(changed_areas_file, "does not exist. Please calculate changed_areas first."))
-   }
+   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+   assertthat::assert_that(file.exists(pgland))
+   pgland <- arrow::read_parquet(pgland)
+   pg <- priogrid::prio_blank_grid()
+   pg[!(values(pg) %in% pgland$pgid)] <- NA
+   pgland <- spex::polygonize(pg)
 
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      break(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
-   pgland <- spex::polygonize(pgland)
+   changed_areas <- priogrid::gen_changed_areas(input_folder)
 
-   message("Loading cshapes")
-   cshp <- sf::st_read(fname, quiet = quiet)
+   cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
    # Setting day to first in month to ensure all changes are included.
    cshp <- cshp %>%
@@ -244,11 +233,11 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
          date_interval = lubridate::interval(startdate, enddate)
       )
 
-   pg <- priogrid::prio_blank_grid()
 
-   # ca 22 minutter på 1 kjerne
-   message("Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.")
-   gwcodes <- parallel::mclapply(changed_areas, calc_crossection, mc.cores = numCores)
+   # Calculate gwcode-ownership for each cell, for each month where ownership changes somewhere in the world.
+   gwcodes <- parallel::mclapply(changed_areas, calc_crossection)
+
+   pg <- priogrid::prio_blank_grid()
 
    # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
    rasters <- list()
@@ -257,7 +246,7 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
    current_raster[] <- NA
    for(j in 1:length(gwcodes)){
       gwcode <- gwcodes[[j]]
-      current_raster[match(gwcode$layer, pg[])] <- gwcode$GWCODE
+      current_raster[match(gwcode$pgid, pg[])] <- gwcode$GWCODE
       rasters[[i]] <- current_raster
       i <- i + 1
    }
@@ -265,10 +254,19 @@ gen_gwcode_month <- function(fname, numCores = 1, quiet = quiet, output_folder =
    gwcode <- raster::stack(rasters)
 
    crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
-   crossection_dates <- as.character(as.Date(crossection_dates, origin = as.Date("1970-1-1")))
+   crossection_dates <- as.Date(crossection_dates, origin = as.Date("1970-1-1"))
 
-   names(gwcode) <- crossection_dates
-   return(gwcode)
+   gwcode_for_all_changes <- dplyr::tibble()
+   for(j in 1:dim(gwcode)[3]){
+      rast <- raster::subset(gwcode, j)
+      df <- raster_to_tibble(rast)
+      names(df)[3] <- "gwcode"
+      df$year <- lubridate::year(crossection_dates)[j]
+      df$month <- lubridate::month(crossection_dates)[j]
+      gwcode_for_all_changes <- dplyr::bind_rows(gwcode_for_all_changes, df)
+   }
+
+   return(gwcode_for_all_changes)
 }
 
 get_closest_distance <- function(points, features, check_dateline=TRUE){
