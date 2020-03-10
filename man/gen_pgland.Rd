@@ -4,12 +4,12 @@
 \alias{gen_pgland}
 \title{gen_pgland}
 \usage{
-gen_pgland(fname, quiet = TRUE)
+gen_pgland(input_folder, quiet = TRUE)
 }
 \arguments{
-\item{fname}{File path to Weidmann cshapes data}
-
 \item{quiet}{Whether or not sf::st_ functions should print warnings.}
+
+\item{fname}{File path to Weidmann cshapes data}
 }
 \description{
 Takes the weidmann cshapes data set and returns a raster for the

@@ -7,9 +7,9 @@
 gen_shdi(input_folder, variable = "shdi")
 }
 \arguments{
-\item{variable}{one of c("msch", "esch", "lifexp", "lgnic", "shdi")}
+\item{input_folder}{path to SHDI data.}
 
-\item{path}{path to SHDI data.}
+\item{variable}{one of c("msch", "esch", "lifexp", "lgnic", "shdi")}
 }
 \description{
 Average Expected years schooling children aged 6 within each grid cell.
