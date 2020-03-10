@@ -2,7 +2,7 @@
 % Please edit documentation in R/pgfunctions.R
 \name{prio_blank_grid}
 \alias{prio_blank_grid}
-\title{Blank GRID 
+\title{Blank GRID
 Returns a blank grid with default PRIOGrid dimensions}
 \usage{
 prio_blank_grid(ncol = FALSE, nrow = FALSE, crs = FALSE,
@@ -19,6 +19,6 @@ prio_blank_grid(ncol = FALSE, nrow = FALSE, crs = FALSE,
 A blank grid
 }
 \description{
-Blank GRID 
+Blank GRID
 Returns a blank grid with default PRIOGrid dimensions
 }

@@ -1,0 +1,10 @@
+# =&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&
+# This file contains the mapping of variable names to functions. 
+# It is used by the dispatch wrapper when it is figuring out what
+# to do. 
+# =&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&=&
+
+gcp_mer:
+   fn: "priogrid::gen_gcp_mer"
+   grpPath: "gecon"
+   hash: 

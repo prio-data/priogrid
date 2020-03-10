@@ -49,4 +49,4 @@ cshp::gen_dcoast
 cshp::gen_pgland
 cshp::gen_driver
 
-
+libnetcdf-dev
