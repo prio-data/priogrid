@@ -32,7 +32,7 @@ make_priogrid <- function(input_folder,output_folder,
    for(varspec in spec){
       #call$fn <- eval(parse(text=paste0("priogrid::",varspec$genfunction)))
       procedure_call <- list(
-         fn = varspec$genfunction,
+         fn = parse_gen_function(varspec$genfunction),
          input_folder <- input_folder,
          output_folder <- output_folder,
          format <- format
@@ -42,11 +42,24 @@ make_priogrid <- function(input_folder,output_folder,
    }
 }
 
+#' @title parse_gen_function
+#' @description Checks if a function is exported from priogrid and returns it. 
+parse_gen_function <- function(function_name){
+   # TODO check if function is actually exported from priogrid::
+   eval(parse(text=paste0("priogrid::",function_name)))
+}
+
 mock_wrap_procedure <- function(
    fn,
    input_folder,output_folder,
    format) {
    print(glue::glue("{deparse(fn)}: {input_folder}, {output_folder} to {format}"))
+   writeout <- list(
+      parquet = saveRDS,
+      rds = saveRDS
+   )
+   data <- fn(input_folder)
+   writeout[[format]](data,output_folder)
 }
 
 #' @title wrap_procedure
