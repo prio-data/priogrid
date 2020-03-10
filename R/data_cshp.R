@@ -44,8 +44,8 @@ gen_gwcode <- function(fname, numCores = 1, quiet = TRUE){
 #'
 #' @param fname File path to Weidmann cshapes data
 #' @param quiet Whether or not sf::st_ functions should print warnings.
-gen_pgland <- function(fname, quiet = TRUE){
-   cshp <- sf::st_read(fname, quiet = quiet)
+gen_pgland <- function(input_folder, quiet = TRUE){
+   cshp <- sf::read_sf(file.path(input_folder, "cshapes.shp"))
 
    cshp <- cshp %>%
       dplyr::filter(GWCODE != -1)
@@ -55,8 +55,7 @@ gen_pgland <- function(fname, quiet = TRUE){
 
    land_gids <- sf::st_intersects(pg_poly, cshp)
    pgland <- pg_poly[lengths(land_gids)> 0,]
-   pgland <- sf::st_centroid(pgland)
-   pgland <- raster::rasterize(pgland, pg, field = "layer")
+   pgland <- dplyr::tibble("pgid" = pgland$pgid, "pgland" = 1L)
    return(pgland)
 }
 
