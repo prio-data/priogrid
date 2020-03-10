@@ -5,7 +5,7 @@
 #'
 #' @param input_folder path to SHDI data.
 #' @param variable one of c("msch", "esch", "lifexp", "lgnic", "shdi")
-#'  @export
+#' @export
 gen_shdi <- function(input_folder, variable = "shdi"){
   shdi <- read.csv(file.path(input_folder, "SHDI-Complete SD1.csv"))
   geom <- sf::read_sf(file.path(input_folder, "GDL-SHDI-SHP-2.shp"))
