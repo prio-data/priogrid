@@ -20,6 +20,23 @@ raster_to_tibble <- function(rast, add_pg_index = FALSE){
   return(df)
 }
 
+get_closest_distance <- function(points, features, check_dateline=TRUE){
+  nearest_feature <- sf::st_nearest_feature(points, features)
+  nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
+
+  distances <- sf::st_length(nearest_point)
+
+  if(check_dateline){
+    pointsT <- st_transform(points,"+proj=longlat +datum=WGS84 +pm=180") %>% st_wrap_dateline()
+    featuresT <- st_transform(features,"+proj=longlat +datum=WGS84 +pm=180") %>% st_wrap_dateline()
+    nearest_featureT <- sf::st_nearest_feature(pointsT, featuresT)
+    nearest_pointT <- sf::st_nearest_points(pointsT, featuresT[nearest_featureT,], pairwise = TRUE)
+    distancesT <- sf::st_length(nearest_pointT)
+    distances <- apply(cbind(distances, distancesT), 1, min)
+  }
+  return(distances)
+}
+
 
 # Previous prio_aggregate_raster()
 # Obsoletes prio_raster()
