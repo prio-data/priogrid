@@ -269,49 +269,44 @@ gen_gwcode_month <- function(input_folder){
    return(gwcode_for_all_changes)
 }
 
-gen_dcoast <- function(fname, output_folder, quiet = TRUE){
+gen_coastdist <- function(input_folder){
+   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+   assertthat::assert_that(file.exists(pgland))
+   pgland <- arrow::read_parquet(pgland)
 
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      return(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
+   pgland <- priogrid::raster_to_tibble(priogrid::prio_blank_grid()) %>% dplyr::filter(pgid %in% pgland$pgid)
+   pgland <- sf::st_as_sf(pgland, coords = c("x", "y"))
+   sf::st_crs(pgland) <- priogrid::prio_crs()
 
-   pgland <- raster::rasterToPoints(pgland)
-   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
-   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
-   sf::st_crs(pgland) <- sf::st_crs(4326)
-
-   # We use GSHHG, with the "low" resolution (GSHHS_l_L1.shp)
-   coastline <- sf::st_read(fname, quiet = quiet)
+   # We use GSHHG, with the "low" resolution. Higher resolution data is available if necessary. (GSHHS_c/f/h/i/l_L1.shp)
+   coastline <- file.path(input_folder, "gshhg", "data", "GSHHS_shp", "l", "GSHHS_l_L1.shp")
+   coastline <- sf::read_sf(coastline)
    coastline <- sf::st_boundary(coastline)
 
+   pgland$coastdist <- priogrid::get_closest_distance(pgland, coastline)
 
-   pgland$dcoast <- priogrid::get_closest_distance(pgland, coastline)
-   pg <- priogrid::prio_blank_grid()
-   dcoast <- raster::rasterize(pgland, pg, field = "dcoast")
-
-   return(dcoast)
+   sf::st_geometry(pgland) <- NULL
+   return(pgland)
 }
 
-gen_driver <- function(fnames, output_folder, quiet = TRUE){
-   river1 <- fnames[1]
-   river2 <- fnames[2]
-   river3 <- fnames[3]
-   lakes <- fnames[4]
+gen_riverdist <- function(input_folder){
+   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+   assertthat::assert_that(file.exists(pgland))
+   pgland <- arrow::read_parquet(pgland)
 
+   pgland <- priogrid::raster_to_tibble(priogrid::prio_blank_grid()) %>% dplyr::filter(pgid %in% pgland$pgid)
+   pgland <- sf::st_as_sf(pgland, coords = c("x", "y"))
+   sf::st_crs(pgland) <- priogrid::prio_crs()
 
-   #river1 <- "C:/Users/jonves/data/priogrid_data/gshhg/data/WDBII_shp/l/WDBII_river_l_L01.shp"
-   #river2 <- "C:/Users/jonves/data/priogrid_data/gshhg/data/WDBII_shp/l/WDBII_river_l_L02.shp"
-   #river3 <- "C:/Users/jonves/data/priogrid_data/gshhg/data/WDBII_shp/l/WDBII_river_l_L03.shp"
-   #lakes <- "C:/Users/jonves/data/priogrid_data/gshhg/data/GSHHS_shp/l/GSHHS_l_L2.shp"
+   river1 <- file.path(input_folder, "gshhg", "data", "WDBII_shp", "l", "WDBII_river_l_L01.shp")
+   river2 <- file.path(input_folder, "gshhg", "data", "WDBII_shp", "l", "WDBII_river_l_L02.shp")
+   river3 <- file.path(input_folder, "gshhg", "data", "WDBII_shp", "l", "WDBII_river_l_L03.shp")
+   lakes <- file.path(input_folder, "gshhg", "data", "GSHHS_shp", "l", "GSHHS_l_L2.shp")
 
-   river1 <- sf::st_read(river1, quiet = T)
-   river2 <- sf::st_read(river2, quiet = T)
-   river3 <- sf::st_read(river3, quiet = T)
-   lakes <- sf::st_read(lakes, quiet = T)
+   river1 <- sf::read_sf(river1)
+   river2 <- sf::read_sf(river2)
+   river3 <- sf::st_read(river3)
+   lakes <- sf::read_sf(lakes)
    lakes <- dplyr::filter(lakes, area >= 1000)
 
    lakes_and_rivers <- rbind(dplyr::select(river1, geometry),
@@ -319,24 +314,11 @@ gen_driver <- function(fnames, output_folder, quiet = TRUE){
                              dplyr::select(river3, geometry),
                              dplyr::select(lakes, geometry))
 
-   message("Get the set of grid cells that intersect with land from file.")
-   pgland_file <- paste0(output_folder, "pgland.rds")
-   if(!is.null(output_folder) &  file.exists(pgland_file)){
-      pgland <- readRDS(pgland_file)
-   } else{
-      return(paste(pgland_file, "does not exist. Please calculate pgland first."))
-   }
 
-   pgland <- raster::rasterToPoints(pgland)
-   pgland <- dplyr::tibble("gid" = pgland[,3], "lon" = pgland[,1], "lat" = pgland[,2])
-   pgland <- sf::st_as_sf(pgland, coords = c("lon", "lat"))
-   sf::st_crs(pgland) <- sf::st_crs(4326)
-   pgland$driver <- priogrid::get_closest_distance(pgland, lakes_and_rivers)
+   pgland$riverdist <- priogrid::get_closest_distance(pgland, lakes_and_rivers)
 
-   pg <- priogrid::prio_blank_grid()
-   driver <- raster::rasterize(pgland, pg, field = "driver")
-
-   return(driver)
+   sf::st_geometry(pgland) <- NULL
+   return(pgland)
 }
 
 gen_bdist1_month <- function(crossection, gwcode, cshp, numCores = 1){
