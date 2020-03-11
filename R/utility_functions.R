@@ -37,6 +37,38 @@ get_closest_distance <- function(points, features, check_dateline=TRUE){
   return(distances)
 }
 
+update_cells_iteratively <- function(pg_list, varname){
+  # Update classification scheme iteratively. pg_list only gives information of the cells that have changed.
+  pg <- priogrid::prio_blank_grid()
+
+  rasters <- list()
+  i <- 1
+  current_raster <- pg
+  current_raster[] <- NA
+  for(j in 1:length(pg_list)){
+    crossection <- pg_list[[j]]
+    current_raster[match(crossection$pgid, pg[])] <- crossection[[varname]]
+    rasters[[i]] <- current_raster
+    i <- i + 1
+  }
+
+  pg_raster <- raster::stack(rasters)
+
+  crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
+  crossection_dates <- as.Date(crossection_dates, origin = as.Date("1970-1-1"))
+
+  result <- dplyr::tibble()
+  for(j in 1:dim(pg_raster)[3]){
+    rast <- raster::subset(pg_raster, j)
+    df <- raster_to_tibble(rast)
+    names(df)[3] <- varname
+    df$year <- lubridate::year(crossection_dates)[j]
+    df$month <- lubridate::month(crossection_dates)[j]
+    result <- dplyr::bind_rows(result, df)
+  }
+
+  return(result)
+}
 
 # Previous prio_aggregate_raster()
 # Obsoletes prio_raster()
