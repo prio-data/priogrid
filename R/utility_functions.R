@@ -81,7 +81,7 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   nothing_needed <- all(resolution_factor == 1)
   assertthat::assert_that( xor(xor(aggregation_needed, disaggregation_needed), nothing_needed) )
 
-  assertthat::assert_that( extent(rast) == priogrid::prio_extent())
+  assertthat::assert_that( raster::extent(rast) == priogrid::prio_extent())
 
   if(aggregation_needed){
     rast <- raster::aggregate(rast, fact = resolution_factor, fun = aggregation_function)
@@ -151,7 +151,7 @@ map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL){
   rast <- priogrid::rasterextent_to_pg(rast)
   rast <- priogrid::raster_to_pg(rast)
 
-  plot(rast)
+  raster::plot(rast)
 }
 
 # previous get_array
