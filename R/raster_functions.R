@@ -2,10 +2,6 @@
 # Functions for working with
 # rasters
 # ================================
-
-library(raster)
-library(ncdf4)
-
 prio_aggregate_raster <- function(x, fun){
    fact <- priogrid::resolution_factor(x)
    res <- raster::aggregate(x,fact=fact,fun=fun)
