@@ -305,7 +305,7 @@ gen_riverdist <- function(input_folder){
 
    river1 <- sf::read_sf(river1)
    river2 <- sf::read_sf(river2)
-   river3 <- sf::st_read(river3)
+   river3 <- sf::read_sf(river3)
    lakes <- sf::read_sf(lakes)
    lakes <- dplyr::filter(lakes, area >= 1000)
 
