@@ -37,7 +37,7 @@ get_closest_distance <- function(points, features, check_dateline=TRUE){
   return(distances)
 }
 
-update_cells_iteratively <- function(pg_list, varname){
+update_cells_iteratively <- function(pg_list, varname, changed_areas){
   # Update classification scheme iteratively. pg_list only gives information of the cells that have changed.
   pg <- priogrid::prio_blank_grid()
 
