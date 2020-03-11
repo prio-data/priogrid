@@ -64,6 +64,7 @@ update_cells_iteratively <- function(pg_list, varname, changed_areas){
     names(df)[3] <- varname
     df$year <- lubridate::year(crossection_dates)[j]
     df$month <- lubridate::month(crossection_dates)[j]
+    df$day <- lubridate::day(crossection_dates)[j]
     result <- dplyr::bind_rows(result, df)
   }
 
