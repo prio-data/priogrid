@@ -266,7 +266,7 @@ gen_riverdist <- function(input_folder){
 }
 
 
-gen_bdist1_month <- function(input_folder){
+gen_bdist1_changes <- function(input_folder){
    #bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.
    bdist1_on_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
@@ -308,7 +308,7 @@ gen_bdist1_month <- function(input_folder){
    gwcode_changes <- file.path(input_folder, "cshapes", "cache", "gwcode_changes.parquet")
    assertthat::assert_that(file.exists(gwcode_changes))
    gwcode_changes <- arrow::read_parquet(gwcode_changes)
-   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, "01", sep = "-"))
+   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
    pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
    gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
 
@@ -355,7 +355,7 @@ gen_bdist2_month <- function(input_folder){
    gwcode_changes <- file.path(input_folder, "cshapes", "cache", "gwcode_changes.parquet")
    assertthat::assert_that(file.exists(gwcode_changes))
    gwcode_changes <- arrow::read_parquet(gwcode_changes)
-   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, "01", sep = "-"))
+   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
    pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
    gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
 
@@ -411,7 +411,7 @@ gen_bdist3_month <- function(input_folder){
    gwcode_changes <- file.path(input_folder, "cshapes", "cache", "gwcode_changes.parquet")
    assertthat::assert_that(file.exists(gwcode_changes))
    gwcode_changes <- arrow::read_parquet(gwcode_changes)
-   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, "01", sep = "-"))
+   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
    pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
    gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
 
