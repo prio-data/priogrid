@@ -172,7 +172,7 @@ gen_gwcode_changes <- function(input_folder){
       crossection_date <- unique(crossection$crossection_date)
       assertthat::assert_that(length(crossection_date) == 1)
 
-      if(which(crossection_date == dates_with_changes) != 1){
+      if(which(crossection_date == dates_with_changes) == 1){
          past_crossection <- cshp[(crossection_date - lubridate::month(1)) %within% cshp$date_interval,]
       } else {
          last_date <- dates_with_changes[which(crossection_date == dates_with_changes) - 1]
@@ -425,106 +425,68 @@ gen_bdist3_month <- function(input_folder){
 
 
 #message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
-gen_capdist <- function(fname, output_folder, numCores = 1, quiet = TRUE){
-   calc_crossection <- function(crossection, all_months, gwcode, cshp){
+gen_capdist <- function(input_folder){
+   calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
-      message(crossection_date)
+      assertthat::assert_that(length(crossection_date) == 1)
 
+
+      # Point data for capitals as they looked like during the cross-section
       cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
 
-      gwcode_index <- which(all_months %in% crossection_date)
-      gw_crossection <- raster::subset(gwcode, gwcode_index)
+      new_or_different_capital_location <- c()
+      # Check if capitals have moved
+      if(which(crossection_date == dates_with_changes) != 1){
+         last_date <- dates_with_changes[which(crossection_date == dates_with_changes) - 1]
+         past_crossection <- cshp[last_date %within% cshp$date_interval,]
 
-      gw_crossection <- raster::rasterToPoints(gw_crossection)
-      gw_crossection <- dplyr::tibble("gwcode" = gw_crossection[,3], "lon" = gw_crossection[,1], "lat" = gw_crossection[,2])
-      gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("lon", "lat"))
-      sf::st_crs(gw_crossection) <- sf::st_crs(4326)
+         past <- past_crossection %>% dplyr::select(gwcode)
+         past_xy <- sf::st_coordinates(past)
+         past <- sf::st_drop_geometry(past) %>% cbind(past_xy)
+         current <- cshp_crossection %>% dplyr::select(gwcode)
+         current_xy <- sf::st_coordinates(current)
+         current <- sf::st_drop_geometry(current) %>% cbind(current_xy)
+         new_or_different_capital_location <- dplyr::anti_join(current, past)
+      }
 
-      # Gids that have changed since last month
+      # Cell-centroids for gids that have changed since last month
+      gw_crossection <- dplyr::filter(gwcode_changes, mydate == crossection_date)
+      gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("x", "y"))
+      sf::st_crs(gw_crossection) <- priogrid::prio_crs()
       gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
       gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
-
+      # For each country where there have been changes, calculate the closest distance
       gw_crossection$capdist <- NA
-      for(country_id in unique(gw_crossection$gwcode)){
+      update_distances_in_these_countries <- unique(c(gw_crossection$gwcode, new_or_different_capital_location$gwcode))
+      for(country_id in update_distances_in_these_countries){
          gw_crossection$capdist[which(gw_crossection$gwcode == country_id)] <- priogrid::get_closest_distance(
             gw_crossection[which(gw_crossection$gwcode == country_id),],
-            cshp_crossection[which(cshp_crossection$GWCODE == country_id),])
+            cshp_crossection[which(cshp_crossection$gwcode == country_id),])
       }
 
+      sf::st_geometry(gw_crossection) <- NULL
+      gw_crossection$mydate <- NULL
 
-      pg <- priogrid::prio_blank_grid()
-      capdist <- raster::rasterize(gw_crossection, pg, field = "capdist")
-      return(capdist)
+      return(gw_crossection)
    }
 
-   cshp <- sf::st_read(fname, quiet = T)
-   cshp_crs <- sf::st_crs(cshp)
+   gwcode_changes <- file.path(input_folder, "cshapes", "cache", "gwcode_changes.parquet")
+   assertthat::assert_that(file.exists(gwcode_changes))
+   gwcode_changes <- arrow::read_parquet(gwcode_changes)
+   gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
+   pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
+   gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
+
+   cshp <- priogrid::monthly_cshp(input_folder)
    sf::st_geometry(cshp) <- NULL
-   cshp <- sf::st_as_sf(cshp, coords = c("CAPLONG", "CAPLAT"))
-   sf::st_crs(cshp) <- cshp_crs
+   cshp <- sf::st_as_sf(cshp, coords = c("caplong", "caplat"))
+   sf::st_crs(cshp) <- priogrid::prio_crs()
 
-   # Setting day to first in month to ensure all changes are included.
-   cshp <- cshp %>%
-      dplyr::filter(GWCODE != -1) %>%
-      dplyr::mutate(
-         startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
-         enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
-      dplyr::mutate(
-         same_month = year(startdate) == year(enddate) & month(startdate) == month(enddate)
-      ) %>%
-      dplyr::filter(same_month == F & startdate != "1991-12-16") %>% # Hack for now. Multiple changes within each month.
-      dplyr::mutate(GWSDAY = 1,
-                    GWEDAY = 1) %>%
-      dplyr::mutate(
-         startdate = lubridate::ymd(paste(GWSYEAR, GWSMONTH, GWSDAY, sep = "-")),
-         enddate = lubridate::ymd(paste(GWEYEAR, GWEMONTH, GWEDAY, sep = "-"))) %>%
- #     dplyr::mutate(
- #        enddate = enddate - lubridate::days(1) # End up until, but not including
- #     ) %>%
-      dplyr::mutate(
-         date_interval = lubridate::interval(startdate, enddate)
-      )
+   changed_areas <- priogrid::gen_changed_areas(input_folder)
+   dates_with_changes <- lubridate::ymd((names(changed_areas)))
 
-   message("Get the set of grid cells that intersect with land from file.")
-   gwcode_file <- paste0(output_folder, "gwcode_changes.rds")
-   if(!is.null(output_folder) &  file.exists(gwcode_file)){
-      gwcode <- readRDS(gwcode_file)
-   } else{
-      return(paste(gwcode_file, "does not exist. Please calculate gwcode_changes first."))
-   }
-
-   message("Get the countries where the border changed from one month to the next.")
-   changed_areas_file <- paste0(output_folder, "changed_areas.rds")
-   if(!is.null(output_folder) &  file.exists(changed_areas_file)){
-      changed_areas <- readRDS(changed_areas_file)
-   } else{
-      break(paste(changed_areas_file, "does not exist. Please calculate changed_areas first."))
-   }
-
-   all_months <- lubridate::ymd(sub("X", "", names(gwcode)))
-
-   capdist <- parallel::mclapply(changed_areas, calc_crossection, all_months = all_months, gwcode = gwcode, cshp = cshp, mc.cores = numCores)
-
-   pg <- priogrid::prio_blank_grid()
-   # Update classification scheme iteratively. Gwcodes are only the pg-ids that have changed since last change.
-   rasters <- list()
-   i <- 1
-   current_raster <- pg
-   current_raster[] <- NA
-   for(j in 1:length(capdist)){
-      dc <- capdist[[j]]
-
-      current_raster[!is.na(dc)] <- dc[!is.na(dc)]
-      rasters[[i]] <- current_raster
-      i <- i + 1
-   }
-
-   capdist <- raster::stack(rasters)
-
-   crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
-   crossection_dates <- as.character(as.Date(crossection_dates, origin = as.Date("1970-1-1")))
-
-   names(capdist) <- crossection_dates
+   capdist <- parallel::mclapply(changed_areas, calc_crossection, dates_with_changes) # calculate distances
+   capdist <- priogrid::update_cells_iteratively(capdist, "capdist", changed_areas)
    return(capdist)
 }
