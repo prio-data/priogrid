@@ -321,7 +321,7 @@ gen_bdist1_changes <- function(input_folder){
 }
 
 
-gen_bdist2_month <- function(input_folder){
+gen_bdist2_changes<- function(input_folder){
    #bdist2: distance in km from the centroid to the border of the nearest neighboring country.
    bdist2_on_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
@@ -368,7 +368,7 @@ gen_bdist2_month <- function(input_folder){
 }
 
 
-gen_bdist3_month <- function(input_folder){
+gen_bdist3_changes <- function(input_folder){
    #bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.
    bdist3_on_crossection <- function(crossection){
       crossection_date <- unique(crossection$crossection_date)
@@ -425,7 +425,7 @@ gen_bdist3_month <- function(input_folder){
 
 
 #message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
-gen_capdist <- function(input_folder){
+gen_capdist_changes <- function(input_folder){
    calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
       assertthat::assert_that(length(crossection_date) == 1)
