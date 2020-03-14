@@ -386,24 +386,29 @@ gen_bdist3_changes <- function(input_folder){
 
       land_codes <- unique(gw_crossection$gwcode)
 
-      for(i in 1:length(land_codes)){
-         this_country <- cshp_cross[which(cshp_cross$gwcode == land_codes[i]), ]
-         centroid_within_country <- sf::st_within(dplyr::filter(gw_crossection, gwcode == land_codes[i]), this_country)
+
+      get_distances <- function(land_code){
+         this_country <- cshp_cross[which(cshp_cross$gwcode == land_code), ]
+         centroid_within_country <- sf::st_within(dplyr::filter(gw_crossection, gwcode == land_code), this_country)
          this_country <- sf::st_boundary(this_country)
-         gw_crossection$cwc <- NA
-         gw_crossection$cwc[gw_crossection$gwcode == land_codes[i]] <- lengths(centroid_within_country) > 0
+
+         distances <- priogrid::get_closest_distance(gw_crossection[which(gw_crossection$gwcode==land_code),], this_country)
 
          # Cells belonging to a country, but with a centroid outside the border will have 0 distance to the outline of the country.
-         gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == FALSE), "bdist3"] <- 0
-
-         gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == TRUE),"bdist3"] <- priogrid::get_closest_distance(
-            gw_crossection[which(gw_crossection$gwcode==land_codes[i] & gw_crossection$cwc == TRUE),], this_country)
-
+         distances[!(lengths(centroid_within_country) > 0)] <- 0
+         return(distances)
       }
+
+      distances_cross <- parallel::mclapply(land_codes, get_distances)
+
+      gw_crossection$bdist3 <- NA
+      for(i in 1:length(land_codes)){
+         gw_crossection[gw_crossection$gwcode==land_codes[i],"bdist3"] <- distances_cross[[i]]
+      }
+
 
       sf::st_geometry(gw_crossection) <- NULL
       gw_crossection$mydate <- NULL
-      gw_crossection$cwc <- NULL
 
       return(gw_crossection)
    }
@@ -418,7 +423,7 @@ gen_bdist3_changes <- function(input_folder){
    cshp <- priogrid::monthly_cshp(input_folder)
    changed_areas <- priogrid::gen_changed_areas(input_folder)
 
-   bdist3 <- parallel::mclapply(changed_areas, bdist3_on_crossection) # calculate distances
+   bdist3 <- lapply(changed_areas, bdist3_on_crossection) # calculate distances
    bdist3 <- priogrid::update_cells_iteratively(bdist3, "bdist3", changed_areas)
    return(bdist3)
 }
@@ -459,10 +464,19 @@ gen_capdist_changes <- function(input_folder){
       # For each country where there have been changes, calculate the closest distance
       gw_crossection$capdist <- NA
       update_distances_in_these_countries <- unique(c(gw_crossection$gwcode, new_or_different_capital_location$gwcode))
-      for(country_id in update_distances_in_these_countries){
-         gw_crossection$capdist[which(gw_crossection$gwcode == country_id)] <- priogrid::get_closest_distance(
-            gw_crossection[which(gw_crossection$gwcode == country_id),],
-            cshp_crossection[which(cshp_crossection$gwcode == country_id),])
+
+
+      get_distances <- function(land_code){
+         this_country <- cshp_crossection[which(cshp_crossection$gwcode == land_code), ]
+         distances <- priogrid::get_closest_distance(gw_crossection[which(gw_crossection$gwcode==land_code),], this_country)
+         return(distances)
+      }
+
+      distances_cross <- lapply(update_distances_in_these_countries, get_distances)
+
+      gw_crossection$capdist <- NA
+      for(i in 1:length(update_distances_in_these_countries)){
+         gw_crossection[gw_crossection$gwcode==update_distances_in_these_countries[i],"capdist"] <- distances_cross[[i]]
       }
 
       sf::st_geometry(gw_crossection) <- NULL
@@ -486,7 +500,7 @@ gen_capdist_changes <- function(input_folder){
    changed_areas <- priogrid::gen_changed_areas(input_folder)
    dates_with_changes <- lubridate::ymd((names(changed_areas)))
 
-   capdist <- parallel::mclapply(changed_areas, calc_crossection, dates_with_changes) # calculate distances
+   capdist <- lapply(changed_areas, calc_crossection, dates_with_changes) # calculate distances
    capdist <- priogrid::update_cells_iteratively(capdist, "capdist", changed_areas)
    return(capdist)
 }
