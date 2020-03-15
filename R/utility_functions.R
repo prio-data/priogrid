@@ -140,9 +140,9 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 
 map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL){
   variable <- dplyr::enquo(variable)
-  if(!is.null(month)){
+  if(!is.null(mymonth)){
     cs <- dplyr::filter(pgdf, year == myyear, month == mymonth) %>% dplyr::select(x, y, !!variable)
-  } else if(!is.null(year)){
+  } else if(!is.null(myyear)){
     cs <- dplyr::filter(pgdf, year == myyear) %>% dplyr::select(x, y, !!variable)
   } else {
     cs <- dplyr::select(pgdf, x, y, !!variable)
