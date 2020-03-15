@@ -16,44 +16,113 @@ monthly_cshp <- function(input_folder){
 
 
 
-#' gen_gwcode
+
+#' pg_timeseries_from_changes
 #'
-#' Takes the weidmann cshapes data set and returns a
+#'#' Takes the weidmann cshapes data set and returns a
 #' rasterstack for each year that codes the country ownership of each cell
 #' as it looked like 1 January each year.
 #'
-#' @param fname File path to Weidmann cshapes data
-#' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
-#' @param quiet Whether or not sf::st_ functions should print warnings.
-gen_gwcode <- function(fname, numCores = 1, quiet = TRUE){
-   # Is this the correct way to select?
-   gwcode <- gen_gwcode_changes(fname, numCores, quiet)
-   crossection_dates <- names(gwcode)
-   crossection_dates <- lubridate::ymd(sub("X", "", crossection_dates))
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date
+pg_timeseries_from_changes <- function(changes_df, interval, enddate, startdate){
 
-   all_dates <- seq(lubridate::ymd("1946-1-1"), lubridate::ymd("2019-1-1"), by = "1 year")
-   all <- dplyr::tibble("mydate" = all_dates, "crossection_date" = NA)
+   changes_df <- dplyr::mutate(changes_df,
+                                   mydate = lubridate::ymd(paste(year, month, day, sep = "-")))
 
-   for(current_date in all$mydate){
-      closest_matching_date <- max(crossection_dates[crossection_dates <= current_date])
-      all$crossection_date[which(all$mydate == current_date)] <- closest_matching_date
+   if(!is.null(startdate)){
+      changes_df <- dplyr::filter(changes_df, mydate >= startdate)
    }
-   all$year <- lubridate::year(all$mydate)
-   all$crossection_date <- as.Date(all$crossection_date, origin = as.Date("1970-1-1"))
 
-   i <- 1
-   gwcode_year <- list()
-   for(year in 1946:2019){
-      gwcode_index <- which(crossection_dates == all$crossection_date[which(all$year == year)])
+   first_date <- min(changes_df$mydate)
+   last_date <- max(changes_df$mydate)
 
-      gwcode_year[[i]] <- subset(gwcode, gwcode_index)
-      i <- i + 1
+   if(!is.null(enddate)){
+      last_date <- enddate
    }
-   gwcode_year <- raster::stack(gwcode_year)
-   names(gwcode_year) <- 1946:2019
-   return(gwcode_year)
+
+   all_years <- seq(first_date, last_date, by = interval)
+
+   filter_to_year <- function(current_date){
+      closest_matching_date <- dplyr::filter(changes_df, mydate <= current_date) %>%
+         dplyr::summarize(closest_date = max(mydate)) %>% dplyr::pull(closest_date)
+
+      res <- dplyr::filter(changes_df, mydate == closest_matching_date)
+      res$mydate <- current_date
+      res$year <- NULL
+      res$month <- NULL
+      res$day <- NULL
+      return(res)
+   }
+
+   pg_timeseries <- parallel::mclapply(all_years, filter_to_year) %>% dplyr::bind_rows()
+   return(pg_timeseries)
 }
 
+
+#' gen_gwcode
+#'
+#' Takes gwcode_changes and translates it into a regular time-series.
+#'
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date. default is 1 year.
+#' @param enddate a date. option to add more years than the last entry in the input data
+#' @param startdate a date. filters the input data to start at the given date.
+gen_gwcode <- function(input_folder, input_file = "gwcode_changes.parquet", interval = "1 year", enddate = as.Date("2020-1-1"), startdate = NULL){
+   changes_df <- file.path(input_folder, "cshapes", "cache", input_file)
+   assertthat::assert_that(file.exists(changes_df))
+   changes_df <- arrow::read_parquet(changes_df)
+   regular_timeseries <- pg_timeseries_from_changes(changes_df, interval = interval, enddate = enddate, startdate = startdate)
+   return(regular_timeseries)
+}
+
+#' gen_bdist1
+#'
+#' Takes bdist1_changes and translates it into a regular time-series.
+#'
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date. default is 1 year.
+#' @param enddate a date. option to add more years than the last entry in the input data
+#' @param startdate a date. filters the input data to start at the given date.
+gen_bdist1 <- function(input_folder, ...){
+   gen_gwcode(input_folder, input_file = "bdist1_changes.parquet", ...)
+}
+
+#' gen_bdist2
+#'
+#' Takes bdist2_changes and translates it into a regular time-series.
+#'
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date. default is 1 year.
+#' @param enddate a date. option to add more years than the last entry in the input data
+#' @param startdate a date. filters the input data to start at the given date.
+gen_bdist2 <- function(input_folder, ...){
+   gen_gwcode(input_folder, input_file = "bdist2_changes.parquet", ...)
+}
+
+#' gen_bdist3
+#'
+#' Takes bdist3_changes and translates it into a regular time-series.
+#'
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date. default is 1 year.
+#' @param enddate a date. option to add more years than the last entry in the input data
+#' @param startdate a date. filters the input data to start at the given date.
+gen_bdist3 <- function(input_folder, ...){
+   gen_gwcode(input_folder, input_file = "bdist3_changes.parquet", ...)
+}
+
+#' gen_capdist
+#'
+#' Takes capdist_changes and translates it into a regular time-series.
+#'
+#' @param input_folder
+#' @param interval see by argument in base::seq.Date. default is 1 year.
+#' @param enddate a date. option to add more years than the last entry in the input data
+#' @param startdate a date. filters the input data to start at the given date.
+gen_capdist <- function(input_folder, ...){
+   gen_gwcode(input_folder, input_file = "capdist_changes.parquet", ...)
+}
 
 #' gen_pgland
 #'
