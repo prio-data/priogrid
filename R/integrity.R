@@ -14,7 +14,6 @@ check_folder_integrity <- function(folder,variable){
 #' the contents of a folder are intact.
 #' @param folder
 #' @export 
-
 get_folder_fingerprint <- function(root){
    fp <- function(f){
       if(file.info(f)$isdir){
