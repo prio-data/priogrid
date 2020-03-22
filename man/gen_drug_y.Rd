@@ -2,12 +2,16 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_drug_y}
 \alias{gen_drug_y}
-\title{Generate yearly dummy identifying ongoing large-scale drug cultivation
-(coca bush, opium poppy and/or cannabis).}
+\title{drug_y}
 \usage{
 gen_drug_y(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate yearly dummy identifying ongoing large-scale drug cultivation
-(coca bush, opium poppy and/or cannabis).
+Generate dummy variable for whether large-scale
+drug cultivation (coca bush, opium poppy, or cannabis) is ongoing
+within the given grid cell, based on the DRUGDATA dataset.
+Available only until 2002.
 }

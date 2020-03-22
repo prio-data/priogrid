@@ -4,17 +4,21 @@
 \alias{gen_gwcode}
 \title{gen_gwcode}
 \usage{
-gen_gwcode(fname, numCores = 1, quiet = TRUE)
+gen_gwcode(
+  input_folder,
+  input_file = "gwcode_changes.parquet",
+  interval = "1 year",
+  enddate = as.Date("2020-1-1"),
+  startdate = NULL
+)
 }
 \arguments{
-\item{fname}{File path to Weidmann cshapes data}
+\item{interval}{see by argument in base::seq.Date. default is 1 year.}
 
-\item{numCores}{Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.}
+\item{enddate}{a date. option to add more years than the last entry in the input data}
 
-\item{quiet}{Whether or not sf::st_ functions should print warnings.}
+\item{startdate}{a date. filters the input data to start at the given date.}
 }
 \description{
-Takes the weidmann cshapes data set and returns a
-rasterstack for each year that codes the country ownership of each cell
-as it looked like 1 January each year.
+Takes gwcode_changes and translates it into a regular time-series.
 }

@@ -12,8 +12,6 @@ make_pg(input_folder, output_folder, config = NULL, overwrite = FALSE)
 \item{output_folder}{The destination folder to which data will be written}
 
 \item{config}{An optional custom config file for custom PRIOGrid builds}
-
-\item{config}{An optional custom config file for custom PRIOGrid builds}
 }
 \value{
 The function returns a list of character vectors for each function

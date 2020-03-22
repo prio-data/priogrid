@@ -5,8 +5,7 @@
 \title{Blank GRID
 Returns a blank grid with default PRIOGrid dimensions}
 \usage{
-prio_blank_grid(ncol = FALSE, nrow = FALSE, crs = FALSE,
-  extent = FALSE)
+prio_blank_grid(ncol = FALSE, nrow = FALSE, crs = FALSE, extent = FALSE)
 }
 \arguments{
 \item{ncol}{Number of columns, defaults to prio_ncol}

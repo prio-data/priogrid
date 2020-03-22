@@ -2,12 +2,19 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_diamprim_s}
 \alias{gen_diamprim_s}
-\title{Generate static diamond presence dummy
-including records without known start year.}
+\title{diamprim_s}
 \usage{
 gen_diamprim_s(input_folder, variable = "diamprim_s")
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate static diamond presence dummy
-including records without known start year.
+Generate dummy variable for whether
+primary (kimberlite or lamproite) diamond deposits have
+been found within the given grid cell, based on the
+Diamond Resources dataset v1a. This variable only codes
+those deposits that do now have a known year of discovery
+or start of production. For a complete picture, these data
+must therefore be combined with the diamprim_y data.
 }

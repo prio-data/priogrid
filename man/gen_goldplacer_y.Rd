@@ -2,10 +2,16 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_goldplacer_y}
 \alias{gen_goldplacer_y}
-\title{Generate yearly dummy identifying lootable placer gold deposits.}
+\title{goldplacer_y}
 \usage{
 gen_goldplacer_y(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate yearly dummy identifying lootable placer gold deposits.
+Generate dummy variable for whether
+placer gold deposits have been found within the given
+grid cell, based om the dGOLD_L subset of the
+GOLDATA dataset v1.2. Available only until 2012.
 }
