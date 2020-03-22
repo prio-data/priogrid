@@ -68,6 +68,7 @@ pg_timeseries_from_changes <- function(changes_df, interval, enddate, startdate)
 #' @param interval see by argument in base::seq.Date. default is 1 year.
 #' @param enddate a date. option to add more years than the last entry in the input data
 #' @param startdate a date. filters the input data to start at the given date.
+#' @export
 gen_gwcode <- function(input_folder, input_file = "gwcode_changes.parquet", interval = "1 year", enddate = as.Date("2020-1-1"), startdate = NULL){
    changes_df <- file.path(input_folder, "cshapes", "cache", input_file)
    assertthat::assert_that(file.exists(changes_df))
@@ -84,6 +85,7 @@ gen_gwcode <- function(input_folder, input_file = "gwcode_changes.parquet", inte
 #' @param interval see by argument in base::seq.Date. default is 1 year.
 #' @param enddate a date. option to add more years than the last entry in the input data
 #' @param startdate a date. filters the input data to start at the given date.
+#' @export
 gen_bdist1 <- function(input_folder, ...){
    gen_gwcode(input_folder, input_file = "bdist1_changes.parquet", ...)
 }
@@ -96,6 +98,7 @@ gen_bdist1 <- function(input_folder, ...){
 #' @param interval see by argument in base::seq.Date. default is 1 year.
 #' @param enddate a date. option to add more years than the last entry in the input data
 #' @param startdate a date. filters the input data to start at the given date.
+#' @export
 gen_bdist2 <- function(input_folder, ...){
    gen_gwcode(input_folder, input_file = "bdist2_changes.parquet", ...)
 }
@@ -108,6 +111,7 @@ gen_bdist2 <- function(input_folder, ...){
 #' @param interval see by argument in base::seq.Date. default is 1 year.
 #' @param enddate a date. option to add more years than the last entry in the input data
 #' @param startdate a date. filters the input data to start at the given date.
+#' @export
 gen_bdist3 <- function(input_folder, ...){
    gen_gwcode(input_folder, input_file = "bdist3_changes.parquet", ...)
 }
@@ -120,6 +124,7 @@ gen_bdist3 <- function(input_folder, ...){
 #' @param interval see by argument in base::seq.Date. default is 1 year.
 #' @param enddate a date. option to add more years than the last entry in the input data
 #' @param startdate a date. filters the input data to start at the given date.
+#' @export
 gen_capdist <- function(input_folder, ...){
    gen_gwcode(input_folder, input_file = "capdist_changes.parquet", ...)
 }
@@ -131,6 +136,7 @@ gen_capdist <- function(input_folder, ...){
 #'
 #' @param fname File path to Weidmann cshapes data
 #' @param quiet Whether or not sf::st_ functions should print warnings.
+#' @export
 gen_pgland <- function(input_folder, quiet = TRUE){
    cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
@@ -167,6 +173,10 @@ gen_landarea_sf <- function(input_folder){
    return(land_polygons)
 }
 
+#' gen_landarea
+#'
+#'
+#' @input_folder input_folder Folder path to PRIO-GRID input data
 gen_landarea <- function(input_folder){
    pgarea <- gen_landarea_sf(input_folder)
    sf::st_geometry(pgarea) <- NULL
