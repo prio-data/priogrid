@@ -2,10 +2,18 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_gem_s}
 \alias{gen_gem_s}
-\title{Generate static gem dummy.}
+\title{gem_s}
 \usage{
 gen_gem_s(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Function to generate static gem presence dummy for records without known discovery or start of production year.
+Generate dummy variable for whether
+gem deposits have been found within the given grid cell,
+based on the GEMDATA dataset. This variable only codes
+those deposits that do not have a known year of discovery
+or start of production. For a complete picture, these data
+must therefore be combined with the gem_y data.
 }

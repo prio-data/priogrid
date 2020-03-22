@@ -4,8 +4,7 @@
 \alias{stepwiseAggregate}
 \title{stepwiseAggregate}
 \usage{
-stepwiseAggregate(data, minres, fun = priogrid::quickmode,
-  firstpass = TRUE)
+stepwiseAggregate(data, minres, fun = priogrid::quickmode, firstpass = TRUE)
 }
 \description{
 This is a function for aggregating huge rasters.

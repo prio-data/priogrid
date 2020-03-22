@@ -2,10 +2,20 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_diamsec_y}
 \alias{gen_diamsec_y}
-\title{Generate yearly secondary diamond presence dummy.}
+\title{diamsec_y}
 \usage{
 gen_diamsec_y(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate yearly secondary diamond presence dummy.
+Generate dummy variable for whether
+secondary (alluvial) diamond deposits have been found
+within the given grid cell for any given year, based on
+the Diamond Resources dataset v1a. This variable only codes
+those deposits that have a known year of discovery or start
+of production. For a complete picture, these data must
+therefore be combined with the diamsec_s data.
+Available only until 2005.
 }

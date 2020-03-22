@@ -4,8 +4,7 @@
 \alias{make_priogrid}
 \title{make_priogrid}
 \usage{
-make_priogrid(input_folder, output_folder, specfile = NULL,
-  format = "parquet")
+make_priogrid(input_folder, output_folder, specfile = NULL, format = "parquet")
 }
 \arguments{
 \item{input_folder}{The folder containing the raw data file structure (see

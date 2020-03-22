@@ -2,10 +2,21 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_goldsurface_y}
 \alias{gen_goldsurface_y}
-\title{Generate yearly dummy identifying semi-lootable surface gold deposits.}
+\title{goldsurface_y}
 \usage{
 gen_goldsurface_y(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate yearly dummy identifying semi-lootable surface gold deposits.
+Generate dummy variable for whether
+surface gold deposits, defined as deposits that are
+located near the surfaec but "do not hold enough information
+to be properly defined as lootable" have been found within
+the given grid cell, based on the dGOLD_S subset of the
+GOLDATA dataset v1.2. This variable only codes the deposits
+that have a known year of discovery or start of production.
+For a complete picture, these data must therefore be combined
+with the goldsurface_s data. Available only until 2012.
 }

@@ -2,13 +2,20 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_diamprim_y}
 \alias{gen_diamprim_y}
-\title{Generate yearly primary diamond presence dummy.}
+\title{diamprim_y}
 \usage{
 gen_diamprim_y(input_folder, variable = "diamprim_y")
 }
 \arguments{
-\item{diamond_data}{DIADATA shapefile from the PRIO Diamond Resources dataset.}
+\item{input_folder}{Path to [pg-folder].}
 }
 \description{
-Generate yearly primary diamond presence dummy.
+Generate dummy variable for whether
+primary (kimberlite or lamproite) diamond deposits have
+been found within the given grid cell for any given year,
+based on the Diamond Resources dataset v1a.
+This variable only codes deposits that have a known year of
+discovery or start of production. For a complete picture,
+these data must therefore be combined with the diamprim_s data.
+Available only until 2005.
 }

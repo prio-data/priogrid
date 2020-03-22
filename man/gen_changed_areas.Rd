@@ -4,7 +4,7 @@
 \alias{gen_changed_areas}
 \title{gen_changed_areas}
 \usage{
-gen_changed_areas(fname, numCores = 1, quiet = TRUE)
+gen_changed_areas(input_folder)
 }
 \arguments{
 \item{fname}{File path to Weidmann cshapes data}

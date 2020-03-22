@@ -2,10 +2,19 @@
 % Please edit documentation in R/data_resource.R
 \name{gen_goldvein_y}
 \alias{gen_goldvein_y}
-\title{Generate yearly dummy identifying non-lootable vein gold deposits.}
+\title{goldvein_y}
 \usage{
 gen_goldvein_y(input_folder)
 }
+\arguments{
+\item{input_folder}{Path to [pg-folder].}
+}
 \description{
-Generate yearly dummy identifying non-lootable vein gold deposits.
+Generate dummy variable for whether
+vein gold deposits have been found within the given grid cell,
+based on the dGOLD_NL subset of the GOLDATA dataset v1.2.
+This variable only codes those deposits that have a known
+year of discovery or start of production. For a complete picture
+these data must therefore be combined with the goldvein_s data.
+Available only until 2012.
 }
