@@ -114,6 +114,20 @@ rasterextent_to_pg <- function(rast){
   return(rast)
 }
 
+
+#' vector_to_pg
+#'
+#' Converts a sf data frame to PRIO-GRID as a crossection.
+#'
+#'
+#' @param sfdf a sf (simple features) data frame
+#' @param variable the variable to convert to PRIO-GRID
+#' @param fun aggregation function. only used if need_aggregation is TRUE.
+#' @param need_aggregation if FALSE, will use velox, which only extracts the last value for each feature. fast when applicable.
+#' @param missval only used if need_aggregation is FALSE. velox sets missing data to this value.
+#'
+#' @return A raster with same extent and crs as PRIO-GRID.
+#' @export
 vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval = -1){
   pg <- priogrid::prio_blank_grid()
 
