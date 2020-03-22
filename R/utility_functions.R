@@ -1,7 +1,12 @@
 #' raster_to_table
 #'
 #' Converts a raster to a tibble with x, y, mydate and raster value
-#' @return A tibble with columns x, y, mydate, and value
+#'
+#' @param rast a raster object
+#' @param add_pg_index boolean, whether to add a pgid column or not.
+#'
+#' @return A tibble with columns x, y, and value.
+#' @export
 raster_to_tibble <- function(rast, add_pg_index = FALSE){
   df <- raster::rasterToPoints(rast)
   df <- dplyr::as_tibble(df)
@@ -71,9 +76,17 @@ update_cells_iteratively <- function(pg_list, varname, changed_areas){
   return(result)
 }
 
-# Previous prio_aggregate_raster()
-# Obsoletes prio_raster()
-# use bilinear resampling for numeric data
+#' raster_to_pg
+#'
+#' Aggregates or disaggregates a raster to conform with the PRIO-GRID resolution.
+#'
+#'
+#' @param rast a raster object
+#' @param aggregation_function see raster::aggregate fun
+#' @param resampling_method see raster::disaggregate, default is ''
+#'
+#' @return A raster with the same resolution, crs, and extent as PRIO-GRID.
+#' @export
 raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method = ""){
   resolution_factor <- priogrid::prio_resolution() / raster::res(rast) #previous prio_resolution_factor()
 
@@ -120,6 +133,20 @@ vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval =
   return(rast)
 }
 
+#' panel_to_pg
+#'
+#' Converts a sf data frame with panel data to PRIO-GRID.
+#'
+#'
+#' @param df a sf (simple features) data frame with panel data
+#' @param timevar the temporal variable (used to split data into crossections)
+#' @param variable the variable to convert to PRIO-GRID
+#' @param need_aggregation if FALSE, will use velox, which only extracts the last value for each feature. fast when applicable.
+#' @param missval only used if need_aggregation is FALSE. velox sets missing data to this value.
+#' @param fun aggregation function. only used if need_aggregation is TRUE.
+#'
+#' @return A tibble with x, y, pgid, timevar, and variable.
+#' @export
 panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   time_fact <- factor(df[[timevar]])
 
