@@ -129,7 +129,7 @@ vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval =
   # backup solution when rasterization needs to aggregate values over many polygons/points
   rast <- raster::rasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
   names(rast) <- variable
-  crs(rast) <- sf::st_crs(pg)$proj4string
+  raster::crs(rast) <- sf::st_crs(pg)$proj4string
   return(rast)
 }
 
