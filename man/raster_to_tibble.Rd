@@ -6,8 +6,13 @@
 \usage{
 raster_to_tibble(rast, add_pg_index = FALSE)
 }
+\arguments{
+\item{rast}{a raster object}
+
+\item{add_pg_index}{boolean, whether to add a pgid column or not.}
+}
 \value{
-A tibble with columns x, y, mydate, and value
+A tibble with columns x, y, and value.
 }
 \description{
 Converts a raster to a tibble with x, y, mydate and raster value
