@@ -14,7 +14,7 @@ raster_to_tibble <- function(rast, add_pg_index = FALSE){
   if(add_pg_index){
     pg <- priogrid::prio_blank_grid()
 
-    assertthat::assert_that(assertthat::are_equal(extent(rast), raster::extent(pg)))
+    assertthat::assert_that(assertthat::are_equal(raster::extent(rast), raster::extent(pg)))
 
     pg_df <- raster::rasterToPoints(pg)
     pg_df <- dplyr::as_tibble(pg_df)
