@@ -7,13 +7,11 @@
 gen_changed_areas(input_folder)
 }
 \arguments{
-\item{fname}{File path to Weidmann cshapes data}
-
-\item{numCores}{Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.}
-
-\item{quiet}{Whether or not sf::st_ functions should print warnings.}
+\item{input_folder}{}
+}
+\value{
+a list, one sf df for each crossection
 }
 \description{
-Takes the weidmann cshapes data set and returns a
-list of sf dataframes that corresponds to the areas where borders changed from one month to the next.
+Finds the areas and dates where borders have changed in the cshapes dataset.
 }

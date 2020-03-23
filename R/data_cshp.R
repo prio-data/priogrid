@@ -188,12 +188,12 @@ gen_landarea <- function(input_folder){
 
 #' gen_changed_areas
 #'
-#' Takes the weidmann cshapes data set and returns a
-#' list of sf dataframes that corresponds to the areas where borders changed from one month to the next.
+#' Finds the areas and dates where borders have changed in the cshapes dataset.
 #'
-#' @param fname File path to Weidmann cshapes data
-#' @param numCores Number of cores to use in calculation. Windows-users can only use 1. Using parallel::mclapply.
-#' @param quiet Whether or not sf::st_ functions should print warnings.
+#' @param input_folder
+#'
+#' @return a list, one sf df for each crossection
+#' @export
 gen_changed_areas <- function(input_folder){
    compare_crossection <- function(crossection_date, cshp, dates_with_changes){
       message(crossection_date)
@@ -244,8 +244,7 @@ gen_changed_areas <- function(input_folder){
 #' rasterstack that encodes the country ownership of a cell as it looked like on the 1st each month.
 #' The rasterstack only includes the months where there was a change from one month to the next.
 #'
-#' @param fname File path to Weidmann cshapes data
-#' @importFrom lubridate %within%
+#' @param input_folder Path to PRIO-GRID input data
 gen_gwcode_changes <- function(input_folder){
    calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
@@ -292,6 +291,14 @@ gen_gwcode_changes <- function(input_folder){
    return(gwcodes)
 }
 
+#' gen_coastdist
+#'
+#' Calculates the distance between cell centroids and the coast.
+#'
+#' @param input_folder path to PRIO-GRID input data
+#'
+#' @return a tibble, with x, y, pgid, and coastdist
+#' @export
 gen_coastdist <- function(input_folder){
    pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
    assertthat::assert_that(file.exists(pgland))
@@ -312,6 +319,14 @@ gen_coastdist <- function(input_folder){
    return(pgland)
 }
 
+#' gen_riverdist
+#'
+#' Calculates the distance between cell centroids and the nearest major river or lake.
+#'
+#' @param input_folder path to PRIO-GRID input data
+#'
+#' @return a tibble, with x, y, pgid, and riverdist
+#' @export
 gen_riverdist <- function(input_folder){
    pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
    assertthat::assert_that(file.exists(pgland))

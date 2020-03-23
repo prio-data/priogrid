@@ -7,7 +7,7 @@
 gen_gwcode_changes(input_folder)
 }
 \arguments{
-\item{fname}{File path to Weidmann cshapes data}
+\item{input_folder}{Path to PRIO-GRID input data}
 }
 \description{
 Takes the weidmann cshapes data set and returns a
