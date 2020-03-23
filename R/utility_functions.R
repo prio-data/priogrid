@@ -25,6 +25,16 @@ raster_to_tibble <- function(rast, add_pg_index = FALSE){
   return(df)
 }
 
+#' get_closest_distance
+#'
+#' Finds (element-wise) the closest distance between a set of points and a set of features.
+#'
+#' @param points point data of class sfg, sfc, or sf
+#' @param features object of class sfg, sfc, or sf
+#' @param check_dateline boolean, whether or not to account for the possibility that the shortest distance is crossing the dateline. doubles the time it takes.
+#'
+#' @return A tibble with columns x, y, and value.
+#' @export
 get_closest_distance <- function(points, features, check_dateline=TRUE){
   nearest_feature <- sf::st_nearest_feature(points, features)
   nearest_point <- sf::st_nearest_points(points, features[nearest_feature,], pairwise = TRUE)
@@ -109,6 +119,16 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   return(rast)
 }
 
+
+#' rasterextent_to_pg
+#'
+#' Resamples a raster using the nearest neighbor method to make extent the same as PRIO-GRID.
+#'
+#'
+#' @param rast a raster object
+#'
+#' @return A raster with same extent and crs as PRIO-GRID.
+#' @export
 rasterextent_to_pg <- function(rast){
   rast <- raster::resample(rast, priogrid::prio_blank_grid(), method = "ngb")
   return(rast)
