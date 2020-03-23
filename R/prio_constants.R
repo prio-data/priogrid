@@ -1,9 +1,34 @@
 # PRIO-GRID CONSTANTS
 
+
+#' prio_crs
+#'
+#' @return the PRIO-GRID CRS proj4string,
+#' @export
 prio_crs <- function(){"+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"}
+
+#' prio_resolution
+#'
+#' @return the PRIO-GRID resolution
+#' @export
 prio_resolution <- function(){0.5}
+
+#' prio_extent
+#'
+#' @return the PRIO-GRID extent
+#' @export
 prio_extent <- function(){raster::extent(-180, 180, -90, 90)}
+
+#' prio_nrow
+#'
+#' @return the PRIO-GRID number of rows
+#' @export
 prio_nrow <- function(){360}
+
+#' prio_ncol
+#'
+#' @return the PRIO-GRID number of columns
+#' @export
 prio_ncol <- function(){720}
 
 
