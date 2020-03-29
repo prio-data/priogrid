@@ -134,10 +134,9 @@ gen_capdist <- function(input_folder, ...){
 #' Takes the weidmann cshapes data set and returns a raster for the
 #' grid cells that intersects with land.
 #'
-#' @param fname File path to Weidmann cshapes data
-#' @param quiet Whether or not sf::st_ functions should print warnings.
+#' @param input_folder path to PRIO-GRID input data
 #' @export
-gen_pgland <- function(input_folder, quiet = TRUE){
+gen_pgland <- function(input_folder){
    cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
    cshp <- cshp %>%
@@ -146,6 +145,7 @@ gen_pgland <- function(input_folder, quiet = TRUE){
    pg <- priogrid::prio_blank_grid()
    pg_poly <- pg %>% spex::polygonize()
 
+   sf::st_crs(cshp) <- sf::st_crs(pg_poly)
    land_gids <- sf::st_intersects(pg_poly, cshp)
    pgland <- pg_poly[lengths(land_gids)> 0,]
    pgland <- dplyr::tibble("pgid" = pgland$pgid, "pgland" = 1L)
