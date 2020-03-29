@@ -36,7 +36,6 @@ getXY <- function(gid, ncol, nrow){
 #' assertthat::are_equal(pg[nrow, 1], 1)
 #' assertthat::are_equal(pg[nrow, ncol], ncol)
 #' assertthat::are_equal(pg[1, ncol], (ncol*nrow))
-
 create_pg_indices <- function(ncol, nrow){
   # To create PRIO-GRID, swap ncol and nrow, load index in reverse order, and
   # rotate 90 degrees once.
@@ -53,12 +52,10 @@ create_pg_indices <- function(ncol, nrow){
 #' @param x The GID to the cell that you would like to find the neighbors of.
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
-#' @return If asmat=TRUE: A matrix of the neighbors.
-#' @return If asmat=FALSE: A vector of the neighbors.
+#' @return If asmat=TRUE: A matrix of the neighbors, If asmat=FALSE: A vector of the neighbors.
 #' @examples
 #' pg <- create_pg_indices(5, 5)
 #' pgneighbors(1, ncol=5, nrow=5)
-
 pgneighbors <- function(x, ncol, nrow, asmat=TRUE){
 
   farright <- ncol*1:nrow
@@ -112,10 +109,7 @@ pgneighbors_v <- Vectorize(pgneighbors, vectorize.args=c("x"))
 #' @param ncol The number of columns in the grid.
 #' @param nrow The number of rows in the grid.
 #' @return A dataframe with a list of neighbors for each gid in gids.
-#' TODO: Return as a listw object.
-#' @examples
-#' pg <- create_pg_indices(5, 5)
-#' pgneighbors_nnb(1, ncol=5, nrow=5)
+#' @export
 pgneighbors_nnb <- function(gids, ncol, nrow){
   nnb <- pgneighbors_v(gids, ncol, nrow)
   df <- as.data.frame(unlist(lapply(format(nnb, scientific=F), paste, collapse=" ")))
@@ -123,6 +117,16 @@ pgneighbors_nnb <- function(gids, ncol, nrow){
   return(df)
 }
 
+
+#' Get nth-order neighbors in PRIO-GRID, vectorized version.
+#'
+#' @param gid The GIDs to the cells that you would like to find the neighbors of.
+#' @param order A number, the n-th order.
+#' @param ncol The number of columns in the grid.
+#' @param nrow The number of rows in the grid.
+#' @param include_self Whether or not to also return the center gids
+#' @return A dataframe with a list of neighbors for each gid in gids.
+#' @export
 nth_order_pgneighbors <- function(gid, order, ncol, nrow, include_self = FALSE){
   gids <- gid
   for(i in 1:order){

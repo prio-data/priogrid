@@ -15,12 +15,7 @@ pgneighbors_nnb(gids, ncol, nrow)
 }
 \value{
 A dataframe with a list of neighbors for each gid in gids.
-TODO: Return as a listw object.
 }
 \description{
 Get first order neighbors in PRIO-GRID, vectorized version.
-}
-\examples{
-pg <- create_pg_indices(5, 5)
-pgneighbors_nnb(1, ncol=5, nrow=5)
 }
