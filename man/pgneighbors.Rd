@@ -15,9 +15,7 @@ pgneighbors(x, ncol, nrow, asmat = TRUE)
 \item{nrow}{The number of rows in the grid.}
 }
 \value{
-If asmat=TRUE: A matrix of the neighbors.
-
-If asmat=FALSE: A vector of the neighbors.
+If asmat=TRUE: A matrix of the neighbors, If asmat=FALSE: A vector of the neighbors.
 }
 \description{
 Get first order neighbors in PRIO-GRID.
