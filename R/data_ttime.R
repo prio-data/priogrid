@@ -74,6 +74,8 @@ gen_ttime_max <- function(input_folder){
   ttime_max <- priogrid::gen_ttime(input_folder, fun = "max")
 
   names(ttime_max)[3] <- "ttime_max"
+
+  return(ttime_max)
 }
 
 
