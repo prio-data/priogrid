@@ -78,7 +78,7 @@ gen_pop_gpw_min <- function(input_folder){
 #'
 #' @export
 gen_pop_gpw_max <- function(input_folder){
-  pop_gpw_max <- gen_pop_gpw_sum(input_folder, fun = "max")
+  pop_gpw_max <- priogrid::gen_pop_gpw_sum(input_folder, fun = "max")
 
   return(pop_gpw_max)
 }
