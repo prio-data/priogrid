@@ -1,53 +1,87 @@
 
-#' gen_pop_gpw_sum 
-#' 
-#' @param path Path to gpw_nc NetCDF file. 
-#' @export
-gen_pop_gpw_sum <- function(path){
-   gen_pop_gpw(path,sum)
-}
-
-#' gen_pop_gpw_sd 
-#' 
-#' @param path Path to gpw_nc NetCDF file. 
-#' @export
-gen_pop_gpw_sd <- function(path){
-   gen_pop_gpw(path,sd)
-}
-
-#' gen_pop_gpw_min 
-#' 
-#' @param path Path to gpw_nc NetCDF file. 
-#' @export
-gen_pop_gpw_min <- function(path){
-   gen_pop_gpw(path,min)
-}
-
-#' gen_pop_gpw_max 
-#' 
-#' @param path Path to gpw_nc NetCDF file. 
-#' @export
-gen_pop_gpw_max <- function(path){
-   gen_pop_gpw(path,max)
-}
-
-## Function to generate pop_gpw_sum, _sd, _min and _max
-## Returns RasterBrick for the selected variable for years 2000, 2005, 2010 and 2015.
-
-
-#' Generate pop_gpw_ variables.
+#' @title pop_gpw_sum
 #'
-#' @param gpw_nc Gridded Population of the World v.4 NetCDF file.
-#' @param fun Function to aggregate by ('sum', 'sd', 'min', 'max')
+#' @description Generate sum population count
+#' for years 2000, 2005, 2010, 2015 and 2020 from
+#' the Gridded Population of the World v.4 data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_pop_gpw_sum <- function(input_folder, fun = "sum"){
+    gpw <- raster::brick(file.path(input_folder, "pop_gpw", "data", "gpw_v4_population_count_rev11_2pt5_min.nc"))
 
-gen_pop_gpw <- function(gpw_nc, fun){
-  gpw <- raster::brick(gpw_nc)
+    gpw <- gpw[[1:5]]
 
-  gpw <- gpw[[1:5]] # 1:5 to also included estimate for 2020
-  years <- c(2000, 2005, 2010, 2015, 2020)
+    raster::extent(gpw) <- priogrid::prio_extent()
 
-  gpw <- priogrid::prio_aggregate_raster(gpw, fun = fun)
+    gpw <- priogrid::raster_to_pg(gpw, aggregation_function = fun)
+    gpw <- priogrid::raster_to_tibble(gpw, add_pg_index = TRUE)
 
-  names(gpw) <- paste0("pop_gpw_", as.character(quote(rast.fun)), "_", years)
-  return(gpw)
+    name <- paste0("pop_gpw_", as.character(fun))
+
+    gpw <- gpw %>%
+      dplyr::group_by(pgid) %>%
+      tidyr::pivot_longer(cols = X1:X5,
+                   values_to = paste0(name),
+                   names_to = "year") %>%
+      dplyr::mutate(year = ifelse(year == "X1", 2000,
+                                  ifelse(year == "X2", 2005,
+                                         ifelse(year == "X3", 2010,
+                                                ifelse(year == "X4", 2015,
+                                                       ifelse(year == "X5", 2020, year)))))) %>%
+      dplyr::ungroup()
+
+    return(gpw)
 }
+
+
+#' @title pop_gpw_sd
+#'
+#' @description Generate standard deviation population count
+#' for years 2000, 2005, 2010, 2015 and 2020 from
+#' the Gridded Population of the World v.4 data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_pop_gpw_sd <- function(input_folder){
+  pop_gpw_sd <- priogrid::gen_pop_gpw_sum(input_folder, fun = "sd")
+
+  return(pop_gpw_sd)
+}
+
+
+#' @title pop_gpw_min
+#'
+#' @description Generate minimum population count
+#' for years 2000, 2005, 2010, 2015 and 2020 from
+#' the Gridded Population of the World v.4 data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_pop_gpw_min <- function(input_folder){
+  pop_gpw_min <- priogrid::gen_pop_gpw_sum(input_folder, fun = "min")
+
+  return(pop_gwp_min)
+}
+
+
+#' @title pop_gpw_max
+#'
+#' @description Generate maximum population count
+#' for years 2000, 2005, 2010, 2015 and 2020 from
+#' the Gridded Population of the World v.4 data.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+gen_pop_gpw_max <- function(input_folder){
+  pop_gpw_max <- gen_pop_gpw_sum(input_folder, fun = "max")
+
+  return(pop_gpw_max)
+}
+
+
+
