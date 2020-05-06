@@ -558,8 +558,6 @@ gen_capdist_changes <- function(input_folder){
 
       # Cell-centroids for gids that have changed since last month
       gw_crossection <- dplyr::filter(gwcode_changes, mydate == crossection_date)
-      gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("x", "y"))
-      sf::st_crs(gw_crossection) <- priogrid::prio_crs()
       gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
       gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
@@ -576,7 +574,7 @@ gen_capdist_changes <- function(input_folder){
 
       distances_cross <- lapply(update_distances_in_these_countries, get_distances)
 
-      gw_crossection$capdist <- NA
+      gw_crossection$capdist <- NA_real_
       for(i in 1:length(update_distances_in_these_countries)){
          gw_crossection[gw_crossection$gwcode==update_distances_in_these_countries[i],"capdist"] <- distances_cross[[i]]
       }
@@ -593,6 +591,9 @@ gen_capdist_changes <- function(input_folder){
    gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
    pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
    gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
+   pg <- priogrid::prio_blank_grid()
+   pg_poly <- pg %>% spex::polygonize()
+   gwcode_changes <- dplyr::left_join(gwcode_changes, pg_poly, by = "pgid") %>% sf::st_as_sf()
 
    cshp <- priogrid::monthly_cshp(input_folder)
    sf::st_geometry(cshp) <- NULL
