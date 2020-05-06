@@ -4,12 +4,10 @@
 \alias{gen_pgland}
 \title{gen_pgland}
 \usage{
-gen_pgland(input_folder, quiet = TRUE)
+gen_pgland(input_folder)
 }
 \arguments{
-\item{quiet}{Whether or not sf::st_ functions should print warnings.}
-
-\item{fname}{File path to Weidmann cshapes data}
+\item{input_folder}{path to PRIO-GRID input data}
 }
 \description{
 Takes the weidmann cshapes data set and returns a raster for the
