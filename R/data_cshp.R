@@ -140,7 +140,7 @@ gen_pgland <- function(input_folder){
    cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
 
    cshp <- cshp %>%
-      dplyr::filter(GWCODE != -1)
+      dplyr::filter(GWCODE != -1, GWEYEAR == 2016)
 
    pg <- priogrid::prio_blank_grid()
    pg_poly <- pg %>% spex::polygonize()
