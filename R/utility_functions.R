@@ -199,7 +199,7 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   return(pg_tibble)
 }
 
-map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL){
+map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL, ...){
   variable <- dplyr::enquo(variable)
   if(!is.null(mymonth)){
     cs <- dplyr::filter(pgdf, year == myyear, month == mymonth) %>% dplyr::select(x, y, !!variable)
@@ -213,7 +213,7 @@ map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL){
   rast <- priogrid::rasterextent_to_pg(rast)
   rast <- priogrid::raster_to_pg(rast)
 
-  raster::plot(rast)
+  raster::plot(rast, ...)
 }
 
 # previous get_array
