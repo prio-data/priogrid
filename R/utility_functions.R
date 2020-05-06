@@ -151,15 +151,15 @@ rasterextent_to_pg <- function(rast){
 vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval = -1){
   pg <- priogrid::prio_blank_grid()
 
-  if(!need_aggregation){
-    vx <- velox::velox(pg)
-    vx$rasterize(spdf = sfdf, field = variable, background = missval, small = TRUE)
-
-    rast <- vx$as.RasterLayer(band = 1)
-    rast[rast == missval] <- NA
-    names(rast) <- variable
-    return(rast)
-  }
+  # if(!need_aggregation){
+  #   vx <- velox::velox(pg)
+  #   vx$rasterize(spdf = sfdf, field = variable, background = missval, small = TRUE)
+  #
+  #   rast <- vx$as.RasterLayer(band = 1)
+  #   rast[rast == missval] <- NA
+  #   names(rast) <- variable
+  #   return(rast)
+  # }
   # backup solution when rasterization needs to aggregate values over many polygons/points
   rast <- raster::rasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
   names(rast) <- variable
