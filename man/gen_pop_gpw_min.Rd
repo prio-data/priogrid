@@ -2,13 +2,15 @@
 % Please edit documentation in R/data_gpw.R
 \name{gen_pop_gpw_min}
 \alias{gen_pop_gpw_min}
-\title{gen_pop_gpw_min}
+\title{pop_gpw_min}
 \usage{
-gen_pop_gpw_min(path)
+gen_pop_gpw_min(input_folder)
 }
 \arguments{
-\item{path}{Path to gpw_nc NetCDF file.}
+\item{input_folder}{Path to [pg-folder].}
 }
 \description{
-gen_pop_gpw_min
+Generate minimum population count
+for years 2000, 2005, 2010, 2015 and 2020 from
+the Gridded Population of the World v.4 data.
 }

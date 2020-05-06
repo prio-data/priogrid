@@ -1,3 +1,11 @@
+#' monthly_cshp
+#'
+#' cleans cshp data
+#'
+#' @param input_folder
+#'
+#' @return a sf dataframe
+#' @export
 monthly_cshp <- function(input_folder){
    cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
    names(cshp) <- tolower(names(cshp))
