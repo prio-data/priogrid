@@ -26,7 +26,6 @@ Imports:
     magrittr,
     raster,
     lwgeom,
-    velox,
     tictoc,
     crayon,
     janitor,
