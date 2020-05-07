@@ -503,7 +503,7 @@ gen_bdist3_changes <- function(input_folder){
 
       distances_cross <- parallel::mclapply(land_codes, get_distances)
 
-      gw_crossection$bdist3 <- NA
+      gw_crossection$bdist3 <- NA_real_
       for(i in 1:length(land_codes)){
          gw_crossection[gw_crossection$gwcode==land_codes[i],"bdist3"] <- distances_cross[[i]]
       }
