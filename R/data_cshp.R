@@ -480,11 +480,14 @@ gen_bdist3_changes <- function(input_folder){
 
       # Iterate over each country, and calculate the nearest distance to contiguos neighbor for all gis in country.
       gw_crossection <- dplyr::filter(gwcode_changes, mydate == crossection_date)
+      gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
+      gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
+
+      # Set geometry to cell centroid
+      sf::st_geometry(gw_crossection) <- NULL
       gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("x", "y"))
       sf::st_crs(gw_crossection) <- priogrid::prio_crs()
 
-      gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
-      gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
       land_codes <- unique(gw_crossection$gwcode)
 
@@ -521,6 +524,9 @@ gen_bdist3_changes <- function(input_folder){
    gwcode_changes$mydate <- lubridate::ymd(paste(gwcode_changes$year, gwcode_changes$month, gwcode_changes$day, sep = "-"))
    pg <- priogrid::raster_to_tibble(priogrid::prio_blank_grid())
    gwcode_changes <- dplyr::left_join(gwcode_changes, pg, by = c("x", "y")) # add priogrid-id
+   pg <- priogrid::prio_blank_grid()
+   pg_poly <- pg %>% spex::polygonize()
+   gwcode_changes <- dplyr::left_join(gwcode_changes, pg_poly, by = "pgid") %>% sf::st_as_sf()
 
    cshp <- priogrid::monthly_cshp(input_folder)
    changed_areas <- priogrid::gen_changed_areas(input_folder)
@@ -561,8 +567,12 @@ gen_capdist_changes <- function(input_folder){
       gids_in_crossection <- sf::st_intersects(gw_crossection, crossection)
       gw_crossection <- gw_crossection[lengths(gids_in_crossection) > 0,]
 
+      # Set geometry to cell centroid
+      sf::st_geometry(gw_crossection) <- NULL
+      gw_crossection <- sf::st_as_sf(gw_crossection, coords = c("x", "y"))
+      sf::st_crs(gw_crossection) <- priogrid::prio_crs()
+
       # For each country where there have been changes, calculate the closest distance
-      gw_crossection$capdist <- NA
       update_distances_in_these_countries <- unique(c(gw_crossection$gwcode, new_or_different_capital_location$gwcode))
 
 
