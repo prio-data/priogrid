@@ -21,10 +21,6 @@ monthly_cshp <- function(input_folder){
    return(cshp)
 }
 
-
-
-
-
 #' pg_timeseries_from_changes
 #'
 #'#' Takes the weidmann cshapes data set and returns a
@@ -137,38 +133,46 @@ gen_capdist <- function(input_folder, ...){
    gen_gwcode(input_folder, input_file = "capdist_changes.parquet", ...)
 }
 
-#' gen_pgland
+#' pgland 
 #'
 #' Takes the weidmann cshapes data set and returns a raster for the
 #' grid cells that intersects with land.
 #'
 #' @param input_folder path to PRIO-GRID input data
 #' @export
-gen_pgland <- function(input_folder){
-   cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
+pgland <- function(input_folder){
+   # I don't think it's a good idea to use parquet as a caching medium.
+   # Too complicated!
 
-   cshp <- cshp %>%
-      dplyr::filter(GWCODE != -1, GWEYEAR == max(GWEYEAR))
+   #pglandPath <- file.path(input_folder,"cache","pgland.parquet")
+   pglandPath <- file.path(input_folder,"cache","pgland.rds")
+   if(!file.exists(pglandPath)){
+      cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
+      cshp <- cshp %>%
+         dplyr::filter(GWCODE != -1, GWEYEAR == max(GWEYEAR))
 
-   pg <- priogrid::prio_blank_grid()
-   pg_poly <- pg %>% spex::polygonize()
+      pg <- priogrid::prio_blank_grid()
+      pg_poly <- pg %>% spex::polygonize()
 
-   sf::st_crs(cshp) <- sf::st_crs(pg_poly)
-   land_gids <- sf::st_intersects(pg_poly, cshp)
-   pgland <- pg_poly[lengths(land_gids)> 0,]
-   pgland <- dplyr::tibble("pgid" = pgland$pgid, "pgland" = 1L)
+      sf::st_crs(cshp) <- sf::st_crs(pg_poly)
+      land_gids <- sf::st_intersects(pg_poly, cshp)
+      pgland <- pg_poly[lengths(land_gids)> 0,]
+      pgland <- dplyr::tibble("pgid" = pgland$pgid, "pgland" = 1L)
+      saveRDS(pgland,pglandPath)
+      #arrow::write_parquet(pgland,pglandPath)
+   } else {
+      pgland <- readRDS(pglandPath)
+      #pgland <- arrow::read_parquet(pglandPath)
+   }
+
    return(pgland)
 }
 
-#' @export
 gen_landarea_sf <- function(input_folder){
-   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
-   assertthat::assert_that(file.exists(pgland))
-   pgland <- arrow::read_parquet(pgland)
+   pgland <- priogrid::pgland(input_folder)
 
    pg <- priogrid::prio_blank_grid()
-   pg[!(values(pg) %in% pgland$pgid)] <- NA
-
+   pg[!(raster::values(pg) %in% pgland$pgid)] <- NA
    pgland <- spex::polygonize(pg)
 
    cshp <- sf::read_sf(file.path(input_folder, "cshapes", "data", "cshapes.shp"))
@@ -257,6 +261,11 @@ gen_changed_areas <- function(input_folder){
 #' @param input_folder Path to PRIO-GRID input data
 #' @export
 gen_gwcode_changes <- function(input_folder){
+   pgland <- priogrid::pgland(input_folder)
+   pg <- priogrid::prio_blank_grid()
+   pg[!(raster::values(pg) %in% pgland$pgid)] <- NA
+   pgland <- spex::polygonize(pg)
+
    calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
       assertthat::assert_that(length(crossection_date) == 1)
@@ -285,13 +294,6 @@ gen_gwcode_changes <- function(input_folder){
       return(gwcodes)
    }
 
-   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
-   assertthat::assert_that(file.exists(pgland))
-   pgland <- arrow::read_parquet(pgland)
-   pg <- priogrid::prio_blank_grid()
-   pg[!(raster::values(pg) %in% pgland$pgid)] <- NA
-   pgland <- spex::polygonize(pg)
-
    changed_areas <- priogrid::gen_changed_areas(input_folder)
    cshp <- priogrid::monthly_cshp(input_folder)
    dates_with_changes <- lubridate::ymd((names(changed_areas)))
@@ -311,9 +313,7 @@ gen_gwcode_changes <- function(input_folder){
 #' @return a tibble, with x, y, pgid, and coastdist
 #' @export
 gen_coastdist <- function(input_folder){
-   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
-   assertthat::assert_that(file.exists(pgland))
-   pgland <- arrow::read_parquet(pgland)
+   pgland <- priogrid::pgland(input_folder)
 
    pgland <- priogrid::raster_to_tibble(priogrid::prio_blank_grid()) %>% dplyr::filter(pgid %in% pgland$pgid)
    pgland <- sf::st_as_sf(pgland, coords = c("x", "y"))
@@ -339,9 +339,7 @@ gen_coastdist <- function(input_folder){
 #' @return a tibble, with x, y, pgid, and riverdist
 #' @export
 gen_riverdist <- function(input_folder){
-   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
-   assertthat::assert_that(file.exists(pgland))
-   pgland <- arrow::read_parquet(pgland)
+   pgland <- priogrid::pgland(input_folder)
 
    pgland <- priogrid::raster_to_tibble(priogrid::prio_blank_grid()) %>% dplyr::filter(pgid %in% pgland$pgid)
    pgland <- sf::st_as_sf(pgland, coords = c("x", "y"))
