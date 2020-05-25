@@ -22,7 +22,7 @@
 #' @importFrom magrittr %>%
 
 make_priogrid <- function(input_folder,output_folder,
-   specfile = NULL,format = "parquet"){
+   specfile = NULL,format = "rds"){
 
    # TODO
    # 
@@ -32,10 +32,7 @@ make_priogrid <- function(input_folder,output_folder,
    # Much of this functionality is already implemented in the integrity.R file.
    # 
 
-   # TODO Mockup
-   input_folder <- "/tmp/in"
-   output_folder <- "/tmp/out"
-   specfile <- "/tmp/spec.csv"
+   dir.create(file.path(input_folder,"cache"))
 
    # Read the included specfile by default
    if(is.null(specfile)){
@@ -59,13 +56,14 @@ make_priogrid <- function(input_folder,output_folder,
    # For line in spec, run the function with the provided arguments.
    for(varspec in spec){
       procedure_call <- list(
+         name = varspec$variable_name,
          fn = parse_gen_function(varspec$genfunction),
-         input_folder <- input_folder,
-         output_folder <- output_folder,
-         format <- format
+         input_folder = input_folder,
+         output_folder = output_folder,
+         format = format
       )
 
-      do.call(mock_wrap_procedure,procedure_call)
+      do.call(wrap_procedure,procedure_call)
    }
 }
 
@@ -86,21 +84,25 @@ make_priogrid <- function(input_folder,output_folder,
 #' make function. If you want to build a single variable, call the gen function
 #' directly instead.
 #'
+#' @param name Name of the variable, used to name the output file. 
 #' @param fn The function to apply
 #' @param input_folder The folder containing the priogrid raw data. 
 #' @param output_folder Where to write the output data files 
 #' @param format What format to write the output data to 
-wrap_procedure <- function(fn, input_folder,output_folder, format) {
+wrap_procedure <- function(name, fn, input_folder,output_folder, format) {
+   writeLines(paste0("Doing ",name))
 
    # This returns a list that specifies r/w functions and the file ext.
    format_spec <- get_format_spec(format)
 
-   out_path <- get_out_path(output_folder,variable_name,format_spec$ext)
+   out_path <- get_out_path(output_folder,name,format_spec$ext)
    if(file.exists(out_path)){
-      data <- format_spec$read(out_path)
+      writeLines(paste0(name," exists in ",output_folder))
+      #data <- format_spec$read(out_path)
    } else {
       data <- fn(input_folder)
-      format_spec$write(data,outpath)
+      format_spec$write(data,out_path)
+      writeLines(paste0("Wrote",out_path))
    }
 }
 
@@ -181,7 +183,7 @@ format_lookup <- function(...){specification_lookup(type="format",...)}
 #' See extdata/format_specification.yaml for further information.
 get_format_spec <- function(format_name){
    format_info <- format_lookup(format_name)
-   format_info$read <- eval(parse(text=var_info$read))
-   format_info$write <- eval(parse(text=var_info$write))
+   format_info$read <- eval(parse(text=format_info$read))
+   format_info$write <- eval(parse(text=format_info$write))
    format_info
 }
