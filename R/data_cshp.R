@@ -160,6 +160,7 @@ gen_pgland <- function(input_folder){
    return(pgland)
 }
 
+#' @export
 gen_landarea_sf <- function(input_folder){
    pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
    assertthat::assert_that(file.exists(pgland))
@@ -185,6 +186,7 @@ gen_landarea_sf <- function(input_folder){
 #'
 #'
 #' @input_folder input_folder Folder path to PRIO-GRID input data
+#' @export
 gen_landarea <- function(input_folder){
    pgarea <- gen_landarea_sf(input_folder)
    sf::st_geometry(pgarea) <- NULL
@@ -253,6 +255,7 @@ gen_changed_areas <- function(input_folder){
 #' The rasterstack only includes the months where there was a change from one month to the next.
 #'
 #' @param input_folder Path to PRIO-GRID input data
+#' @export
 gen_gwcode_changes <- function(input_folder){
    calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
@@ -368,6 +371,7 @@ gen_riverdist <- function(input_folder){
 }
 
 
+#' @export
 gen_bdist1_changes <- function(input_folder){
    #bdist1: distance in km from the centroid to the border of the nearest land-contiguous neighboring country.
    bdist1_on_crossection <- function(crossection){
@@ -423,6 +427,7 @@ gen_bdist1_changes <- function(input_folder){
 }
 
 
+#' @export
 gen_bdist2_changes<- function(input_folder){
    #bdist2: distance in km from the centroid to the border of the nearest neighboring country.
    bdist2_on_crossection <- function(crossection){
@@ -470,6 +475,7 @@ gen_bdist2_changes<- function(input_folder){
 }
 
 
+#' @export
 gen_bdist3_changes <- function(input_folder){
    #bdist3: distance in km from the centroid to the territorial outline of the country the cell belongs to.
    bdist3_on_crossection <- function(crossection){
@@ -538,6 +544,8 @@ gen_bdist3_changes <- function(input_folder){
 
 
 #message("capdist: distance in km from the cell centroid to the national capital in the country the cell belongs to")
+
+#' @export
 gen_capdist_changes <- function(input_folder){
    calc_crossection <- function(crossection, dates_with_changes){
       crossection_date <- unique(crossection$crossection_date)
