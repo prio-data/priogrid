@@ -1,0 +1,9 @@
+genfunction,group,variable_name,download_link,ready,hash,in_bibtex
+gen_landarea,,landarea,,T,,
+gen_coastdist,,coastdist,,T,,
+gen_riverdist,,riverdist,,T,,
+gen_msch,,msch,,T,,
+gen_esch,,esch,,T,,
+gen_lifexp,,lifexp,,T,,
+gen_lgnic,,lgnic,,T,,
+gen_excluded,,excluded,,T,,

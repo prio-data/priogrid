@@ -4,9 +4,11 @@
 \alias{wrap_procedure}
 \title{wrap_procedure}
 \usage{
-wrap_procedure(fn, input_folder, output_folder, format)
+wrap_procedure(name, fn, input_folder, output_folder, format)
 }
 \arguments{
+\item{name}{Name of the variable, used to name the output file.}
+
 \item{fn}{The function to apply}
 
 \item{input_folder}{The folder containing the priogrid raw data.}
