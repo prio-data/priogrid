@@ -23,8 +23,15 @@ gen_shdi <- function(input_folder, variable = "shdi"){
   return(shdi)
 }
 
+#' @export
 gen_msch <- function(input_folder){ gen_shdi(input_folder, variable = "msch") }
+
+#' @export
 gen_esch <- function(input_folder){ gen_shdi(input_folder, variable = "esch") }
+
+#' @export
 gen_lifexp <- function(input_folder){ gen_shdi(input_folder, variable = "lifexp") }
+
+#' @export
 gen_lgnic <- function(input_folder){ gen_shdi(input_folder, variable = "lgnic") }
 
