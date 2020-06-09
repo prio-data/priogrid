@@ -29,6 +29,8 @@ Imports:
     tictoc,
     crayon,
     janitor,
+    R.utils,
+    SPEI,
     Rcpp
 Suggests: testthat
 RoxygenNote: 7.1.0

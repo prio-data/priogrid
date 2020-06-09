@@ -218,24 +218,24 @@ map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL, ..
 
 # previous get_array
 get_ncarray <- function(ncfile, variable, fillvalue, lon=NULL, lat=NULL, ...){
-  nc <- nc_open(ncfile)
+  nc <- ncdf4::nc_open(ncfile)
 
   if(missing(lon) & missing(lat)){
     lon <- NA
     lat <- NA
     res <- NA
   } else{
-    lon <- ncvar_get(nc, lon, verbose = F)
-    lat <- ncvar_get(nc, lat, verbose = F)
+    lon <- ncdf4::ncvar_get(nc, lon, verbose = F)
+    lat <- ncdf4::ncvar_get(nc, lat, verbose = F)
     res <- (lon[2]-lon[1])/2
 
   } # If I want to add spatial indexing to the function, this information is necessary.
 
-  fillvalue <- ncatt_get(nc, varid=variable, attname=fillvalue)
+  fillvalue <- ncdf4::ncatt_get(nc, varid=variable, attname=fillvalue)
 
-  nc_array <- ncvar_get(nc, variable, ...)
+  nc_array <- ncdf4::ncvar_get(nc, variable, ...)
   nc_array[nc_array == fillvalue$value] <- NA
-  nc_close(nc)
+  ncdf4::nc_close(nc)
 
   return(list("data" = nc_array, "lon" = lon, "lat" = lat, "res" = res))
 }
