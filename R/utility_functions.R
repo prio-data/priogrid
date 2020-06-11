@@ -199,6 +199,20 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   return(pg_tibble)
 }
 
+
+#' map_pg_crossection
+#'
+#' Plots a PRIO-GRID crossection on a map.
+#'
+#'
+#' @param pgdf a prio-grid dataframe with x, y, year, month, variable
+#' @param variable the variable to convert to plot
+#' @param myyear the year of the crossection to plot
+#' @param mymonth the month of the crossection to plot
+#' @param ... function accepts other parameters passed to raster::plot()
+#'
+#' @return A plot based on raster::plot()
+#' @export
 map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL, ...){
   variable <- dplyr::enquo(variable)
   if(!is.null(mymonth)){
