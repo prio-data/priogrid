@@ -105,8 +105,6 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   nothing_needed <- all(resolution_factor == 1)
   assertthat::assert_that( xor(xor(aggregation_needed, disaggregation_needed), nothing_needed) )
 
-  assertthat::assert_that( raster::extent(rast) == priogrid::prio_extent())
-
   if(aggregation_needed){
     rast <- raster::aggregate(rast, fact = resolution_factor, fun = aggregation_function)
   }
@@ -114,8 +112,11 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
     rast <- raster::disaggregate(rast, fact = 1 / resolution_factor, method = resampling_method)
   }
 
+  if(raster::extent(rast) != priogrid::prio_extent()){
+    rast <- priogrid::rasterextent_to_pg(rast)
+  }
+
   raster::crs(rast) <- priogrid::prio_crs()
-  raster::extent(rast) <- priogrid::prio_extent()
   return(rast)
 }
 
