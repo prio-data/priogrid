@@ -271,12 +271,13 @@ interpolate_crossection <- function(crossection, variable, lon, lat, input_folde
 #' and plots them.
 #'
 #' @param df a dataframe crossection x, y, variable
+#' @param input_folder
 #' @param variable the variable to convert to plot
 #' @param ... function accepts other parameters passed to raster::plot()
 #'
 #' @return A dataframe with the cells that are missing and a plot.
 #' @export
-missing_in_pg <- function(df, plot_missing = TRUE, ...){
+missing_in_pg <- function(df, input_folder, plot_missing = TRUE, ...){
   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
   assertthat::assert_that(file.exists(pgland))
   pgland <- arrow::read_parquet(pgland)
