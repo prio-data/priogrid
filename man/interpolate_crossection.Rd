@@ -4,7 +4,14 @@
 \alias{interpolate_crossection}
 \title{interpolate_crossection}
 \usage{
-interpolate_crossection(crossection, variable, lon, lat)
+interpolate_crossection(
+  crossection,
+  variable,
+  lon,
+  lat,
+  input_folder,
+  date_var = NULL
+)
 }
 \arguments{
 \item{crossection}{a dataframe crossection lon, lat, variable}

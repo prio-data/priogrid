@@ -4,7 +4,7 @@
 \alias{missing_in_pg}
 \title{missing_in_pg}
 \usage{
-missing_in_pg(df, plot_missing = TRUE, ...)
+missing_in_pg(df, input_folder, plot_missing = TRUE, ...)
 }
 \arguments{
 \item{df}{a dataframe crossection x, y, variable}
