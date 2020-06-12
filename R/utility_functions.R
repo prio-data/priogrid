@@ -201,6 +201,62 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 }
 
 
+#' interpolate_crossection
+#'
+#' Increasingly coarse bilinear interpolation of missing data
+#'
+#' @param crossection a dataframe crossection lon, lat, variable
+#' @param variable the variable to interpolate missing from
+#' @param lon a string denoting the name of the longitude variable
+#' @param lat a string denoting the name of the latitude variable
+#'
+#' @return the interpolated crossection
+#' @export
+interpolate_crossection <- function(crossection, variable, lon, lat){
+  crossection_date <- unique(crossection$mydate)
+  rast <- raster::rasterFromXYZ(dplyr::select(crossection, all_of(c(lon, lat, variable))))
+
+  rast2 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 360, nrow = 180), method = "bilinear")
+  rast3 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 180, nrow = 90), method = "bilinear")
+  rast4 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 90, nrow = 45), method = "bilinear")
+  rast5 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 45, nrow = 23), method = "bilinear")
+  rast6 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 23, nrow = 11), method = "bilinear")
+  rast7 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 11, nrow = 6), method = "bilinear")
+
+  rast2 <- raster::resample(rast2, priogrid::prio_blank_grid(), method = "ngb")
+  rast3 <- raster::resample(rast3, priogrid::prio_blank_grid(), method = "ngb")
+  rast4 <- raster::resample(rast4, priogrid::prio_blank_grid(), method = "ngb")
+  rast5 <- raster::resample(rast5, priogrid::prio_blank_grid(), method = "ngb")
+  rast6 <- raster::resample(rast6, priogrid::prio_blank_grid(), method = "ngb")
+  rast7 <- raster::resample(rast7, priogrid::prio_blank_grid(), method = "ngb")
+
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast2[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast3[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast4[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast5[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast6[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast7[missing_vals]
+
+  pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+  assertthat::assert_that(file.exists(pgland))
+  pgland <- arrow::read_parquet(pgland)
+
+
+  pg <- priogrid::prio_blank_grid()
+  rast[which(!(pg[] %in% pgland$pgid))] <- NA
+
+  sdf <- priogrid::raster_to_tibble(rast)
+  sdf$mydate <-crossection_date
+  sdf
+}
+
+
 #' missing_in_pg
 #'
 #' Finds whether a crossection has missing data for any of the 64818 PRIO-GRID land cells,
