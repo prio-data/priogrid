@@ -258,7 +258,7 @@ interpolate_crossection <- function(crossection, variable, lon, lat, input_folde
 
   sdf <- priogrid::raster_to_tibble(rast)
   if(!is.null(date_var)){
-    sdf[[datevar]] <-crossection_date
+    sdf[[date_var]] <-crossection_date
   }
 
   sdf
