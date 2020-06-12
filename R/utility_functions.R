@@ -217,8 +217,9 @@ interpolate_crossection <- function(crossection, variable, lon, lat, input_folde
     crossection_date <- unique(crossection[[date_var]])
   }
 
-
   rast <- raster::rasterFromXYZ(dplyr::select(crossection, all_of(c(lon, lat, variable))))
+  rast <- priogrid::raster_to_pg(rast)
+  rast <- priogrid::rasterextent_to_pg(rast)
 
   rast2 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 360, nrow = 180), method = "bilinear")
   rast3 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 180, nrow = 90), method = "bilinear")
