@@ -288,6 +288,11 @@ missing_in_pg <- function(df, plot_missing = TRUE, ...){
 
   anti_df <- dplyr::filter(anti_df, pgid %in% pgland$pgid)
 
+  if(nrow(anti_df) == 0){
+    message("No missing data.")
+    return(NULL)
+  }
+
   if(plot_missing){
     rast <- rasterFromXYZ(anti_df)
     raster::plot(rast, ...)
