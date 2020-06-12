@@ -212,8 +212,12 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 #'
 #' @return the interpolated crossection
 #' @export
-interpolate_crossection <- function(crossection, variable, lon, lat){
-  crossection_date <- unique(crossection$mydate)
+interpolate_crossection <- function(crossection, variable, lon, lat, input_folder, date_var = NULL){
+  if(!is.null(date_var)){
+    crossection_date <- unique(crossection[[date_var]])
+  }
+
+
   rast <- raster::rasterFromXYZ(dplyr::select(crossection, all_of(c(lon, lat, variable))))
 
   rast2 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 360, nrow = 180), method = "bilinear")
@@ -252,7 +256,10 @@ interpolate_crossection <- function(crossection, variable, lon, lat){
   rast[which(!(pg[] %in% pgland$pgid))] <- NA
 
   sdf <- priogrid::raster_to_tibble(rast)
-  sdf$mydate <-crossection_date
+  if(!is.null(date_var)){
+    sdf[[datevar]] <-crossection_date
+  }
+
   sdf
 }
 
