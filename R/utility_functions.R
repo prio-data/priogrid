@@ -201,6 +201,37 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 }
 
 
+#' missing_in_pg
+#'
+#' Finds whether a crossection has missing data for any of the 64818 PRIO-GRID land cells,
+#' and plots them.
+#'
+#' @param df a dataframe crossection x, y, variable
+#' @param variable the variable to convert to plot
+#' @param ... function accepts other parameters passed to raster::plot()
+#'
+#' @return A dataframe with the cells that are missing and a plot.
+#' @export
+missing_in_pg <- function(df, plot_missing = TRUE, ...){
+  pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+  assertthat::assert_that(file.exists(pgland))
+  pgland <- arrow::read_parquet(pgland)
+
+  pg <- prio_blank_grid()
+  pgdf <- raster_to_tibble(pg)
+
+  anti_df <- anti_join(pgdf, df, by = c("x", "y"))
+
+  anti_df <- dplyr::filter(anti_df, pgid %in% pgland$pgid)
+
+  if(plot_missing){
+    rast <- rasterFromXYZ(anti_df)
+    raster::plot(rast, ...)
+  }
+  return(anti_df)
+}
+
+
 #' map_pg_crossection
 #'
 #' Plots a PRIO-GRID crossection on a map.
