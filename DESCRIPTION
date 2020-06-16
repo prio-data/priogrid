@@ -29,6 +29,7 @@ Imports:
     tictoc,
     crayon,
     janitor,
+    readxl,
     R.utils,
     SPEI,
     Rcpp
