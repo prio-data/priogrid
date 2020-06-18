@@ -271,13 +271,13 @@ interpolate_crossection <- function(crossection, variable, lon, lat, input_folde
 #' and plots them.
 #'
 #' @param df a dataframe crossection x, y, variable
-#' @param input_folder
 #' @param variable the variable to convert to plot
+#' @param input_folder
 #' @param ... function accepts other parameters passed to raster::plot()
 #'
 #' @return A dataframe with the cells that are missing and a plot.
 #' @export
-missing_in_pg <- function(df, input_folder, plot_missing = TRUE, ...){
+missing_in_pg <- function(df, variable, input_folder, plot_missing = TRUE, ...){
   pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
   assertthat::assert_that(file.exists(pgland))
   pgland <- arrow::read_parquet(pgland)
@@ -285,8 +285,9 @@ missing_in_pg <- function(df, input_folder, plot_missing = TRUE, ...){
   pg <- prio_blank_grid()
   pgdf <- raster_to_tibble(pg)
 
-  anti_df <- anti_join(pgdf, df, by = c("x", "y"))
+  df <- dplyr::select(df, all_of(c("x", "y", variable))) %>% dplyr::filter(complete.cases(.))
 
+  anti_df <- anti_join(pgdf, df, by = c("x", "y"))
   anti_df <- dplyr::filter(anti_df, pgid %in% pgland$pgid)
 
   if(nrow(anti_df) == 0){
@@ -295,7 +296,9 @@ missing_in_pg <- function(df, input_folder, plot_missing = TRUE, ...){
   }
 
   if(plot_missing){
-    rast <- rasterFromXYZ(anti_df)
+    pgdf[[variable]] <- if_else(pgdf$pgid %in% anti_df$pgid, 1, 0)
+    pgdf$pgid <- NULL
+    rast <- raster::rasterFromXYZ(pgdf)
     raster::plot(rast, ...)
   }
   return(anti_df)
