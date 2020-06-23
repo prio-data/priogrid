@@ -105,8 +105,6 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
   nothing_needed <- all(resolution_factor == 1)
   assertthat::assert_that( xor(xor(aggregation_needed, disaggregation_needed), nothing_needed) )
 
-  assertthat::assert_that( raster::extent(rast) == priogrid::prio_extent())
-
   if(aggregation_needed){
     rast <- raster::aggregate(rast, fact = resolution_factor, fun = aggregation_function)
   }
@@ -114,8 +112,11 @@ raster_to_pg <- function(rast, aggregation_function = "mean", resampling_method 
     rast <- raster::disaggregate(rast, fact = 1 / resolution_factor, method = resampling_method)
   }
 
+  if(raster::extent(rast) != priogrid::prio_extent()){
+    rast <- priogrid::rasterextent_to_pg(rast)
+  }
+
   raster::crs(rast) <- priogrid::prio_crs()
-  raster::extent(rast) <- priogrid::prio_extent()
   return(rast)
 }
 
@@ -199,6 +200,124 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
   return(pg_tibble)
 }
 
+
+#' interpolate_crossection
+#'
+#' Increasingly coarse bilinear interpolation of missing data
+#'
+#' @param crossection a dataframe crossection lon, lat, variable
+#' @param variable the variable to interpolate missing from
+#' @param lon a string denoting the name of the longitude variable
+#' @param lat a string denoting the name of the latitude variable
+#'
+#' @return the interpolated crossection
+#' @export
+interpolate_crossection <- function(crossection, variable, lon, lat, input_folder, date_var = NULL){
+  if(!is.null(date_var)){
+    crossection_date <- unique(crossection[[date_var]])
+  }
+
+  rast <- raster::rasterFromXYZ(dplyr::select(crossection, all_of(c(lon, lat, variable))))
+  rast <- priogrid::raster_to_pg(rast)
+  rast <- priogrid::rasterextent_to_pg(rast)
+
+  rast2 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 360, nrow = 180), method = "bilinear")
+  rast3 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 180, nrow = 90), method = "bilinear")
+  rast4 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 90, nrow = 45), method = "bilinear")
+  rast5 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 45, nrow = 23), method = "bilinear")
+  rast6 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 23, nrow = 11), method = "bilinear")
+  rast7 <- raster::resample(rast, priogrid::prio_blank_grid(ncol = 11, nrow = 6), method = "bilinear")
+
+  rast2 <- raster::resample(rast2, priogrid::prio_blank_grid(), method = "ngb")
+  rast3 <- raster::resample(rast3, priogrid::prio_blank_grid(), method = "ngb")
+  rast4 <- raster::resample(rast4, priogrid::prio_blank_grid(), method = "ngb")
+  rast5 <- raster::resample(rast5, priogrid::prio_blank_grid(), method = "ngb")
+  rast6 <- raster::resample(rast6, priogrid::prio_blank_grid(), method = "ngb")
+  rast7 <- raster::resample(rast7, priogrid::prio_blank_grid(), method = "ngb")
+
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast2[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast3[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast4[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast5[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast6[missing_vals]
+  missing_vals <- which(is.na(rast[]))
+  rast[missing_vals] <- rast7[missing_vals]
+
+  pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+  assertthat::assert_that(file.exists(pgland))
+  pgland <- arrow::read_parquet(pgland)
+
+
+  pg <- priogrid::prio_blank_grid()
+  rast[which(!(pg[] %in% pgland$pgid))] <- NA
+
+  sdf <- priogrid::raster_to_tibble(rast)
+  if(!is.null(date_var)){
+    sdf[[date_var]] <-crossection_date
+  }
+
+  sdf
+}
+
+
+#' missing_in_pg
+#'
+#' Finds whether a crossection has missing data for any of the 64818 PRIO-GRID land cells,
+#' and plots them.
+#'
+#' @param df a dataframe crossection x, y, variable
+#' @param variable the variable to convert to plot
+#' @param input_folder
+#' @param ... function accepts other parameters passed to raster::plot()
+#'
+#' @return A dataframe with the cells that are missing and a plot.
+#' @export
+missing_in_pg <- function(df, variable, input_folder, plot_missing = TRUE, ...){
+  pgland <- file.path(input_folder, "cshapes", "cache", "pgland.parquet")
+  assertthat::assert_that(file.exists(pgland))
+  pgland <- arrow::read_parquet(pgland)
+
+  pg <- prio_blank_grid()
+  pgdf <- raster_to_tibble(pg)
+
+  df <- dplyr::select(df, all_of(c("x", "y", variable))) %>% dplyr::filter(complete.cases(.))
+
+  anti_df <- anti_join(pgdf, df, by = c("x", "y"))
+  anti_df <- dplyr::filter(anti_df, pgid %in% pgland$pgid)
+
+  if(nrow(anti_df) == 0){
+    message("No missing data.")
+    return(NULL)
+  }
+
+  if(plot_missing){
+    pgdf[[variable]] <- if_else(pgdf$pgid %in% anti_df$pgid, 1, 0)
+    pgdf$pgid <- NULL
+    rast <- raster::rasterFromXYZ(pgdf)
+    raster::plot(rast, ...)
+  }
+  return(anti_df)
+}
+
+
+#' map_pg_crossection
+#'
+#' Plots a PRIO-GRID crossection on a map.
+#'
+#'
+#' @param pgdf a prio-grid dataframe with x, y, year, month, variable
+#' @param variable the variable to convert to plot
+#' @param myyear the year of the crossection to plot
+#' @param mymonth the month of the crossection to plot
+#' @param ... function accepts other parameters passed to raster::plot()
+#'
+#' @return A plot based on raster::plot()
+#' @export
 map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL, ...){
   variable <- dplyr::enquo(variable)
   if(!is.null(mymonth)){
@@ -218,24 +337,24 @@ map_pg_crossection <- function(pgdf, variable, myyear = NULL, mymonth = NULL, ..
 
 # previous get_array
 get_ncarray <- function(ncfile, variable, fillvalue, lon=NULL, lat=NULL, ...){
-  nc <- nc_open(ncfile)
+  nc <- ncdf4::nc_open(ncfile)
 
   if(missing(lon) & missing(lat)){
     lon <- NA
     lat <- NA
     res <- NA
   } else{
-    lon <- ncvar_get(nc, lon, verbose = F)
-    lat <- ncvar_get(nc, lat, verbose = F)
+    lon <- ncdf4::ncvar_get(nc, lon, verbose = F)
+    lat <- ncdf4::ncvar_get(nc, lat, verbose = F)
     res <- (lon[2]-lon[1])/2
 
   } # If I want to add spatial indexing to the function, this information is necessary.
 
-  fillvalue <- ncatt_get(nc, varid=variable, attname=fillvalue)
+  fillvalue <- ncdf4::ncatt_get(nc, varid=variable, attname=fillvalue)
 
-  nc_array <- ncvar_get(nc, variable, ...)
+  nc_array <- ncdf4::ncvar_get(nc, variable, ...)
   nc_array[nc_array == fillvalue$value] <- NA
-  nc_close(nc)
+  ncdf4::nc_close(nc)
 
   return(list("data" = nc_array, "lon" = lon, "lat" = lat, "res" = res))
 }
