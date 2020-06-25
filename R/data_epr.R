@@ -1,4 +1,4 @@
-#' @title eth_excluded
+#' @title epr_excluded
 #'
 #' @description Generate variable that counts the number of excluded and politically relevant
 #' ethnic groups that are settled in a given grid cell in a given year.
@@ -12,7 +12,7 @@ gen_excluded <- function(input_folder){
 
    excluded <- priogrid::panel_to_pg(excluded,
                                      timevar = "year",
-                                     variable = var,
+                                     variable = "epr_excluded",
                                      need_aggregation = TRUE,
                                      fun = "count")
 
@@ -20,7 +20,7 @@ gen_excluded <- function(input_folder){
 
 }
 
-#' @title eth_promoted
+#' @title epr_promoted
 #'
 #' @description Generate variable that counts the number of politically relevant ethnic groups
 #' that are settled in a given grid cell in a given year, and that have increased their political access
@@ -35,7 +35,7 @@ gen_promoted <- function(input_folder){
 
    promoted <- priogrid::panel_to_pg(promoted,
                                      timevar = "year",
-                                     variable = "eth_promoted",
+                                     variable = "epr_promoted",
                                      need_aggregation = TRUE,
                                      fun = "count")
 
@@ -43,7 +43,7 @@ gen_promoted <- function(input_folder){
 
 }
 
-#' @title eth_demoted
+#' @title epr_demoted
 #'
 #' @description Generate variable that counts the number of politically relevant ethnic groups
 #' that are settled in a given grid cell in a given year, and that have reduced their political access
@@ -58,13 +58,39 @@ gen_demoted <- function(input_folder){
 
    demoted <- priogrid::panel_to_pg(demoted,
                                     timevar = "year",
-                                    variable = "eth_demoted",
+                                    variable = "epr_demoted",
                                     need_aggregation = TRUE,
                                     fun = "count")
 
    return(demoted)
 
 }
+
+#' @title epr_regional
+#'
+#' @description Generate variable that counts the number of regionally based ethnic groups
+#' that are settled in a given grid cell in a given year.
+#'
+#' @param input_folder Path to [pg-folder].
+#'
+#' @export
+
+gen_epr_regional <- function(input_folder){
+   regional <- prep_epr(input_folder)
+
+   regional <- priogrid::panel_to_pg(regional,
+                                     timevar = "year",
+                                     variable = "epr_regional",
+                                     need_aggregation = TRUE,
+                                     fun = "count")
+
+   return(demoted)
+
+}
+
+
+
+
 
 
 
@@ -77,36 +103,33 @@ prep_epr <- function(input_folder){
    epr <- read.csv(files[2], stringsAsFactors = FALSE)
 
    epr <- epr %>%
-      dplyr::mutate(eth_excluded = ifelse(status == "POWERLESS" | status == "DISCRIMINATED",
+      dplyr::mutate(epr_excluded = ifelse(status == "POWERLESS" | status == "DISCRIMINATED",
                                           yes = 1, no = 0),
                     year = purrr::map2(from, to, `:`)) %>%
       tidyr::unnest(year) %>%
-      dplyr::select(gwgroupid, year, status, eth_excluded)
-
-   geoepr <- geoepr %>%
-      dplyr::mutate(year = purrr::map2(from, to, `:`)) %>%
-      tidyr::unnest(year) %>%
-      dplyr::left_join(epr, by = c("year", "gwgroupid"))
-
-   geoepr <- geoepr %>%
       dplyr::mutate(status_cat = ifelse(status == "MONOPOLY" | status == "DOMINANT", 1,
                                         ifelse(status == "SENIOR PARTNER" | status == "JUNIOR PARTNER", 2,
                                                ifelse(status == "POWERLESS" | status == "DISCRIMINATED", 3,
-                                                      0)))) %>%
-      dplyr::filter(status_cat != 0) %>% # Removing "irrelevant", "self-exclusion", and "state collapse"
+                                                      NA)))) %>% # Removing "irrelevant", "self-exclusion", and "state collapse"
       dplyr::arrange(gwgroupid, year) %>%
       dplyr::group_by(gwgroupid) %>%
-      dplyr::mutate(lag_status = lag(status, n = 1),
-                    lag_status_cat = lag(status_cat, n = 1)) %>%
-      dplyr::mutate(change = ifelse(status_cat != lag_status_cat, 1, 0)) %>%
+      dplyr::mutate(lag_status = dplyr::lag(status, n = 1),
+                    lag_status_cat = dplyr::lag(status_cat, n = 1)) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(eth_promoted = ifelse(as.numeric(lag_status_cat) > as.numeric(status_cat), 1, 0),
-                    eth_demoted = ifelse(as.numeric(lag_status_cat) < as.numeric(status_cat), 1, 0)) %>%
-      dplyr::mutate(eth_promoted = tidyr::replace_na(eth_promoted, 0),
-                    eth_demoted = tidyr::replace_na(eth_demoted, 0)) %>%
-      dplyr::select(gwid, year, eth_promoted, eth_demoted, eth_excluded)
+      dplyr::mutate(change = ifelse(status_cat != lag_status_cat, 1, 0)) %>%
+      dplyr::mutate(epr_promoted = ifelse(as.numeric(lag_status_cat) > as.numeric(status_cat), 1, 0),
+                    epr_demoted = ifelse(as.numeric(lag_status_cat) < as.numeric(status_cat), 1, 0)) %>%
+      dplyr::mutate(epr_promoted = tidyr::replace_na(epr_promoted, 0),
+                    epr_demoted = tidyr::replace_na(epr_demoted, 0)) %>%
+      dplyr::select(gwgroupid, year, status, epr_excluded, epr_promoted, epr_demoted)
 
-   geoepr <- geoepr[!sf::st_is_empty(geoepr$geometry), ]
+   geoepr <- geoepr %>%
+      dplyr::mutate(epr_regional = ifelse(type == "Regionally based", yes = 1, no = 0)) %>%
+      dplyr::mutate(year = purrr::map2(from, to, `:`)) %>%
+      tidyr::unnest(year) %>%
+      dplyr::filter(!sf::st_is_empty(geometry)) %>%
+      dplyr::left_join(epr, by = c("year", "gwgroupid")) %>%
+      dplyr::select(gwid, year, epr_promoted, epr_demoted, epr_excluded, epr_regional, geometry)
 
    return(geoepr)
 
