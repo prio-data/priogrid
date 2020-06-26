@@ -98,40 +98,38 @@ prep_epr <- function(input_folder){
    files <- file.path(input_folder, "geoepr", "data", c("GeoEPR.shp","EPR-2018.1.1.csv"))
 
    geoepr <- sf::read_sf(files[1])
-   geoepr <- sf::st_transform(geoepr, crs = priogrid::prio_crs())
+   geoepr <- sf::st_transform(geoepr, crs = priogrid::prio_crs()) %>%
+     dplyr::filter(type == "Regionally based" | type == "Regional & urban" | type == "Aggregate") %>%
+     dplyr::mutate(year = purrr::map2(from, to, `:`)) %>%
+     tidyr::unnest(year) %>%
+     dplyr::filter(!sf::st_is_empty(geometry))
 
    epr <- read.csv(files[2], stringsAsFactors = FALSE)
 
    epr <- epr %>%
-      dplyr::mutate(epr_excluded = ifelse(status == "POWERLESS" | status == "DISCRIMINATED",
+     dplyr::mutate(epr_excluded = ifelse(status == "POWERLESS" | status == "DISCRIMINATED",
                                           yes = 1, no = 0),
                     year = purrr::map2(from, to, `:`)) %>%
-      tidyr::unnest(year) %>%
-      dplyr::mutate(status_cat = ifelse(status == "MONOPOLY" | status == "DOMINANT", 1,
+     tidyr::unnest(year) %>%
+     dplyr::right_join(geoepr, by = c("year", "gwgroupid", "gwid")) %>%
+     dplyr::mutate(status_cat = ifelse(status == "MONOPOLY" | status == "DOMINANT", 1,
                                         ifelse(status == "SENIOR PARTNER" | status == "JUNIOR PARTNER", 2,
                                                ifelse(status == "POWERLESS" | status == "DISCRIMINATED", 3,
                                                       NA)))) %>% # Removing "irrelevant", "self-exclusion", and "state collapse"
-      dplyr::arrange(gwgroupid, year) %>%
-      dplyr::group_by(gwgroupid) %>%
-      dplyr::mutate(lag_status = dplyr::lag(status, n = 1),
-                    lag_status_cat = dplyr::lag(status_cat, n = 1)) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(change = ifelse(status_cat != lag_status_cat, 1, 0)) %>%
-      dplyr::mutate(epr_promoted = ifelse(as.numeric(lag_status_cat) > as.numeric(status_cat), 1, 0),
-                    epr_demoted = ifelse(as.numeric(lag_status_cat) < as.numeric(status_cat), 1, 0)) %>%
-      dplyr::mutate(epr_promoted = tidyr::replace_na(epr_promoted, 0),
-                    epr_demoted = tidyr::replace_na(epr_demoted, 0)) %>%
-      dplyr::select(gwgroupid, year, status, epr_excluded, epr_promoted, epr_demoted)
+     dplyr::arrange(gwgroupid, year) %>%
+     dplyr::group_by(gwgroupid) %>%
+     dplyr::mutate(lag_status = dplyr::lag(status, n = 1),
+                   lag_status_cat = dplyr::lag(status_cat, n = 1)) %>%
+     dplyr::ungroup() %>%
+     dplyr::mutate(change = ifelse(status_cat != lag_status_cat, 1, 0)) %>%
+     dplyr::mutate(epr_promoted = ifelse(as.numeric(lag_status_cat) > as.numeric(status_cat), 1, 0),
+                   epr_demoted = ifelse(as.numeric(lag_status_cat) < as.numeric(status_cat), 1, 0)) %>%
+     dplyr::mutate(epr_promoted = tidyr::replace_na(epr_promoted, 0),
+                   epr_demoted = tidyr::replace_na(epr_demoted, 0)) %>%
+     dplyr::mutate(epr_regional = ifelse(type == "Regionally based", yes = 1, no = 0)) %>%
+     dplyr::select(gwid, gwgroupid, year, epr_promoted, epr_demoted, epr_excluded, epr_regional, geometry)
 
-   geoepr <- geoepr %>%
-      dplyr::mutate(epr_regional = ifelse(type == "Regionally based", yes = 1, no = 0)) %>%
-      dplyr::mutate(year = purrr::map2(from, to, `:`)) %>%
-      tidyr::unnest(year) %>%
-      dplyr::filter(!sf::st_is_empty(geometry)) %>%
-      dplyr::left_join(epr, by = c("year", "gwgroupid")) %>%
-      dplyr::select(gwid, year, epr_promoted, epr_demoted, epr_excluded, epr_regional, geometry)
-
-   return(geoepr)
+   return(epr)
 
 
 }
