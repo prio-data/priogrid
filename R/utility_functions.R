@@ -393,7 +393,7 @@ make_raster <- function(nclist, flip_poles=FALSE, transpose=FALSE, crs=NULL){
 #' @param pgdf output from PRIO-GRID gen_*() function.
 #' @param variable the variable to interpolate missing values from.
 #' @param date_var string denoting the name of the date variable. Defaults to "year".
-#' @param interval string denoting the increment of the sequence to be interpolated. Defaults to "1 year".
+#' @param interval string denoting the interval between interpolated values, i.e. the temporal resolution. Defaults to "1 year".
 #' @param startdate starting date. Defaults to the earliest observation in the original data.
 #' @param enddate end date. Defaults to the latest observation in the original data.
 #'
@@ -489,7 +489,7 @@ interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interva
       dplyr::filter(year %in% seq$year)
   }
 
-  if (stringr::str_detect(interval, "month")) {
+  if (stringr::str_detect(interval, "month") | stringr::str_detect(interval, "quarter")) {
     seq <- dplyr::tibble("year" = seq.Date(startdate, enddate, by = interval))
 
     ipol_df <- ipol_df %>%
@@ -497,5 +497,21 @@ interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interva
       dplyr::rename(month = year)
   }
 
+  if (stringr::str_detect(interval, "week")) {
+    seq <- dplyr::tibble("year" = seq.Date(startdate, enddate, by = interval))
+
+    ipol_df <- ipol_df %>%
+      dplyr::filter(year %in% seq$year) %>%
+      dplyr::rename(week = year)
+  }
+
+  if (stringr::str_detect(interval, "day")) {
+    seq <- dplyr::tibble("year" = seq.Date(startdate, enddate, by = interval))
+
+    ipol_df <- ipol_df %>%
+      dplyr::filter(year %in% seq$year) %>%
+      dplyr::rename(day = year)
+
+  }
   return (ipol_df)
 }
