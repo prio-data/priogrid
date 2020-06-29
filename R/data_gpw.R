@@ -13,7 +13,7 @@ gen_pop_gpw_sum <- function(input_folder, fun = "sum"){
 
     gpw <- gpw[[1:5]]
 
-    raster::extent(gpw) <- priogrid::prio_extent()
+    # raster::extent(gpw) <- priogrid::prio_extent()
 
     gpw <- priogrid::raster_to_pg(gpw, aggregation_function = fun)
     gpw <- priogrid::raster_to_tibble(gpw, add_pg_index = TRUE)
@@ -30,6 +30,7 @@ gen_pop_gpw_sum <- function(input_folder, fun = "sum"){
                                          ifelse(year == "X3", 2010,
                                                 ifelse(year == "X4", 2015,
                                                        ifelse(year == "X5", 2020, year)))))) %>%
+      dplyr::mutate(year = as.numeric(year)) %>%
       dplyr::ungroup()
 
     return(gpw)
@@ -64,7 +65,7 @@ gen_pop_gpw_sd <- function(input_folder){
 gen_pop_gpw_min <- function(input_folder){
   pop_gpw_min <- priogrid::gen_pop_gpw_sum(input_folder, fun = "min")
 
-  return(pop_gwp_min)
+  return(pop_gpw_min)
 }
 
 
