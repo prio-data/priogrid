@@ -18,6 +18,13 @@ raster_to_tibble <- function(rast, add_pg_index = FALSE){
 
     pg_df <- raster::rasterToPoints(pg)
     pg_df <- dplyr::as_tibble(pg_df)
+
+    # merging floating point columns. need to round
+    df$x <- round(df$x, 10)
+    df$y <- round(df$y, 10)
+    pg_df$x <- round(pg_df$x, 10)
+    pg_df$y <- round(pg_df$y, 10)
+
     df <- dplyr::left_join(df, pg_df, by = c("x", "y"))
 
   }
