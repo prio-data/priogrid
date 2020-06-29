@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_epr.R
 \name{gen_excluded}
 \alias{gen_excluded}
-\title{excluded}
+\title{epr_excluded}
 \usage{
 gen_excluded(input_folder)
 }

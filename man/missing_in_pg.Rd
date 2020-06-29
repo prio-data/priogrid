@@ -4,14 +4,14 @@
 \alias{missing_in_pg}
 \title{missing_in_pg}
 \usage{
-missing_in_pg(df, input_folder, plot_missing = TRUE, ...)
+missing_in_pg(df, variable, input_folder, plot_missing = TRUE, ...)
 }
 \arguments{
 \item{df}{a dataframe crossection x, y, variable}
 
-\item{...}{function accepts other parameters passed to raster::plot()}
-
 \item{variable}{the variable to convert to plot}
+
+\item{...}{function accepts other parameters passed to raster::plot()}
 }
 \value{
 A dataframe with the cells that are missing and a plot.
