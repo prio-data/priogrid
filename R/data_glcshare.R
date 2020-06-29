@@ -100,7 +100,7 @@ gen_glcs_grassland <- function(input_folder) gen_glcshare(input_folder, land_typ
 #'
 #' @return a dataframe with x, y, and share trees
 #' @export
-gen_glcs_trees <- function(input_folder) function(input_folder) gen_glcshare(input_folder, land_type = "trees")
+gen_glcs_trees <- function(input_folder) gen_glcshare(input_folder, land_type = "trees")
 
 #' gen_glcs_shrubs
 #'
