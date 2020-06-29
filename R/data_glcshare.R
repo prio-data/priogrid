@@ -9,7 +9,7 @@
 #' @param input_folder
 #' @param land_type one of c("artificial_surfaces", "cropland", "grassland", "trees", "shrubs", "herbaceous", "mangroves", "sparse", "bare_soil", "snow", "water")
 #'
-#' @return a dataframe with x, y, and gmted2010 elevation
+#' @return a dataframe with x, y, and land type share
 #' @export
 gen_glcshare <- function(input_folder, land_type){
 
@@ -44,3 +44,158 @@ gen_glcshare <- function(input_folder, land_type){
   unlink(tdir, recursive = T)
   return(df)
 }
+
+#' gen_glcs_artificial
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "artificial surfaces" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share artificial surfaces
+#' @export
+gen_glcs_artificial <- gen_glcshare(input_folder, land_type = "artificial_surfaces")
+
+#' gen_glcs_cropland
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "cropland" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share cropland
+#' @export
+gen_glcs_cropland <- gen_glcshare(input_folder, land_type = "cropland")
+
+#' gen_glcs_grassland
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "grassland" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share grassland
+#' @export
+gen_glcs_grassland <- gen_glcshare(input_folder, land_type = "grassland")
+
+#' gen_glcs_trees
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "trees" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share trees
+#' @export
+gen_glcs_trees <- gen_glcshare(input_folder, land_type = "trees")
+
+#' gen_glcs_shrubs
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "shrubs" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share shrubs
+#' @export
+gen_glcs_shrubs <- gen_glcshare(input_folder, land_type = "shrubs")
+
+#' gen_glcs_herbaceous
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "herbaceous" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share herbaceous
+#' @export
+gen_glcs_herbaceous <- gen_glcshare(input_folder, land_type = "herbaceous")
+
+#' gen_glcs_mangroves
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "mangroves" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share mangroves
+#' @export
+gen_glcs_mangroves <- gen_glcshare(input_folder, land_type = "mangroves")
+
+#' gen_glcs_sparse
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "sparse" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share sparse
+#' @export
+gen_glcs_sparse <- gen_glcshare(input_folder, land_type = "sparse")
+
+#' gen_glcs_bare
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "bare_soil" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share bare_soil
+#' @export
+gen_glcs_bare <- gen_glcshare(input_folder, land_type = "bare_soil")
+
+#' gen_glcs_snow
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "snow" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share snow
+#' @export
+gen_glcs_snow <- gen_glcshare(input_folder, land_type = "snow")
+
+#' gen_glcs_water
+#'
+#' Aggregates and transforms the FAO Global Land Cover Share Database (2013) "water" to PRIO-GRID.
+#'
+#' Link to original data: http://www.fao.org/geonetwork/srv/en/metadata.show?id=47948
+#'
+#' Please cite: John Latham, Renato Cumani, Ilaria Rosati and Mario Bloise (2014) FAO Global Land Cover (GLC-SHARE) Beta-Release 1.0 Database, Land and Water Division, J, available at: http://www.fao.org/uploads/media/glc-share-doc.pdf.
+#'
+#' @param input_folder
+#'
+#' @return a dataframe with x, y, and share water
+#' @export
+gen_glcs_water <- gen_glcshare(input_folder, land_type = "water")
+
