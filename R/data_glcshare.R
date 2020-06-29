@@ -41,6 +41,7 @@ gen_glcshare <- function(input_folder, land_type){
 
   names(rast) <- paste0("glcs_", land_type)
   df <- priogrid::raster_to_tibble(rast,add_pg_index = TRUE)
+  rm(rast)
   unlink(tdir, recursive = T)
   return(df)
 }
