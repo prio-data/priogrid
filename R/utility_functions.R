@@ -384,3 +384,118 @@ make_raster <- function(nclist, flip_poles=FALSE, transpose=FALSE, crs=NULL){
 
   return(rast)
 }
+
+
+#' interpolate_pg_timeseries
+#'
+#' Interpolation of time-series data where only some cross-sections are available.
+#'
+#' @param pgdf output from PRIO-GRID gen_*() function.
+#' @param variable the variable to interpolate missing values from.
+#' @param date_var string denoting the name of the date variable. Defaults to "year".
+#' @param interval string denoting the increment of the sequence to be interpolated. Defaults to "1 year".
+#' @param startdate starting date. Defaults to the earliest observation in the original data.
+#' @param enddate end date. Defaults to the latest observation in the original data.
+#'
+#' @details `interval` can be specified as `"day"`, `"week"`, `"month"`, `"quarter"` or `"year"`. See `seq.Date` for details.
+#'
+#' @return Interpolated time-series data frame.
+#'
+#' @export
+interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interval = "1 year", startdate = NULL, enddate = NULL){
+
+  if (is.numeric(interval) == TRUE) {
+    stop("Interval must be specified as character string")
+  }
+
+  df <- data.frame(pgdf) %>%
+    dplyr::rename(t = !!date_var)
+
+  pg <- priogrid::prio_blank_grid()
+  # Raster layer for each crossection in data
+  my_rasters <- dplyr::tibble()
+  crossection_dates <- sort(unique(df$t))
+  for(cdate in seq_along(crossection_dates)){
+    rast <- raster::subs(pg, df[df$t == crossection_dates[cdate], ], by = "pgid", which = variable)
+    new_row <- dplyr::tibble("mydate" = cdate, "raster" = list(rast))
+    my_rasters <- dplyr::bind_rows(my_rasters, new_row)
+  }
+
+  if (unique(nchar(crossection_dates)) == 4) { # date_var is 4 digit year, default in gen_*() functions
+    assertthat::assert_that(is.numeric(crossection_dates))
+    my_rasters$mydate <- lubridate::ymd(paste0(crossection_dates, "-01-01"))
+  } else {
+    my_rasters$mydate <- lubridate::ymd(crossection_dates) # date_var not 4 digit year
+    assertthat::assert_that(is.Date(my_rasters$mydate))
+  }
+
+  if (is.null(startdate)) {
+    startdate <- min(my_rasters$mydate)
+  } else {
+    startdate <- as.Date(startdate, format = "%Y-%m-%d")
+  }
+
+  if (is.null(enddate)) {
+    enddate <- max(my_rasters$mydate)
+  } else {
+    enddate <- as.Date(enddate, format = "%Y-%m-%d")
+  }
+
+  # Join with empty rasters
+  s <- my_rasters$raster[[1]]
+  s[!is.na(s)] <- -9998
+
+  empty_rast <- dplyr::tibble("mydate" = seq.Date(startdate, enddate, by = interval), "raster" = list(s)) %>%
+    dplyr::anti_join(my_rasters, by = "mydate")
+
+  full_data_frame <- dplyr::bind_rows(my_rasters, empty_rast) %>%
+    dplyr::arrange(mydate)
+
+  cross_stack <- raster::stack(full_data_frame$raster)
+  names(cross_stack) <- full_data_frame$mydate
+
+  # Recode NA (sea cells)
+  cross_stack[is.na(cross_stack)] <- -9999
+  cross_stack[cross_stack == -9998] <- NA
+
+  # Interpolate NA values
+  ipol <- raster::approxNA(cross_stack)
+  ipol[ipol < 0] <- NA
+
+  # Convert to pg tbl
+  ipol_tbl <- priogrid::raster_to_tibble(ipol, add_pg_index = TRUE)
+
+  ipol_df <- ipol_tbl %>%
+    dplyr::group_by(pgid) %>%
+    tidyr::pivot_longer(cols = c(-x, -y, -pgid),
+                        values_to = paste0(variable),
+                        names_to = "year") %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(year = stringr::str_remove(year, "X")) %>%
+    dplyr::mutate(year = lubridate::ymd(year))
+
+  if (stringr::str_detect(interval, "year")) {
+    ipol_df <- ipol_df %>%
+      dplyr::mutate(year = lubridate::year(year))
+  }
+
+  # Ensuring that function uses all available data to interpolate from,
+  # but only returns the user-defined sequence of dates
+  if (stringr::str_detect(interval, "years") & interval != "1 year") {
+    seq <- dplyr::tibble("year" = seq.Date(startdate, enddate, by = interval)) %>%
+      dplyr::mutate(year = lubridate::year(year))
+
+    ipol_df <- ipol_df %>%
+      dplyr::filter(year %in% seq$year)
+  }
+
+  if (stringr::str_detect(interval, "month")) {
+    seq <- dplyr::tibble("year" = seq.Date(startdate, enddate, by = interval))
+
+    ipol_df <- ipol_df %>%
+      dplyr::filter(year %in% seq$year) %>%
+      dplyr::rename(month = year)
+  }
+
+  return (ipol_df)
+}
