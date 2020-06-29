@@ -57,7 +57,7 @@ gen_glcshare <- function(input_folder, land_type){
 #'
 #' @return a dataframe with x, y, and share artificial surfaces
 #' @export
-gen_glcs_artificial <- gen_glcshare(input_folder, land_type = "artificial_surfaces")
+gen_glcs_artificial <- function(input_folder) gen_glcshare(input_folder, land_type = "artificial_surfaces")
 
 #' gen_glcs_cropland
 #'
@@ -71,7 +71,7 @@ gen_glcs_artificial <- gen_glcshare(input_folder, land_type = "artificial_surfac
 #'
 #' @return a dataframe with x, y, and share cropland
 #' @export
-gen_glcs_cropland <- gen_glcshare(input_folder, land_type = "cropland")
+gen_glcs_cropland <- function(input_folder) gen_glcshare(input_folder, land_type = "cropland")
 
 #' gen_glcs_grassland
 #'
@@ -85,7 +85,7 @@ gen_glcs_cropland <- gen_glcshare(input_folder, land_type = "cropland")
 #'
 #' @return a dataframe with x, y, and share grassland
 #' @export
-gen_glcs_grassland <- gen_glcshare(input_folder, land_type = "grassland")
+gen_glcs_grassland <- function(input_folder) gen_glcshare(input_folder, land_type = "grassland")
 
 #' gen_glcs_trees
 #'
@@ -99,7 +99,7 @@ gen_glcs_grassland <- gen_glcshare(input_folder, land_type = "grassland")
 #'
 #' @return a dataframe with x, y, and share trees
 #' @export
-gen_glcs_trees <- gen_glcshare(input_folder, land_type = "trees")
+gen_glcs_trees <- function(input_folder) function(input_folder) gen_glcshare(input_folder, land_type = "trees")
 
 #' gen_glcs_shrubs
 #'
@@ -113,7 +113,7 @@ gen_glcs_trees <- gen_glcshare(input_folder, land_type = "trees")
 #'
 #' @return a dataframe with x, y, and share shrubs
 #' @export
-gen_glcs_shrubs <- gen_glcshare(input_folder, land_type = "shrubs")
+gen_glcs_shrubs <- function(input_folder) gen_glcshare(input_folder, land_type = "shrubs")
 
 #' gen_glcs_herbaceous
 #'
@@ -127,7 +127,7 @@ gen_glcs_shrubs <- gen_glcshare(input_folder, land_type = "shrubs")
 #'
 #' @return a dataframe with x, y, and share herbaceous
 #' @export
-gen_glcs_herbaceous <- gen_glcshare(input_folder, land_type = "herbaceous")
+gen_glcs_herbaceous <- function(input_folder) gen_glcshare(input_folder, land_type = "herbaceous")
 
 #' gen_glcs_mangroves
 #'
@@ -141,7 +141,7 @@ gen_glcs_herbaceous <- gen_glcshare(input_folder, land_type = "herbaceous")
 #'
 #' @return a dataframe with x, y, and share mangroves
 #' @export
-gen_glcs_mangroves <- gen_glcshare(input_folder, land_type = "mangroves")
+gen_glcs_mangroves <- function(input_folder) gen_glcshare(input_folder, land_type = "mangroves")
 
 #' gen_glcs_sparse
 #'
@@ -155,7 +155,7 @@ gen_glcs_mangroves <- gen_glcshare(input_folder, land_type = "mangroves")
 #'
 #' @return a dataframe with x, y, and share sparse
 #' @export
-gen_glcs_sparse <- gen_glcshare(input_folder, land_type = "sparse")
+gen_glcs_sparse <- function(input_folder) gen_glcshare(input_folder, land_type = "sparse")
 
 #' gen_glcs_bare
 #'
@@ -169,7 +169,7 @@ gen_glcs_sparse <- gen_glcshare(input_folder, land_type = "sparse")
 #'
 #' @return a dataframe with x, y, and share bare_soil
 #' @export
-gen_glcs_bare <- gen_glcshare(input_folder, land_type = "bare_soil")
+gen_glcs_bare <- function(input_folder) gen_glcshare(input_folder, land_type = "bare_soil")
 
 #' gen_glcs_snow
 #'
@@ -183,7 +183,7 @@ gen_glcs_bare <- gen_glcshare(input_folder, land_type = "bare_soil")
 #'
 #' @return a dataframe with x, y, and share snow
 #' @export
-gen_glcs_snow <- gen_glcshare(input_folder, land_type = "snow")
+gen_glcs_snow <- function(input_folder) gen_glcshare(input_folder, land_type = "snow")
 
 #' gen_glcs_water
 #'
@@ -197,5 +197,5 @@ gen_glcs_snow <- gen_glcshare(input_folder, land_type = "snow")
 #'
 #' @return a dataframe with x, y, and share water
 #' @export
-gen_glcs_water <- gen_glcshare(input_folder, land_type = "water")
+gen_glcs_water <- function(input_folder) gen_glcshare(input_folder, land_type = "water")
 
