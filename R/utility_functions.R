@@ -304,7 +304,7 @@ missing_in_pg <- function(df, variable, input_folder, plot_missing = TRUE, ...){
   }
 
   if(plot_missing){
-    pgdf[[variable]] <- if_else(pgdf$pgid %in% anti_df$pgid, 1, 0)
+    pgdf[[variable]] <- dplyr::if_else(pgdf$pgid %in% anti_df$pgid, 1, 0)
     pgdf$pgid <- NULL
     rast <- raster::rasterFromXYZ(pgdf)
     raster::plot(rast, ...)
