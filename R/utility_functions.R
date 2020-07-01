@@ -295,7 +295,7 @@ missing_in_pg <- function(df, variable, input_folder, plot_missing = TRUE, ...){
 
   df <- dplyr::select(df, all_of(c("x", "y", variable))) %>% dplyr::filter(complete.cases(.))
 
-  anti_df <- anti_join(pgdf, df, by = c("x", "y"))
+  anti_df <- dplyr::anti_join(pgdf, df, by = c("x", "y"))
   anti_df <- dplyr::filter(anti_df, pgid %in% pgland$pgid)
 
   if(nrow(anti_df) == 0){
