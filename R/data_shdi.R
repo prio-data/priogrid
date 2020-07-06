@@ -131,5 +131,5 @@ gen_esch <- function(input_folder){ gen_shdi(input_folder, variable = "esch") }
 gen_lifexp <- function(input_folder){ gen_shdi(input_folder, variable = "lifexp") }
 
 #' @export
-gen_lgnic <- function(input_folder){ gen_shdi(input_folder, variable = "lgnic") }
+gen_gnic <- function(input_folder){ gen_shdi(input_folder, variable = "gnic") }
 

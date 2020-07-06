@@ -10,6 +10,11 @@ gen_epr_regional(input_folder)
 \item{input_folder}{Path to [pg-folder].}
 }
 \description{
-Generate variable that counts the number of regionally based ethnic groups
-that are settled in a given grid cell in a given year.
+Counts the number of regionally based ethnic groups
+that are settled in a given grid cell in a given year; derived from
+the GeoEPR 2019 data.
+
+Link to original data: https://icr.ethz.ch/data/epr/
+
+Please cite: Vogt, Manuel, Nils-Christian Bormann, Seraina Rüegger, Lars-Erik Cederman, Philipp Hunziker, and Luc Girardin. 2015. “Integrating Data on Ethnicity, Geography, and Conflict: The Ethnic Power Relations Data Set Family.” Journal of Conflict Resolution 59(7): 1327–42.
 }

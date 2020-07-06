@@ -4,13 +4,18 @@
 \alias{gen_pop_gpw_sd}
 \title{pop_gpw_sd}
 \usage{
-gen_pop_gpw_sd(input_folder)
+gen_pop_gpw_sd(input_folder, interpolate = FALSE)
 }
 \arguments{
-\item{input_folder}{Path to [pg-folder].}
+\item{input_folder}{path to [pg-folder].}
+
+\item{interpolate}{if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.}
 }
 \description{
-Generate standard deviation population count
+Generate standard deviation of population count
 for years 2000, 2005, 2010, 2015 and 2020 from
 the Gridded Population of the World v.4 data.
+Link to original data: https://sedac.ciesin.columbia.edu/data/collection/gpw-v4.
+
+Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2018. Gridded Population of the World, Version 4 (GPWv4): Population Count, Revision 11. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4JW8BX5.
 }

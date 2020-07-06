@@ -4,7 +4,7 @@
 \alias{gen_shdi}
 \title{Generate Expected years schooling children aged 6 variable from SHDI}
 \usage{
-gen_shdi(input_folder, variable = "shdi")
+gen_shdi(input_folder, variable = "shdi", add_missing_geometries = TRUE)
 }
 \arguments{
 \item{input_folder}{path to SHDI data.}
