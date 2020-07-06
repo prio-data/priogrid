@@ -111,16 +111,6 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
     shdi <- shdi %>% dplyr::arrange(gdlcode, year) %>% dplyr::select(-empty)
   }
 
-  df <- shdi
-  time_fact <- factor(df[[timevar]])
-
-  sdf <- dplyr::select(df, !!variable)
-  sdf_list <- base::split(sdf, time_fact, sep = "_")
-
-  rast_list_sum <- parallel::mclapply(sdf_list, vector_to_pg, variable = variable, need_aggregation = TRUE, missval = -1, fun = "sum")
-  rast_list_count <- parallel::mclapply(sdf_list, vector_to_pg, variable = variable, need_aggregation = TRUE, missval = -1, fun = "count")
-
-
   shdi_sum <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "sum")
   shdi_count <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "count")
   shdi_count <- shdi_count %>% dplyr::rename("count" = variable)
