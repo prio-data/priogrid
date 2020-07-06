@@ -10,7 +10,12 @@ gen_promoted(input_folder)
 \item{input_folder}{Path to [pg-folder].}
 }
 \description{
-Generate variable that counts the number of politically relevant ethnic groups
-that are settled in a given grid cell in a given year, and that have increased their political access
-from the previous year.
+Counts the number of politically relevant ethnic groups in the grid cell
+that have increased their political status from the previous year. Group status derived from
+the EPR Core 2019 dataset, and location derived from the GeoEPR 2019 data.
+Status defined as group rules alone; shares power; or is excluded.
+
+Link to original data: https://icr.ethz.ch/data/epr/
+
+Please cite: Vogt, Manuel, Nils-Christian Bormann, Seraina Rüegger, Lars-Erik Cederman, Philipp Hunziker, and Luc Girardin. 2015. “Integrating Data on Ethnicity, Geography, and Conflict: The Ethnic Power Relations Data Set Family.” Journal of Conflict Resolution 59(7): 1327–42.
 }
