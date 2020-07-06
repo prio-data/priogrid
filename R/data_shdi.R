@@ -25,12 +25,20 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
   old_geom <- sf::read_sf(old_geom_file) %>% dplyr::rename_all(tolower)
 
   shdi <- read.csv(file.path(input_folder, "shdi", "data", "SHDI Complete 4.0 (1).csv"))
+  shdi <- shdi %>% dplyr::rename_all(tolower)
+
+  # Countries without subnational data
+  no_subnat <- shdi %>% dplyr::group_by(country) %>% dplyr::summarize(n_unique = length(unique(gdlcode))) %>% dplyr::filter(n_unique == 1)
+
+  shdi_national <- shdi %>%
+    dplyr::filter(level == "National", country %in% no_subnat$country) %>%
+    dplyr::select(year, gdlcode, !!variable)
 
   shdi <- shdi %>%
-    dplyr::rename_all(tolower) %>%
     dplyr::filter(level == "Subnat") %>%
     dplyr::select(year, gdlcode, !!variable)
 
+  shdi <- dplyr::bind_rows(shdi_national, shdi)
   shdi <- dplyr::left_join(shdi, geom, by = "gdlcode") %>% sf::st_as_sf()
 
   if(add_missing_geometries){
