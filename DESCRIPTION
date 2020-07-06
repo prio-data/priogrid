@@ -33,6 +33,7 @@ Imports:
     arrow,
     R.utils,
     SPEI,
+    fasterize,
     Rcpp
 Suggests: testthat
 RoxygenNote: 7.1.0
