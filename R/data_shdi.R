@@ -109,20 +109,7 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
     shdi <- rbind(shdi, shdi_missing)
 
     shdi <- shdi %>% dplyr::arrange(gdlcode, year) %>% dplyr::select(-empty)
-
-    rm(list = ls(pattern = "miss"))
-
-}
-
-  # shdi_empty %>% dplyr::select(country, region, gdlcode) %>% dplyr::distinct()
-  # missing_geometries <- shdi_empty %>% dplyr::select(country, region, gdlcode) %>% dplyr::distinct()
-  # missing_in_old <- old_geom %>% dplyr::filter(gdlcode %in% missing_geometries$gdlcode) %>% dplyr::select(gdlcode, geometry)
-  # shdi_empty <- dplyr::left_join(shdi_empty, missing_in_old, by = "gdlcode")
-
-  shdi <- shdi %>% dplyr::filter(!empty)
-  shdi_sp <- as(shdi1, "Spatial")
-
-
+  }
 
   df <- shdi
   time_fact <- factor(df[[timevar]])
@@ -130,11 +117,18 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
   sdf <- dplyr::select(df, !!variable)
   sdf_list <- base::split(sdf, time_fact, sep = "_")
 
-  raster::rasterize(as(sdf_list[[1]], "Spatial"))
-  as(polys, "Spatial")
+  rast_list_sum <- parallel::mclapply(sdf_list, vector_to_pg, variable = variable, need_aggregation = TRUE, missval = -1, fun = "sum")
+  rast_list_count <- parallel::mclapply(sdf_list, vector_to_pg, variable = variable, need_aggregation = TRUE, missval = -1, fun = "count")
 
-  shdi <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "mean")
-  return(shdi)
+
+  shdi_sum <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "sum")
+  shdi_count <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "count")
+  shdi_count <- shdi_count %>% dplyr::rename("count" = variable)
+  shdi_sum <- dplyr::left_join(shdi_sum, shdi_count, by = c("x", "y", "pgid", "year"))
+
+  shdi_sum[[variable]] <- shdi_sum[[variable]] / shdi_sum$count
+  shdi_sum$count <- NULL
+  return(shdi_sum)
 }
 
 #' @export
