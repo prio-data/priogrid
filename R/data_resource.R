@@ -52,7 +52,13 @@ prep_diamonds <- function(input_folder){
 #' these data must therefore be combined with the diamprim_s data.
 #' Available only until 2005.
 #'
-#' @param input_folder Path to [pg-folder].
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/
+#'
+#' Please cite: Gilmore, Elisabeth; Nils Petter Gleditsch, Päivi Lujala & Jan Ketil Rød, 2005. ‘Conflict Diamonds: A New Dataset’, Conflict Management and Peace Science 22(3): 257–292
+#' Lujala, Päivi; Nils Petter Gleditsch & Elisabeth Gilmore, 2005. ‘A Diamond Curse? Civil War and a Lootable Resource’, Journal of Conflict Resolution 49(4): 538–562.
+#'
+#' @param input_folder path to [pg-folder].
+#' @param variable one of c("diamprim_y", "diamsec_y")
 #'
 #' @export
 gen_diamprim_y <- function(input_folder, variable = "diamprim_y"){
@@ -79,6 +85,11 @@ gen_diamprim_y <- function(input_folder, variable = "diamprim_y"){
 #' therefore be combined with the diamsec_s data.
 #' Available only until 2005.
 #'
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/
+#'
+#' Please cite: Gilmore, Elisabeth; Nils Petter Gleditsch, Päivi Lujala & Jan Ketil Rød, 2005. ‘Conflict Diamonds: A New Dataset’, Conflict Management and Peace Science 22(3): 257–292
+#' Lujala, Päivi; Nils Petter Gleditsch & Elisabeth Gilmore, 2005. ‘A Diamond Curse? Civil War and a Lootable Resource’, Journal of Conflict Resolution 49(4): 538–562.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -98,6 +109,11 @@ gen_diamsec_y <- function(input_folder){
 #' those deposits that do now have a known year of discovery
 #' or start of production. For a complete picture, these data
 #' must therefore be combined with the diamprim_y data.
+#'
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/
+#'
+#' Please cite: Gilmore, Elisabeth; Nils Petter Gleditsch, Päivi Lujala & Jan Ketil Rød, 2005. ‘Conflict Diamonds: A New Dataset’, Conflict Management and Peace Science 22(3): 257–292
+#' Lujala, Päivi; Nils Petter Gleditsch & Elisabeth Gilmore, 2005. ‘A Diamond Curse? Civil War and a Lootable Resource’, Journal of Conflict Resolution 49(4): 538–562.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
@@ -122,6 +138,11 @@ gen_diamprim_s <- function(input_folder, variable = "diamprim_s"){
 #' year of discovery or start of production. For a complete picture,
 #' these data must therefore be combined with the diamsec_y data.
 #'
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/
+#'
+#' Please cite: Gilmore, Elisabeth; Nils Petter Gleditsch, Päivi Lujala & Jan Ketil Rød, 2005. ‘Conflict Diamonds: A New Dataset’, Conflict Management and Peace Science 22(3): 257–292
+#' Lujala, Päivi; Nils Petter Gleditsch & Elisabeth Gilmore, 2005. ‘A Diamond Curse? Civil War and a Lootable Resource’, Journal of Conflict Resolution 49(4): 538–562.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -138,6 +159,10 @@ gen_diamsec_s <- function(input_folder){
 #' drug cultivation (coca bush, opium poppy, or cannabis) is ongoing
 #' within the given grid cell, based on the DRUGDATA dataset.
 #' Available only until 2002.
+#'
+#' Link to original data: http://www.paivilujala.com/drugdata.html
+#'
+#' Please cite: Buhaug, Halvard & Päivi Lujala 2005. Accounting for Scale: Measuring Geography in Quantitative Studies of Civil War. Political Geography 24: 399-418.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
@@ -207,6 +232,10 @@ prep_gems <- function(input_folder){
 #' must therefore be combined with the gem_s data.
 #' Available only until 2004.
 #'
+#' Link to original data: http://www.paivilujala.com/gemdata.html
+#'
+#' Please cite: Lujala, Päivi 2009. Deadly Combat over Natural Resources: Gems, Petroleum, Drugs, and the Severity of Armed Civil Conflict. Journal of Conflict Resolution 53(1): 50-71.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -232,6 +261,10 @@ gen_gem_y <- function(input_folder){
 #' those deposits that do not have a known year of discovery
 #' or start of production. For a complete picture, these data
 #' must therefore be combined with the gem_y data.
+#'
+#' Link to original data: http://www.paivilujala.com/gemdata.html
+#'
+#' Please cite: Lujala, Päivi 2009. Deadly Combat over Natural Resources: Gems, Petroleum, Drugs, and the Severity of Armed Civil Conflict. Journal of Conflict Resolution 53(1): 50-71.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
@@ -274,6 +307,11 @@ prep_gold <- function(input_folder, data_file = "dGOLD_L.shp"){
 #' grid cell, based om the dGOLD_L subset of the
 #' GOLDATA dataset v1.2. Available only until 2012.
 #'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -302,6 +340,11 @@ gen_goldplacer_y <- function(input_folder){
 #' For a complete picture, these data must therefore be combined
 #' with the goldsurface_s data. Available only until 2012.
 #'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -329,6 +372,11 @@ gen_goldsurface_y <- function(input_folder){
 #' these data must therefore be combined with the goldvein_s data.
 #' Available only until 2012.
 #'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -354,6 +402,11 @@ gen_goldvein_y <- function(input_folder){
 #' This variable only codes those deposits that do not have a known
 #' year of discovery or start of production. For a complete picture,
 #' these data must therefore be combined with the goldplacer_y data.
+#'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
@@ -382,6 +435,11 @@ gen_goldplacer_s <- function(input_folder){
 #' year of discovery or start of production. For a complete picture,
 #' these data must therefore be combined with the goldsurface_y data.
 #'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -409,6 +467,11 @@ gen_goldsurface_s <- function(input_folder){
 #' This variable only codes those deposits that do not have a known
 #' year of discovery or start of production. For a complete picture,
 #' these data must therefore be combined with the goldvein_y data.
+#'
+#' Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+#'
+#' Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+#' Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
@@ -457,6 +520,10 @@ prep_petro <- function(input_folder){
 #' must therefore be combined with the petroleum_s data.
 #' Available only until 2003.
 #'
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Petroleum-Dataset/Petroleum-Dataset-v-12/
+#'
+#' Please cite: Lujala, Päivi; Jan Ketil Rød & Nadia Thieme, 2007. ‘Fighting over Oil: Introducing A New Dataset’, Conflict Management and Peace Science 24(3), 239-256.
+#'
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
@@ -483,6 +550,10 @@ gen_petroleum_y <- function(input_folder){
 #' have a known year of discovery or start of production.
 #' For a complete picture, these data must therefore be
 #' combined with the petroleum_y data.
+#'
+#' Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Petroleum-Dataset/Petroleum-Dataset-v-12/
+#'
+#' Please cite: Lujala, Päivi; Jan Ketil Rød & Nadia Thieme, 2007. ‘Fighting over Oil: Introducing A New Dataset’, Conflict Management and Peace Science 24(3), 239-256.
 #'
 #' @param input_folder Path to [pg-folder].
 #'
