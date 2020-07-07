@@ -9,11 +9,12 @@
 #' Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2018. Gridded Population of the World, Version 4 (GPWv4): Population Count, Revision 11. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4JW8BX5.
 #'
 #' @param input_folder path to [pg-folder].
-#' @param fun one of c("sum", "sd", "min", "max")
-#' @param interpolate if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param fun one of c("sum", "sd", "min", "max").
+#' @param interpolate_time if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_pop_gpw_sum <- function(input_folder, fun = "sum", interpolate = FALSE){
+gen_pop_gpw_sum <- function(input_folder, fun = "sum", interpolate_time = FALSE, interpolate_missing = FALSE){
     gpw <- raster::brick(file.path(input_folder, "pop_gpw", "data", "gpw_v4_population_count_rev11_2pt5_min.nc"))
 
     gpw <- gpw[[1:5]]
@@ -36,8 +37,32 @@ gen_pop_gpw_sum <- function(input_folder, fun = "sum", interpolate = FALSE){
       dplyr::mutate(year = as.numeric(year)) %>%
       dplyr::ungroup()
 
-    if (interpolate){
+    if (interpolate_time){
       gpw <- priogrid::interpolate_pg_timeseries(gpw, variable = var)
+    }
+
+    if (interpolate_missing){
+      missing <- priogrid::missing_in_pg(gpw, var, input_folder, plot_missing = FALSE)
+      gpw_list <- base::split(gpw, gpw$year)
+
+      ipol_list <- parallel::mclapply(gpw_list, priogrid::interpolate_crossection, variable = var, lon = "x", lat = "y", input_folder)
+
+      ipol_miss <- parallel::mclapply(ipol_list, dplyr::right_join, missing, by = c("x", "y"))
+
+
+      add_timevar <- function(df, time, timevar){
+        df[[timevar]] <- time
+        return(df)
+      }
+
+      ipol_tbl <- purrr::map2_dfr(ipol_miss, names(ipol_miss), add_timevar, timevar = "year") %>% dplyr::mutate(year = as.numeric(year))
+
+      gpw <- dplyr::bind_rows(gpw, ipol_tbl)
+
+      missing <- priogrid::missing_in_pg(gpw, var, input_folder, plot_missing = FALSE)
+      assertthat::assert_that(is.null(missing))
+
+
     }
 
     return(gpw)
