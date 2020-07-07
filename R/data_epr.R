@@ -20,7 +20,7 @@ gen_excluded <- function(input_folder, variable = "epr_excluded"){
                                      timevar = "year",
                                      variable = variable,
                                      need_aggregation = TRUE,
-                                     fun = "count")
+                                     fun = "sum")
 
    return(excluded)
 
@@ -106,6 +106,7 @@ prep_epr <- function(input_folder){
                                          ifelse(status == "SENIOR PARTNER" | status == "JUNIOR PARTNER", 2,
                                                 ifelse(status == "POWERLESS" | status == "DISCRIMINATED", 3,
                                                        NA)))) %>% # Removing "irrelevant", "self-exclusion", and "state collapse"
+      dplyr::filter(!is.na(status_cat)) %>%
       dplyr::arrange(gwgroupid, year) %>%
       dplyr::group_by(gwgroupid) %>%
       dplyr::mutate(lag_status = dplyr::lag(status, n = 1),
@@ -119,6 +120,8 @@ prep_epr <- function(input_folder){
       dplyr::mutate(epr_regional = ifelse(type == "Regionally based", yes = 1, no = 0)) %>%
       dplyr::select(gwid, gwgroupid, year, epr_promoted, epr_demoted, epr_excluded, epr_regional, geometry) %>%
       dplyr::filter(!sf::st_is_empty(geometry))
+
+   geoepr <- sf::st_cast(geoepr, to = "MULTIPOLYGON")
 
    return(geoepr)
 }
