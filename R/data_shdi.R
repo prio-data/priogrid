@@ -1,10 +1,16 @@
-
-#' Generate Expected years schooling children aged 6 variable from SHDI
+#' shdi
 #'
-#' Average Expected years schooling children aged 6 within each grid cell.
+#' Gives the subnational human development index (SHDI) within each grid cell, based on SHDI data v. 4.
+#' The index is an average of values along three dimensions: education, health, and standard of living. Available from 1990 to 2018.
 #'
-#' @param input_folder path to SHDI data.
-#' @param variable one of c("msch", "esch", "lifexp", "lgnic", "shdi")
+#' Links to original data: https://globaldatalab.org/shdi/shapefiles/ and https://globaldatalab.org/shdi/download_files/.
+#'
+#' Please cite: Smits, J., Permanyer, I. The Subnational Human Development Database. Sci Data 6, 190038 (2019). https://doi.org/10.1038/sdata.2019.38
+#'
+#' @param input_folder path to [pg-folder].
+#' @param variable one of c("shdi", msch", "esch", "lifexp", "lgnic").
+#' @param add_missing_geometries if `TRUE`, adds geometries that are missing in the original data. Replacement geometries are collected from cshapes or GADM (https://gadm.org/maps.html).
+#'
 #' @export
 gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = TRUE){
 
@@ -121,23 +127,72 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
 
   shdi_sum <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "sum")
   shdi_count <- priogrid::panel_to_pg(shdi, timevar = "year", variable = variable, need_aggregation = TRUE, missval = -1, fun = "count")
-  shdi_count <- shdi_count %>% dplyr::rename("count" = variable)
+  shdi_count <- shdi_count %>% dplyr::rename("count" = !!variable)
   shdi_sum <- dplyr::left_join(shdi_sum, shdi_count, by = c("x", "y", "pgid", "year"))
 
   shdi_sum[[variable]] <- shdi_sum[[variable]] / shdi_sum$count
   shdi_sum$count <- NULL
+  shdi_sum$year <- as.numeric(shdi_sum$year)
   return(shdi_sum)
 }
 
-#' @export
-gen_msch <- function(input_folder){ gen_shdi(input_folder, variable = "msch") }
 
+#' msch
+#'
+#' Gives the mean years of schooling for population aged 25+ within each grid cell, based on SHDI data v. 4. Available from 1990 to 2018.
+#'
+#' Links to original data: https://globaldatalab.org/shdi/shapefiles/ and https://globaldatalab.org/shdi/download_files/.
+#'
+#' Please cite: Smits, J., Permanyer, I. The Subnational Human Development Database. Sci Data 6, 190038 (2019). https://doi.org/10.1038/sdata.2019.38
+#'
+#' @param input_folder path to [pg-folder].
+#' @param add_missing_geometries if `TRUE`, adds geometries that are missing in the original data. Replacement geometries are collected from cshapes or GADM (https://gadm.org/maps.html).
+#'
 #' @export
-gen_esch <- function(input_folder){ gen_shdi(input_folder, variable = "esch") }
+gen_msch <- function(input_folder, add_missing_geometries = TRUE){ gen_shdi(input_folder, variable = "msch", add_missing_geometries = add_missing_geometries) }
 
-#' @export
-gen_lifexp <- function(input_folder){ gen_shdi(input_folder, variable = "lifexp") }
 
+#' esch
+#'
+#' Gives the expected years of schooling for children aged 6 within each grid cell, based on SHDI data v. 4. Available from 1990 to 2018.
+#'
+#' Links to original data: https://globaldatalab.org/shdi/shapefiles/ and https://globaldatalab.org/shdi/download_files/.
+#'
+#' Please cite: Smits, J., Permanyer, I. The Subnational Human Development Database. Sci Data 6, 190038 (2019). https://doi.org/10.1038/sdata.2019.38
+#'
+#' @param input_folder path to [pg-folder].
+#' @param add_missing_geometries if `TRUE`, adds geometries that are missing in the original data. Replacement geometries are collected from cshapes or GADM (https://gadm.org/maps.html).
+#'
 #' @export
-gen_gnic <- function(input_folder){ gen_shdi(input_folder, variable = "gnic") }
+gen_esch <- function(input_folder, add_missing_geometries = TRUE){ gen_shdi(input_folder, variable = "esch", add_missing_geometries = add_missing_geometries) }
+
+
+#' lifexp
+#'
+#' Gives the life expectancy at birth within each grid cell, based on SHDI data v. 4. Available from 1990 to 2018.
+#'
+#' Links to original data: https://globaldatalab.org/shdi/shapefiles/ and https://globaldatalab.org/shdi/download_files/.
+#'
+#' Please cite: Smits, J., Permanyer, I. The Subnational Human Development Database. Sci Data 6, 190038 (2019). https://doi.org/10.1038/sdata.2019.38
+#'
+#' @param input_folder path to [pg-folder].
+#' @param add_missing_geometries if `TRUE`, adds geometries that are missing in the original data. Replacement geometries are collected from cshapes or GADM (https://gadm.org/maps.html).
+#'
+#' @export
+gen_lifexp <- function(input_folder, add_missing_geometries = TRUE){ gen_shdi(input_folder, variable = "lifexp", add_missing_geometries = add_missing_geometries) }
+
+
+#' gnic
+#'
+#' Gives the Gross National Income per capita in thousands of USD (2011 PPP) within each grid cell, based on SHDI data v. 4. Available from 1990 to 2018.
+#'
+#' Links to original data: https://globaldatalab.org/shdi/shapefiles/ and https://globaldatalab.org/shdi/download_files/.
+#'
+#' Please cite: Smits, J., Permanyer, I. The Subnational Human Development Database. Sci Data 6, 190038 (2019). https://doi.org/10.1038/sdata.2019.38
+#'
+#' @param input_folder path to [pg-folder].
+#' @param add_missing_geometries if `TRUE`, adds geometries that are missing in the original data. Replacement geometries are collected from cshapes or GADM (https://gadm.org/maps.html).
+#'
+#' @export
+gen_gnic <- function(input_folder, add_missing_geometries = TRUE){ gen_shdi(input_folder, variable = "gnic", add_missing_geometries = add_missing_geometries) }
 
