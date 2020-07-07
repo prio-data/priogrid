@@ -453,7 +453,6 @@ interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interva
     dplyr::arrange(mydate)
 
   cross_stack <- raster::stack(full_data_frame$raster)
-  names(cross_stack) <- full_data_frame$mydate
 
   # Recode NA (sea cells)
   cross_stack[is.na(cross_stack)] <- -9999
@@ -462,6 +461,8 @@ interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interva
   # Interpolate NA values
   ipol <- raster::approxNA(cross_stack)
   ipol[ipol < 0] <- NA
+
+  names(ipol) <- full_data_frame$mydate
 
   # Convert to pg tbl
   ipol_tbl <- priogrid::raster_to_tibble(ipol, add_pg_index = TRUE)
