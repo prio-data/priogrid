@@ -23,7 +23,7 @@ gen_ruggedness <- function(input_folder, interpolate_missing = FALSE){
     halo <- dplyr::left_join(missing, interpol, by = c("x", "y"))
     ruggedness <- dplyr::bind_rows(ruggedness, halo)
 
-    missing <- priogrid::missing_in_pg(rg_ipol, "ruggedness", input_folder)
+    missing <- priogrid::missing_in_pg(ruggedness, "ruggedness", input_folder)
     assertthat::assert_that(is.null(missing))
   }
 
