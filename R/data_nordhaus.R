@@ -108,5 +108,3 @@ gen_gcp_qual <- function(input_folder){
     priogrid::raster_to_tibble(add_pg_index = T)
   return(pg_tibble)
 }
-
-qual <- gen_gcp_qual(input_folder)
