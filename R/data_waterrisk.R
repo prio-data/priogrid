@@ -38,7 +38,7 @@ gen_waterrisk <- function(input_folder){
 #' @title waterrisk monthly
 #'
 #' @description Generate variable measuring monthly waterrisk, drawn from the monthly Aqueduct 3.0 dataset.
-#'
+#' Please cite: Hofste, R., S. Kuzma, S. Walker, E.H., Sutanudjaja, et. al. 2019. “Aqueduct 3.0: Updated Decision-Relevant Global Water Risk Indicators.” Technical Note. Washington, DC: World Resources Institute. Available online at: https://www.wri.org/publication/aqueduct-30.
 #'
 #' @param input_folder path to [pg-folder].
 #'
@@ -90,11 +90,12 @@ gen_waterrisk_monthly <- function(input_folder){
     temp <- temp %>%
       dplyr::mutate(waterrisk = waterrisk/count)
 
-    full_pg <- dplyr::bind_rows(full_pg, temp)
+    temp_ipol <- priogrid::interpolate_crossection(temp, variable = "waterrisk",
+                                                   lon = "x", lat = "y", input_folder = input_folder)
+    temp_ipol <- temp_ipol %>% dplyr::mutate(month = i)
+
+    full_pg <- dplyr::bind_rows(full_pg, temp_ipol)
     }
-  full_pg$count <- NULL
+
   return(full_pg)
 }
-
-
-
