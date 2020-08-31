@@ -14,9 +14,10 @@
 #' @param gecon_data path to [pg-folder].
 #' @param variable one of c("GCP_MER", "GCP_PPP")
 #' @param interpolate_time if `TRUE`, data is interpolated to all years from 1990 to 2005 See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_gcp_mer <- function(input_folder, variable = "GCP_MER", interpolate_time = FALSE){
+gen_gcp_mer <- function(input_folder, variable = "GCP_MER", interpolate_time = FALSE, interpolate_missing = TRUE){
   gcp <- readxl::read_xls(file.path(input_folder, "gecon", "data", "Gecon40_post_final.xls"), sheet = 1, progress = FALSE)
 
   suffix <- sub("GCP_", "", variable)
@@ -28,7 +29,7 @@ gen_gcp_mer <- function(input_folder, variable = "GCP_MER", interpolate_time = F
     dplyr::group_by(LAT, LONGITUDE, name) %>%
     dplyr::mutate(area_share = AREA / sum(AREA, na.rm = T)) %>%
     dplyr::mutate(value = log(value+1)*area_share) %>%
-    dplyr::summarise(value = exp(sum(value, na.rm = T))-1) %>%
+    dplyr::summarize(value = exp(sum(value, na.rm = T))-1, .groups = "drop") %>%
     dplyr::ungroup() %>%
     dplyr::filter(grepl(suffix, name))
 
@@ -55,6 +56,22 @@ gen_gcp_mer <- function(input_folder, variable = "GCP_MER", interpolate_time = F
     pg_tibble <- priogrid::interpolate_pg_timeseries(pg_tibble, variable = tolower(variable))
   }
 
+  if (interpolate_missing){
+    missing <- priogrid::missing_in_pg(pg_tibble, tolower(variable), input_folder, plot_missing = FALSE)
+    nordhaus_list <- base::split(pg_tibble, pg_tibble$year)
+
+    ipol_list <- parallel::mclapply(nordhaus_list, priogrid::interpolate_crossection, variable = tolower(variable), lon = "x", lat = "y", input_folder)
+
+    ipol_miss <- parallel::mclapply(ipol_list, dplyr::right_join, missing, by = c("x", "y"))
+
+    ipol_tbl <- purrr::map2_dfr(ipol_miss, names(ipol_miss), add_timevar, timevar = "year") %>% dplyr::mutate(year = as.numeric(year))
+
+    pg_tibble <- dplyr::bind_rows(pg_tibble, ipol_tbl)
+
+    missing <- priogrid::missing_in_pg(pg_tibble, tolower(variable), input_folder, plot_missing = FALSE)
+    assertthat::assert_that(is.null(missing))
+  }
+
   return(pg_tibble)
 }
 
@@ -67,14 +84,15 @@ gen_gcp_mer <- function(input_folder, variable = "GCP_MER", interpolate_time = F
 #'
 #' @param input_folder path to [pg-folder]
 #' @param interpolate_time if `TRUE`, data is interpolated to all years from 1990 to 2005. See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' Link to original data: https://gecon.yale.edu/.
 #'
 #' Please cite: Nordhaus, William D. (2006) Geography and macroeconomics: New data and new findings. Proceedings of the National Academy of Sciences of the USA, 103(10): 3510-3517.
 #'
 #' @export
-gen_gcp_ppp <- function(input_folder, interpolate_time = FALSE){
-  gen_gcp_mer(input_folder, variable = "GCP_PPP", interpolate_time = interpolate_time)
+gen_gcp_ppp <- function(input_folder, interpolate_time = FALSE, interpolate_missing = TRUE){
+  gen_gcp_mer(input_folder, variable = "GCP_PPP", interpolate_time = interpolate_time, interpolate_missing = interpolate_missing)
 }
 
 
@@ -90,21 +108,38 @@ gen_gcp_ppp <- function(input_folder, interpolate_time = FALSE){
 #' Please cite: Nordhaus, William D. (2006) Geography and macroeconomics: New data and new findings. Proceedings of the National Academy of Sciences of the USA, 103(10): 3510-3517.
 #'
 #' @param input_folder path to [pg-folder].
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_gcp_qual <- function(input_folder){
+gen_gcp_qual <- function(input_folder, interpolate_missing = TRUE){
   gcp <- readxl::read_xls(file.path(input_folder, "gecon", "data", "Gecon40_post_final.xls"), sheet = 1, progress = FALSE)
 
   gcp <- gcp %>%
     dplyr::select(LAT, LONGITUDE, QUALITY) %>%
     dplyr::group_by(LAT, LONGITUDE) %>%
-    dplyr::summarise(quality = mean(QUALITY, na.rm = T))
+    dplyr::summarize(gcp_qual = mean(QUALITY, na.rm = T), .groups = "drop")
 
-  gcp <- dplyr::select(gcp, LONGITUDE, LAT, quality)
-  gcp$quality <- dplyr::if_else(gcp$quality <= -499, NA_real_, gcp$quality)
+  gcp <- dplyr::select(gcp, LONGITUDE, LAT, gcp_qual) %>%
+    dplyr::mutate(gcp_qual = dplyr::if_else(gcp_qual <= -499, NA_real_, gcp_qual))
 
   pg_tibble <- raster::rasterFromXYZ(gcp, crs = priogrid::prio_crs()) %>%
     priogrid::raster_to_pg() %>%
     priogrid::raster_to_tibble(add_pg_index = T)
+
+  if (interpolate_missing){
+    missing <- priogrid::missing_in_pg(pg_tibble, "gcp_qual", input_folder, plot_missing = FALSE)
+
+    ipol <- priogrid::interpolate_crossection(pg_tibble, variable = "gcp_qual", lon = "x", lat = "y", input_folder = input_folder)
+
+    ipol_miss <- dplyr::right_join(ipol, missing, by = c("x", "y"))
+
+    pg_tibble <- dplyr::bind_rows(pg_tibble, ipol_miss)
+
+    missing <- priogrid::missing_in_pg(pg_tibble, "gcp_qual", input_folder, plot_missing = FALSE)
+    assertthat::assert_that(is.null(missing))
+  }
+
+
   return(pg_tibble)
 }
+
