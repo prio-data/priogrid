@@ -79,11 +79,12 @@ gen_pop_gpw_sum <- function(input_folder, fun = "sum", interpolate_time = FALSE,
 #' Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2018. Gridded Population of the World, Version 4 (GPWv4): Population Count, Revision 11. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4JW8BX5.
 #'
 #' @param input_folder path to [pg-folder].
-#' @param interpolate if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_time if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_pop_gpw_sd <- function(input_folder, interpolate = FALSE){
-  priogrid::gen_pop_gpw_sum(input_folder, fun = "sd", interpolate = interpolate)
+gen_pop_gpw_sd <- function(input_folder, interpolate_time = FALSE, interpolate_missing = TRUE){
+  priogrid::gen_pop_gpw_sum(input_folder, fun = "sd", interpolate_time = interpolate_time, interpolate_missing = interpolate_missing)
 }
 
 
@@ -98,11 +99,12 @@ gen_pop_gpw_sd <- function(input_folder, interpolate = FALSE){
 #' Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2018. Gridded Population of the World, Version 4 (GPWv4): Population Count, Revision 11. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4JW8BX5.
 #'
 #' @param input_folder path to [pg-folder].
-#' @param interpolate if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_time if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_pop_gpw_min <- function(input_folder, interpolate = FALSE){
-  priogrid::gen_pop_gpw_sum(input_folder, fun = "min", interpolate = interpolate)
+gen_pop_gpw_min <- function(input_folder, interpolate_time = FALSE, interpolate_missing = TRUE){
+  priogrid::gen_pop_gpw_sum(input_folder, fun = "min", interpolate_time = interpolate_time, interpolate_missing = interpolate_missing)
 }
 
 
@@ -117,9 +119,10 @@ gen_pop_gpw_min <- function(input_folder, interpolate = FALSE){
 #' Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2018. Gridded Population of the World, Version 4 (GPWv4): Population Count, Revision 11. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4JW8BX5.
 #'
 #' @param input_folder Path to [pg-folder].
-#' @param interpolate if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_time if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.
+#' @param interpolate_missing if `TRUE`, interpolates data to grid cells with missing values around coastline.
 #'
 #' @export
-gen_pop_gpw_max <- function(input_folder, interpolate = FALSE){
-  gen_pop_gpw_sum(input_folder, fun = "max", interpolate = interpolate)
+gen_pop_gpw_max <- function(input_folder, interpolate_time = FALSE, interpolate_missing = TRUE){
+  gen_pop_gpw_sum(input_folder, fun = "max", interpolate_time = interpolate_time, interpolate_missing = interpolate_missing)
 }
