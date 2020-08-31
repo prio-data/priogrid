@@ -14,6 +14,13 @@ gen_waterrisk <- function(input_folder){
     dplyr::select(waterrisk = bws_cat) %>%
     dplyr::mutate(waterrisk = dplyr::na_if(waterrisk, -1))
 
+  suppressMessages(spare_mtx <- sf::st_intersects(waterrisk, waterrisk, sparse = TRUE))
+  whichna <- which(is.na(waterrisk$waterrisk)) # Which units have NA
+  for(x in whichna){
+    # print(x)
+    waterrisk$waterrisk[x] <- mean(waterrisk$waterrisk[spare_mtx[[x]]], na.rm = TRUE)
+  }
+
   waterrisk_sum <- priogrid::vector_to_pg(waterrisk, variable = "waterrisk", need_aggregation = TRUE, fun = "sum")
   waterrisk_sum <- priogrid::raster_to_tibble(waterrisk_sum, add_pg_index = T)
 
@@ -31,6 +38,9 @@ gen_waterrisk <- function(input_folder){
   waterrisk <- priogrid::interpolate_crossection(waterrisk, variable = "waterrisk", lon = "x", lat = "y",
                                                  input_folder = input_folder)
 
+  pg <- priogrid::raster_to_tibble(prio_blank_grid())
+  waterrisk <- dplyr::left_join(waterrisk, pg, by = c("x", "y"))
+
   return(waterrisk)
 }
 
@@ -45,7 +55,7 @@ gen_waterrisk <- function(input_folder){
 #' @export
 gen_waterrisk_monthly <- function(input_folder){
   waterrisk <- sf::read_sf(file.path(input_folder, "waterrisk", "Y2019M07D12_Aqueduct30_V01", "baseline",
-                                   "monthly", "y2019m07d12_rh_aqueduct30_data_download_monthly_v01.gpkg"))
+                                     "monthly", "y2019m07d12_rh_aqueduct30_data_download_monthly_v01.gpkg"))
   waterrisk_long <- waterrisk %>%
     as.data.frame() %>%
     dplyr::select(pfaf_id,
@@ -65,17 +75,24 @@ gen_waterrisk_monthly <- function(input_folder){
                         names_to = "month",
                         values_to = "waterrisk")
 
-  waterrisk <- waterrisk %>%
-    dplyr::select(pfaf_id) %>%
-    dplyr::full_join(waterrisk_long, by = "pfaf_id") %>%
-    dplyr::mutate(month = readr::parse_number(as.character(month)),
-                  waterrisk = dplyr::na_if(waterrisk, -1),
-                  waterrisk = dplyr::na_if(waterrisk, -9999)) %>%
-    dplyr::filter(!is.na(waterrisk))
+    waterrisk <- waterrisk %>%
+      dplyr::select(pfaf_id) %>%
+      dplyr::full_join(waterrisk_long, by = "pfaf_id") %>%
+      dplyr::mutate(month = readr::parse_number(as.character(month)),
+                    waterrisk = dplyr::na_if(waterrisk, -1),
+                    waterrisk = dplyr::na_if(waterrisk, -9999))
 
   full_pg <- tibble::tibble()
   for(i in seq(1, 12, 1)){
     month_df <- waterrisk %>% dplyr::filter(month == i)
+
+    suppressMessages(spare_mtx <- sf::st_intersects(month_df, month_df, sparse = TRUE)) # Create contiguity matrix
+
+    whichna <- which(is.na(month_df$waterrisk)) # Which units have NA
+    for(x in whichna){
+      # print(x)
+      month_df$waterrisk[x] <- mean(month_df$waterrisk[spare_mtx[[x]]],na.rm=TRUE)
+    } # Loop through and calculate mean from contiguous units
 
     df_sum <- priogrid::vector_to_pg(month_df, variable = "waterrisk", fun = "sum")
     temp_sum <- priogrid::raster_to_tibble(df_sum, add_pg_index = TRUE) %>%
@@ -91,11 +108,14 @@ gen_waterrisk_monthly <- function(input_folder){
       dplyr::mutate(waterrisk = waterrisk/count)
 
     temp_ipol <- priogrid::interpolate_crossection(temp, variable = "waterrisk",
-                                                   lon = "x", lat = "y", input_folder = input_folder)
-    temp_ipol <- temp_ipol %>% dplyr::mutate(month = i)
+                                                   lon = "x", lat = "y", input_folder = input_folder) %>%
+      dplyr::mutate(month = i)
 
     full_pg <- dplyr::bind_rows(full_pg, temp_ipol)
-    }
+  }
+
+  pg <- priogrid::raster_to_tibble(prio_blank_grid())
+  full_pg <- dplyr::left_join(full_pg, pg, by = c("x", "y"))
 
   return(full_pg)
 }
