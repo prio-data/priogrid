@@ -170,9 +170,18 @@ vector_to_pg <- function(sfdf, variable, fun, need_aggregation = TRUE, missval =
   #   return(rast)
   # }
   # backup solution when rasterization needs to aggregate values over many polygons/points
-  rast <- fasterize::fasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
-  names(rast) <- variable
-  raster::crs(rast) <- sf::st_crs(pg)$proj4string
+
+  # fasterize::fasterize is considerably faster than raster::rasterize, but is currently only functional on polygon and multipolygon sf objects
+  if (sf::st_geometry_type(sfdf, by_geometry = FALSE) == "POLYGON" ||
+      sf::st_geometry_type(sfdf, by_geometry = FALSE) == "MULTIPOLYGON"){
+    rast <- fasterize::fasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
+    names(rast) <- variable
+    raster::crs(rast) <- sf::st_crs(pg)$proj4string
+  } else {
+    rast <- raster::rasterize(sfdf, priogrid::prio_blank_grid(), field = variable, fun = fun)
+    names(rast) <- variable
+    raster::crs(rast) <- sf::st_crs(pg)$proj4string
+  }
   return(rast)
 }
 
