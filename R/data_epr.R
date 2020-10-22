@@ -75,7 +75,6 @@ gen_demoted <- function(input_folder){
 #' @param input_folder Path to [pg-folder].
 #'
 #' @export
-
 gen_epr_regional <- function(input_folder){
    gen_excluded(input_folder, variable = "epr_regional")
 }
@@ -83,6 +82,8 @@ gen_epr_regional <- function(input_folder){
 
 
 # Data preparation
+#' Tidy EPR data
+#' @export
 prep_epr <- function(input_folder){
    files <- file.path(input_folder, "geoepr", "data", c("GeoEPR.shp","EPR-2018.1.1.csv"))
 
