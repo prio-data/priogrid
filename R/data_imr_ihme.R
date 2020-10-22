@@ -10,11 +10,7 @@
 gen_imr_ihme_mean <- function(input_folder, fun = "mean"){
   imr <- get_ihme_brick(input_folder)
 
-  raster::extent(imr) <- priogrid::prio_extent()
-
   imr_mean <- priogrid::raster_to_pg(imr, aggregation_function = fun)
-
-  imr_mean <- priogrid::rasterextent_to_pg(imr_mean)
 
   imr_mean <- priogrid::raster_to_tibble(imr_mean, add_pg_index = TRUE)
 
@@ -80,7 +76,9 @@ gen_imr_ihme_min <- function(input_folder){
 }
 
 
-
+# ================================================
+#' Tidy imr data
+#' @export
 prep_imr_imhe <- function(ihme_00, ihme_05, ihme_10, ihme_15){
    i00 <- raster::raster(ihme_00)
    i05 <- raster::raster(ihme_05)
@@ -95,7 +93,7 @@ prep_imr_imhe <- function(ihme_00, ihme_05, ihme_10, ihme_15){
 #' Returns a raster brick containing the IHME data
 #'
 #' @param folder A folder containing the files
-
+#' @export
 get_ihme_brick <- function(folder){
    do.call(prep_imr_imhe,as.list(get_ihme_files(folder)))
 }
@@ -109,7 +107,7 @@ get_ihme_brick <- function(folder){
 #'
 #' @param folder A folder containing the files
 #' @return A character vector with four paths
-
+#' @export
 get_ihme_files <- function(input_folder){
    files <- c("IHME_AFRICA_U5M_1998_2017_MEAN_UNDER5_2000_Y2017M09D25.TIF",
               "IHME_AFRICA_U5M_1998_2017_MEAN_UNDER5_2005_Y2017M09D25.TIF",
