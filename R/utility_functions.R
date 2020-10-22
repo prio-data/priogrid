@@ -226,10 +226,11 @@ panel_to_pg <- function(df, timevar, variable, need_aggregation, missval, fun){
 #' @param variable the variable to interpolate missing from
 #' @param lon a string denoting the name of the longitude variable
 #' @param lat a string denoting the name of the latitude variable
+#' @param add_pg_index boolean, whether to add a pgid column or not. Default is TRUE.
 #'
 #' @return the interpolated crossection
 #' @export
-interpolate_crossection <- function(crossection, variable, lon, lat, input_folder, date_var = NULL){
+interpolate_crossection <- function(crossection, variable, lon, lat, input_folder, date_var = NULL, add_pg_index = TRUE){
   if(!is.null(date_var)){
     crossection_date <- unique(crossection[[date_var]])
   }
@@ -273,12 +274,12 @@ interpolate_crossection <- function(crossection, variable, lon, lat, input_folde
   pg <- priogrid::prio_blank_grid()
   rast[which(!(pg[] %in% pgland$pgid))] <- NA
 
-  sdf <- priogrid::raster_to_tibble(rast)
+  sdf <- priogrid::raster_to_tibble(rast, add_pg_index = add_pg_index)
   if(!is.null(date_var)){
     sdf[[date_var]] <-crossection_date
   }
 
-  sdf
+  return(sdf)
 }
 
 
@@ -406,13 +407,15 @@ make_raster <- function(nclist, flip_poles=FALSE, transpose=FALSE, crs=NULL){
 #' @param interval string denoting the interval between interpolated values, i.e. the temporal resolution. Defaults to "1 year".
 #' @param startdate starting date. Defaults to the earliest observation in the original data.
 #' @param enddate end date. Defaults to the latest observation in the original data.
+#' @param add_pg_index boolean, whether to add a pgid column or not. Default is TRUE.
 #'
 #' @details `interval` can be specified as `"day"`, `"week"`, `"month"`, `"quarter"` or `"year"`. See `seq.Date` for details.
 #'
 #' @return Interpolated time-series data frame.
 #'
 #' @export
-interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interval = "1 year", startdate = NULL, enddate = NULL){
+interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interval = "1 year", startdate = NULL, enddate = NULL,
+                                      add_pg_index = TRUE){
 
   if (is.numeric(interval) == TRUE) {
     stop("Interval must be specified as character string")
@@ -474,7 +477,7 @@ interpolate_pg_timeseries <- function(pgdf, variable, date_var = "year", interva
   names(ipol) <- full_data_frame$mydate
 
   # Convert to pg tbl
-  ipol_tbl <- priogrid::raster_to_tibble(ipol, add_pg_index = TRUE)
+  ipol_tbl <- priogrid::raster_to_tibble(ipol, add_pg_index = add_pg_index)
 
   ipol_df <- ipol_tbl %>%
     dplyr::group_by(pgid) %>%
