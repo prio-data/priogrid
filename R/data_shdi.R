@@ -110,7 +110,7 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
     miss_34 <- missing_files[[14]] %>% dplyr::filter(NAME_1 == "Pristina") %>% dplyr::mutate(gdlcode = "KSVr106") %>% dplyr::select(gdlcode, geometry) %>% sf::st_cast(to = "MULTIPOLYGON")
     miss_35 <- missing_files[[14]] %>% dplyr::filter(stringr::str_detect(NAME_1, "Uro")) %>% dplyr::mutate(gdlcode = "KSVr107") %>% dplyr::select(gdlcode, geometry) %>% sf::st_cast(to = "MULTIPOLYGON")
     #China, Taiwan
-    miss_36 <- cshapes::cshp(date = as.Date("2015-01-01")) %>% sf::st_as_sf() %>% dplyr::filter(CNTRY_NAME == "Taiwan") %>%
+    miss_36 <- cshapes::cshp(date = as.Date("2015-01-01")) %>% dplyr::filter(country_name == "Taiwan") %>%
       dplyr::mutate(gdlcode = "CHNr133") %>% dplyr::select(gdlcode, geometry)
 
     z <- as.list(mget(paste0("miss_", 1:36)))
