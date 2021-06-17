@@ -22,7 +22,13 @@ gen_gbd_wasting <- function(input_folder, wasting = TRUE){
   }
 
   r <- raster::brick(lapply(gbd_files, raster::raster))
-  names(r) <- paste("year_", sapply(stringr::str_split(names(r), "_"), function(x) x[12]), sep = "")
+
+
+  if(wasting){
+    names(r) <- paste("year_", sapply(stringr::str_split(names(r), "_"), function(x) x[12]), sep = "")
+  } else{
+    names(r) <- paste("year_", sapply(stringr::str_split(names(r), "_"), function(x) x[9]), sep = "")
+  }
 
   r <- priogrid::raster_to_pg(r, aggregation_function = "mean")
   df <- priogrid::raster_to_tibble(r, add_pg_index = TRUE)
