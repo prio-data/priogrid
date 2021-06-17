@@ -4,12 +4,18 @@
 \alias{gen_pop_gpw_min}
 \title{pop_gpw_min}
 \usage{
-gen_pop_gpw_min(input_folder, interpolate = FALSE)
+gen_pop_gpw_min(
+  input_folder,
+  interpolate_time = FALSE,
+  interpolate_missing = TRUE
+)
 }
 \arguments{
 \item{input_folder}{path to [pg-folder].}
 
-\item{interpolate}{if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.}
+\item{interpolate_time}{if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.}
+
+\item{interpolate_missing}{if `TRUE`, interpolates data to grid cells with missing values around coastline.}
 }
 \description{
 Generate minimum population count

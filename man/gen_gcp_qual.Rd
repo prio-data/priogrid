@@ -4,9 +4,21 @@
 \alias{gen_gcp_qual}
 \title{Generate gcp_qual variable}
 \usage{
-gen_gcp_qual(input_folder)
+gen_gcp_qual(input_folder, interpolate_missing = TRUE)
+}
+\arguments{
+\item{input_folder}{path to [pg-folder].}
+
+\item{interpolate_missing}{if `TRUE`, interpolates data to grid cells with missing values around coastline.}
 }
 \description{
-Generate quality of GCP values variable,
-based on the G-Econ dataset v. 4.0.
+Indicates the quality of the GCP values, based on the G-Econ dataset v4.0, last modified May 2011.
+Quality is a measure of the quality of the economic data. Quality = 1 for countries for which the data are consistent,
+but it does not capture the quality of the underlying country statistics. In general, quality < 1 indicates that there
+are major inconsistencies in one of the underlying data inputs into GCP. See the G-Econ definition table, available at http://gecon.yale.edu/.
+}
+\details{
+Link to original data: https://gecon.yale.edu/.
+
+Please cite: Nordhaus, William D. (2006) Geography and macroeconomics: New data and new findings. Proceedings of the National Academy of Sciences of the USA, 103(10): 3510-3517.
 }

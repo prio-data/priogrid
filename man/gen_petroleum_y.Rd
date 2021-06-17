@@ -18,4 +18,8 @@ petroleum deposits that have a known year of discovery or
 start of production. For a complete picture, these data
 must therefore be combined with the petroleum_s data.
 Available only until 2003.
+
+Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Petroleum-Dataset/Petroleum-Dataset-v-12/
+
+Please cite: Lujala, Päivi; Jan Ketil Rød & Nadia Thieme, 2007. ‘Fighting over Oil: Introducing A New Dataset’, Conflict Management and Peace Science 24(3), 239-256.
 }

@@ -10,7 +10,8 @@ interpolate_pg_timeseries(
   date_var = "year",
   interval = "1 year",
   startdate = NULL,
-  enddate = NULL
+  enddate = NULL,
+  add_pg_index = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ interpolate_pg_timeseries(
 \item{startdate}{starting date. Defaults to the earliest observation in the original data.}
 
 \item{enddate}{end date. Defaults to the latest observation in the original data.}
+
+\item{add_pg_index}{boolean, whether to add a pgid column or not. Default is TRUE.}
 }
 \value{
 Interpolated time-series data frame.

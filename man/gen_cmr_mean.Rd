@@ -4,11 +4,19 @@
 \alias{gen_cmr_mean}
 \title{cmr_mean}
 \usage{
-gen_cmr_mean(input_folder)
+gen_cmr_mean(input_folder, fun = "mean")
 }
 \arguments{
 \item{input_folder}{Path to [pg-folder].}
+
+\item{fun}{one of c("mean", "sd", "min", "max")}
 }
 \description{
-Generate mean child malnutrition variable.
+Measures the average prevalence of child malnutrition within each cell. The original pixel value
+is the percent of children under the age of 5 that are malnourished. Based on raster data from the SEDAC Global
+Poverty Mapping project. The indicator is a snapshot for the year 2000 only.
+
+Link to original data: https://sedac.ciesin.columbia.edu/data/set/povmap-global-subnational-prevalence-child-malnutrition
+
+Please cite: Center for International Earth Science Information Network - CIESIN - Columbia University. 2005. Poverty Mapping Project: Global Subnational Prevalence of Child Malnutrition. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/H4K64G12.
 }
