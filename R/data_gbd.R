@@ -21,6 +21,6 @@ gen_gbd_wasting <- function(input_folder){
 
   wasting <- priogrid::raster_to_pg(wasting, aggregation_function = "mean")
   wasting <- priogrid::raster_to_tibble(wasting, add_pg_index = TRUE)
-  wasting <- wasting %>% pivot_longer(cols = starts_with("year_"), names_prefix = "year_", names_to = "year", values_to = "wasting")
+  wasting <- wasting %>% tidyr::pivot_longer(cols = starts_with("year_"), names_prefix = "year_", names_to = "year", values_to = "wasting")
   return(wasting)
 }
