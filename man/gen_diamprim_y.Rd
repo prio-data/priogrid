@@ -7,7 +7,9 @@
 gen_diamprim_y(input_folder, variable = "diamprim_y")
 }
 \arguments{
-\item{input_folder}{Path to [pg-folder].}
+\item{input_folder}{path to [pg-folder].}
+
+\item{variable}{one of c("diamprim_y", "diamsec_y")}
 }
 \description{
 Generate dummy variable for whether
@@ -18,4 +20,9 @@ This variable only codes deposits that have a known year of
 discovery or start of production. For a complete picture,
 these data must therefore be combined with the diamprim_s data.
 Available only until 2005.
+
+Link to original data: https://www.prio.org/Data/Geographical-and-Resource-Datasets/Diamond-Resources/
+
+Please cite: Gilmore, Elisabeth; Nils Petter Gleditsch, Päivi Lujala & Jan Ketil Rød, 2005. ‘Conflict Diamonds: A New Dataset’, Conflict Management and Peace Science 22(3): 257–292
+Lujala, Päivi; Nils Petter Gleditsch & Elisabeth Gilmore, 2005. ‘A Diamond Curse? Civil War and a Lootable Resource’, Journal of Conflict Resolution 49(4): 538–562.
 }

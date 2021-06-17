@@ -36,6 +36,6 @@ Imports:
     fasterize,
     Rcpp
 Suggests: testthat
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 LinkingTo: 
     Rcpp

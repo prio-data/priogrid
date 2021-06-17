@@ -4,14 +4,21 @@
 \alias{gen_pop_gpw_sum}
 \title{pop_gpw_sum}
 \usage{
-gen_pop_gpw_sum(input_folder, fun = "sum", interpolate = FALSE)
+gen_pop_gpw_sum(
+  input_folder,
+  fun = "sum",
+  interpolate_time = FALSE,
+  interpolate_missing = FALSE
+)
 }
 \arguments{
 \item{input_folder}{path to [pg-folder].}
 
-\item{fun}{one of c("sum", "sd", "min", "max")}
+\item{fun}{one of c("sum", "sd", "min", "max").}
 
-\item{interpolate}{if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.}
+\item{interpolate_time}{if `TRUE`, data is interpolated to all years from 2000 to 2020. See interpolate_pg_timeseries() for details.}
+
+\item{interpolate_missing}{if `TRUE`, interpolates data to grid cells with missing values around coastline.}
 }
 \description{
 Generate sum population count

@@ -2,11 +2,23 @@
 % Please edit documentation in R/data_nordhaus.R
 \name{gen_gcp_ppp}
 \alias{gen_gcp_ppp}
-\title{Generate gcp_ppp variable}
+\title{gcp_ppp}
 \usage{
-gen_gcp_ppp(input_folder)
+gen_gcp_ppp(input_folder, interpolate_time = FALSE, interpolate_missing = TRUE)
+}
+\arguments{
+\item{input_folder}{path to [pg-folder]}
+
+\item{interpolate_time}{if `TRUE`, data is interpolated to all years from 1990 to 2005. See interpolate_pg_timeseries() for details.}
+
+\item{interpolate_missing}{if `TRUE`, interpolates data to grid cells with missing values around coastline.
+
+Link to original data: https://gecon.yale.edu/.
+
+Please cite: Nordhaus, William D. (2006) Geography and macroeconomics: New data and new findings. Proceedings of the National Academy of Sciences of the USA, 103(10): 3510-3517.}
 }
 \description{
-Generate gross cell product (USD adjusted for purchasing-power-parity) variable,
-based on the G-Econ dataset v. 4.0.
+Indicates the gross cell product, measured in USD using purchasing-power-parity, based on the G-Econ dataset v4.0, last modified May 2011.
+Else similar to gcp_mer, but uses USD at purchasing-power-parity which corrects for each currency's purchasing power.
+This variable is only available for 1990, 1995, 2000, and 2005, but function allows for temporal interpolation that gives yearly values from 1990 to 2005.
 }

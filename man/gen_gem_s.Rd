@@ -16,4 +16,8 @@ based on the GEMDATA dataset. This variable only codes
 those deposits that do not have a known year of discovery
 or start of production. For a complete picture, these data
 must therefore be combined with the gem_y data.
+
+Link to original data: http://www.paivilujala.com/gemdata.html
+
+Please cite: Lujala, Päivi 2009. Deadly Combat over Natural Resources: Gems, Petroleum, Drugs, and the Severity of Armed Civil Conflict. Journal of Conflict Resolution 53(1): 50-71.
 }

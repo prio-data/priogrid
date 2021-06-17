@@ -4,10 +4,12 @@
 \alias{gen_ruggedness}
 \title{gen_ruggedness}
 \usage{
-gen_ruggedness(input_folder)
+gen_ruggedness(input_folder, interpolate_missing = FALSE)
 }
 \arguments{
-\item{input_folder}{}
+\item{input_folder}{path to [pg-folder].}
+
+\item{interpolate_missing}{if `TRUE`, interpolates data to grid cells with missing values around coastline.}
 }
 \value{
 a dataframe with x, y, and ruggedness

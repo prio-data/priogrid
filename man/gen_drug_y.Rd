@@ -14,4 +14,8 @@ Generate dummy variable for whether large-scale
 drug cultivation (coca bush, opium poppy, or cannabis) is ongoing
 within the given grid cell, based on the DRUGDATA dataset.
 Available only until 2002.
+
+Link to original data: http://www.paivilujala.com/drugdata.html
+
+Please cite: Buhaug, Halvard & Päivi Lujala 2005. Accounting for Scale: Measuring Geography in Quantitative Studies of Civil War. Political Geography 24: 399-418.
 }

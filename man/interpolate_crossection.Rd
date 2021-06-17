@@ -10,7 +10,8 @@ interpolate_crossection(
   lon,
   lat,
   input_folder,
-  date_var = NULL
+  date_var = NULL,
+  add_pg_index = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ interpolate_crossection(
 \item{lon}{a string denoting the name of the longitude variable}
 
 \item{lat}{a string denoting the name of the latitude variable}
+
+\item{add_pg_index}{boolean, whether to add a pgid column or not. Default is TRUE.}
 }
 \value{
 the interpolated crossection

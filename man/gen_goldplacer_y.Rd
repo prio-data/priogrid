@@ -14,4 +14,9 @@ Generate dummy variable for whether
 placer gold deposits have been found within the given
 grid cell, based om the dGOLD_L subset of the
 GOLDATA dataset v1.2. Available only until 2012.
+
+Link to original data: https://www.researchgate.net/publication/281849073_GOLDATA_12_v
+
+Please cite: Balestri, Sara, 2015. GOLDATA: The Gold deposits dataset codebook, Version 1.2. UCSC-Cognitive Science and Communication Research Centre WP 02/15, Milan. doi:10.13140/RG.2.1.1730.8648
+Balestri, Sara, 2012. Gold and civil conflict intensity: evidence from a spatially disaggregated analysis, Peace Economics. Peace Science and Public Policy, 18(3): 1-17. doi:10.1515/peps-2012-0012.
 }
