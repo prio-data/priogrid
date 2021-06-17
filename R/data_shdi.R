@@ -30,7 +30,7 @@ gen_shdi <- function(input_folder, variable = "shdi", add_missing_geometries = T
   old_geom_file <- file.path(input_folder, "shdi", "data", "GDL-SHDI-SHP-2.shp")
   old_geom <- sf::read_sf(old_geom_file) %>% dplyr::rename_all(tolower)
 
-  shdi <- read.csv(file.path(input_folder, "shdi", "data", "SHDI Complete 4.0 (1).csv"))
+  shdi <- read.csv(file.path(input_folder, "shdi", "data", "SHDI-SGDI-Total 5.0.csv"))
   shdi <- shdi %>% dplyr::rename_all(tolower)
 
   # Countries without subnational data
