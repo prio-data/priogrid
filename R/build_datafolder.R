@@ -67,14 +67,14 @@ add_datasource <- function(basepath, datasource, add_large){
   }
 }
 
-BASE_PATH <- "~/pgtest"
+#BASE_PATH <- "~/pgtest"
 
-test <- yaml.load_file("~/test.yaml")
+#test <- yaml.load_file("~/test.yaml")
 
 
-for(datasource in test$sites){
-  add_datasource(BASE_PATH, datasource, add_large = FALSE)
-}
+#for(datasource in test$sites){
+#  add_datasource(BASE_PATH, datasource, add_large = FALSE)
+#}
 
 
 
