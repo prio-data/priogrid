@@ -6,8 +6,8 @@
 #' @examples
 #' pg <- create_pg_indices()
 #' @export
-create_pg_indices <- function(ncol = options()$PG.options$ncol,
-                              nrow = options()$PG.options$nrow){
+create_pg_indices <- function(ncol = pgoptions$get_ncol(),
+                              nrow = pgoptions$get_nrow()){
   # To create PRIO-GRID, swap ncol and nrow, load index in reverse order, and
   # rotate 90 degrees once.
   rotate <- function(x) t(apply(x, 2, rev))
@@ -27,10 +27,10 @@ create_pg_indices <- function(ncol = options()$PG.options$ncol,
 #' @examples
 #' pg <- prio_blank_grid()
 #' @export
-prio_blank_grid <- function(ncol = options()$PG.options$ncol,
-                            nrow = options()$PG.options$nrow,
-                            extent = options()$PG.options$ext,
-                            crs_string = options()$PG.options$crs){
+prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
+                            nrow = pgoptions$get_nrow(),
+                            extent = pgoptions$get_extent(),
+                            crs_string = pgoptions$get_crs()){
   require(terra)
 
   if(ncol%%1 != 0 & ncol > 0) stop("ncol must be positive integer")

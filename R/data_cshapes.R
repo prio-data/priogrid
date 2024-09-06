@@ -1,6 +1,11 @@
-
+#' read_cshapes
+#'
+#' Reads the CShapes 2.0 raw data
+#'
+#' @return an object of class sf
+#' @export
 read_cshapes <- function(){
-  f <- get_pgfile(src_name == "CShapes", version == "2.0")
+  f <- get_pgfile("CShapes", "2.0")
   df <- sf::read_sf(f) # CShapes comes in GeoJSON format
   df <- df |>
     dplyr::mutate(

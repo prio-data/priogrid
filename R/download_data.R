@@ -20,17 +20,18 @@ pg_rawfiles <- function(use_mirror = TRUE){
 }
 
 get_pgfile <- function(src_name, version){
-  f <- pg_rawfiles() |> dplyr::filter(!!src_name == src_name, !!version == version) |> dplyr::pull(filename)
-  destfolder <- options()$PG.options$rawfolder
+  f <- pg_rawfiles() |> dplyr::filter(src_name == !!rlang::enquo(src_name),
+                                      version == !!rlang::enquo(version)) |> dplyr::pull(filename)
+  destfolder <- pgoptions$get_rawfolder()
   if(length(f) == 0){
     return(message("No files in metadata with that name and version."))
   }
 
   if(!dir.exists(destfolder)){
-    stop(paste(destfolder, "does not exist. Please set `rawfolder` using set_pg_options()."))
+    stop(paste(destfolder, "does not exist. Please pgoptions$set_rawfolder()."))
   }
 
-  full_file_path <- file.path(options()$PG.options$rawfolder, f)
+  full_file_path <- file.path(destfolder, f)
 
   file_found <- file.exists(full_file_path)
   if(!all(file_found)){
@@ -41,12 +42,7 @@ get_pgfile <- function(src_name, version){
 }
 
 download_pg_rawdata <- function(overwrite = FALSE){
-  # rawfolder is not set by default.
-  if(options()$PG.options$rawfolder == ""){
-    destfolder <- readline("options()$PG.options$rawfolder is not set. Where do you want to store raw-data? ")
-  } else(
-    destfolder <- options()$PG.options$rawfolder
-  )
+  destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
     accept <- readline(paste("Destination folder", destfolder, "does not exist. Do you want to create? (Y)es: "))
@@ -56,9 +52,6 @@ download_pg_rawdata <- function(overwrite = FALSE){
       return(message("No folder to store data."))
     )
   }
-
-  # Update PG.options when destfolder has been decided.
-  set_pg_options(list("rawfolder" = destfolder))
 
   file_info <- pg_rawfiles()
   file_info$file_exists <- file.exists(file.path(destfolder, file_info$filename))
