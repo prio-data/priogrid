@@ -1,10 +1,6 @@
 pgconfig_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid", "prio"))
 
 
-#pgoptions$set_rawfolder("~/priogrid_data")
-#pgoptions$print()
-
-
 #' PRIO-GRID Options Manager
 #'
 #' set_extent c(xmin, xmax, ymin, ymax)
