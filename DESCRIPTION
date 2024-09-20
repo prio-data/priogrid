@@ -15,16 +15,15 @@ LinkingTo:
     Rcpp
 Suggests: 
     testthat (>= 3.0.0),
-    assertthat,
-    exactextractr,
-    httr2,
-    memoise,
-    options,
-    tidyverse
+    assertthat
 Config/testthat/edition: 3
-Imports: 
+Imports:
+    tidyverse,
     lubridate,
     sf,
-    terra
+    terra,
+    memoise,
+    exactextractr,
+    httr2
 Depends: 
     R (>= 2.10)
