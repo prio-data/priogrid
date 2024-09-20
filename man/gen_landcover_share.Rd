@@ -7,6 +7,6 @@
 gen_landcover_share()
 }
 \description{
-Takes the NaturalEarth 50m raster and returns a raster
+Takes the NaturalEarth 10m raster and returns a raster
 in PRIO-GRID resolution with the share of the cell that intersects with land.
 }
