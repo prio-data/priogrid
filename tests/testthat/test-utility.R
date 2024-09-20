@@ -8,11 +8,10 @@ test_that("prio-grid indicies are from bottom-left to top-right", {
 })
 
 test_that("prio-grid raster parameters are correct", {
-  require(terra)
-  expect_equal(ext(prio_blank_grid()) |> as.vector(), options()$PG.options$ext)
-  expect_equal(crs(prio_blank_grid()), crs(options()$PG.options$crs))
-  expect_equal(ncol(prio_blank_grid()), options()$PG.options$ncol)
-  expect_equal(nrow(prio_blank_grid()), options()$PG.options$nrow)
+  expect_equal(terra::ext(prio_blank_grid()) |> as.vector(), pgoptions$get_extent())
+  expect_equal(terra::crs(prio_blank_grid()), terra::crs(pgoptions$get_crs()))
+  expect_equal(terra::ncol(prio_blank_grid()), pgoptions$get_ncol())
+  expect_equal(terra::nrow(prio_blank_grid()), pgoptions$get_nrow())
 })
 
 test_that("raster_to_pgtibble", {
