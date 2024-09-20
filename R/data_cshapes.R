@@ -75,7 +75,7 @@ gen_changed_areas_base <- function(cshp){
 #'
 #' @export
 gen_changed_areas <- function(cshp){
-  gen_changed_areas_memoised <- memoise::memoise(gen_changed_areas_base, cache = cachem::cache_disk(rappdirs::user_cache_dir("R-poldat")))
+  gen_changed_areas_memoised <- memoise::memoise(gen_changed_areas_base, cache = pgconfig_cache)
   res <- gen_changed_areas_memoised(cshp)
   return(res)
 }
