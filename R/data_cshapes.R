@@ -1,3 +1,5 @@
+cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid", "prio"))
+
 #' read_cshapes
 #'
 #' Reads the CShapes 2.0 raw data
@@ -74,8 +76,4 @@ gen_changed_areas_base <- function(cshp){
 #' @describeIn gen_changed_areas_base Finds the areas and dates where borders have changed in the cshapes dataset. Memoise/caching wrapper.
 #'
 #' @export
-gen_changed_areas <- function(cshp){
-  gen_changed_areas_memoised <- memoise::memoise(gen_changed_areas_base, cache = pgconfig_cache)
-  res <- gen_changed_areas_memoised(cshp)
-  return(res)
-}
+gen_changed_areas <- memoise::memoise(gen_changed_areas_base, cache = cshapes_cache)
