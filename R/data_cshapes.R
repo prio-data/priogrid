@@ -1,6 +1,11 @@
-
+#' read_cshapes
+#'
+#' Reads the CShapes 2.0 raw data
+#'
+#' @return an object of class sf
+#' @export
 read_cshapes <- function(){
-  f <- get_pgfile(src_name == "CShapes", version == "2.0")
+  f <- get_pgfile("CShapes", "2.0")
   df <- sf::read_sf(f) # CShapes comes in GeoJSON format
   df <- df |>
     dplyr::mutate(
@@ -12,15 +17,14 @@ read_cshapes <- function(){
   return(df)
 }
 
-#' gen_changed_areas
+#' gen_changed_areas_base
 #'
 #' Finds the areas and dates where borders have changed in the cshapes dataset.
 #'
-#' @param input_folder
+#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @return a list, one sf df for each crossection
-#' @export
-gen_changed_areas <- function(){
+gen_changed_areas_base <- function(cshp){
   compare_crossection <- function(crossection_date, cshp, dates_with_changes){
     message(crossection_date)
     if(which(crossection_date == dates_with_changes) == 1){
@@ -49,7 +53,6 @@ gen_changed_areas <- function(){
 
   use_s2 <- sf::sf_use_s2()
   sf::sf_use_s2(FALSE)
-  cshp <- read_cshapes()
 
   dates_with_changes <- sort(unique(unique(cshp$gwsdate), unique(cshp$gwsdate)))
 
@@ -66,4 +69,14 @@ gen_changed_areas <- function(){
 
   sf::sf_use_s2(use_s2)
   return(changed_areas)
+}
+
+#' @describeIn gen_changed_areas_base Finds the areas and dates where borders have changed in the cshapes dataset. Memoise/caching wrapper.
+#'
+#' @export
+gen_changed_areas <- function(cshp){
+  hashsum <- digest::digest(cshp)
+  gen_changed_areas_memoised <- memoise::memoise(gen_changed_areas_base, cache = cachem::cache_disk(rappdirs::user_cache_dir("R-poldat")))
+  res <- gen_changed_areas_memoised(cshp)
+  return(res)
 }
