@@ -7,14 +7,18 @@ cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid"
 #' @return an object of class sf
 #' @export
 read_cshapes <- function(){
+  require(dplyr)
+  require(sf)
+  require(lubridate)
+
   f <- get_pgfile("CShapes", "2.0")
-  df <- sf::read_sf(f) # CShapes comes in GeoJSON format
+  df <- read_sf(f) # CShapes comes in GeoJSON format
   df <- df |>
-    dplyr::mutate(
+    mutate(
       gwsdate = as.Date(gwsdate, format = "%d.%m.%Y %H:%M:%S"),
       gwedate = as.Date(gwedate, format = "%d.%m.%Y %H:%M:%S")) |>
-    dplyr::mutate(
-      date_interval = lubridate::interval(gwsdate, gwedate)
+    mutate(
+      date_interval = interval(gwsdate, gwedate)
     )
   return(df)
 }
