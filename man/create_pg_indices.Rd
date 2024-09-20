@@ -4,10 +4,7 @@
 \alias{create_pg_indices}
 \title{Create matrix with index numbering conventions as for PRIO-GRID.}
 \usage{
-create_pg_indices(
-  ncol = options()$PG.options$ncol,
-  nrow = options()$PG.options$nrow
-)
+create_pg_indices(ncol = pgoptions$get_ncol(), nrow = pgoptions$get_nrow())
 }
 \arguments{
 \item{ncol}{The number of columns in the grid.}

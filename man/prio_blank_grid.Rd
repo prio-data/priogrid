@@ -5,10 +5,10 @@
 \title{Create a raster with PRIO-GRID ids.}
 \usage{
 prio_blank_grid(
-  ncol = options()$PG.options$ncol,
-  nrow = options()$PG.options$nrow,
-  extent = options()$PG.options$ext,
-  crs_string = options()$PG.options$crs
+  ncol = pgoptions$get_ncol(),
+  nrow = pgoptions$get_nrow(),
+  extent = pgoptions$get_extent(),
+  crs_string = pgoptions$get_crs()
 )
 }
 \arguments{
