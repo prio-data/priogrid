@@ -22,7 +22,7 @@ gen_landcover_share <- function(){
   ne <- read_naturalearth_10m_physical()
 
   pg <- prio_blank_grid()
-  land_cover <- rasterize(vect(ne), pg, fun = "min", cover = T)
+  land_cover <- terra::rasterize(terra::vect(ne), pg, fun = "min", cover = T)
 
   return(land_cover)
 }
