@@ -84,19 +84,16 @@ gen_changed_areas <- memoise::memoise(gen_changed_areas_base, cache = cshapes_ca
 #' a raster-mask that is true for the grid cells that intersects with country borders
 #' included in the international state system at the measurement_date
 #'
+#' @param measurement_date A single date
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
-#' @parm measurement_date A single date
 #'
 #' @export
 gen_cshapes_cover <- function(measurement_date, cshp = read_cshapes()){
-  calc_landcover <- function(change_date, cshp, pg){
-    cs <- cshp |> dplyr::filter(change_date %within% date_interval)
-    cshp_cover <- rasterize(vect(cs), pg, fun = "min", cover = T)
-    return(intersect(cshp_cover, pg))
-  }
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
   pg <- prio_blank_grid()
-  res <- calc_landcover(measurement_date, cshp = cshp, pg = pg)
+  cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+  cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
+  res <- terra::intersect(cshp_cover, pg)
   return(res)
 }
