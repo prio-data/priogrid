@@ -2,6 +2,7 @@
 
 export(create_pg_indices)
 export(gen_changed_areas)
+export(gen_cshapes_cover)
 export(gen_land)
 export(gen_landcover_share)
 export(prio_blank_grid)
