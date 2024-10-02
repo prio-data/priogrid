@@ -84,7 +84,7 @@ gen_changed_areas <- memoise::memoise(gen_changed_areas_base, cache = cshapes_ca
 #' a raster-mask that is true for the grid cells that intersects with country borders
 #' included in the international state system at the measurement_date
 #'
-#' @param measurement_date A single date
+#' @param measurement_date A single date as Date object
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @export
