@@ -31,7 +31,7 @@ cshapes <- dplyr::tibble(
 )
 
 natural_earth <- dplyr::tibble(
-  "src_name" = "NaturalEarth10mPhysical",
+  "src_name" = "NaturalEarth50mLand",
   "version" = "4.1.1",
   "cite" = "",
   "references" = list(c("")),
