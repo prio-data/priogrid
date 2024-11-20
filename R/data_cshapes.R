@@ -103,8 +103,8 @@ gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 
 
 
-  names(cshp_cover) <- "cshapes_cover_share"
-  return(cshp_cover)
+  names(res) <- "cshapes_cover_share"
+  return(res)
 }
 
 #' Whether or not a grid-cell intersects with the international state system (cShapes 2.0)
