@@ -133,7 +133,7 @@ gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   cmat <- cbind(terra::minmax(res)[1,]:terra::minmax(res)[2,], cs$gwcode)
   res <- terra::classify(res, cmat)
 
-  represented_gwcodes <- terra::values(res) |> unique() |> as.vector()
+  represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
   countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
   assertthat::assert_that(length(countries_not_included)== 0)
   res <- as.factor(res)
