@@ -18,11 +18,18 @@ read_naturalearth_50m_land <- function(){
 #' @export
 gen_naturalearth_cover_share <- function(){
   ne <- read_naturalearth_50m_land()
-
   pg <- prio_blank_grid()
-  ne_coversh <- terra::rasterize(terra::vect(ne), pg, fun = "min", cover = T)
-  names(ne_coversh) <- "naturalearth_cover_share"
-  return(ne_coversh)
+
+  ne_combined <- ne |> dplyr::summarize(geometry = sf::st_combine(geometry))
+  coversh <- exactextractr::exact_extract(pg, ne_combined)
+
+  ra <- exactextractr::rasterize_polygons(ne_combined, pg)
+  pg <- pg*ra # Remove non-land cells
+
+  res <- terra::classify(pg, coversh[[1]])
+
+  names(res) <- "naturalearth_cover_share"
+  return(res)
 }
 
 #' Whether or not a grid-cell intersects with land (NaturalEarth)

@@ -91,7 +91,17 @@ gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
-  cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
+  #cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
+
+  cs_combined <- cs |> dplyr::summarize(geometry = sf::st_combine(geometry))
+  coversh <- exactextractr::exact_extract(pg, cs_combined)
+
+  ra <- exactextractr::rasterize_polygons(cs_combined, pg)
+  pg <- pg*ra # Remove non-land cells
+
+  res <- terra::classify(pg, coversh[[1]])
+
+
 
   names(cshp_cover) <- "cshapes_cover_share"
   return(cshp_cover)
