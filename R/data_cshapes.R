@@ -114,3 +114,33 @@ gen_cshapes_cover <- function(measurement_date, cshp = read_cshapes()){
   names(res) <- "cshapes_cover"
   return(res)
 }
+
+#' The Gleditsch-Ward (cShapes 2.0 version) code in each grid-cell
+#'
+#' Uses max area for cells with multiple countries. If actual tie, the algorithm will use the lowest index.
+#'
+#' @param measurement_date A single date as Date object
+#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#'
+#' @return
+#' @export
+#'
+#' @examples
+gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
+  measurement_date <- as.Date("1991-01-01")
+
+  pg <- prio_blank_grid()
+  cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+  res <- exactextractr::rasterize_polygons(cs, pg)
+  cmat <- cbind(terra::minmax(res)[1,]:terra::minmax(res)[2,], cs$gwcode)
+  res <- terra::classify(res, cmat)
+
+  represented_gwcodes <- terra::values(res) |> unique() |> as.vector()
+  countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
+  assertthat::assert_that(length(countries_not_included)== 0)
+  res <- as.factor(res)
+
+  # Still need to add provision for countries that are minorities the cells
+  # they occupy (Palestine would be an example).
+  res
+}
