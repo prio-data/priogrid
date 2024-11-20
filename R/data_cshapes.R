@@ -136,7 +136,7 @@ gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
   countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
   assertthat::assert_that(length(countries_not_included)== 0)
-  res <- as.factor(res)
+  res <- terra::as.factor(res)
 
   # Still need to add provision for countries that are minorities the cells
   # they occupy (Palestine would be an example).
