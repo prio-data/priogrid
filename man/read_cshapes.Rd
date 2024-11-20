@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_cshapes.R
 \name{read_cshapes}
 \alias{read_cshapes}
-\title{read_cshapes}
+\title{Reads the CShapes 2.0 raw data}
 \usage{
 read_cshapes()
 }
@@ -10,5 +10,5 @@ read_cshapes()
 an object of class sf
 }
 \description{
-Reads the CShapes 2.0 raw data
+It correctly formats gwsdate and gwedate as date objects, and adds a utility column date_interval.
 }
