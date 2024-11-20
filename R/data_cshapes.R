@@ -1,8 +1,8 @@
 cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid", "prio"))
 
-#' read_cshapes
-#'
 #' Reads the CShapes 2.0 raw data
+#'
+#' It correctly formats gwsdate and gwedate as date objects, and adds a utility column date_interval.
 #'
 #' @return an object of class sf
 #' @export
@@ -19,14 +19,12 @@ read_cshapes <- function(){
   return(df)
 }
 
-#' gen_changed_areas_base
-#'
 #' Finds the areas and dates where borders have changed in the cshapes dataset.
 #'
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @return a list, one sf df for each crossection
-gen_changed_areas_base <- function(cshp){
+cshapes_changed_areas_base <- function(cshp){
   compare_crossection <- function(crossection_date, cshp, dates_with_changes){
     message(crossection_date)
     if(which(crossection_date == dates_with_changes) == 1){
@@ -73,12 +71,12 @@ gen_changed_areas_base <- function(cshp){
   return(changed_areas)
 }
 
-#' @describeIn gen_changed_areas_base Finds the areas and dates where borders have changed in the cshapes dataset. Memoise/caching wrapper.
+#' @describeIn cshapes_changed_areas_base Finds the areas and dates where borders have changed in the cshapes dataset. Memoise/caching wrapper.
 #'
 #' @export
-gen_changed_areas <- memoise::memoise(gen_changed_areas_base, cache = cshapes_cache)
+cshapes_changed_areas <- memoise::memoise(cshapes_changed_areas_base, cache = cshapes_cache)
 
-#' gen_cshp_cover
+#' Share of grid-cell intersecting with the international state system (cShapes 2.0)
 #'
 #' Takes the cShapes data and returns
 #' a raster-mask that is true for the grid cells that intersects with country borders
@@ -88,13 +86,31 @@ gen_changed_areas <- memoise::memoise(gen_changed_areas_base, cache = cshapes_ca
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @export
-gen_cshp_cover <- function(measurement_date, cshp = read_cshapes()){
+gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
+
+  names(cshp_cover) <- "cshapes_cover_share"
+  return(cshp_cover)
+}
+
+#' Whether or not a grid-cell intersects with the international state system (cShapes 2.0)
+#'
+#' Takes the cShapes data and returns
+#' a raster-mask that is true for the grid cells that intersects with country borders
+#' included in the international state system at the measurement_date
+#'
+#' @param measurement_date A single date as Date object
+#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#'
+#' @export
+gen_cshapes_cover <- function(measurement_date, cshp = read_cshapes()){
+  cshp_cover <- gen_cshapes_cover_share(measurement_date, cshp)
+  pg <- prio_blank_grid()
   res <- terra::intersect(cshp_cover, pg)
-  names(res) <- "cshp_cover"
+  names(res) <- "cshapes_cover"
   return(res)
 }

@@ -70,7 +70,13 @@ PGOptionsManager <- R6::R6Class(
     #' @description Get ncol option
     get_ncol = function() private$options$ncol,
     #' @description Get rawfolder option
-    get_rawfolder = function() private$options$rawfolder,
+    get_rawfolder = function(){
+      if(is.na(private$options$rawfolder)){
+        stop("Please set local folder for raw data using pgoptions$set_rawfolder(path).")
+      } else{
+        private$options$rawfolder
+      }
+    },
     #' @description Get verbose option
     get_verbose = function() private$options$verbose,
 
@@ -93,7 +99,7 @@ PGOptionsManager <- R6::R6Class(
       ncol = 720,
       crs = "epsg:4326",
       extent = c("xmin" = -180, "xmax" =  180, "ymin" = -90, "ymax" = 90),
-      rawfolder = tempdir(),
+      rawfolder = NA,
       verbose = TRUE
     ),
 
