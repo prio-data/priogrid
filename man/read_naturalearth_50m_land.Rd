@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{read_naturalearth_50m_land}
 \alias{read_naturalearth_50m_land}
-\title{read_naturalearth_10m_physical}
+\title{Reads the Natural Earth 50m Physical Vector Data}
 \usage{
 read_naturalearth_50m_land()
 }
@@ -10,5 +10,5 @@ read_naturalearth_50m_land()
 an object of class sf
 }
 \description{
-Reads the Natural Earth 10m Physical Vector Data
+Reads the Natural Earth 50m Physical Vector Data
 }
