@@ -127,8 +127,6 @@ gen_cshapes_cover <- function(measurement_date, cshp = read_cshapes()){
 #'
 #' @examples
 gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
-  measurement_date <- as.Date("1991-01-01")
-
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   res <- exactextractr::rasterize_polygons(cs, pg)
