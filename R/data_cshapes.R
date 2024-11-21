@@ -117,8 +117,11 @@ gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @export
-gen_cshapes_cover <- function(measurement_date, cshp = read_cshapes()){
+gen_cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
   cshp_cover <- gen_cshapes_cover_share(measurement_date, cshp)
+
+  cshp_cover <- terra::ifel(cshp_cover < min_cover, NA, cshp_cover)
+
   pg <- prio_blank_grid()
   res <- terra::intersect(cshp_cover, pg)
   names(res) <- "cshapes_cover"
