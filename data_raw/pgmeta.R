@@ -31,7 +31,7 @@ cshapes <- dplyr::tibble(
 )
 
 natural_earth <- dplyr::tibble(
-  "src_name" = "NaturalEarth50mLand",
+  "src_name" = "NaturalEarth10mLand",
   "version" = "4.1.1",
   "cite" = "",
   "references" = list(c("")),
@@ -40,7 +40,7 @@ natural_earth <- dplyr::tibble(
   "spatial_extent" = list(c(-180, 180, -90, 90)),
   "crs" = "",
   "temporal_extent" = list(c()),
-  "data_url" = "https://naturalearth.s3.amazonaws.com/4.1.1/50m_physical/ne_50m_land.zip",
+  "data_url" = "https://naturalearth.s3.amazonaws.com/4.1.1/10m_physical/ne_10m_land.zip",
   "prio_mirror_url" = "",
   "status" = "survey"
 )
