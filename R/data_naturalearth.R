@@ -1,13 +1,13 @@
-#' Reads the Natural Earth 50m Physical Vector Data
+#' Reads the Natural Earth 10m Physical Vector Data
 #'
 #' @return an object of class sf
 #' @export
-read_naturalearth_50m_land <- function(){
-  f <- get_pgfile("NaturalEarth50mLand", "4.1.1")
+read_naturalearth_10m_land <- function(){
+  f <- get_pgfile("NaturalEarth10mLand", "4.1.1")
   #unzip(f, list = T)
   unzip_to <- file.path(dirname(f), tools::file_path_sans_ext(basename(f)))
   unzip(f, exdir = unzip_to)
-  return(sf::st_read(file.path(dirname(f), tools::file_path_sans_ext(basename(f)), "ne_50m_land.shp")))
+  return(sf::st_read(file.path(dirname(f), tools::file_path_sans_ext(basename(f)), "ne_10m_land.shp")))
 }
 
 #' Share of grid-cell that intersects with land (NaturalEarth)
@@ -17,7 +17,7 @@ read_naturalearth_50m_land <- function(){
 #'
 #' @export
 gen_naturalearth_cover_share <- function(){
-  ne <- read_naturalearth_50m_land()
+  ne <- read_naturalearth_10m_land()
   pg <- prio_blank_grid()
 
   ne_combined <- ne |> dplyr::summarize(geometry = sf::st_combine(geometry))
@@ -38,8 +38,10 @@ gen_naturalearth_cover_share <- function(){
 #' a raster-mask that is true for the grid cells that intersects with land.
 #'
 #' @export
-gen_naturalearth_cover <- function(){
+gen_naturalearth_cover <- function(min_cover = 0){
   land_cover_share <- gen_naturalearth_cover_share()
+
+  land_cover_share <- terra::ifel(land_cover_share < min_cover, NA, land_cover_share)
   pg <- prio_blank_grid()
   ne_cover <- terra::intersect(land_cover_share, pg)
   names(ne_cover) <- "naturalearth_cover"
