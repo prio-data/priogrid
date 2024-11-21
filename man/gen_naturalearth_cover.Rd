@@ -4,7 +4,7 @@
 \alias{gen_naturalearth_cover}
 \title{Whether or not a grid-cell intersects with land (NaturalEarth)}
 \usage{
-gen_naturalearth_cover()
+gen_naturalearth_cover(min_cover = 0)
 }
 \description{
 Takes the NaturalEarth 50m raster and returns

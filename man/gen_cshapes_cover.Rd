@@ -4,7 +4,7 @@
 \alias{gen_cshapes_cover}
 \title{Whether or not a grid-cell intersects with the international state system (cShapes 2.0)}
 \usage{
-gen_cshapes_cover(measurement_date, cshp = read_cshapes())
+gen_cshapes_cover(measurement_date, min_cover = 0, cshp = read_cshapes())
 }
 \arguments{
 \item{measurement_date}{A single date as Date object}
