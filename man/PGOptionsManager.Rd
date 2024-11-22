@@ -16,18 +16,25 @@ pgoptions$print()
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-PGOptionsManager-new}{\code{PGOptionsManager$new()}}
+\item \href{#method-PGOptionsManager-reset_options}{\code{PGOptionsManager$reset_options()}}
 \item \href{#method-PGOptionsManager-set_extent}{\code{PGOptionsManager$set_extent()}}
 \item \href{#method-PGOptionsManager-set_crs}{\code{PGOptionsManager$set_crs()}}
 \item \href{#method-PGOptionsManager-set_nrow}{\code{PGOptionsManager$set_nrow()}}
 \item \href{#method-PGOptionsManager-set_ncol}{\code{PGOptionsManager$set_ncol()}}
 \item \href{#method-PGOptionsManager-set_rawfolder}{\code{PGOptionsManager$set_rawfolder()}}
 \item \href{#method-PGOptionsManager-set_verbose}{\code{PGOptionsManager$set_verbose()}}
+\item \href{#method-PGOptionsManager-set_temporal_resolution}{\code{PGOptionsManager$set_temporal_resolution()}}
+\item \href{#method-PGOptionsManager-set_start_date}{\code{PGOptionsManager$set_start_date()}}
+\item \href{#method-PGOptionsManager-set_end_date}{\code{PGOptionsManager$set_end_date()}}
 \item \href{#method-PGOptionsManager-get_crs}{\code{PGOptionsManager$get_crs()}}
 \item \href{#method-PGOptionsManager-get_extent}{\code{PGOptionsManager$get_extent()}}
 \item \href{#method-PGOptionsManager-get_nrow}{\code{PGOptionsManager$get_nrow()}}
 \item \href{#method-PGOptionsManager-get_ncol}{\code{PGOptionsManager$get_ncol()}}
 \item \href{#method-PGOptionsManager-get_rawfolder}{\code{PGOptionsManager$get_rawfolder()}}
 \item \href{#method-PGOptionsManager-get_verbose}{\code{PGOptionsManager$get_verbose()}}
+\item \href{#method-PGOptionsManager-get_temporal_resolution}{\code{PGOptionsManager$get_temporal_resolution()}}
+\item \href{#method-PGOptionsManager-get_start_date}{\code{PGOptionsManager$get_start_date()}}
+\item \href{#method-PGOptionsManager-get_end_date}{\code{PGOptionsManager$get_end_date()}}
 \item \href{#method-PGOptionsManager-print}{\code{PGOptionsManager$print()}}
 \item \href{#method-PGOptionsManager-clone}{\code{PGOptionsManager$clone()}}
 }
@@ -39,6 +46,16 @@ pgoptions$print()
 Initialize options
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$new()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-reset_options"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-reset_options}{}}}
+\subsection{Method \code{reset_options()}}{
+Reset options to defaults.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$reset_options()}\if{html}{\out{</div>}}
 }
 
 }
@@ -145,6 +162,58 @@ Set verbose output of functions if true.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-set_temporal_resolution"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-set_temporal_resolution}{}}}
+\subsection{Method \code{set_temporal_resolution()}}{
+Set temporal resolution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$set_temporal_resolution(value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{value}}{String increment of temporal sequence. See \link[base:seq.Date]{base::seq.Date} for more information.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-set_start_date"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-set_start_date}{}}}
+\subsection{Method \code{set_start_date()}}{
+Set start date
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$set_start_date(value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{value}}{The date used globally to build PRIO-GRID. The month and day are used to define the
+measurement date within the temporal resolution (e.g., as.Date(1900-06-30) would slice June 30 every year for compatible data sources).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-set_end_date"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-set_end_date}{}}}
+\subsection{Method \code{set_end_date()}}{
+Set end date
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$set_end_date(value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{value}}{a date or "today"}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PGOptionsManager-get_crs"></a>}}
 \if{latex}{\out{\hypertarget{method-PGOptionsManager-get_crs}{}}}
 \subsection{Method \code{get_crs()}}{
@@ -201,6 +270,36 @@ Get rawfolder option
 Get verbose option
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_verbose()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-get_temporal_resolution"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-get_temporal_resolution}{}}}
+\subsection{Method \code{get_temporal_resolution()}}{
+Get temporal resolution option
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_temporal_resolution()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-get_start_date"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-get_start_date}{}}}
+\subsection{Method \code{get_start_date()}}{
+Get start date option
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_start_date()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-get_end_date"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-get_end_date}{}}}
+\subsection{Method \code{get_end_date()}}{
+Get end date option
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_end_date()}\if{html}{\out{</div>}}
 }
 
 }

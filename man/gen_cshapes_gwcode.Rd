@@ -2,15 +2,13 @@
 % Please edit documentation in R/data_cshapes.R
 \name{gen_cshapes_gwcode}
 \alias{gen_cshapes_gwcode}
-\title{The Gleditsch-Ward (cShapes 2.0 version) code in each grid-cell}
+\title{Generate cshapes_gwcode variable}
 \usage{
-gen_cshapes_gwcode(measurement_date, cshp = read_cshapes())
+gen_cshapes_gwcode(cshp = read_cshapes())
 }
 \arguments{
-\item{measurement_date}{A single date as Date object}
-
 \item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
 }
 \description{
-Uses max area for cells with multiple countries. If actual tie, the algorithm will use the lowest index.
+The variable can be generated with up to daily temporal resolution.
 }
