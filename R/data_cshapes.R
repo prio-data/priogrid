@@ -21,7 +21,7 @@ read_cshapes <- function(){
 
 #' Finds the areas and dates where borders have changed in the cshapes dataset.
 #'
-#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @return a list, one sf df for each crossection
 cshapes_changed_areas_base <- function(cshp){
@@ -83,7 +83,7 @@ cshapes_changed_areas <- memoise::memoise(cshapes_changed_areas_base, cache = cs
 #' included in the international state system at the measurement_date
 #'
 #' @param measurement_date A single date as Date object
-#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @export
 cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
@@ -114,7 +114,7 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' included in the international state system at the measurement_date
 #'
 #' @param measurement_date A single date as Date object
-#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @export
 cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
@@ -133,7 +133,7 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
 #' Uses max area for cells with multiple countries. If actual tie, the algorithm will use the lowest index.
 #'
 #' @param measurement_date A single date as Date object
-#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @return
 #' @export
@@ -161,7 +161,7 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 #'
 #' The variable can be generated with up to daily temporal resolution.
 #'
-#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @return
 #' @export
