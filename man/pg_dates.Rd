@@ -5,8 +5,8 @@
 \title{Get a sequence of dates}
 \usage{
 pg_dates(
-  start_date = pgoptions$start_date(),
-  end_date = pgoptions$end_date(),
+  start_date = pgoptions$get_start_date(),
+  end_date = pgoptions$get_end_date(),
   temporal_resolution = pgoptions$get_temporal_resolution()
 )
 }
