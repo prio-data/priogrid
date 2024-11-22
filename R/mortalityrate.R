@@ -1,7 +1,4 @@
-#' @title Read SEDAC Global Infant Mortality Rates
-#' @description Reads the SEDAC Global Infant Mortality Rates dataset from a GeoTIFF file.
-#' @details Handles quirks like negative values (coded as -9999) by setting them to NA.
-#' @return A `terra::rast` object representing infant mortality rates.
+
 
 read_sedac_global_infant_mortality_rates <- function() {
 
@@ -14,11 +11,6 @@ read_sedac_global_infant_mortality_rates <- function() {
 
   return(r)
 }
-
-#' @title Generate SEDAC Global Infant Mortality Rates Raster
-#' @description Processes the SEDAC dataset to ensure compatibility with PRIO Grid.
-#' @param data A `terra::rast` object (default: result of `read_sedac_global_infant_mortality_rates`).
-#' @return A `terra::rast` object compatible with PRIO Grid.
 
 gen_sedac_global_infant_mortality_rates <- function(data = read_sedac_global_infant_mortality_rates()) {
   pg <- prio_blank_grid()
