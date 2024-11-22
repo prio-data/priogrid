@@ -19,6 +19,11 @@ PGOptionsManager <- R6::R6Class(
       private$load_options()
     },
 
+    #' @description Reset options to defaults.
+    reset_options = function(){
+      pgconfig_cache$set("config", private$defaults)
+    },
+
     #' @description Set output spatial extent
     #' @param value A vector with extent, c(xmin, xmax, ymin, ymax)
     set_extent = function(value) {
@@ -61,6 +66,28 @@ PGOptionsManager <- R6::R6Class(
       private$save_options()
     },
 
+    #' @description Set temporal resolution
+    #' @param value String increment of temporal sequence. See [base::seq.Date] for more information.
+    set_temporal_resolution = function(value){
+      private$options$temporal_resolution <- value
+      private$save_options()
+    },
+
+    #' @description Set start date
+    #' @param value The date used globally to build PRIO-GRID. The month and day are used to define the
+    #'   measurement date within the temporal resolution (e.g., as.Date(1900-06-30) would slice June 30 every year for compatible data sources).
+    set_start_date = function(value){
+      private$options$start_date <- value
+      private$save_options()
+    },
+
+    #' @description Set end date
+    #' @param value a date or "today"
+    set_end_date = function(value){
+      private$options$end_date <- value
+      private$save_options()
+    },
+
     #' @description Get crs option
     get_crs = function() private$options$crs,
     #' @description Get extent option
@@ -79,6 +106,18 @@ PGOptionsManager <- R6::R6Class(
     },
     #' @description Get verbose option
     get_verbose = function() private$options$verbose,
+    #' @description Get temporal resolution option
+    get_temporal_resolution = function() private$options$temporal_resolution,
+    #' @description Get start date option
+    get_start_date = function() as.Date(private$options$start_date),
+    #' @description Get end date option
+    get_end_date = function(){
+      end_date <- private$options$end_date
+      if(end_date == "today"){
+        end_date <- Sys.Date()
+      }
+      return(end_date)
+    },
 
     #' @description Prints all options
     print = function() {
@@ -89,19 +128,27 @@ PGOptionsManager <- R6::R6Class(
       cat("  extent:", private$options$extent, "\n")
       cat("  rawfolder:", private$options$rawfolder, "\n")
       cat("  verbose:", private$options$verbose, "\n")
+      cat("  temporal resolution:", private$options$temporal_resolution, "\n")
+      cat("  start date:", private$options$start_date, "\n")
+      cat("  end date:", private$options$end_date, "\n")
       invisible(self)
     }
   ),
 
   private = list(
-    options = list(
+    defaults = list(
       nrow = 360,
       ncol = 720,
       crs = "epsg:4326",
       extent = c("xmin" = -180, "xmax" =  180, "ymin" = -90, "ymax" = 90),
       rawfolder = NA,
-      verbose = TRUE
+      verbose = TRUE,
+      temporal_resolution = "1 year",
+      start_date = "1850-01-01",
+      end_date = "today"
     ),
+
+    options = list(),
 
     load_options = function() {
       if (!cachem::is.key_missing(pgconfig_cache$get("config"))) {
