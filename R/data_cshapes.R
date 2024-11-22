@@ -86,7 +86,7 @@ cshapes_changed_areas <- memoise::memoise(cshapes_changed_areas_base, cache = cs
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @export
-gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
+cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
   pg <- prio_blank_grid()
@@ -117,8 +117,8 @@ gen_cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
 #'
 #' @export
-gen_cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
-  cshp_cover <- gen_cshapes_cover_share(measurement_date, cshp)
+cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
+  cshp_cover <- cshapes_cover_share(measurement_date, cshp)
 
   cshp_cover <- terra::ifel(cshp_cover < min_cover, NA, cshp_cover)
 
@@ -139,7 +139,7 @@ gen_cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshap
 #' @export
 #'
 #' @examples
-gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
+cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   res <- exactextractr::rasterize_polygons(cs, pg)
@@ -149,9 +149,24 @@ gen_cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
   countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
   assertthat::assert_that(length(countries_not_included)== 0)
-  res <- terra::as.factor(res)
+  # res <- terra::as.factor(res)
 
   # Still need to add provision for countries that are minorities the cells
   # they occupy (Palestine would be an example).
   res
+}
+
+
+gen_cshapes_gwcode <- function(cshp = read_cshapes()){
+  time_slices <- pg_dates()
+  temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
+  time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  r <- cshapes_gwcode(time_slices[1], cshp = cshp)
+  for(i in 2:length(time_slices)){
+    t <- time_slices[i]
+    terra::add(r) <- cshapes_gwcode(t, cshp = cshp)
+  }
+  names(r) <- as.character(time_slices)
+  r
 }
