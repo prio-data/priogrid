@@ -42,6 +42,53 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
   return(pg)
 }
 
+#' Get a sequence of dates
+#'
+#' This is a wrapper of [base::seq.Date], only with defaults that can be set in the options.
+#'
+#'
+#' @param from starting date
+#' @param to end date
+#' @param by increment of sequence. See details in [base::seq.Date].
+#'
+#' @return
+#' @export
+#'
+#' @examples
+pg_dates <- function(start_date = pgoptions$get_start_date(),
+                     end_date = pgoptions$get_end_date(),
+                     temporal_resolution = pgoptions$get_temporal_resolution()){
+  seq.Date(start_date, end_date, temporal_resolution)
+}
+
+#' Converts raster with variable to data.frame
+#'
+#' Assumes that the name of the raster layer is the name of the variable if static is true,
+#' otherwise, the user must supply the correct variable name. If static is false,
+#' the name of the raster layer is assumed to be the time variable.
+#'
+#' @param rast SpatRaster
+#' @param static True if no temporal dimension, False else.
+#' @param varname The variable name, only required if static is False.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' ne <- gen_naturalearth_cover()
+#' rast_to_df(ne)
+rast_to_df <- function(rast, static = TRUE, varname = NULL){
+  pg <- prio_blank_grid()
+  df <- c(pg, rast) |> as.data.frame()
+
+  if(static){
+    return(df)
+  } else{
+    # Assumes variable names in raster are dates.
+    df <- df |> tidyr::pivot_longer(cols = -dplyr::all_of(c("pgid")), names_to = "measurement_date", values_to = varname)
+    return(df)
+  }
+}
 
 #' Transform raster to PRIO-GRID format
 #'
