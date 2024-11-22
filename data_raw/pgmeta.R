@@ -18,7 +18,7 @@
 cshapes <- dplyr::tibble(
   "src_name" = "CShapes",
   "version" = "2.0",
-  "cite" = "some_bib_key",
+  "cite" = "schvitzMappingInternationalSystem2022",
   "references" = list(c("other", "bib", "keys")),
   "license" = "https://creativecommons.org/licenses/by-nc-sa/4.0/",
   "spatial_resolution" = "vector",
