@@ -157,6 +157,16 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 }
 
 
+#' Generate cshapes_gwcode variable
+#'
+#' The variable can be generated with up to daily temporal resolution.
+#'
+#' @param cshp The CShapes dataset, for instance as given by [priogrid::read_cshapes()]
+#'
+#' @return
+#' @export
+#'
+#' @examples
 gen_cshapes_gwcode <- function(cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
