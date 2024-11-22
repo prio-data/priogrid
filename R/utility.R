@@ -55,8 +55,8 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 #' @export
 #'
 #' @examples
-pg_dates <- function(start_date = pgoptions$start_date(),
-                     end_date = pgoptions$end_date(),
+pg_dates <- function(start_date = pgoptions$get_start_date(),
+                     end_date = pgoptions$get_end_date(),
                      temporal_resolution = pgoptions$get_temporal_resolution()){
   seq.Date(start_date, end_date, temporal_resolution)
 }
