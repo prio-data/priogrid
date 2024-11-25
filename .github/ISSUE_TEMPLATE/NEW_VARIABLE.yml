@@ -3,12 +3,12 @@ description: Here you can suggest a new variable to be added to the PRIO-GRID me
 title: "[New Variable]: "
 labels: ["feature"]
 assignees:
-  - kvelleby
+  - kvelleby  
 body:
   - type: markdown
-attributes:
-  value: |
-    Thanks for taking the time to suggest a new variable for PRIO-GRID!
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new variable for PRIO-GRID!
   - type: input
     id: contact
     attributes:
