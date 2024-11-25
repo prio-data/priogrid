@@ -36,8 +36,8 @@ body:
   - type: textarea
     id: variable_description
     attributes:
-      label: Description of variable
-      description: A description of how the sources can be used to calculate the variable.
+      label: "Description of variable"
+      description: "A description of how the sources can be used to calculate the variable."
       placeholder: "ex. Capital distance-weighted (using "caplong" and "caplat" in cShapes) battle-related deaths (using "best" in GED)."
     validations:
-      required: true
+      required: true   
