@@ -46,7 +46,7 @@ body:
     attributes:
       label: Citation
       description: The proper way to cite the data source.
-      placeholder: ex. Schvitz, Guy, Luc Girardin, Seraina Rüegger, Nils B. Weidmann, Lars-Erik Cederman, and Kristian Skrede Gleditsch. 2022. “Mapping the International System, 1886-2019: The CShapes 2.0 Dataset.” Journal of Conflict Resolution 66 (1): 144–61. https://doi.org/10.1177/00220027211013563.
+      placeholder: "ex. Schvitz, Guy, Luc Girardin, Seraina Rüegger, Nils B. Weidmann, Lars-Erik Cederman, and Kristian Skrede Gleditsch. 2022. “Mapping the International System, 1886-2019: The CShapes 2.0 Dataset.” Journal of Conflict Resolution 66 (1): 144–61. https://doi.org/10.1177/00220027211013563."
     validations:
       required: true
   - type: dropdown
