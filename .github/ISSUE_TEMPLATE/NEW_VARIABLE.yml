@@ -34,7 +34,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: description
+    id: variable_description
     attributes:
       label: Description of variable
       description: A description of how the sources can be used to calculate the variable.
