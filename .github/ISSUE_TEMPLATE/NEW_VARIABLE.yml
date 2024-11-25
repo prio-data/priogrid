@@ -1,0 +1,43 @@
+name: New Variable
+description: Here you can suggest a new variable to be added to the PRIO-GRID meta-data.
+title: "[New Variable]: "
+labels: ["feature"]
+assignees:
+  - kvelleby
+body:
+  - type: markdown
+attributes:
+  value: |
+    Thanks for taking the time to suggest a new variable for PRIO-GRID!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: input
+    id: variable_name
+    attributes:
+      label: Variable name
+      description: Your suggested name for the variable
+      placeholder: ex. capital_conflict
+    validations:
+      required: false
+  - type: textarea
+    id: source_names
+    attributes:
+      label: Required sources
+      description: The full name of sources required to calculate the variable
+      placeholder: ex. ETH ICR cShapes and UCDP GED
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of variable
+      description: A description of how the sources can be used to calculate the variable.
+      placeholder: ex. Capital distance-weighted (using "caplong" and "caplat" in cShapes) battle-related deaths (using "best" in GED).
+    validations:
+      required: true
