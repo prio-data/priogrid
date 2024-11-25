@@ -26,14 +26,6 @@ body:
     validations:
       required: false
   - type: textarea
-    id: source_names
-    attributes:
-      label: Required sources
-      description: The full name of sources required to calculate the variable
-      placeholder: ex. ETH ICR cShapes and UCDP GED
-    validations:
-      required: true   
-  - type: textarea
     id: var_desc
     attributes:
       label: Explain your idea
@@ -41,3 +33,12 @@ body:
       placeholder: "ex. Capital distance-weighted (using "caplong" and "caplat" in cShapes) battle-related deaths (using "best" in GED)."
     validations:
       required: true   
+  - type: textarea
+    id: source_names
+    attributes:
+      label: Required sources
+      description: The full name of sources required to calculate the variable
+      placeholder: ex. ETH ICR cShapes and UCDP GED
+    validations:
+      required: true   
+
