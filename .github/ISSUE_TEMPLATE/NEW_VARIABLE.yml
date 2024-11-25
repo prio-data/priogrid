@@ -26,19 +26,11 @@ body:
     validations:
       required: false
   - type: textarea
-    id: var_desc
+    id: variable_idea
     attributes:
       label: Explain your idea
-      description: Make a description of how the sources can be used to calculate the variable.
-      placeholder: "ex. Capital distance-weighted (using "caplong" and "caplat" in cShapes) battle-related deaths (using "best" in GED)."
-    validations:
-      required: true   
-  - type: textarea
-    id: source_names
-    attributes:
-      label: Required sources
-      description: The full name of sources required to calculate the variable
-      placeholder: ex. ETH ICR cShapes and UCDP GED
+      description: Include the full name of sources required to calculate the variable and how you would calculate it.
+      placeholder: "ex. Using caplong and caplat from ETH ICR cShapes and best from UCDP GED, calculate the capital distance-weigthed battle-related deaths in each cell."
     validations:
       required: true   
 
