@@ -103,6 +103,6 @@ body:
     attributes:
       label: Academic references
       description: References where the source data is used or discussed, or other relevant further reading.
-      placeholder: ex. Weidmann, Nils B., Doreen Kuse, and Kristian Skrede Gleditsch. 2010. “The Geography of the International System: The CShapes Dataset.” International Interactions 36 (1): 86–106. https://doi.org/10.1080/03050620903554614.
+      placeholder: "ex. Weidmann, Nils B., Doreen Kuse, and Kristian Skrede Gleditsch. 2010. “The Geography of the International System: The CShapes Dataset.” International Interactions 36 (1): 86–106. https://doi.org/10.1080/03050620903554614."
     validations:
       required: false
