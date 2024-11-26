@@ -115,7 +115,11 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
 
   subdirs <- file_info |> dplyr::filter(!subdir_exists) |> dplyr::pull(filename) |> dirname() |> unique()
   if(length(subdirs) > 0){
-    dir.create(file.path(destfolder, subdirs))
+    directories_to_create <- file.path(destfolder, subdirs)
+    for(d in directories_to_create){
+      dir.create(d)
+    }
+
   }
 
   pb <- utils::txtProgressBar(min = 0, max = total_files, style = 3)
