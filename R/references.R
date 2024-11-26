@@ -9,25 +9,3 @@ get_bibliography <- function(keys, bib.style = "authoryear", as_biblatex = FALSE
     print(to_cite, .opts = list("bib.style" = bib.style))
   }
 }
-
-
-#' Add source to PRIO-GRID meta data
-#'
-#' @return
-#' @export
-#'
-#' @examples
-add_source <- function(){
-
-}
-
-#' Add variable to PRIO-GRID variable list
-#'
-#' @return
-#' @export
-#'
-#' @examples
-add_variable <- function(){
-
-}
-

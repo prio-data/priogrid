@@ -1,4 +1,11 @@
 
+
+pgmeta <- readxl::read_excel("data_raw/pgmeta_raw.xlsx")
+
+con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+dplyr::copy_to(con, pgmeta)
+pgmeta2 <- dplyr::tbl(con, "pgmeta")
+
 # <- dplyr::tibble(
 #   "src_name" = "",
 #   "version" = "",
