@@ -1,5 +1,5 @@
 
-#' read_geostat
+#' read_geostat_CHG_out
 #'
 #' Reads the Geostat usual residence one year prior to cencus
 #' moved from outside of reporting country
