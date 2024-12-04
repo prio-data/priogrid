@@ -57,5 +57,3 @@ CHG_out <- function() {
 }
 
 
-p <- plot(gs)
-p
