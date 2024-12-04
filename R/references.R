@@ -1,5 +1,5 @@
 get_bibliography <- function(keys, bib.style = "authoryear", as_biblatex = FALSE){
-  bib <- RefManageR::ReadBib("data/pgmeta.bib")
+  bib <- RefManageR::ReadBib("data/bibliography.bib")
   to_cite <- bib[key = keys]
 
 
