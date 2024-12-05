@@ -1,30 +1,16 @@
-#' Download data from url and save to file
-#'
-#' This is a simple wrapper around [httr2::request()] and [httr2::req_perform()].
-#'
-#' @param url The url of the data you want to download.
-#' @param filepath The filepath to where you want to store the data locally.
-#'
-#' @return
-#' @export
-#'
-#' @examples
-download_file_httr2 <- function(url, filepath){
-  url |>
-    httr2::request() |>
-    httr2::req_perform(path = filepath)
-}
-
 #' Search PRIO-GRID meta-data
 #'
 #' Use regex to search the meta-data for the data you are interested in.
 #'
 #' @param search_string
+#' @param bib_element Supports author, journal, year, or title. If null, the search
+#' will not search bibliography elements.
 #'
-#' @return
+#' @return list with data.frames
 #' @export
 #'
 #' @examples
+#' pgsearch("GHSL")
 pgsearch <- function(search_string, bib_element = NULL){
   in_name <- pgsources |> dplyr::filter(grepl(search_string, source_name, ignore.case = T))
   in_version <- pgsources |> dplyr::filter(grepl(search_string, source_version, ignore.case = T))
@@ -56,6 +42,7 @@ pgsearch <- function(search_string, bib_element = NULL){
 #' @export
 #'
 #' @examples
+#' file_info <- pg_rawfiles()
 pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
   if(use_mirror){
     urls <- pgsources |>
@@ -99,9 +86,17 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 #' @export
 #'
 #' @examples
+#' res <- check_pgsourcefiles()
 check_pgsourcefiles <- function(){
   destfolder <- pgoptions$get_rawfolder()
   file_info <- pg_rawfiles()
+
+  lacking_pgchecksum <- dplyr::anti_join(file_info, pgchecksum, by = c("source_name", "source_version", "id", "filename"))
+
+  if(nrow(lacking_pgchecksum)>0){
+    stop("pgchecksum data is outdated. Please contact the administrators of PRIO-GRID.")
+  }
+
   local_checksum <- file_info |> dplyr::mutate(
     local_md5 = tools::md5sum(file.path(destfolder, filename))
   ) |> dplyr::select(source_name, source_version, id, filename, local_md5)

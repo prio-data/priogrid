@@ -34,3 +34,22 @@
 #'   \item{created_at}{A date stamp when this entry was last updated.}
 #' }
 "pgsources"
+
+#' PRIO-GRID File Checksums (MD5)
+#'
+#' We provide here file checksums for all the files we have used to test and build PRIO-GRID.
+#' You can test if you have managed to download the same files using [check_pgsourcefiles()]
+#' after you have downloaded the files using [download_pg_rawdata()].
+#'
+#' @format ## `pgchecksum`
+#' A data frame with 22 rows and 5 columns:
+#' \describe{
+#'   \item{source_name}{Full name of the source, preferably including the institution hosting it.}
+#'   \item{source_version}{The version of the data source, as noted by the creator. If none, use the publication year.}
+#'   \item{id}{A Unique Universal Identifier (UUID)}
+#'   \item{filename}{The filename of a file from the data source.}
+#'   \item{md5}{The MD5 checksum of the correct data to use.}
+#' }
+"pgchecksum"
+
+
