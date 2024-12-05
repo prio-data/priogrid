@@ -119,10 +119,11 @@ check_pgsourcefiles <- function(){
 #' @param src_name character, the source name
 #' @param version character, the version number
 #'
-#' @return
+#' @return file path, string
 #' @export
 #'
 #' @examples
+#' get_pgfile(source_name = "ETH ICR cShapes", source_version = "2.0", id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 get_pgfile <- function(source_name, source_version, id){
   f <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
                                       source_version == !!rlang::enquo(source_version),
@@ -154,10 +155,12 @@ get_pgfile <- function(source_name, source_version, id){
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
 #'
-#' @return
+#' @return data.frame Download summary
 #' @export
 #'
 #' @examples
+#' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
+#' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
 download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
   destfolder <- pgoptions$get_rawfolder()
 
