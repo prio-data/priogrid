@@ -7,7 +7,9 @@ cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid"
 #' @return an object of class sf
 #' @export
 read_cshapes <- function(){
-  f <- get_pgfile("CShapes", "2.0")
+  f <- get_pgfile(source_name = "ETH ICR cShapes",
+                  source_version = "2.0",
+                  id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
   df <- sf::read_sf(f) # CShapes comes in GeoJSON format
   df <- df |>
     dplyr::mutate(
@@ -126,6 +128,30 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
   res <- terra::intersect(cshp_cover, pg)
   names(res) <- "cshapes_cover"
   return(res)
+}
+
+#' Generate cshapes_cover_share variable
+#'
+#' The variable can be generated with up to daily temporal resolution.
+#'
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
+#'
+#' @return
+#' @export
+#'
+#' @examples
+gen_cshapes_cover_share <- function(cshp = read_cshapes()){
+  time_slices <- pg_dates()
+  temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
+  time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  r <- cshapes_cover_share(time_slices[1], cshp = cshp)
+  for(i in 2:length(time_slices)){
+    t <- time_slices[i]
+    terra::add(r) <- cshapes_cover_share(t, cshp = cshp)
+  }
+  names(r) <- as.character(time_slices)
+  r
 }
 
 #' The Gleditsch-Ward (cShapes 2.0 version) code in each grid-cell
