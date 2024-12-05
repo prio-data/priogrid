@@ -2,13 +2,18 @@
 % Please edit documentation in R/references.R
 \name{get_bibliography}
 \alias{get_bibliography}
-\title{Get bibliography given a bibkey}
+\title{Get the PRIO-GRID bibliography}
 \usage{
 get_bibliography(keys = NULL, as_biblatex = FALSE)
 }
 \arguments{
-\item{as_biblatex}{}
+\item{keys}{A vector of strings, bibkeys found in \link{pgsources}.}
+
+\item{as_biblatex}{Set to true if you want results in biblatex instead of an R object.}
 }
 \description{
-Get bibliography given a bibkey
+The bibliography contains all citations and further references that are
+included in \link{pgsources}. You can also get a subset of references,
+and you can get the  bibliography,
+or references as biblatex.
 }
