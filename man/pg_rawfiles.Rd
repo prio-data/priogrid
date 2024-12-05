@@ -4,7 +4,7 @@
 \alias{pg_rawfiles}
 \title{Extract url- and file-info from PRIO-GRID metadata}
 \usage{
-pg_rawfiles(use_mirror = TRUE)
+pg_rawfiles(use_mirror = TRUE, only_file_extensions = FALSE)
 }
 \arguments{
 \item{use_mirror}{Boolean. Whether or not to use PRIO-GRID mirror.}

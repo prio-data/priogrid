@@ -4,7 +4,7 @@
 \alias{get_pgfile}
 \title{Get file-path on local system to a data source in PRIO-GRID}
 \usage{
-get_pgfile(src_name, version)
+get_pgfile(source_name, source_version, id)
 }
 \arguments{
 \item{src_name}{character, the source name}
