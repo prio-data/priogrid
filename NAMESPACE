@@ -2,11 +2,9 @@
 
 export(check_pgsourcefiles)
 export(create_pg_indices)
-export(cshapes_changed_areas)
 export(cshapes_cover)
 export(cshapes_cover_share)
 export(cshapes_gwcode)
-export(download_file_httr2)
 export(download_pg_rawdata)
 export(extract_bib_elements)
 export(gen_cshapes_cover_share)

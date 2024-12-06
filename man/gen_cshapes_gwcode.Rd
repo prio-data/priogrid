@@ -9,6 +9,12 @@ gen_cshapes_gwcode(cshp = read_cshapes())
 \arguments{
 \item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
 }
+\value{
+SpatRast
+}
 \description{
 The variable can be generated with up to daily temporal resolution.
+}
+\examples{
+# gwcode <- gen_cshapes_gwcode()
 }

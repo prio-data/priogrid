@@ -6,9 +6,15 @@
 \usage{
 check_pgsourcefiles()
 }
+\value{
+data.frame
+}
 \description{
 Here, we use \link{pgchecksum}, which we created when testing
 PRIO-GRID, and test it against a similar method for your own
 local files. This is to verify that you are using the same files
 as we used to build PRIO-GRID.
+}
+\examples{
+res <- check_pgsourcefiles()
 }

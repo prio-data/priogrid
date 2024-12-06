@@ -11,9 +11,15 @@ get_bibliography(keys = NULL, as_biblatex = FALSE)
 
 \item{as_biblatex}{Set to true if you want results in biblatex instead of an R object.}
 }
+\value{
+BibEntry or BibTex
+}
 \description{
 The bibliography contains all citations and further references that are
 included in \link{pgsources}. You can also get a subset of references,
-and you can get the  bibliography,
+and you can get the \link[RefManageR:RefManageR-package]{RefManageR::RefManageR-package} bibliography,
 or references as biblatex.
+}
+\examples{
+get_bibliography(keys = "schvitzMappingInternationalSystem2022")
 }

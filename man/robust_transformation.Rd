@@ -19,7 +19,8 @@ robust_transformation(r, agg_fun, disagg_method = "near", cores = 1, ...)
 SpatRaster
 }
 \description{
-Transform raster to PRIO-GRID format
+This should generally not be used. Write exactly what you need to transform the data instead.
+It can be used as a general template for how to transform data, however.
 }
 \examples{
 r <- prio_blank_grid(ncol = 1440, nrow = 720)

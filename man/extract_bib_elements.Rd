@@ -13,7 +13,13 @@ extract_bib_elements(citation_liststr, bib_element = "author", ...)
 
 \item{...}{}
 }
+\value{
+list with BibEntry-element classes or vectors with character strings
+}
 \description{
 In \link{pgsources}, citations are semi-colon separated. This function splits
 these into individual keys and get the bibliography element from each key.
+}
+\examples{
+extract_bib_elements(pgsources$citation_keys[1])
 }

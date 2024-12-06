@@ -21,63 +21,6 @@ read_cshapes <- function(){
   return(df)
 }
 
-#' Finds the areas and dates where borders have changed in the cshapes dataset.
-#'
-#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
-#'
-#' @return a list, one sf df for each crossection
-cshapes_changed_areas_base <- function(cshp){
-  compare_crossection <- function(crossection_date, cshp, dates_with_changes){
-    message(crossection_date)
-    if(which(crossection_date == dates_with_changes) == 1){
-      changed_areas <- cshp[crossection_date %within% cshp$date_interval,]
-      changed_areas$crossection_date <- crossection_date
-    } else {
-      last_date <- dates_with_changes[which(crossection_date == dates_with_changes) - 1]
-      past_crossection <- cshp[last_date %within% cshp$date_interval,]
-      cshp_crossection <- cshp[crossection_date %within% cshp$date_interval,]
-      new_changes <- lengths(sf::st_equals_exact(cshp_crossection, past_crossection, par = 0)) == 0
-
-      if(any(new_changes)){
-        cshp_crossection$changes <- new_changes
-        cshp_crossection <- dplyr::filter(cshp_crossection, changes)
-        # Combine and buffer to make sure area-calculations are done again for bordering cells. st_union to check validity.
-        geometry <- sf::st_union(sf::st_buffer(sf::st_combine(cshp_crossection), 1))
-        changed_areas <- sf::st_sf(geometry)
-        changed_areas$crossection_date <- crossection_date
-
-      } else{
-        changed_areas <- NULL
-      }
-    }
-    return(changed_areas)
-  }
-
-  use_s2 <- sf::sf_use_s2()
-  sf::sf_use_s2(FALSE)
-
-  dates_with_changes <- sort(unique(unique(cshp$gwsdate), unique(cshp$gwsdate)))
-
-  #Find all areas and dates where there have been changes since last day.
-  changed_areas <- lapply(dates_with_changes, compare_crossection, cshp = cshp, dates_with_changes = dates_with_changes)
-
-  changed_areas <- parallel::mclapply(dates_with_changes, compare_crossection, cshp, dates_with_changes)
-  changed_areas[sapply(changed_areas, is.null)] <- NULL
-
-  crossection_dates <- sapply(changed_areas, function(x) unique(x$crossection_date))
-  crossection_dates <- as.character(as.Date(crossection_dates, origin = as.Date("1970-1-1")))
-
-  names(changed_areas) <- crossection_dates
-
-  sf::sf_use_s2(use_s2)
-  return(changed_areas)
-}
-
-#' @describeIn cshapes_changed_areas_base Finds the areas and dates where borders have changed in the cshapes dataset. Memoise/caching wrapper.
-#'
-#' @export
-cshapes_changed_areas <- memoise::memoise(cshapes_changed_areas_base, cache = cshapes_cache)
-
 #' Share of grid-cell intersecting with the international state system (cShapes 2.0)
 #'
 #' Takes the cShapes data and returns
@@ -88,6 +31,8 @@ cshapes_changed_areas <- memoise::memoise(cshapes_changed_areas_base, cache = cs
 #' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @export
+#' @examples
+#' # cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
 cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
@@ -119,6 +64,8 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
 #' @export
+#' @examples
+#' # cshapes_cover_one_cross_section <- cshapes_cover(as.Date("2010-01-01"))
 cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
   cshp_cover <- cshapes_cover_share(measurement_date, cshp)
 
@@ -136,10 +83,11 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
 #'
 #' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
-#' @return
+#' @return SpatRast
 #' @export
 #'
 #' @examples
+#' # cshapes_cover_share <- gen_cshapes_cover_share()
 gen_cshapes_cover_share <- function(cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
@@ -161,10 +109,11 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes()){
 #' @param measurement_date A single date as Date object
 #' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
-#' @return
+#' @return SpatRast
 #' @export
 #'
 #' @examples
+#' # gwcode_one_cross_section <- cshapes_gwcode(as.Date("2010-01-01"))
 cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
@@ -189,10 +138,11 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 #'
 #' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
 #'
-#' @return
+#' @return SpatRast
 #' @export
 #'
 #' @examples
+#' # gwcode <- gen_cshapes_gwcode()
 gen_cshapes_gwcode <- function(cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
