@@ -3,7 +3,9 @@
 #' @return an object of class sf
 #' @export
 read_naturalearth_10m_land <- function(){
-  f <- get_pgfile("NaturalEarth10mLand", "4.1.1")
+  f <- get_pgfile(source_name = "Natural Earth Physical 10m Land",
+                  source_version = "5.1.1",
+                  id = "92da9800-4520-4e87-a855-b28255452189")
   #unzip(f, list = T)
   unzip_to <- file.path(dirname(f), tools::file_path_sans_ext(basename(f)))
   unzip(f, exdir = unzip_to)

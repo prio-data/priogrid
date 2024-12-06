@@ -51,10 +51,11 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 #' @param to end date
 #' @param by increment of sequence. See details in [base::seq.Date].
 #'
-#' @return
+#' @return Date vector
 #' @export
 #'
 #' @examples
+#' pg_dates()
 pg_dates <- function(start_date = pgoptions$get_start_date(),
                      end_date = pgoptions$get_end_date(),
                      temporal_resolution = pgoptions$get_temporal_resolution()){
@@ -71,7 +72,7 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
 #' @param static True if no temporal dimension, False else.
 #' @param varname The variable name, only required if static is False.
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -91,6 +92,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 }
 
 #' Transform raster to PRIO-GRID format
+#'
+#' This should generally not be used. Write exactly what you need to transform the data instead.
+#' It can be used as a general template for how to transform data, however.
 #'
 #' @param r Raster to transform
 #' @param agg_fun Aggregation function, see terra::aggregate

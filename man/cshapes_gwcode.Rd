@@ -11,6 +11,12 @@ cshapes_gwcode(measurement_date, cshp = read_cshapes())
 
 \item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
 }
+\value{
+SpatRast
+}
 \description{
 Uses max area for cells with multiple countries. If actual tie, the algorithm will use the lowest index.
+}
+\examples{
+# gwcode_one_cross_section <- cshapes_gwcode(as.Date("2010-01-01"))
 }
