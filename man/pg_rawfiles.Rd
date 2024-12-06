@@ -15,3 +15,6 @@ data.frame
 \description{
 Extract url- and file-info from PRIO-GRID metadata
 }
+\examples{
+file_info <- pg_rawfiles()
+}

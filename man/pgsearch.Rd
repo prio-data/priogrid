@@ -7,8 +7,18 @@
 pgsearch(search_string, bib_element = NULL)
 }
 \arguments{
-\item{search_string}{}
+\item{search_string}{A character string to search in source name, source version, source id, source tags, spatial extent, temporal
+resolution, or in bibliography elements.}
+
+\item{bib_element}{Supports author, journal, year, or title. If null, the search
+will not search bibliography elements.}
+}
+\value{
+list with data.frames
 }
 \description{
 Use regex to search the meta-data for the data you are interested in.
+}
+\examples{
+pgsearch("GHSL")
 }

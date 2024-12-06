@@ -13,7 +13,13 @@ get_bib_element(key, element = "author", as_character = TRUE)
 
 \item{as_character}{Return the result as a string instead of a RefManageR class object.}
 }
+\value{
+BibEntry-element class or vector with character strings
+}
 \description{
 Get bibliography information. Is used by \code{\link[=pgsearch]{pgsearch()}} to search \link{pgsources} based
 on bibliography information.
+}
+\examples{
+get_bib_element("schvitzMappingInternationalSystem2022", element = "author")
 }

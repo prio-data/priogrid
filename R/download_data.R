@@ -2,7 +2,8 @@
 #'
 #' Use regex to search the meta-data for the data you are interested in.
 #'
-#' @param search_string
+#' @param search_string A character string to search in source name, source version, source id, source tags, spatial extent, temporal
+#' resolution, or in bibliography elements.
 #' @param bib_element Supports author, journal, year, or title. If null, the search
 #' will not search bibliography elements.
 #'
@@ -82,7 +83,7 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 #' local files. This is to verify that you are using the same files
 #' as we used to build PRIO-GRID.
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 #' @examples

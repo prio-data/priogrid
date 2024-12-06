@@ -13,6 +13,9 @@ rast_to_df(rast, static = TRUE, varname = NULL)
 
 \item{varname}{The variable name, only required if static is False.}
 }
+\value{
+data.frame
+}
 \description{
 Assumes that the name of the raster layer is the name of the variable if static is true,
 otherwise, the user must supply the correct variable name. If static is false,
