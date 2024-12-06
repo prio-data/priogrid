@@ -13,6 +13,8 @@ We rely on the simple-features and terra packages. Please see these packages for
 ```
 install.packages("renv")
 renv::install("prio-data/priogrid")
+
+source("data-raw/pgsources.R)
 ```
 
 ## Useage
