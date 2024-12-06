@@ -16,3 +16,6 @@ Takes the cShapes data and returns
 a raster-mask that is true for the grid cells that intersects with country borders
 included in the international state system at the measurement_date
 }
+\examples{
+# cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
+}

@@ -4,13 +4,19 @@
 \alias{get_pgfile}
 \title{Get file-path on local system to a data source in PRIO-GRID}
 \usage{
-get_pgfile(src_name, version)
+get_pgfile(source_name, source_version, id)
 }
 \arguments{
 \item{src_name}{character, the source name}
 
 \item{version}{character, the version number}
 }
+\value{
+file path, string
+}
 \description{
 To look up src_name and version in PRIO-GRID, see \link{pgmeta} or \code{\link[=pg_rawfiles]{pg_rawfiles()}}.
+}
+\examples{
+get_pgfile(source_name = "ETH ICR cShapes", source_version = "2.0", id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 }
