@@ -11,9 +11,7 @@ A data frame with 4 rows and 5 columns:
 \describe{
 \item{name}{Full name of the variable.}
 \item{static}{Boolean. Whether the variable varies over time or not.}
-\item{source_name}{Full name of the source, preferably including the institution hosting it.}
-\item{source_version}{The version of the data source, as noted by the creator. If none, use the publication year.}
-\item{source_id}{The Unique Universal Identifier (UUID) of the source}
+\item{source_ids}{Comma-separated string. The Unique Universal Identifier (UUID) of the sources used to build the variable.}
 }
 }
 }
