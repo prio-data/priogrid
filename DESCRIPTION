@@ -24,6 +24,7 @@ Imports:
     terra,
     memoise,
     exactextractr,
-    httr2
+    httr2,
+    curl
 Depends: 
     R (>= 2.10)
