@@ -155,6 +155,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @param overwrite Whether or not to download and overwrite files already in local folder.
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
+#' @param resume If true, will also download files that did not finish download last time the function was run.
 #'
 #' @return data.frame Download summary
 #' @export
@@ -162,7 +163,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @examples
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
-download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
+download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL, resume = TRUE){
   destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
@@ -183,6 +184,14 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
   file_info$file_exists <- file.exists(file.path(destfolder, file_info$filename))
   file_info$subdir_exists <- dir.exists(file.path(destfolder, dirname(file_info$filename)))
 
+  if(resume){
+    if(file.exists(file.path(destfolder, "tmp", "unfinished_downloads.rds"))){
+      did_not_finish <- readRDS(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+      file_info <- file_info |>
+        dplyr::mutate(file_exists = dplyr::if_else((file.path(destfolder, filename) %in% did_not_finish), FALSE, file_exists))
+    }
+  }
+
   if(!overwrite){
     file_info <- file_info |> dplyr::filter(!file_exists)
   }
@@ -199,5 +208,15 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
     }
   }
 
-  curl::multi_download(file_info$url, file.path(destfolder, file_info$filename))
+  download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
+  did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE)), status_code != 0) |> dplyr::pull(destfile)
+  if(length(did_not_finish)>0){
+    if(!dir.exists(file.path(destfolder, "tmp"))){
+      dir.create(file.path(destfolder, "tmp"))
+    }
+    saveRDS(did_not_finish, file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+  } else {
+    unlink(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+  }
+
 }
