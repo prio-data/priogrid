@@ -18,3 +18,6 @@ The variable can be generated with up to daily temporal resolution.
 \examples{
 # cshapes_cover_share <- gen_cshapes_cover_share()
 }
+\references{
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}

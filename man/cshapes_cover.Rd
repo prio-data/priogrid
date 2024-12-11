@@ -19,3 +19,6 @@ included in the international state system at the measurement_date
 \examples{
 # cshapes_cover_one_cross_section <- cshapes_cover(as.Date("2010-01-01"))
 }
+\references{
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}
