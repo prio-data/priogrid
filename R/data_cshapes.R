@@ -6,6 +6,8 @@ cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid"
 #'
 #' @return an object of class sf
 #' @export
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 read_cshapes <- function(){
   f <- get_pgfile(source_name = "ETH ICR cShapes",
                   source_version = "2.0",
@@ -33,6 +35,8 @@ read_cshapes <- function(){
 #' @export
 #' @examples
 #' # cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
@@ -66,6 +70,8 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' @export
 #' @examples
 #' # cshapes_cover_one_cross_section <- cshapes_cover(as.Date("2010-01-01"))
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
   cshp_cover <- cshapes_cover_share(measurement_date, cshp)
 
@@ -88,6 +94,8 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
 #'
 #' @examples
 #' # cshapes_cover_share <- gen_cshapes_cover_share()
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 gen_cshapes_cover_share <- function(cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
@@ -114,6 +122,8 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes()){
 #'
 #' @examples
 #' # gwcode_one_cross_section <- cshapes_gwcode(as.Date("2010-01-01"))
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
   pg <- prio_blank_grid()
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
@@ -143,6 +153,8 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 #'
 #' @examples
 #' # gwcode <- gen_cshapes_gwcode()
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 gen_cshapes_gwcode <- function(cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))

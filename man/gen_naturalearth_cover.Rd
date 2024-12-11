@@ -10,3 +10,6 @@ gen_naturalearth_cover(min_cover = 0)
 Takes the NaturalEarth 50m raster and returns
 a raster-mask that is true for the grid cells that intersects with land.
 }
+\references{
+\insertRef{naturalearthLand10mPhysical2024}{priogrid}
+}
