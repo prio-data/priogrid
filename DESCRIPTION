@@ -25,6 +25,7 @@ Imports:
     memoise,
     exactextractr,
     httr2,
-    curl
+    curl,
+    Rdpack
 Depends: 
     R (>= 2.10)
