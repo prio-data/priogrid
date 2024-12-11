@@ -20,3 +20,6 @@ Uses max area for cells with multiple countries. If actual tie, the algorithm wi
 \examples{
 # gwcode_one_cross_section <- cshapes_gwcode(as.Date("2010-01-01"))
 }
+\references{
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}

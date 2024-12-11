@@ -12,3 +12,6 @@ an object of class sf
 \description{
 It correctly formats gwsdate and gwedate as date objects, and adds a utility column date_interval.
 }
+\references{
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}

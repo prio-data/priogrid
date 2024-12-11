@@ -35,6 +35,23 @@
 #' }
 "pgsources"
 
+#' PRIO-GRID Variables
+#'
+#' These are the variables available in PRIO-GRID.
+#'
+#' The static information is used when building PRIO-GRID, as there are different naming conventions
+#' for the data depending on whether the data is static or with a temporal-dimension.
+#'
+#' @format ## `pgvariables`
+#' A data frame with 4 rows and 5 columns:
+#' \describe{
+#'   \item{name}{Full name of the variable.}
+#'   \item{static}{Boolean. Whether the variable varies over time or not.}
+#'   \item{source_ids}{Comma-separated string. The Unique Universal Identifier (UUID) of the sources used to build the variable.}
+#' }
+"pgvariables"
+
+
 #' PRIO-GRID File Checksums (MD5)
 #'
 #' We provide here file checksums for all the files we have used to test and build PRIO-GRID.

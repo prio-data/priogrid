@@ -43,7 +43,13 @@ gwcode <- gen_cshapes_gwcode()
 gwcode |> rast_to_df(static = FALSE, varname = "gwcode")
 
 # How to cite the data.
-get_bibliography(keys = "schvitzMappingInternationalSystem2022") 
+get_bibliography(keys = "schvitzMappingInternationalSystem2022")
+
+# How to calculate all PRIO-GRID (takes a long time)
+calculate_pgvariables() # Saves all rasters in your raw_folder/priogrid/version 
+pg <- collate_pgdata()
+pg$static |> head()
+pg$non_static |> head()
 ```
 
 We are planning on having a server automatically calculating and updating PRIO-GRID and serving the end-result on a web-server (for a few resolutions). However, anyone can re-calculate in their own
