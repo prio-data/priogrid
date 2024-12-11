@@ -14,7 +14,7 @@
 #' @examples
 #' get_bibliography(keys = "schvitzMappingInternationalSystem2022")
 get_bibliography <- function(keys = NULL, as_biblatex = FALSE){
-  bib <- RefManageR::ReadBib("data/bibliography.bib")
+  bib <- RefManageR::ReadBib("inst/bibliography.bib")
 
   if(is.null(keys)){
     to_cite <- bib
