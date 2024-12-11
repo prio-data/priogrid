@@ -18,3 +18,6 @@ The variable can be generated with up to daily temporal resolution.
 \examples{
 # gwcode <- gen_cshapes_gwcode()
 }
+\references{
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}

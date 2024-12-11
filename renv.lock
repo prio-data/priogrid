@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.4.0",
+    "Version": "4.4.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -22,18 +22,18 @@
     },
     "KernSmooth": {
       "Package": "KernSmooth",
-      "Version": "2.23-22",
+      "Version": "2.23-24",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "stats"
       ],
-      "Hash": "2fecebc3047322fa5930f74fae5de70f"
+      "Hash": "9f33a1ee37bbe8919eb2ec4b9f2473a5"
     },
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-60.2",
+      "Version": "7.3-61",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -44,11 +44,11 @@
         "stats",
         "utils"
       ],
-      "Hash": "2f342c46163b0b54d7b64d1f798e2c78"
+      "Hash": "0cafd6f0500e5deba33be22c46bf6055"
     },
     "Matrix": {
       "Package": "Matrix",
-      "Version": "1.7-0",
+      "Version": "1.7-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -61,7 +61,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "1920b2f11133b12350024297d8a4ff4a"
+      "Hash": "5122bb14d8736372411f955e1b16bc8a"
     },
     "R6": {
       "Package": "R6",
@@ -969,7 +969,7 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-164",
+      "Version": "3.1-166",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -979,7 +979,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "a623a2239e642806158bc4dc3f51565d"
+      "Hash": "ccbb8846be320b627e6aa2b4616a2ded"
     },
     "openssl": {
       "Package": "openssl",
@@ -1336,9 +1336,14 @@
     },
     "sf": {
       "Package": "sf",
-      "Version": "1.0-17",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "1.0-19",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "r-spatial",
+      "RemoteRepo": "sf",
+      "RemoteRef": "main",
+      "RemoteSha": "39e8f51372e19237d95cd406ae4683a253c3c5b2",
       "Requirements": [
         "DBI",
         "R",
@@ -1355,7 +1360,7 @@
         "units",
         "utils"
       ],
-      "Hash": "453a7d0263eae87a7831242a74fe9b60"
+      "Hash": "40ca2cb236b984b03fad99ede1e57e7e"
     },
     "sp": {
       "Package": "sp",
@@ -1425,15 +1430,20 @@
     },
     "terra": {
       "Package": "terra",
-      "Version": "1.7-78",
-      "Source": "Repository",
-      "Repository": "RSPM",
+      "Version": "1.8-3",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "rspatial",
+      "RemoteRepo": "terra",
+      "RemoteRef": "master",
+      "RemoteSha": "289bee253d41e4242c8cbca7f31f24a45c392a6e",
       "Requirements": [
         "R",
         "Rcpp",
         "methods"
       ],
-      "Hash": "8f020def0792119cb98bd8f696dab22d"
+      "Hash": "f991056fee3c246934fab4d1d1313977"
     },
     "textshaping": {
       "Package": "textshaping",
