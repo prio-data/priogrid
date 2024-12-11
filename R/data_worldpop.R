@@ -2,7 +2,9 @@
 #'
 #' Note: The shapefile for international flowlines does not seem to work.
 #'
-#' @return list
+#' @param print_metadata True if you want to print meta-information about the migration data.
+#'
+#' @return list of data.frames (centroids (sf), flowlines_internal (sf), migration_internal)
 #' @export
 #' @references
 #' \insertRef{ceausuSexDisaggregatedInternalInternational2021}{priogrid}
