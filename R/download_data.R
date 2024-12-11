@@ -215,8 +215,36 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL, resume = TR
       dir.create(file.path(destfolder, "tmp"))
     }
     saveRDS(did_not_finish, file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+    warning("Some files did not completely finish downloading (printed below). Run unfinished_downloads() to see which files did not finish.
+Try running download_pg_rawdata() again (will resume download if possible).
+If the problem persists, please file an issue on <https://github.com/prio-data/priogrid/issues> with results from unfinished_downloads().")
   } else {
     unlink(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
   }
 
+}
+
+#' Prints data.frame with unfinished downloads
+#'
+#' [download_pg_rawdata()] stores unfinished downloads if it is interrupted by
+#' the user or the server. Use this function to see which files that failed
+#' to completely download. This information is also used internally by [download_pg_rawdata()]
+#' to resume file downloads.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' unfinished_downloads()
+unfinished_downloads <- function(){
+  f <- file.path(destfolder, "tmp", "unfinished_downloads.rds")
+  if(file.exists(f)){
+    did_not_finish <- readRDS(f)
+    file_info <- pg_rawfiles()
+
+    file_info |>
+      dplyr::filter(file.path(destfolder, filename) %in% did_not_finish)
+  } else{
+    print("No unfinished downloads found.")
+  }
 }
