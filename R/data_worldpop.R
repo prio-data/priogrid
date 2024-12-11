@@ -4,7 +4,8 @@
 #'
 #' @return list
 #' @export
-#'
+#' @references
+#' \insertRef{ceausuSexDisaggregatedInternalInternational2021}{priogrid}
 read_worldpop_migration_flows <- function(print_metadata = FALSE){
   zip_file <- get_pgfile(source_name = "WorldPop Migration Flows",
                   source_version = "2019",
