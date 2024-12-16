@@ -60,6 +60,21 @@ geostat <- dplyr::tibble(
   "status" = "staging"
 )
 
-pgmeta <- dplyr::bind_rows(cshapes, natural_earth, geostat)
+geo_pko <- dplyr::tibble(
+  "src_name" = "Geo-PKO",
+  "version" = "2.1",
+  "cite" = "some_bib_key",
+  "references" = list(c("other", "bib", "keys")),
+  "license" = "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "spatial_resolution" = "Raster",
+  "spatial_extent" = list(c(-180, 180, 90, 90)),
+  "crs" = "epsg:4326",
+  "temporal_extent" = list(c(1994, 2020)),
+  "data_url" = "https://www.uu.se/download/18.24f546b0193ac54c49a1af2b/1734079168492/c_818704-l_1-k_geo_pko_v.2.2.xlsx",
+  "prio_mirror_url" = "",
+  "status" = "staging"
+  )
+
+pgmeta <- dplyr::bind_rows(cshapes, natural_earth, geostat, geo_pko)
 
 usethis::use_data(pgmeta, overwrite = TRUE)
