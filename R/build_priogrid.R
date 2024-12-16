@@ -73,7 +73,7 @@ collate_pgdata <- function(){
   non_static <- expand.grid(pgid = create_pg_indices(), measurement_date = pg_dates())
   static <- dplyr::tibble()
   for(i in 1:nrow(variables)){
-    r <- readRDS(variables$fname[i])
+    r <- readRDS(file.path(priogrid_outpath, variables$fname[i]))
     if(class(r) == "PackedSpatRaster"){
       r <- terra::unwrap(r)
     }
