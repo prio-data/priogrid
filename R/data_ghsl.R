@@ -34,14 +34,27 @@ read_ghsl_population_grid <- function(){
   return(r)
 }
 
+#' Generate GHSL GHS Population Grid
+#'
+#' This aggregates the high-resolution population grid to PRIO-GRID level across all 5-year intervals (1975 - 2030).
+#'
+#' This does take some time.
+#'
+#' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' # r <- gen_ghsl_population_grid()
+#' @references
+#' \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}
 gen_ghsl_population_grid <- function(){
   r <- read_ghsl_population_grid()
 
   pg <- prio_blank_grid()
   ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")
   res <- terra::resample(ragg, pg, method = "near")
-
-  names(res) <- mydate
 
   return(res)
 }
