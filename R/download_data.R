@@ -163,7 +163,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @examples
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
-download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL, resume = TRUE){
+download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TRUE){
   destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
@@ -237,14 +237,14 @@ If the problem persists, please file an issue on <https://github.com/prio-data/p
 #' @examples
 #' unfinished_downloads()
 unfinished_downloads <- function(){
-  f <- file.path(destfolder, "tmp", "unfinished_downloads.rds")
+  f <- file.path(pgoptions$get_rawfolder(), "tmp", "unfinished_downloads.rds")
   if(file.exists(f)){
     did_not_finish <- readRDS(f)
     file_info <- pg_rawfiles()
 
     file_info |>
-      dplyr::filter(file.path(destfolder, filename) %in% did_not_finish)
+      dplyr::filter(file.path(pgoptions$get_rawfolder(), filename) %in% did_not_finish)
   } else{
-    print("No unfinished downloads found.")
+    message("No unfinished downloads found.")
   }
 }
