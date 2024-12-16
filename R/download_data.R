@@ -163,7 +163,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @examples
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
-download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TRUE){
+download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TRUE, max_retry = 10){
   destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
@@ -209,8 +209,16 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
   }
 
   download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
-  did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE)), status_code != 0) |> dplyr::pull(destfile)
-  if(length(did_not_finish)>0){
+  did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+  retry_number <- 0
+  while(retry_number < max_retry){
+    retry_number <- retry_number + 1
+    unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
+    download_report <- curl::multi_download(unfinished_files_to_download, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
+    did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+  }
+
+  if(nrow(did_not_finish)>0){
     if(!dir.exists(file.path(destfolder, "tmp"))){
       dir.create(file.path(destfolder, "tmp"))
     }
