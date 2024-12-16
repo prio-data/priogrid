@@ -63,9 +63,11 @@ calculate_pgvariables <- function(gen_functions = NULL, overwrite = FALSE){
 #' nrow(pg$non_static)
 collate_pgdata <- function(){
   priogrid_outpath <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"))
-  variables_files <- list.files(priogrid_outpath)
-  variables <- pgvariables |> dplyr::filter(name %in% (variables_files |> tools::file_path_sans_ext()))
-  variables$fname <- list.files(priogrid_outpath, full.names = T)
+  variable_files <- list.files(priogrid_outpath)
+  variable_names <- variable_files |> tools::file_path_sans_ext()
+  names(variable_files) <- variable_names
+  variables <- pgvariables |> dplyr::filter(name %in% variable_names)
+  variables$fname <- variable_files[match(variables$name, names(variable_files))]
 
 
   non_static <- expand.grid(pgid = create_pg_indices(), measurement_date = pg_dates())
