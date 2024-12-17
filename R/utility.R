@@ -111,36 +111,36 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
 
   pg <- prio_blank_grid()
 
-  equal_projection <- crs(r) == crs(pg)
+  equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
-    r <- project(r, crs(pg))
+    r <- terra::project(r, terra::crs(pg))
   }
 
-  equal_extent <- ext(r) == ext(pg)
+  equal_extent <- terra::ext(r) == terra::ext(pg)
   if(!equal_extent){
-    tmp <- rast(ext(pg),
-               crs = crs(r),
+    tmp <- terra::rast(terra::ext(pg),
+               crs = terra::crs(r),
                ncol = ncol(r),
                nrow = nrow(r))
-    r <- resample(r, tmp, method = "near", threads = T)
+    r <- terra::resample(r, tmp, method = "near", threads = T)
   }
 
-  higher_resolution <- res(r) < res(pg)
+  higher_resolution <- terra::res(r) < terra::res(pg)
   if(any(higher_resolution)){
-    r <- aggregate(r,
-                  fact = res(pg)/res(r),
+    r <- terra::aggregate(r,
+                  fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
                   cores = cores, ...)
   }
 
-  lower_resolution <- res(r) > res(pg)
+  lower_resolution <- terra::res(r) > terra::res(pg)
   if(any(lower_resolution)){
-    r <- disagg(r,
-               fact = res(r)/res(pg),
+    r <- terra::disagg(r,
+               fact = terra::res(r)/terra::res(pg),
                method = disagg_method)
   }
 
-  r <- resample(r, pg, method = "near", threads = T)
+  r <- terra::resample(r, pg, method = "near", threads = T)
 
   return(r)
 }
