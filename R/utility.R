@@ -107,41 +107,48 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #' robust_transformation(r, agg_fun = "mean")
 #' @export
 robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1, ...){
-  require(terra)
-
   pg <- prio_blank_grid()
+  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  dir.create(temporary_directory)
 
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
-    r <- terra::project(r, terra::crs(pg))
+    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::project(r, terra::crs(pg), filename = tmp1)
   }
 
   equal_extent <- terra::ext(r) == terra::ext(pg)
   if(!equal_extent){
-    tmp <- terra::rast(terra::ext(pg),
+    extent_template <- terra::rast(terra::ext(pg),
                crs = terra::crs(r),
                ncol = ncol(r),
                nrow = nrow(r))
-    r <- terra::resample(r, tmp, method = "near", threads = T)
+    tmp2 <- tempfile(pattern = "resample", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::resample(r, extent_template, method = "near", filename = tmp2, threads = T)
   }
 
   higher_resolution <- terra::res(r) < terra::res(pg)
   if(any(higher_resolution)){
+    tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
     r <- terra::aggregate(r,
                   fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
+                  filename = tmp3,
                   cores = cores, ...)
   }
 
   lower_resolution <- terra::res(r) > terra::res(pg)
   if(any(lower_resolution)){
+    tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
     r <- terra::disagg(r,
                fact = terra::res(r)/terra::res(pg),
-               method = disagg_method)
+               method = disagg_method,
+               filename = tmp4)
   }
 
   r <- terra::resample(r, pg, method = "near", threads = T)
 
+  unlink(temporary_directory, recursive = TRUE)
   return(r)
 }
 
