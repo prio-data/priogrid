@@ -213,8 +213,9 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
   retry_number <- 0
   while(retry_number < max_retry){
     retry_number <- retry_number + 1
+    message(paste("Download interrupted, retrying...", retry_number))
     unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
-    download_report <- curl::multi_download(unfinished_files_to_download, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
+    download_report <- curl::multi_download(unfinished_files_to_download$url, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
     did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
   }
 
