@@ -51,10 +51,11 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 #' @param to end date
 #' @param by increment of sequence. See details in [base::seq.Date].
 #'
-#' @return
+#' @return Date vector
 #' @export
 #'
 #' @examples
+#' pg_dates()
 pg_dates <- function(start_date = pgoptions$get_start_date(),
                      end_date = pgoptions$get_end_date(),
                      temporal_resolution = pgoptions$get_temporal_resolution()){
@@ -71,7 +72,7 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
 #' @param static True if no temporal dimension, False else.
 #' @param varname The variable name, only required if static is False.
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -92,6 +93,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 
 #' Transform raster to PRIO-GRID format
 #'
+#' This should generally not be used. Write exactly what you need to transform the data instead.
+#' It can be used as a general template for how to transform data, however.
+#'
 #' @param r Raster to transform
 #' @param agg_fun Aggregation function, see terra::aggregate
 #' @param disagg_method Disaggregation method, see terra::disagg
@@ -103,41 +107,48 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #' robust_transformation(r, agg_fun = "mean")
 #' @export
 robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1, ...){
-  require(terra)
-
   pg <- prio_blank_grid()
+  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  dir.create(temporary_directory)
 
-  equal_projection <- crs(r) == crs(pg)
+  equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
-    r <- project(r, crs(pg))
+    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::project(r, terra::crs(pg), filename = tmp1)
   }
 
-  equal_extent <- ext(r) == ext(pg)
+  equal_extent <- terra::ext(r) == terra::ext(pg)
   if(!equal_extent){
-    tmp <- rast(ext(pg),
-               crs = crs(r),
+    extent_template <- terra::rast(terra::ext(pg),
+               crs = terra::crs(r),
                ncol = ncol(r),
                nrow = nrow(r))
-    r <- resample(r, tmp, method = "near", threads = T)
+    tmp2 <- tempfile(pattern = "resample", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::resample(r, extent_template, method = "near", filename = tmp2, threads = T)
   }
 
-  higher_resolution <- res(r) < res(pg)
+  higher_resolution <- terra::res(r) < terra::res(pg)
   if(any(higher_resolution)){
-    r <- aggregate(r,
-                  fact = res(pg)/res(r),
+    tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::aggregate(r,
+                  fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
+                  filename = tmp3,
                   cores = cores, ...)
   }
 
-  lower_resolution <- res(r) > res(pg)
+  lower_resolution <- terra::res(r) > terra::res(pg)
   if(any(lower_resolution)){
-    r <- disagg(r,
-               fact = res(r)/res(pg),
-               method = disagg_method)
+    tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::disagg(r,
+               fact = terra::res(r)/terra::res(pg),
+               method = disagg_method,
+               filename = tmp4)
   }
 
-  r <- resample(r, pg, method = "near", threads = T)
+  r <- terra::resample(r, pg, method = "near", threads = T)
 
+  unlink(temporary_directory, recursive = TRUE)
   return(r)
 }
 

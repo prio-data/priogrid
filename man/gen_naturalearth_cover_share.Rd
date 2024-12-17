@@ -10,3 +10,6 @@ gen_naturalearth_cover_share()
 Takes the NaturalEarth 10m raster and returns a raster
 in PRIO-GRID resolution with the share of the cell that intersects with land.
 }
+\references{
+\insertRef{naturalearthLand10mPhysical2024}{priogrid}
+}

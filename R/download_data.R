@@ -1,18 +1,38 @@
-#' Download data from url and save to file
+#' Search PRIO-GRID meta-data
 #'
-#' This is a simple wrapper around [httr2::request()] and [httr2::req_perform()].
+#' Use regex to search the meta-data for the data you are interested in.
 #'
-#' @param url The url of the data you want to download.
-#' @param filepath The filepath to where you want to store the data locally.
+#' @param search_string A character string to search in source name, source version, source id, source tags, spatial extent, temporal
+#' resolution, or in bibliography elements.
+#' @param bib_element Supports author, journal, year, or title. If null, the search
+#' will not search bibliography elements.
 #'
-#' @return
+#' @return list with data.frames
 #' @export
 #'
 #' @examples
-download_file_httr2 <- function(url, filepath){
-  url |>
-    httr2::request() |>
-    httr2::req_perform(path = filepath)
+#' pgsearch("GHSL")
+pgsearch <- function(search_string, bib_element = NULL){
+  in_name <- pgsources |> dplyr::filter(grepl(search_string, source_name, ignore.case = T))
+  in_version <- pgsources |> dplyr::filter(grepl(search_string, source_version, ignore.case = T))
+  in_id <- pgsources |> dplyr::filter(grepl(search_string, id, ignore.case = T))
+  in_tags <- pgsources |> dplyr::filter(grepl(search_string, tags, ignore.case = T))
+  in_spatial_extent <- pgsources |> dplyr::filter(grepl(search_string, spatial_extent, ignore.case = T))
+  in_temporal_resolution <- pgsources |> dplyr::filter(grepl(search_string, temporal_resolution, ignore.case = T))
+
+  if(is.null(bib_element)){
+    return(list("in_name" = in_name, "in_version" = in_version, "in_id" = in_id,
+                "in_tags" = in_tags, "in_spatial_extent" = in_spatial_extent, "in_temporal_resolution" = in_temporal_resolution))
+  } else{
+    in_bib_element <- pgsources |>
+      dplyr::rowwise() |>
+      dplyr::mutate(bib_element = list(extract_bib_elements(citation_keys) |> unlist())) |>
+      dplyr::filter(grepl(search_string, bib_element, ignore.case = T) |> any())
+
+    return(list("in_name" = in_name, "in_version" = in_version, "in_id" = in_id,
+                "in_tags" = in_tags, "in_spatial_extent" = in_spatial_extent, "in_temporal_resolution" = in_temporal_resolution,
+                "in_element" = in_bib_element))
+  }
 }
 
 #' Extract url- and file-info from PRIO-GRID metadata
@@ -23,19 +43,74 @@ download_file_httr2 <- function(url, filepath){
 #' @export
 #'
 #' @examples
-pg_rawfiles <- function(use_mirror = TRUE){
+#' file_info <- pg_rawfiles()
+pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
   if(use_mirror){
-    urls <- pgmeta |>
-      dplyr::mutate(url = dplyr::if_else(prio_mirror_url != "", prio_mirror_url, data_url)) |>
-      dplyr::select(src_name, version, url)
+    urls <- pgsources |>
+      dplyr::mutate(url = dplyr::if_else(is.na(prio_mirror), download_url, prio_mirror)) |>
+      dplyr::select(id, source_name, source_version, url)
   } else{
-    urls <- pgmeta |> dplyr::select(src_name, version, url = data_url)
+    urls <- pgsources |> dplyr::select(id, source_name, source_version, url = download_url)
   }
 
+  urls <- urls[!is.na(urls$url),]
+
+  parse_source_url <- function(url){
+    if(grepl("urls/", url) |> all()){
+      url <- readLines(file.path("data", url))
+    }
+    return(list(url))
+  }
+
+  urls$url_list <- sapply(urls$url, parse_source_url)
+
   # Unnest because url-column can be a list of urls
-  urls <- tidyr::unnest(urls, cols = c(url))
-  urls <- urls |> dplyr::mutate(filename = file.path(paste(src_name, version, sep = "_"), basename(url)))
+  urls <- tidyr::unnest(urls, cols = c(url_list)) |> dplyr::select(source_name, source_version, id, url = url_list)
+  urls <- urls |> dplyr::mutate(filename = basename(url)  |> stringr::str_remove("\\?.*"))
+
+  if(only_file_extensions){
+    # For testing
+    return(tools::file_ext(urls$filename))
+  }
+  urls <- urls |> dplyr::mutate(filename = file.path(source_name, source_version, id, filename))
   return(urls)
+}
+
+#' Test if MD5 checksums of local files are the same as a tested set of files
+#'
+#' Here, we use [pgchecksum], which we created when testing
+#' PRIO-GRID, and test it against a similar method for your own
+#' local files. This is to verify that you are using the same files
+#' as we used to build PRIO-GRID.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' res <- check_pgsourcefiles()
+check_pgsourcefiles <- function(){
+  destfolder <- pgoptions$get_rawfolder()
+  file_info <- pg_rawfiles()
+
+  lacking_pgchecksum <- dplyr::anti_join(file_info, pgchecksum, by = c("source_name", "source_version", "id", "filename"))
+
+  if(nrow(lacking_pgchecksum)>0){
+    stop("pgchecksum data is outdated. Please contact the administrators of PRIO-GRID.")
+  }
+
+  local_checksum <- file_info |> dplyr::mutate(
+    local_md5 = tools::md5sum(file.path(destfolder, filename))
+  ) |> dplyr::select(source_name, source_version, id, filename, local_md5)
+
+  df <- dplyr::left_join(local_checksum, pgchecksum, by = c("source_name", "source_version", "id", "filename")) |>
+    dplyr::mutate(files_are_equal = local_md5 == md5)
+
+  if(all(df$files_are_equal)){
+    print("All files in your local storage are similar to a tested set.")
+  } else{
+    print("Some files in your local storage are different to a tested set. Please see the returned data.frame for details.")
+  }
+  return(df)
 }
 
 #' Get file-path on local system to a data source in PRIO-GRID
@@ -45,13 +120,15 @@ pg_rawfiles <- function(use_mirror = TRUE){
 #' @param src_name character, the source name
 #' @param version character, the version number
 #'
-#' @return
+#' @return file path, string
 #' @export
 #'
 #' @examples
-get_pgfile <- function(src_name, version){
-  f <- pg_rawfiles() |> dplyr::filter(src_name == !!rlang::enquo(src_name),
-                                      version == !!rlang::enquo(version)) |> dplyr::pull(filename)
+#' get_pgfile(source_name = "ETH ICR cShapes", source_version = "2.0", id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
+get_pgfile <- function(source_name, source_version, id){
+  f <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
+                                      source_version == !!rlang::enquo(source_version),
+                                      id == !!rlang::enquo(id)) |> dplyr::pull(filename)
   destfolder <- pgoptions$get_rawfolder()
   if(length(f) == 0){
     return(message("No files in metadata with that name and version."))
@@ -65,7 +142,7 @@ get_pgfile <- function(src_name, version){
 
   file_found <- file.exists(full_file_path)
   if(!all(file_found)){
-    stop(paste("Some files were not found in", destfolder, ":", f[!file_found]))
+    stop(paste("Some files were not found in", destfolder, ":\n", f[!file_found], "\n"))
   }
 
   return(full_file_path)
@@ -79,10 +156,12 @@ get_pgfile <- function(src_name, version){
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
 #'
-#' @return
+#' @return data.frame Download summary
 #' @export
 #'
 #' @examples
+#' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
+#' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
 download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
   destfolder <- pgoptions$get_rawfolder()
 
@@ -115,22 +194,10 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
 
   subdirs <- file_info |> dplyr::filter(!subdir_exists) |> dplyr::pull(filename) |> dirname() |> unique()
   if(length(subdirs) > 0){
-    directories_to_create <- file.path(destfolder, subdirs)
-    for(d in directories_to_create){
-      dir.create(d)
+    for(newdir in subdirs){
+      dir.create(file.path(destfolder, newdir), recursive = TRUE)
     }
-
   }
 
-  pb <- utils::txtProgressBar(min = 0, max = total_files, style = 3)
-  reqs <- mapply(download_file_httr2, url = file_info$url, filepath = file.path(destfolder, file_info$filename), SIMPLIFY = FALSE)
-  close(pb)
-
-
-  request_error <- lapply(reqs, httr2::resp_is_error)
-  failed_downloads <- names(reqs)[request_error |> unlist()]
-  if(length(failed_downloads) > 0){
-    print("Failed downloads:")
-    return(failed_downloads)
-  }
+  curl::multi_download(file_info$url, file.path(destfolder, file_info$filename))
 }
