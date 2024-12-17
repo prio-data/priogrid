@@ -14,3 +14,9 @@ read_geopko <- function(){
 
   return(df)
 }
+
+gen_geopko <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+
+}
