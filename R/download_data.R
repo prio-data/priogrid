@@ -155,6 +155,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @param overwrite Whether or not to download and overwrite files already in local folder.
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
+#' @param resume If true, will also download files that did not finish download last time the function was run.
 #'
 #' @return data.frame Download summary
 #' @export
@@ -162,7 +163,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @examples
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
-download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
+download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TRUE, max_retry = 10){
   destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
@@ -175,13 +176,27 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
   }
 
   if(is.null(file_info)){
-    # Default to using all sources.
-    file_info <- pg_rawfiles()
-  }
+    if(resume){
+      # Only download unfinished downloads if file_info is null, resume is true, and there are unfinished downloads.
+      if(file.exists(file.path(destfolder, "tmp", "unfinished_downloads.rds"))){
+        did_not_finish <- readRDS(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+        file_info <- file_info |>
+          dplyr::mutate(file_exists = dplyr::if_else((file.path(destfolder, filename) %in% did_not_finish), FALSE, file_exists))
+      } else{
+        # Default to using all sources.
+        file_info <- pg_rawfiles()
+      }
+    } else{
+      # Default to using all sources.
+      file_info <- pg_rawfiles()
+    }
 
+  }
 
   file_info$file_exists <- file.exists(file.path(destfolder, file_info$filename))
   file_info$subdir_exists <- dir.exists(file.path(destfolder, dirname(file_info$filename)))
+
+
 
   if(!overwrite){
     file_info <- file_info |> dplyr::filter(!file_exists)
@@ -199,5 +214,52 @@ download_pg_rawdata <- function(overwrite = FALSE, file_info = NULL){
     }
   }
 
-  curl::multi_download(file_info$url, file.path(destfolder, file_info$filename))
+  download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
+  did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+  retry_number <- 0
+  while(retry_number < max_retry){
+    retry_number <- retry_number + 1
+    message(paste("Download interrupted, retrying...", retry_number))
+    unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
+    download_report <- curl::multi_download(unfinished_files_to_download$url, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
+    did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+  }
+
+  if(nrow(did_not_finish)>0){
+    if(!dir.exists(file.path(destfolder, "tmp"))){
+      dir.create(file.path(destfolder, "tmp"))
+    }
+    saveRDS(did_not_finish, file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+    warning("Some files did not completely finish downloading (printed below). Run unfinished_downloads() to see which files did not finish.
+Try running download_pg_rawdata() again (will resume download if possible).
+If the problem persists, please file an issue on <https://github.com/prio-data/priogrid/issues> with results from unfinished_downloads().")
+  } else {
+    unlink(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+  }
+
+}
+
+#' Prints data.frame with unfinished downloads
+#'
+#' [download_pg_rawdata()] stores unfinished downloads if it is interrupted by
+#' the user or the server. Use this function to see which files that failed
+#' to completely download. This information is also used internally by [download_pg_rawdata()]
+#' to resume file downloads.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' unfinished_downloads()
+unfinished_downloads <- function(){
+  f <- file.path(pgoptions$get_rawfolder(), "tmp", "unfinished_downloads.rds")
+  if(file.exists(f)){
+    did_not_finish <- readRDS(f)
+    file_info <- pg_rawfiles()
+
+    file_info |>
+      dplyr::filter(file.path(pgoptions$get_rawfolder(), filename) %in% did_not_finish)
+  } else{
+    message("No unfinished downloads found.")
+  }
 }
