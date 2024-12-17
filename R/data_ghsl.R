@@ -51,10 +51,11 @@ read_ghsl_population_grid <- function(){
 #' \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}
 gen_ghsl_population_grid <- function(){
   r <- read_ghsl_population_grid()
+  res <- robust_transformation(r, agg_fun = "sum")
 
-  pg <- prio_blank_grid()
-  ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")
-  res <- terra::resample(ragg, pg, method = "near")
+  #pg <- prio_blank_grid()
+  #ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")
+  #res <- terra::resample(ragg, pg, method = "near")
 
   return(res)
 }
