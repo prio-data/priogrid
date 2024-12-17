@@ -216,16 +216,17 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
 
   download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
   did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
-  retry_number <- 0
-  while(retry_number < max_retry){
-    retry_number <- retry_number + 1
-    message(paste("Download interrupted, retrying...", retry_number))
-    unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
-    download_report <- curl::multi_download(unfinished_files_to_download$url, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
-    did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
-  }
 
-  if(nrow(did_not_finish)>0){
+  if(nrow(did_not_finish > 0)){
+    retry_number <- 0
+    while(retry_number < max_retry){
+      retry_number <- retry_number + 1
+      message(paste("Download interrupted, retrying...", retry_number))
+      unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
+      download_report <- curl::multi_download(unfinished_files_to_download$url, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
+      did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+    }
+
     if(!dir.exists(file.path(destfolder, "tmp"))){
       dir.create(file.path(destfolder, "tmp"))
     }
