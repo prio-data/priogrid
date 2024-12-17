@@ -55,7 +55,14 @@ PGOptionsManager <- R6::R6Class(
     #' @description Set the folder where raw-data should be downloaded (possibly very large files), defaults to temporary folder
     #' @param value String path to folder
     set_rawfolder = function(value){
-      private$options$rawfolder <- normalizePath(value)
+      private$options$rawfolder <- normalizePath(value, mustWork = FALSE)
+      if(!dir.exists(file.path(private$options$rawfolder, "tmp"))){
+        dir.create(file.path(private$options$rawfolder, "tmp"), recursive = TRUE)
+      }
+      if(!dir.exists(file.path(private$options$rawfolder, "priogrid"))){
+        dir.create(file.path(private$options$rawfolder, "priogrid"), recursive = TRUE)
+      }
+      normalizePath(private$options$rawfolder)
       private$save_options()
     },
 
