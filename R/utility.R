@@ -117,14 +117,14 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
     r <- terra::project(r, terra::crs(pg), filename = tmp1)
   }
 
-  equal_extent <- terra::ext(r) == terra::ext(pg)
-  if(!equal_extent){
-    extent_template <- terra::rast(terra::ext(pg),
-               crs = terra::crs(r),
-               ncol = ncol(r),
-               nrow = nrow(r))
-    tmp2 <- tempfile(pattern = "resample", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::resample(r, extent_template, method = "near", filename = tmp2, threads = T)
+  pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
+  input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf()
+  input_extent_is_smaller_or_equal <- sf::st_contains(pg_extent, input_rast_extent, sparse = FALSE) |> all()
+  input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
+  input_extent_is_smaller <- input_extent_is_smaller_or_equal & !input_extent_is_equal
+  if(input_extent_is_smaller){
+    tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::crop(r, pg, filename = tmp2)
   }
 
   higher_resolution <- terra::res(r) < terra::res(pg)
