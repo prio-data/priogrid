@@ -21,7 +21,7 @@ PGOptionsManager <- R6::R6Class(
 
     #' @description Reset options to defaults.
     reset_options = function(){
-      pgconfig_cache$set("config", private$defaults)
+      private$set_default_options()
     },
 
     #' @description Set output spatial extent
@@ -132,7 +132,7 @@ PGOptionsManager <- R6::R6Class(
       cat("  nrow:", private$options$nrow, "\n")
       cat("  ncol:", private$options$ncol, "\n")
       cat("  crs:", private$options$crs, "\n")
-      cat("  extent:", private$options$extent, "\n")
+      cat("  extent:", as.vector(private$options$extent), "\n")
       cat("  rawfolder:", private$options$rawfolder, "\n")
       cat("  verbose:", private$options$verbose, "\n")
       cat("  temporal resolution:", private$options$temporal_resolution, "\n")
@@ -157,11 +157,16 @@ PGOptionsManager <- R6::R6Class(
 
     options = list(),
 
+    set_default_options = function(){
+      pgconfig_cache$set("config", private$defaults)
+    },
+
     load_options = function() {
       if (!cachem::is.key_missing(pgconfig_cache$get("config"))) {
         private$options <- pgconfig_cache$get("config")
       } else{
-        private$reset_options()
+        private$set_default_options()
+        private$options <- pgconfig_cache$get("config")
       }
     },
 
