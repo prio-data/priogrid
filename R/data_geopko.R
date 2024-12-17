@@ -18,7 +18,9 @@ read_geopko <- function(){
 gen_geopko <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
-
+  # create date column combining year and month columns
+  # number of peacekeeping operations?
+  r <- rasterize(f, pg) # this creates a dummy on peacekeeping at all or not - must be better!
 }
 
 
