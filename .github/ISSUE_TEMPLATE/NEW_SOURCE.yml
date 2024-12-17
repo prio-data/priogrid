@@ -1,0 +1,108 @@
+name: New Source
+description: Here you can suggest a new source to be added to the PRIO-GRID meta-data.
+title: "[New Source]: "
+labels: ["feature"]
+assignees:
+  - kvelleby
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new source for PRIO-GRID!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: input
+    id: source_name
+    attributes:
+      label: Data source name
+      description: A full name of the provider and dataset.
+      placeholder: ex. ETH ICR cShapes
+    validations:
+      required: true
+  - type: input
+    id: source_version
+    attributes:
+      label: Data source version
+      description: The version of the data source
+      placeholder: ex. 2.0
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Data license
+      description: URL to license, or text if well-known license type.
+      placeholder: ex. CC-BY 4.0
+    validations:
+      required: true
+  - type: textarea
+    id: citation
+    attributes:
+      label: Citation
+      description: The proper way to cite the data source.
+      placeholder: "ex. Schvitz, Guy, Luc Girardin, Seraina Rüegger, Nils B. Weidmann, Lars-Erik Cederman, and Kristian Skrede Gleditsch. 2022. “Mapping the International System, 1886-2019: The CShapes 2.0 Dataset.” Journal of Conflict Resolution 66 (1): 144–61. https://doi.org/10.1177/00220027211013563."
+    validations:
+      required: true
+  - type: dropdown
+    id: spatial_extent
+    attributes:
+      label: Spatial extent
+      description: Roughly speaking, what is the spatial coverage of the data source?
+      options:
+        - World
+        - Multiple continents
+        - Single continent
+        - Several countries (spread)
+    validations:
+      required: false
+  - type: dropdown
+    id: temporal_resolution
+    attributes:
+      label: What is the temporal resolution of the data source?
+      options:
+        - Static
+        - Higher than monthly
+        - Monthly
+        - Quarterly
+        - Yearly
+        - Less than yearly
+    validations:
+      required: false
+  - type: input
+    id: download_url
+    attributes:
+      label: Data URL
+      description: The direct URL to download data.
+      placeholder: ex. https://icr.ethz.ch/data/cshapes/CShapes-2.0.geojson
+    validations:
+      required: false
+  - type: input
+    id: website_url
+    attributes:
+      label: Website URL
+      description: The URL to the website of the data source.
+      placeholder: ex. https://icr.ethz.ch/data/cshapes/
+    validations:
+      required: true
+  - type: textarea
+    id: tags
+    attributes:
+      label: Tags
+      description: A semi-colon separated list of tag-words, or short description of the data.
+      placeholder: ex. boundaries; political units; international system
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: Academic references
+      description: References where the source data is used or discussed, or other relevant further reading.
+      placeholder: "ex. Weidmann, Nils B., Doreen Kuse, and Kristian Skrede Gleditsch. 2010. “The Geography of the International System: The CShapes Dataset.” International Interactions 36 (1): 86–106. https://doi.org/10.1080/03050620903554614."
+    validations:
+      required: false

@@ -154,7 +154,7 @@ PGOptionsManager <- R6::R6Class(
       if (!cachem::is.key_missing(pgconfig_cache$get("config"))) {
         private$options <- pgconfig_cache$get("config")
       } else{
-        private$save_options()
+        private$reset_options()
       }
     },
 

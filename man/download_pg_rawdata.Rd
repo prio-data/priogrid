@@ -12,6 +12,13 @@ download_pg_rawdata(overwrite = FALSE, file_info = NULL)
 \item{file_info}{A data.frame with the same structure as the result from \code{\link[=pg_rawfiles]{pg_rawfiles()}}. If file_info is null (default),
 then file_info will be all data returned from \code{\link[=pg_rawfiles]{pg_rawfiles()}}.}
 }
+\value{
+data.frame Download summary
+}
 \description{
 Before running this, you need to set the folder using pgoptions$set_rawfolder("path/to/folder")
+}
+\examples{
+files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
+# download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
 }

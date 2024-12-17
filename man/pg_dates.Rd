@@ -17,6 +17,12 @@ pg_dates(
 
 \item{by}{increment of sequence. See details in \link[base:seq.Date]{base::seq.Date}.}
 }
+\value{
+Date vector
+}
 \description{
 This is a wrapper of \link[base:seq.Date]{base::seq.Date}, only with defaults that can be set in the options.
+}
+\examples{
+pg_dates()
 }
