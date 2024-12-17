@@ -1,5 +1,9 @@
 read_corruption <- function() {
-  fname <- "/Users/ingvildsmestad/Downloads/GDL-Comprehensive-Subnational-Corruption-Index-(SCI)-of-region-2.csv"
+  #f <- get_pgfile(source_name = "",
+   #               source_version = "",
+    #              id = "93164a9e-089b-467f-b63d-413f8c58d34c")
+  f <- "/Users/ingvildsmestad/Downloads/GDL-Comprehensive-Subnational-Corruption-Index-(SCI)-of-region-2.csv"
+  df <- read.csv(f)
   r <- terra::rast(fname)
 
   r <- terra::clamp(r, 0, values = FALSE)

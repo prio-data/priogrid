@@ -1,16 +1,16 @@
-# --- TEST ---
-
-start_read <- Sys.time()
-r_data <- read_corruption()
-time_read <- Sys.time() - start_read
-print(paste("Time to read data:", time_read))
-
-start_gen <- Sys.time()
-r_processed <- corruption_data(data = r_data)
-time_gen <- Sys.time() - start_gen
-print(paste("Time to process data:", time_gen))
-
-pg <- prio_blank_grid()
-df <- as.data.frame(c(pg, r_processed))
-plot(r_processed)
-
+# # --- TEST ---
+#
+# start_read <- Sys.time()
+# r_data <- read_corruption()
+# time_read <- Sys.time() - start_read
+# print(paste("Time to read data:", time_read))
+#
+# start_gen <- Sys.time()
+# r_processed <- corruption_data(data = r_data)
+# time_gen <- Sys.time() - start_gen
+# print(paste("Time to process data:", time_gen))
+#
+# pg <- prio_blank_grid()
+# df <- as.data.frame(c(pg, r_processed))
+# plot(r_processed)
+#

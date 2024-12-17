@@ -32,4 +32,3 @@ gen_sedac_global_infant_mortality_rates <- function(data = read_sedac_global_inf
   return(data)
 }
 
-
