@@ -119,10 +119,10 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
 
   pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
   input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf()
-  input_extent_is_smaller_or_equal <- sf::st_contains(pg_extent, input_rast_extent, sparse = FALSE) |> all()
+  input_extent_is_larger_or_equal <- sf::st_contains(input_rast_extent, pg_extent, sparse = FALSE) |> all()
   input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
-  input_extent_is_smaller <- input_extent_is_smaller_or_equal & !input_extent_is_equal
-  if(input_extent_is_smaller){
+  input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
+  if(input_extent_is_larger){
     tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
     r <- terra::crop(r, pg, filename = tmp2)
   }
