@@ -12,3 +12,6 @@ an object of class sf
 \description{
 Reads the Natural Earth 10m Physical Vector Data
 }
+\references{
+\insertRef{naturalearthLand10mPhysical2024}{priogrid}
+}
