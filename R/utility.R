@@ -114,7 +114,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
     tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::project(r, terra::crs(pg), filename = tmp1)
+    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
   }
 
   pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
@@ -124,7 +124,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
   input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
   if(input_extent_is_larger){
     tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::crop(r, pg, filename = tmp2)
+    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
   }
 
   higher_resolution <- terra::res(r) < terra::res(pg)
@@ -134,6 +134,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
                   fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
                   filename = tmp3,
+                  gdal=c("COMPRESS=LZW"),
                   cores = cores, ...)
   }
 
