@@ -176,21 +176,27 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
   }
 
   if(is.null(file_info)){
-    # Default to using all sources.
-    file_info <- pg_rawfiles()
-  }
+    if(resume){
+      # Only download unfinished downloads if file_info is null, resume is true, and there are unfinished downloads.
+      if(file.exists(file.path(destfolder, "tmp", "unfinished_downloads.rds"))){
+        did_not_finish <- readRDS(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+        file_info <- file_info |>
+          dplyr::mutate(file_exists = dplyr::if_else((file.path(destfolder, filename) %in% did_not_finish), FALSE, file_exists))
+      } else{
+        # Default to using all sources.
+        file_info <- pg_rawfiles()
+      }
+    } else{
+      # Default to using all sources.
+      file_info <- pg_rawfiles()
+    }
 
+  }
 
   file_info$file_exists <- file.exists(file.path(destfolder, file_info$filename))
   file_info$subdir_exists <- dir.exists(file.path(destfolder, dirname(file_info$filename)))
 
-  if(resume){
-    if(file.exists(file.path(destfolder, "tmp", "unfinished_downloads.rds"))){
-      did_not_finish <- readRDS(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
-      file_info <- file_info |>
-        dplyr::mutate(file_exists = dplyr::if_else((file.path(destfolder, filename) %in% did_not_finish), FALSE, file_exists))
-    }
-  }
+
 
   if(!overwrite){
     file_info <- file_info |> dplyr::filter(!file_exists)
