@@ -23,4 +23,3 @@ gen_geopko <- function() {
   r <- rasterize(f, pg) # this creates a dummy on peacekeeping at all or not - must be better!
 }
 
-
