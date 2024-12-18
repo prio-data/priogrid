@@ -15,11 +15,33 @@ read_geopko <- function(){
   return(df)
 }
 
-gen_geopko <- function() {
+gen_geopko_sum <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
-  # create date column combining year and month columns
-  # number of peacekeeping operations?
-  r <- rasterize(f, pg) # this creates a dummy on peacekeeping at all or not - must be better!
+  r <- terra::rasterize(f, pg, field = 1, fun = sum, na.rm = TRUE)
 }
 
+gen_geopko_mean <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+  r <- terra::rasterize(f, pg, field = 1, fun = mean, na.rm = TRUE)
+}
+
+
+gen_geopko_min <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+  r <- terra::rasterize(f, pg, field = 1, fun = min, na.rm = TRUE)
+}
+
+gen_geopko_max <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+  r <- terra::rasterize(f, pg, field = 1, fun = max, na.rm = TRUE)
+}
+
+gen_geopko_sd <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+  r <- terra::rasterize(f, pg, field = 1, fun = sd, na.rm = TRUE)
+}
