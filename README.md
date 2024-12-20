@@ -23,6 +23,8 @@ You might need to additionally follow install instructions on https://github.com
 a package that is missing, it will usually work just by renv::install("package_name"). If you in addition would file an issue on the package you needed to install, we would greatly
 appreciate it.
 
+When installing packages from source, a common issue is that RStudio does not always have access to the same system paths for binary files as your terminal. Adding such paths e.g. `PATH = /my/path:/another/path` to `~/.Renviron` might help. You can see which binary paths R have access to by writing `Sys.getenv("PATH")`. An alternative to setting paths in .Renviron is to add them in R using `Sys.setenv(PATH = paste0(Sys.getenv("PATH"), ":/my/path"))`. There is also a known issue when using Homebrew in MacOS when installing the sf and terra packages that require special attention. The install instructions on their github pages describe how to fix this.
+
 ## Useage
 This is work in progress. However, here are some features we are working on.
 
