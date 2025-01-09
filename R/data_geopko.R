@@ -1,5 +1,10 @@
 
-## Geocoded Peacekeeping Operations (Geo-PKO)
+#' Reads the Geocoded Peacekeeping Operations (Geo-PKO) data
+#'
+#'
+#' @return an object of class sf
+#' @export
+#' \insertRef{cilMappingBlueHelmets2020}{priogrid}
 
 read_geopko <- function(){
   f <- get_pgfile(source_name = "Geocoded Peacekeeping Operations (Geo-PKO)",
@@ -14,6 +19,18 @@ read_geopko <- function(){
 
   return(df)
 }
+
+#' Generate Geo-PKO sum
+#'
+#' Takes the number of peacekeeping operations within each PRIO-GRID cell
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' # r <- gen_geopko_sum()
+#' @references
+#' \insertRef{cilMappingBlueHelmets2020}{priogrid}
 
 gen_geopko_sum <- function() {
   f <- read_geopko()
