@@ -35,7 +35,9 @@ read_geopko <- function(){
 gen_geopko_sum <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
-  r <- terra::rasterize(f, pg, field = 1, fun = sum, na.rm = TRUE)
+  r <- terra::rasterize(terra::vect(f), pg, field = 1, fun = sum, na.rm = TRUE)
+
+  names(r) <- "geopko_sum"
 }
 
 gen_geopko_mean <- function() {
