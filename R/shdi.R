@@ -2,7 +2,7 @@
 read_globaldatalab_shdi <- function(){
    f <- get_pgfile(source_name = "'/Users/ingvildsmestad/Downloads/SHDI-SGDI-Total 8.0.csv'",
                    source_version = "v.8.0",
-                   id = "")
+                   id = " ")
  }
 
 #' Generates GlobalDataLab Subnational Human Development Index
