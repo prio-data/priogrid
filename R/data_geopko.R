@@ -38,29 +38,45 @@ gen_geopko_sum <- function() {
   r <- terra::rasterize(terra::vect(f), pg, field = 1, fun = sum, na.rm = TRUE)
 
   names(r) <- "geopko_sum"
+
 }
 
-gen_geopko_mean <- function() {
+#' Generate Geo-PKO count
+#'
+#' Takes the count of peacekeeping operations within each PRIO-GRID cell per year
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' # r <- gen_geopko_count()
+#' @references
+#' \insertRef{cilMappingBlueHelmets2020}{priogrid}
+
+gen_geopko_count <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
-  r <- terra::rasterize(f, pg, field = 1, fun = mean, na.rm = TRUE)
+
+  years <- 1994:2022
+  stack_list <- list()
+
+  for (year in years) {
+    c <- f |>
+      dplyr::group_by(country, year) |>
+      dplyr::summarise(count = dplyr::n()) |>
+      dplyr::filter(year == !!year)
+
+    r <- terra::rasterize(c, pg, "count")
+
+    stack_list[[as.character(year)]] <- r
+  }
+
+  stack <- terra::rast(stack_list)
+
+  names(stack) <- as.character(years)
+
+  return(stack)
+
 }
 
 
-gen_geopko_min <- function() {
-  f <- read_geopko()
-  pg <- prio_blank_grid()
-  r <- terra::rasterize(f, pg, field = 1, fun = min, na.rm = TRUE)
-}
-
-gen_geopko_max <- function() {
-  f <- read_geopko()
-  pg <- prio_blank_grid()
-  r <- terra::rasterize(f, pg, field = 1, fun = max, na.rm = TRUE)
-}
-
-gen_geopko_sd <- function() {
-  f <- read_geopko()
-  pg <- prio_blank_grid()
-  r <- terra::rasterize(f, pg, field = 1, fun = sd, na.rm = TRUE)
-}
