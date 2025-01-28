@@ -14,8 +14,10 @@ read_geopko <- function(){
     dplyr::filter(!is.na(longitude)) |>
     sf::st_as_sf(coords = c("longitude", "latitude"),
                  remove = FALSE) |>
-    sf::st_set_crs(4326) |>
-    sf::st_transform(3857)
+    sf::st_set_crs(4326)
+
+  pgday <- pg_dates()[1] |> lubridate::day()
+  df$date <- lubridate::ymd(paste(df$year, df$month, pgday, sep = "-")) |> as.character()
 
   return(df)
 }
@@ -24,7 +26,7 @@ read_geopko <- function(){
 #'
 #' Takes the count of peacekeeping operations within each PRIO-GRID cell per year
 #'
-#' @return
+#' @return SpatRast
 #' @export
 #'
 #' @examples
@@ -35,17 +37,16 @@ gen_geopko_operations_count <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
 
-  years <- 1994:2022
+  years <- as.numeric(1994:2022)
   stack_list <- list()
 
 
   for (year in years) {
     print(paste("Year:", year))
     c <- f |>
-      dplyr::group_by(country, year) |>
-      dplyr::summarise(count = dplyr::n())
+      dplyr::filter(year == !!year)
 
-    r <- terra::rasterize(c, pg, fun = sum, na.rm = TRUE)
+    r <- terra::rasterize(c, pg, fun = "sum", na.rm = TRUE)
 
 
     stack_list[[as.character(year)]] <- r
@@ -59,5 +60,47 @@ gen_geopko_operations_count <- function() {
   return(stack)
 
 }
+
+#' Generate the number of troops from Geo-PKO
+#'
+#' Takes the number of peace keeping troops within each PRIO-GRID cell
+#'
+#' @return SpatRast
+#' @export
+#'
+#' @examples
+#' # t <- gen_pko_troops_count
+#' @references
+#' \insertRef{cilMappingBlueHelmets2020}{priogrid}
+gen_geopko_troops_count <- function() {
+  f <- read_geopko()
+  pg <- prio_blank_grid()
+
+  f$no.troops <- ifelse(f$no.troops == "unknown", NA, f$no.troops)
+  f$no.troops <- as.numeric(f$no.troops)
+
+  years <- as.numeric(1994:2022)
+  stack_list <- list()
+
+  for (year in years) {
+    print(paste("Year:", year))
+    c <- f |>
+      dplyr::filter(year == !!year)
+
+    t <- terra::rasterize(c, pg, field = "no.troops", fun = "sum", na.rm = TRUE)
+
+
+    stack_list[[as.character(year)]] <- t
+    print(terra::minmax(t))
+  }
+
+  stack <- terra::rast(stack_list)
+
+  names(stack) <- as.character(years)
+
+  return(stack)
+
+}
+
 
 
