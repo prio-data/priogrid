@@ -1,3 +1,27 @@
+parse_url <- function(url){
+  if(is.na(url) || trimws(url) == "" || !is.character(url)){
+    return("missing")
+  }
+
+  if(RCurl::url.exists(url)){
+    return("working url")
+  }
+
+  if(startsWith(url, "urls/")){
+    if(file.exists(url)){
+      return("parsed url file")
+    } else(
+      return("missing url file")
+    )
+  }
+
+  if(file.exists(url)){
+    return("unparsed url file")
+  }
+
+  return("possibly non-working url")
+}
+
 validate_url <- function(url) {
   if (is.na(url) || url == "" || !is.character(url)) {
     return(NA)
@@ -153,4 +177,4 @@ add_source <- function(source_name,
 
 }
 
-#add_source("a", "b", "c", "", "e", "f", test = T) |> View()
+#add_source("a", "b", "c", "d", "e", "f", test = T) |> View()
