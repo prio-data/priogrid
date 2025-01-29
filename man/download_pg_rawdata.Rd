@@ -4,13 +4,15 @@
 \alias{download_pg_rawdata}
 \title{Download the raw-data for PRIO-GRID}
 \usage{
-download_pg_rawdata(overwrite = FALSE, file_info = NULL)
+download_pg_rawdata(overwrite = FALSE, file_info = NULL, resume = TRUE)
 }
 \arguments{
 \item{overwrite}{Whether or not to download and overwrite files already in local folder.}
 
 \item{file_info}{A data.frame with the same structure as the result from \code{\link[=pg_rawfiles]{pg_rawfiles()}}. If file_info is null (default),
 then file_info will be all data returned from \code{\link[=pg_rawfiles]{pg_rawfiles()}}.}
+
+\item{resume}{If true, will also download files that did not finish download last time the function was run.}
 }
 \value{
 data.frame Download summary
