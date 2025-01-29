@@ -3,48 +3,80 @@ parse_url <- function(url){
     return("missing")
   }
 
-  if(RCurl::url.exists(url)){
-    return("working url")
-  }
-
   if(startsWith(url, "urls/")){
-    if(file.exists(url)){
+    fpath <- file.path("data", url)
+    if(file.exists(fpath) && !dir.exists(fpath)){
       return("parsed url file")
     } else(
       return("missing url file")
     )
   }
 
-  if(file.exists(url)){
+  if(file.exists(url) && !dir.exists(url)){
     return("unparsed url file")
+  }
+
+  if(file.exists(url) && dir.exists(url)){
+    return("directory")
+  }
+
+  if(RCurl::url.exists(url)){
+    return("working url")
   }
 
   return("possibly non-working url")
 }
 
-validate_url <- function(url) {
-  if (is.na(url) || url == "" || !is.character(url)) {
-    return(NA)
-  }
+parse_url_file <- function(fname, id){
+  urls <- readLines(fname)
+  fpath <- file.path("data", "urls", paste0(id, ".txt"))
+  writeLines(urls, fpath)
+  fpath <- file.path("urls", basename(fpath))
+  return(fpath)
+}
 
-  if (startsWith(url, "urls/")) {
-    # url is already parsed information
-    file_path <- file.path("data", url)
-    if (file.exists(file_path)) {
-      urls <- readLines(file_path)
-      # Check if all URLs in the file exist
-      all(sapply(urls, RCurl::url.exists))
-    } else {
-      FALSE
+test_urls_in_file <- function(fname){
+  urls <- readLines(fname)
+  all(sapply(urls, RCurl::url.exists))
+}
+
+handle_url <- function(url, id, test = FALSE) {
+  input_type <- parse_url(url)
+
+  f <- switch (input_type,
+    "missing" = function(url, id){
+      warning("URL is missing.")
+      return(list("entry" = NA, "exists" = NA))
+    },
+    "missing url file" = function(url, id){
+      warning("URL file is missing.")
+      return(list("entry" = NA, "exists" = NA))
+    },
+    "directory" = function(url, id){
+      warning("URL is a local directory, not a URL.")
+      return(list("entry" = NA, "exists" = NA))
+    },
+    "parsed url file" = function(url, id){
+      url_file_path <- file.path("data", url)
+      return(list("entry" = url, "exists" = test_urls_in_file(url_file_path)))
+    },
+    "unparsed url file" = function(url, id){
+      url_file_path <- parse_url_file(url, id)
+      return(list("entry" = url_file_path, "exists" = test_urls_in_file(url_file_path)))
+    },
+    "working url" = function(url, id){
+      return(list("entry" = url, "exists" = TRUE))
+    },
+    "possibly non-working url" = function(url, id){
+      warning("URL does not parse. Please review.")
+      return(list("entry" = "NA", "exists" = NA))
     }
-  }
-  else if(file.exists(url)){
-    # url might be new file with urls to read
-    urls <- readLines(url)
-    all(sapply(urls, RCurl::url.exists))
-  } else {
-    # Direct URL check
-    RCurl::url.exists(url)
+  )
+
+  if(test){
+    return(f)
+  } else{
+    return(f(url, id))
   }
 }
 
@@ -82,8 +114,7 @@ add_source <- function(source_name,
                        prio_mirror = NA,
                        tags = NULL,
                        reference_keys = NULL,
-                       test = TRUE,
-                       validate_urls = TRUE){
+                       test = TRUE){
 
   is_character_but_not_empty <- function(x) is.character(x) && x != ""
 
@@ -100,7 +131,6 @@ add_source <- function(source_name,
   assertthat::assert_that(is_character_but_not_empty(prio_mirror) || is.na(prio_mirror))
   assertthat::assert_that(is_character_but_not_empty(tags) || is.null(tags))
   assertthat::assert_that(is.logical(test))
-  assertthat::assert_that(is.logical(validate_urls))
 
   col_types <- readr::cols(
     id = readr::col_character(),
@@ -125,24 +155,14 @@ add_source <- function(source_name,
   csv_file <- "data_raw/sources.csv"
   sources <- readr::read_delim(csv_file, delim = "\t", col_types = col_types)
 
-  if(validate_urls){
-    download_url_exists <- validate_url(download_url)
-    website_url_exists <- validate_url(website_url)
-    prio_mirror_exists <- validate_url(prio_mirror)
+  download_url_obj <- handle_url(download_url)
+  prio_mirror_obj <- handle_url(prio_mirror)
 
-    if(!website_url_exists){
-      warning(paste("Cannot connect to website", website_url))
-    }
-    if(!is.na(download_url_exists)){
-      if(!download_url_exists){
-        warning("Cannot connect to download url file(s).")
-      }
-    }
-    if(!is.na(prio_mirror_exists)){
-      if(!prio_mirror_exists){
-        warning("Cannot connect to PRIO mirror url file(s).")
-      }
-    }
+  website_url_type <- parse_url(website_url)
+  if(website_url_type == "working url"){
+    website_url_obj = list("entry" = website_url, "exists" = TRUE)
+  } else{
+    stop("Cannot validate website URL. Do you have internet connection?")
   }
 
   new_id <- uuid::UUIDgenerate()
@@ -155,21 +175,29 @@ add_source <- function(source_name,
    "citation_keys" = citation_keys,
    "aws_bucket" = aws_bucket,
    "aws_region" = aws_region,
-   "download_url" = download_url,
-   "website_url" = website_url,
+   "download_url" = download_url_obj$entry,
+   "website_url" = website_url_obj$entry,
    "tags" = tags,
    "spatial_extent" = spatial_extent,
    "temporal_resolution" = temporal_resolution,
    "reference_keys" = reference_keys,
-   "prio_mirror" = prio_mirror,
-   "download_url_exists" = download_url_exists,
-   "website_url_exists" = website_url_exists,
-   "prio_mirror_exists" = prio_mirror_exists,
+   "prio_mirror" = prio_mirror_obj$entry,
+   "download_url_exists" = download_url_obj$exists,
+   "website_url_exists" = website_url_obj$exists,
+   "prio_mirror_exists" = prio_mirror_obj$exists,
    "created_at" = format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   )
 
   if(test){
+    if(parse_url(download_url) == "unparsed url file"){
+      unlink(download_url_obj$entry) # remove this file since it was just a test
+    }
+    if(parse_url(prio_mirror) == "unparsed url file"){
+      unlink(prio_mirror_obj$entry) # remove this file since it was just a test
+    }
+
     dplyr::bind_rows(sources, new_source)
+    return(new_source)
   } else{
     updated_sources <- dplyr::bind_rows(sources, new_source)
     readr::write_delim(updated_data, csv_file, delim = "\t")
