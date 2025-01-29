@@ -24,7 +24,7 @@ read_geopko <- function(){
   return(df)
 }
 
-#' Generate Geo-PKO count
+#' Generate Geo-PKO operations count
 #'
 #' Takes the count of peacekeeping operations within each PRIO-GRID cell per year
 #'
