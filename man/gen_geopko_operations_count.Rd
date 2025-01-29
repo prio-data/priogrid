@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_geopko.R
 \name{gen_geopko_operations_count}
 \alias{gen_geopko_operations_count}
-\title{Generate Geo-PKO count}
+\title{Generate Geo-PKO operations count}
 \usage{
 gen_geopko_operations_count()
 }
