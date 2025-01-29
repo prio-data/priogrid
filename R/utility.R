@@ -62,6 +62,31 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
   seq.Date(start_date, end_date, temporal_resolution)
 }
 
+#' Get a sequence of date intervals
+#'
+#' The start date is the last observed date in the first interval of the intervals you
+#' want to capture. E.g., if start date is 31 January 2010 with 1 month resolution, then the
+#' first interval goes from 1 January 2010 to 31 January 2010. The intervals are not necessary
+#' equal length.
+#'
+#' @param from starting date
+#' @param to end date
+#' @param by increment of sequence. See details in [base::seq.Date].
+#'
+#' @return Date interval vector
+#' @export
+#'
+#' @examples
+#' pg_date_intervals()
+pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
+                              end_date = pgoptions$get_end_date(),
+                              temporal_resolution = pgoptions$get_temporal_resolution()){
+  mydates <- seq.Date(start_date, end_date, temporal_resolution)
+  previous_date <- seq.Date(start_date, length.out = 2, by = paste0("-",temporal_resolution))[2] # Get the previous date in the interval
+  mydates <- c(previous_date, mydates)
+  lubridate::interval(mydates[-length(mydates)] + lubridate::days(1), mydates[-1])
+}
+
 #' Converts raster with variable to data.frame
 #'
 #' Assumes that the name of the raster layer is the name of the variable if static is true,

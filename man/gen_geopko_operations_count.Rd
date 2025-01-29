@@ -14,6 +14,7 @@ Takes the count of peacekeeping operations within each PRIO-GRID cell per year
 }
 \examples{
 # r <- gen_geopko_operations_count()
+
 }
 \references{
 \insertRef{cilMappingBlueHelmets2020}{priogrid}

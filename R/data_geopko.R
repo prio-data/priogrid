@@ -4,6 +4,8 @@
 #'
 #' @return an object of class sf
 #' @export
+#'
+#' @references
 #' \insertRef{cilMappingBlueHelmets2020}{priogrid}
 read_geopko <- function(){
   f <- get_pgfile(source_name = "Geocoded Peacekeeping Operations (Geo-PKO)",
@@ -16,8 +18,8 @@ read_geopko <- function(){
                  remove = FALSE) |>
     sf::st_set_crs(4326)
 
-  pgday <- pg_dates()[1] |> lubridate::day()
-  df$date <- lubridate::ymd(paste(df$year, df$month, pgday, sep = "-")) |> as.character()
+  # Set date to last day in month
+  df$mydate <- lubridate::ym(paste(df$year, df$month, sep = "-")) |> lubridate::rollforward()
 
   return(df)
 }
@@ -31,32 +33,28 @@ read_geopko <- function(){
 #'
 #' @examples
 #' # r <- gen_geopko_operations_count()
+#'
 #' @references
 #' \insertRef{cilMappingBlueHelmets2020}{priogrid}
 gen_geopko_operations_count <- function() {
   f <- read_geopko()
   pg <- prio_blank_grid()
 
-  years <- as.numeric(1994:2022)
+  time_intervals <- pg_date_intervals()
   stack_list <- list()
+  for (i in 1:length(time_intervals)) {
+    t <- time_intervals[i]
+    c <- f |> dplyr::filter(mydate %within% !!t)
+    if(nrow(c) > 0){
+      r <- terra::rasterize(c, pg, fun = "sum", na.rm = TRUE)
+      end_t <- lubridate::int_end(t)
+      stack_list[[as.character(end_t)]] <- r
+    }
 
-
-  for (year in years) {
-    print(paste("Year:", year))
-    c <- f |>
-      dplyr::filter(year == !!year)
-
-    r <- terra::rasterize(c, pg, fun = "sum", na.rm = TRUE)
-
-
-    stack_list[[as.character(year)]] <- r
-    print(terra::minmax(r))
   }
 
   stack <- terra::rast(stack_list)
-
-  names(stack) <- as.character(years)
-
+  names(stack) <- names(stack_list)
   return(stack)
 
 }
@@ -70,6 +68,7 @@ gen_geopko_operations_count <- function() {
 #'
 #' @examples
 #' # t <- gen_pko_troops_count
+#'
 #' @references
 #' \insertRef{cilMappingBlueHelmets2020}{priogrid}
 gen_geopko_troops_count <- function() {
@@ -79,27 +78,22 @@ gen_geopko_troops_count <- function() {
   f$no.troops <- ifelse(f$no.troops == "unknown", NA, f$no.troops)
   f$no.troops <- as.numeric(f$no.troops)
 
-  years <- as.numeric(1994:2022)
+  time_intervals <- pg_date_intervals()
   stack_list <- list()
+  for (i in 1:length(time_intervals)) {
+    t <- time_intervals[i]
 
-  for (year in years) {
-    print(paste("Year:", year))
-    c <- f |>
-      dplyr::filter(year == !!year)
-
-    t <- terra::rasterize(c, pg, field = "no.troops", fun = "sum", na.rm = TRUE)
-
-
-    stack_list[[as.character(year)]] <- t
-    print(terra::minmax(t))
+    c <- f |> dplyr::filter(mydate %within% !!t)
+    if(nrow(c) > 0){
+      r <- terra::rasterize(c, pg, field = "no.troops", fun = "sum", na.rm = TRUE)
+      end_t <- lubridate::int_end(t)
+      stack_list[[as.character(end_t)]] <- r
+    }
   }
 
   stack <- terra::rast(stack_list)
-
-  names(stack) <- as.character(years)
-
+  names(stack) <- names(stack_list)
   return(stack)
-
 }
 
 

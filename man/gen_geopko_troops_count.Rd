@@ -14,6 +14,7 @@ Takes the number of peace keeping troops within each PRIO-GRID cell
 }
 \examples{
 # t <- gen_pko_troops_count
+
 }
 \references{
 \insertRef{cilMappingBlueHelmets2020}{priogrid}
