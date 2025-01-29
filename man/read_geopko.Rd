@@ -12,3 +12,6 @@ an object of class sf
 \description{
 Reads the Geocoded Peacekeeping Operations (Geo-PKO) data
 }
+\references{
+\insertRef{cilMappingBlueHelmets2020}{priogrid}
+}
