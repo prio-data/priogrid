@@ -283,16 +283,22 @@ Source <- R6::R6Class("Source",
         return(list(url = NA, urls = NULL))
       }
 
+      # Handle file input
       if (file.exists(url) && !dir.exists(url)) {
         tryCatch({
           urls <- readLines(url)
-          return(list(url = urls[1], urls = urls))
+          # If file is not in urls/ directory, generate new path
+          if (!startsWith(url, "urls/")) {
+            return(list(url = file.path("urls", paste0(private$data$id, ".txt")), urls = urls))
+          }
+          return(list(url = url, urls = urls))
         }, error = function(e) {
           warning(sprintf("Could not read URL file: %s", e$message))
           return(list(url = NA, urls = NULL))
         })
       }
 
+      # Single URL case
       return(list(url = url, urls = c(url)))
     },
 
