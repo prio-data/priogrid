@@ -61,17 +61,11 @@ Source <- R6::R6Class("Source",
 
       # Handle URLs
       download_result <- private$handle_download_url(download_url, type = "urls")
-      if (!download_result$valid && !is.null(download_result$message)) {
-        warning("Invalid download_url: ", download_result$message)
-      }
       private$url_data$download <- download_result$urls
       private$data$download_url <- download_result$url
       private$data$download_url_exists <- download_result$valid
 
       prio_result <- private$handle_download_url(prio_mirror, type = "prio_mirror_urls")
-      if (!prio_result$valid && !is.null(prio_result$message)) {
-        warning("Invalid prio_mirror: ", prio_result$message)
-      }
       private$url_data$prio <- prio_result$urls
       private$data$prio_mirror <- prio_result$url
       private$data$prio_mirror_exists <- prio_result$valid
@@ -160,6 +154,12 @@ Source <- R6::R6Class("Source",
       cat("\nURL Status:\n")
       if (!private$data$website_url_exists) {
         cat("- Warning: Website URL not accessible:", private$data$website_url, "\n")
+      }
+      if (!private$data$download_url_exists) {
+        cat("- Warning: Download URL not accessible:", private$data$download_url, "\n")
+      }
+      if (!private$data$prio_mirror_exists) {
+        cat("- Warning: PRIO Mirror URL not accessible:", private$data$prio_mirror, "\n")
       }
 
       cat("\nCreated at:", private$data$created_at, "\n")
