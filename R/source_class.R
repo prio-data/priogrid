@@ -320,19 +320,30 @@ Source <- R6::R6Class("Source",
       })
 
       if (!is.na(private$data$download_url)) {
-        tryCatch({
-          results$download_url_exists <- RCurl::url.exists(private$data$download_url)
-        }, error = function(e) {
-          warning(sprintf("Error validating download URL: %s", e$message))
-        })
+        # Check if it's a urls/ path first
+        if (startsWith(private$data$download_url, "urls/")) {
+          file_path <- file.path("data", private$data$download_url)
+          results$download_url_exists <- file.exists(file_path)
+        } else {
+          tryCatch({
+            results$download_url_exists <- RCurl::url.exists(private$data$download_url)
+          }, error = function(e) {
+            warning(sprintf("Error validating download URL: %s", e$message))
+          })
+        }
       }
 
       if (!is.na(private$data$prio_mirror)) {
-        tryCatch({
-          results$prio_mirror_exists <- RCurl::url.exists(private$data$prio_mirror)
-        }, error = function(e) {
-          warning(sprintf("Error validating PRIO mirror URL: %s", e$message))
-        })
+        if (startsWith(private$data$prio_mirror, "urls/")) {
+          file_path <- file.path("data", private$data$prio_mirror)
+          results$prio_mirror_exists <- file.exists(file_path)
+        } else {
+          tryCatch({
+            results$prio_mirror_exists <- RCurl::url.exists(private$data$prio_mirror)
+          }, error = function(e) {
+            warning(sprintf("Error validating PRIO mirror URL: %s", e$message))
+          })
+        }
       }
 
       results
