@@ -72,7 +72,7 @@ Source <- R6::R6Class("Source",
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     },
 
-    save_url_file = function() {
+    get_url_path = function() {
       return(private$save_url_file())
     },
 
