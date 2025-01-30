@@ -47,7 +47,6 @@ Source <- R6::R6Class("Source",
       }
 
       private$data$id <- uuid::UUIDgenerate()
-
       private$data$source_name <- source_name
       private$data$source_version <- source_version
       private$data$license <- license
@@ -57,19 +56,26 @@ Source <- R6::R6Class("Source",
       private$data$citation_keys <- citation_keys
       private$data$aws_bucket <- aws_bucket
       private$data$aws_region <- aws_region
-      private$data$prio_mirror <- prio_mirror
       private$data$tags <- tags
       private$data$reference_keys <- reference_keys
 
-      # Handle download URL
+      # Handle URLs
       download_result <- private$handle_download_url(download_url)
-      private$url_data <- download_result$urls
+      if (!download_result$valid && !is.null(download_result$message)) {
+        stop("Invalid download_url: ", download_result$message)
+      }
+      private$url_data$download <- download_result$urls
       private$data$download_url <- download_result$url
 
-      url_validations <- private$validate_urls()
-      private$data <- c(private$data, url_validations)
-
+      prio_result <- private$handle_download_url(prio_mirror)
+      if (!prio_result$valid && !is.null(prio_result$message)) {
+        stop("Invalid prio_mirror: ", prio_result$message)
+      }
+      private$url_data$prio <- prio_result$urls
+      private$data$prio_mirror <- prio_result$url
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+      private$validate_website_url()
     },
 
     get_url_path = function() {
@@ -97,9 +103,7 @@ Source <- R6::R6Class("Source",
         temporal_resolution = private$data$temporal_resolution,
         reference_keys = private$data$reference_keys,
         prio_mirror = private$data$prio_mirror,
-        download_url_exists = private$data$download_url_exists,
         website_url_exists = private$data$website_url_exists,
-        prio_mirror_exists = private$data$prio_mirror_exists,
         created_at = private$data$created_at
       )
     },
@@ -153,17 +157,6 @@ Source <- R6::R6Class("Source",
       if (!private$data$website_url_exists) {
         cat("- Warning: Website URL not accessible:", private$data$website_url, "\n")
       }
-      if (!is.na(private$data$download_url) && !private$data$download_url_exists) {
-        cat("- Warning: Download URL not accessible:", private$data$download_url, "\n")
-      }
-      if (!is.na(private$data$prio_mirror) && !private$data$prio_mirror_exists) {
-        cat("- Warning: PRIO mirror not accessible:", private$data$prio_mirror, "\n")
-      }
-      if (private$data$website_url_exists &&
-          (is.na(private$data$download_url) || private$data$download_url_exists) &&
-          (is.na(private$data$prio_mirror) || private$data$prio_mirror_exists)) {
-        cat("- All provided URLs are accessible\n")
-      }
 
       cat("\nCreated at:", private$data$created_at, "\n")
       invisible(self)
@@ -173,7 +166,7 @@ Source <- R6::R6Class("Source",
   private = list(
     input_data = NULL,
     data = list(),
-    url_data = NULL,
+    url_data = list(download = NULL, prio = NULL),
 
     valid_spatial_extents = c(
       "World",
@@ -279,81 +272,92 @@ Source <- R6::R6Class("Source",
     },
 
     handle_download_url = function(url) {
-      if (is.na(url) || !is.character(url)) {
-        return(list(url = NA, urls = NULL))
+      # Handle NA, NULL, empty cases
+      if (is.null(url) || is.na(url) || trimws(url) == "") {
+        return(list(url = NA_character_, urls = NULL, valid = TRUE))
       }
 
-      # Handle file input
-      if (file.exists(url) && !dir.exists(url)) {
-        tryCatch({
-          urls <- readLines(url)
-          # If file is not in urls/ directory, generate new path
-          if (!startsWith(url, "urls/")) {
-            return(list(url = file.path("urls", paste0(private$data$id, ".txt")), urls = urls))
-          }
-          return(list(url = url, urls = urls))
-        }, error = function(e) {
-          warning(sprintf("Could not read URL file: %s", e$message))
-          return(list(url = NA, urls = NULL))
-        })
+      # Handle directory case
+      if (dir.exists(url)) {
+        return(list(
+          url = NA_character_,
+          urls = NULL,
+          valid = FALSE,
+          message = "URL cannot be a directory"
+        ))
       }
 
-      # Single URL case
-      return(list(url = url, urls = c(url)))
+      # Handle urls/ file case
+      if (startsWith(url, "urls/")) {
+        file_path <- file.path("data", url)
+        if (!file.exists(file_path)) {
+          return(list(
+            url = NA_character_,
+            urls = NULL,
+            valid = FALSE,
+            message = sprintf("URL file not found: %s", file_path)
+          ))
+        }
+        urls <- readLines(file_path)
+        valid_urls <- all(sapply(urls, function(u) {
+          tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
+        }))
+        return(list(url = url, urls = urls, valid = valid_urls))
+      }
+
+      # Handle local file case
+      if (file.exists(url)) {
+        urls <- readLines(url)
+        valid_urls <- all(sapply(urls, function(u) {
+          tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
+        }))
+        return(list(
+          url = file.path("urls", paste0(private$data$id, ".txt")),
+          urls = urls,
+          valid = valid_urls
+        ))
+      }
+
+      # Handle direct URL case
+      url_valid <- tryCatch(RCurl::url.exists(url), error = function(e) FALSE)
+      if (url_valid) {
+        return(list(url = url, urls = c(url), valid = TRUE))
+      }
+
+      # Invalid URL
+      return(list(
+        url = NA_character_,
+        urls = NULL,
+        valid = FALSE,
+        message = "Invalid URL"
+      ))
     },
 
     save_url_file = function() {
-      if (!is.null(private$url_data)) {
+      urls_saved <- FALSE
+
+      if (!is.null(private$url_data$download)) {
         dir.create(file.path("data", "urls"), recursive = TRUE, showWarnings = FALSE)
         fpath <- file.path("data", "urls", paste0(private$data$id, ".txt"))
-        writeLines(private$url_data, fpath)
-        return(file.path("urls", basename(fpath)))
+        writeLines(private$url_data$download, fpath)
+        urls_saved <- TRUE
       }
-      return(NA)
+
+      if (!is.null(private$url_data$prio)) {
+        dir.create(file.path("data", "urls"), recursive = TRUE, showWarnings = FALSE)
+        fpath <- file.path("data", "urls", paste0(private$data$id, "_prio.txt"))
+        writeLines(private$url_data$prio, fpath)
+        urls_saved <- TRUE
+      }
+
+      return(urls_saved)
     },
 
-    validate_urls = function() {
-      results <- list(
-        website_url_exists = FALSE,
-        download_url_exists = FALSE,
-        prio_mirror_exists = FALSE
+    validate_website_url = function() {
+      private$data$website_url_exists <- tryCatch(
+        RCurl::url.exists(private$data$website_url),
+        error = function(e) FALSE
       )
-
-      tryCatch({
-        results$website_url_exists <- RCurl::url.exists(private$data$website_url)
-      }, error = function(e) {
-        warning(sprintf("Error validating website URL: %s", e$message))
-      })
-
-      if (!is.na(private$data$download_url)) {
-        # Check if it's a urls/ path
-        if (startsWith(private$data$download_url, "urls/")) {
-          file_path <- file.path("data", private$data$download_url)
-          results$download_url_exists <- file.exists(file_path)
-        } else if (!is.null(private$url_data)) {
-          # For new files that haven't been saved yet, validate the URLs
-          results$download_url_exists <- all(sapply(private$url_data, function(url) {
-            tryCatch({
-              RCurl::url.exists(url)
-            }, error = function(e) FALSE)
-          }))
-        }
-      }
-
-      if (!is.na(private$data$prio_mirror)) {
-        if (startsWith(private$data$prio_mirror, "urls/")) {
-          file_path <- file.path("data", private$data$prio_mirror)
-          results$prio_mirror_exists <- file.exists(file_path)
-        } else {
-          tryCatch({
-            results$prio_mirror_exists <- RCurl::url.exists(private$data$prio_mirror)
-          }, error = function(e) {
-            warning(sprintf("Error validating PRIO mirror URL: %s", e$message))
-          })
-        }
-      }
-
-      results
     }
   )
 )
