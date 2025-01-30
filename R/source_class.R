@@ -39,19 +39,15 @@ Source <- R6::R6Class("Source",
                           tags = NULL,
                           reference_keys = NULL) {
 
-      # Store inputs before validation for error messages
       private$input_data <- as.list(environment())
 
-      # Run validation
       validation_result <- private$validate_inputs()
       if (!validation_result$valid) {
         stop(validation_result$message)
       }
 
-      # Generate UUID for new source
       private$data$id <- uuid::UUIDgenerate()
 
-      # Store validated data
       private$data$source_name <- source_name
       private$data$source_version <- source_version
       private$data$license <- license
@@ -61,22 +57,30 @@ Source <- R6::R6Class("Source",
       private$data$citation_keys <- citation_keys
       private$data$aws_bucket <- aws_bucket
       private$data$aws_region <- aws_region
-      private$data$download_url <- download_url
       private$data$prio_mirror <- prio_mirror
       private$data$tags <- tags
       private$data$reference_keys <- reference_keys
 
-      # Add URL validation results
+      # Handle download URL
+      download_result <- private$handle_download_url(download_url)
+      private$url_data <- download_result$urls
+      private$data$download_url <- download_result$url
+
       url_validations <- private$validate_urls()
       private$data <- c(private$data, url_validations)
 
-      # Add timestamp
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     },
 
-    #' @description
-    #' Convert source to tibble format
-    #' @return tibble
+    save_url_file = function() {
+      return(private$save_url_file())
+    },
+
+    set_download_url = function(url) {
+      private$data$download_url <- url
+      invisible(self)
+    },
+
     to_tibble = function() {
       dplyr::tibble(
         id = private$data$id,
@@ -100,30 +104,19 @@ Source <- R6::R6Class("Source",
       )
     },
 
-    #' @description
-    #' Print source details
-    #' @description
-    #' Print source details including full citations
-    #' @param bib_path String. Path to REFERENCES.bib file. Defaults to "inst/REFERENCES.bib"
     print = function(bib_path = "inst/REFERENCES.bib") {
       cat("Source:", private$data$source_name, "\n")
       cat("Version:", private$data$source_version, "\n")
       cat("License:", private$data$license, "\n")
 
-      # Handle citations if they exist
       if (!is.null(private$data$citation_keys) && nchar(private$data$citation_keys) > 0) {
         citation_keys <- unlist(strsplit(private$data$citation_keys, ";\\s*"))
-
         tryCatch({
-          # Read bibliography file
           bib <- RefManageR::ReadBib(bib_path)
-
-          # Print each citation
           cat("\nCitations:\n")
           for (key in citation_keys) {
             key <- trimws(key)
             if (key %in% names(bib)) {
-              # Format citation using RefManageR
               citation <- RefManageR::Cite(bib, key)
               cat("- ", citation, "\n", sep = "")
             } else {
@@ -136,7 +129,26 @@ Source <- R6::R6Class("Source",
         })
       }
 
-      # Print URL statuses
+      if (!is.null(private$data$reference_keys) && nchar(private$data$reference_keys) > 0) {
+        reference_keys <- unlist(strsplit(private$data$reference_keys, ";\\s*"))
+        tryCatch({
+          bib <- RefManageR::ReadBib(bib_path)
+          cat("\nOther references:\n")
+          for (key in reference_keys) {
+            key <- trimws(key)
+            if (key %in% names(bib)) {
+              citation <- RefManageR::Cite(bib, key)
+              cat("- ", citation, "\n", sep = "")
+            } else {
+              cat("- [Missing citation for key:", key, "]\n")
+            }
+          }
+        }, error = function(e) {
+          cat("\nWarning: Could not read bibliography file:", e$message, "\n")
+          cat("Reference keys:", private$data$reference_keys, "\n")
+        })
+      }
+
       cat("\nURL Status:\n")
       if (!private$data$website_url_exists) {
         cat("- Warning: Website URL not accessible:", private$data$website_url, "\n")
@@ -147,7 +159,6 @@ Source <- R6::R6Class("Source",
       if (!is.na(private$data$prio_mirror) && !private$data$prio_mirror_exists) {
         cat("- Warning: PRIO mirror not accessible:", private$data$prio_mirror, "\n")
       }
-
       if (private$data$website_url_exists &&
           (is.na(private$data$download_url) || private$data$download_url_exists) &&
           (is.na(private$data$prio_mirror) || private$data$prio_mirror_exists)) {
@@ -160,13 +171,10 @@ Source <- R6::R6Class("Source",
   ),
 
   private = list(
-    # Store input data for error messages
     input_data = NULL,
-
-    # Store validated data
     data = list(),
+    url_data = NULL,
 
-    # Valid values for controlled vocabularies
     valid_spatial_extents = c(
       "World",
       "Multiple continents",
@@ -183,9 +191,7 @@ Source <- R6::R6Class("Source",
       "Less than yearly"
     ),
 
-    #' Validate all input parameters
     validate_inputs = function() {
-      # Required string fields
       required_strings <- c(
         "source_name",
         "source_version",
@@ -212,7 +218,6 @@ Source <- R6::R6Class("Source",
         }
       }
 
-      # Optional string fields
       optional_strings <- c(
         "citation_keys",
         "aws_bucket",
@@ -242,7 +247,6 @@ Source <- R6::R6Class("Source",
         }
       }
 
-      # Validate spatial extent
       if (!checkmate::test_choice(
         private$input_data$spatial_extent,
         private$valid_spatial_extents
@@ -257,7 +261,6 @@ Source <- R6::R6Class("Source",
         ))
       }
 
-      # Validate temporal resolution
       if (!checkmate::test_choice(
         private$input_data$temporal_resolution,
         private$valid_temporal_resolutions
@@ -272,11 +275,37 @@ Source <- R6::R6Class("Source",
         ))
       }
 
-      # All validations passed
       return(list(valid = TRUE, message = NULL))
     },
 
-    #' Validate URLs and return existence status
+    handle_download_url = function(url) {
+      if (is.na(url) || !is.character(url)) {
+        return(list(url = NA, urls = NULL))
+      }
+
+      if (file.exists(url) && !dir.exists(url)) {
+        tryCatch({
+          urls <- readLines(url)
+          return(list(url = urls[1], urls = urls))
+        }, error = function(e) {
+          warning(sprintf("Could not read URL file: %s", e$message))
+          return(list(url = NA, urls = NULL))
+        })
+      }
+
+      return(list(url = url, urls = c(url)))
+    },
+
+    save_url_file = function() {
+      if (!is.null(private$url_data)) {
+        dir.create(file.path("data", "urls"), recursive = TRUE, showWarnings = FALSE)
+        fpath <- file.path("data", "urls", paste0(private$data$id, ".txt"))
+        writeLines(private$url_data, fpath)
+        return(file.path("urls", basename(fpath)))
+      }
+      return(NA)
+    },
+
     validate_urls = function() {
       results <- list(
         website_url_exists = FALSE,
@@ -284,14 +313,12 @@ Source <- R6::R6Class("Source",
         prio_mirror_exists = FALSE
       )
 
-      # Validate website URL
       tryCatch({
         results$website_url_exists <- RCurl::url.exists(private$data$website_url)
       }, error = function(e) {
         warning(sprintf("Error validating website URL: %s", e$message))
       })
 
-      # Validate download URL if provided
       if (!is.na(private$data$download_url)) {
         tryCatch({
           results$download_url_exists <- RCurl::url.exists(private$data$download_url)
@@ -300,7 +327,6 @@ Source <- R6::R6Class("Source",
         })
       }
 
-      # Validate PRIO mirror if provided
       if (!is.na(private$data$prio_mirror)) {
         tryCatch({
           results$prio_mirror_exists <- RCurl::url.exists(private$data$prio_mirror)
