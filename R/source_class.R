@@ -60,14 +60,14 @@ Source <- R6::R6Class("Source",
       private$data$reference_keys <- reference_keys
 
       # Handle URLs
-      download_result <- private$handle_download_url(download_url)
+      download_result <- private$handle_download_url(download_url, type = "urls")
       if (!download_result$valid && !is.null(download_result$message)) {
         stop("Invalid download_url: ", download_result$message)
       }
       private$url_data$download <- download_result$urls
       private$data$download_url <- download_result$url
 
-      prio_result <- private$handle_download_url(prio_mirror)
+      prio_result <- private$handle_download_url(prio_mirror, type = "prio_mirror_urls")
       if (!prio_result$valid && !is.null(prio_result$message)) {
         stop("Invalid prio_mirror: ", prio_result$message)
       }
@@ -271,7 +271,7 @@ Source <- R6::R6Class("Source",
       return(list(valid = TRUE, message = NULL))
     },
 
-    handle_download_url = function(url) {
+    handle_download_url = function(url, type) {
       # Handle NA, NULL, empty cases
       if (is.null(url) || is.na(url) || trimws(url) == "") {
         return(list(url = NA_character_, urls = NULL, valid = TRUE))
@@ -312,7 +312,7 @@ Source <- R6::R6Class("Source",
           tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
         }))
         return(list(
-          url = file.path("urls", paste0(private$data$id, ".txt")),
+          url = file.path(type, paste0(private$data$id, ".txt")),
           urls = urls,
           valid = valid_urls
         ))
@@ -337,15 +337,15 @@ Source <- R6::R6Class("Source",
       urls_saved <- FALSE
 
       if (!is.null(private$url_data$download)) {
-        dir.create(file.path("data", "urls"), recursive = TRUE, showWarnings = FALSE)
-        fpath <- file.path("data", "urls", paste0(private$data$id, ".txt"))
+        fpath <- file.path("data", private$data$download_url)
+        dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$download, fpath)
         urls_saved <- TRUE
       }
 
       if (!is.null(private$url_data$prio)) {
-        dir.create(file.path("data", "urls"), recursive = TRUE, showWarnings = FALSE)
-        fpath <- file.path("data", "urls", paste0(private$data$id, "_prio.txt"))
+        fpath <- file.path("data", private$data$prio_mirror)
+        dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$prio, fpath)
         urls_saved <- TRUE
       }
