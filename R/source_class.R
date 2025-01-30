@@ -36,8 +36,8 @@ Source <- R6::R6Class("Source",
                           aws_region = NA_character_,
                           download_url = NA_character_,
                           prio_mirror = NA_character_,
-                          tags = NULL,
-                          reference_keys = NULL) {
+                          tags = NA_character_,
+                          reference_keys = NA_character_) {
 
       private$input_data <- as.list(environment())
 
@@ -62,17 +62,19 @@ Source <- R6::R6Class("Source",
       # Handle URLs
       download_result <- private$handle_download_url(download_url, type = "urls")
       if (!download_result$valid && !is.null(download_result$message)) {
-        stop("Invalid download_url: ", download_result$message)
+        warning("Invalid download_url: ", download_result$message)
       }
       private$url_data$download <- download_result$urls
       private$data$download_url <- download_result$url
+      private$data$download_url_exists <- download_result$valid
 
       prio_result <- private$handle_download_url(prio_mirror, type = "prio_mirror_urls")
       if (!prio_result$valid && !is.null(prio_result$message)) {
-        stop("Invalid prio_mirror: ", prio_result$message)
+        warning("Invalid prio_mirror: ", prio_result$message)
       }
       private$url_data$prio <- prio_result$urls
       private$data$prio_mirror <- prio_result$url
+      private$data$prio_mirror_exists <- prio_result$valid
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
       private$validate_website_url()
@@ -103,7 +105,9 @@ Source <- R6::R6Class("Source",
         temporal_resolution = private$data$temporal_resolution,
         reference_keys = private$data$reference_keys,
         prio_mirror = private$data$prio_mirror,
+        download_url_exists = private$data$download_url_exists,
         website_url_exists = private$data$website_url_exists,
+        prio_mirror_exists = private$data$prio_mirror_exists,
         created_at = private$data$created_at
       )
     },
@@ -226,7 +230,7 @@ Source <- R6::R6Class("Source",
         if (!is.null(value) && !is.na(value)) {
           if (!checkmate::test_string(
             value,
-            min.chars = 1
+            min.chars = 0
           )) {
             return(list(
               valid = FALSE,
@@ -274,7 +278,7 @@ Source <- R6::R6Class("Source",
     handle_download_url = function(url, type) {
       # Handle NA, NULL, empty cases
       if (is.null(url) || is.na(url) || trimws(url) == "") {
-        return(list(url = NA_character_, urls = NULL, valid = TRUE))
+        return(list(url = NA_character_, urls = NULL, valid = FALSE))
       }
 
       # Handle directory case
