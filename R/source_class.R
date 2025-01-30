@@ -326,16 +326,17 @@ Source <- R6::R6Class("Source",
       })
 
       if (!is.na(private$data$download_url)) {
-        # Check if it's a urls/ path first
+        # Check if it's a urls/ path
         if (startsWith(private$data$download_url, "urls/")) {
           file_path <- file.path("data", private$data$download_url)
           results$download_url_exists <- file.exists(file_path)
-        } else {
-          tryCatch({
-            results$download_url_exists <- RCurl::url.exists(private$data$download_url)
-          }, error = function(e) {
-            warning(sprintf("Error validating download URL: %s", e$message))
-          })
+        } else if (!is.null(private$url_data)) {
+          # For new files that haven't been saved yet, validate the URLs
+          results$download_url_exists <- all(sapply(private$url_data, function(url) {
+            tryCatch({
+              RCurl::url.exists(url)
+            }, error = function(e) FALSE)
+          }))
         }
       }
 
