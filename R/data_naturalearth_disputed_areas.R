@@ -41,15 +41,19 @@ read_disputed_areas <- function() {
 #' @references
 #' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
 gen_disputed_areas_cover <- function(data = read_disputed_areas()) {
-  if (sf::st_crs(data) != sf::st_crs(4326)) {
-    data <- sf::st_transform(data, crs = 4326)
+  pgcrs <- sf::st_crs(pgoptions$get_crs())
+  if (sf::st_crs(data) != pgcrs) {
+    data <- sf::st_transform(data, crs = pgcrs)
   }
   pg <- prio_blank_grid()
-  disputed_coversh <- terra::rasterize(
-    terra::vect(data), pg,
-    fun = function(vals, ...) mean(vals),
-    cover = TRUE
-  )
+
+  data_combined <- data |> dplyr::summarize(geometry = sf::st_combine(geometry))
+  coversh <- exactextractr::exact_extract(pg, data_combined)
+
+  ra <- exactextractr::rasterize_polygons(data_combined, pg)
+  pg <- pg*ra # Remove non-land cells
+
+  disputed_coversh <- terra::classify(pg, coversh[[1]])
   names(disputed_coversh) <- "disputed_land_share_of_cell"
   return(disputed_coversh)
 }
@@ -82,13 +86,22 @@ gen_naturalearth_disputed_areas_type <- function(type = "Disputed", disputed_are
   }
 
   disputed_type <- disputed_areas |>
-    dplyr::filter(TYPE == type) |>
-    terra::vect()
+    dplyr::filter(TYPE == type)
+
+  pgcrs <- sf::st_crs(pgoptions$get_crs())
+  if (sf::st_crs(disputed_type) != pgcrs) {
+    disputed_type <- sf::st_transform(disputed_type, crs = pgcrs)
+  }
 
   pg <- prio_blank_grid()
 
-  r <- terra::rasterize(disputed_type, pg, fun = "max", cover = TRUE)
+  data_combined <- disputed_type |> dplyr::summarize(geometry = sf::st_combine(geometry))
+  coversh <- exactextractr::exact_extract(pg, data_combined)
 
+  ra <- exactextractr::rasterize_polygons(data_combined, pg)
+  pg <- pg*ra # Remove non-land cells
+
+  r <- terra::classify(pg, coversh[[1]])
   names(r) <- paste0("naturalearth_disputed_areas_", type) |> tolower()
 
   return(r)
