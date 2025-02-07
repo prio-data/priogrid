@@ -1,10 +1,11 @@
 
-#' read_geostat
+#' Reads the Geostat usual residence total population
 #'
-#' Reads the Geostat usual residence for total population raster data
-#'
-#' @return an object of class raster
+#' @return SpatRaster
 #' @export
+#'
+#' @references
+#' \insertRef{geographicinformationsystemofthecommissionGeostatCensusGrid2024}{priogrid}
 read_geostat_pop <- function() {
   f <- get_pgfile(source_name = "GISCO Geostat Census Grid",
                   source_version = "2021",
@@ -35,11 +36,18 @@ read_geostat_pop <- function() {
 
 #' gen_pop_residence
 #'
-#' Takes the geostat totpop raster and returns a raster
+#' Takes the geostat totpop raster and returns a spatraster
 #' in PRIO-GRID extent and resolution
 #'
+#' @return SpatRaster
 #' @export
-pop_residence <- function() {
+#'
+#'@examples
+#' # gs <- gen_geostat_pop_residence
+#'
+#' @references
+#' \insertRef{geographicinformationsystemofthecommissionGeostatCensusGrid2024}{priogrid}
+gen_geostat_pop_residence <- function() {
   gs <- read_geostat_pop()
   pg <- prio_blank_grid()
   gs <- terra::project(gs, terra::crs(pg))

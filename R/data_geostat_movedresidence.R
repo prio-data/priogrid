@@ -34,8 +34,6 @@ read_geostat_CHG_out <- function() {
   return(raster_object)
 }
 
-#' gen_CHG_out
-#'
 #' Takes the geostat CHG_out raster and returns a raster
 #' in PRIO-GRID extent and resolution
 #'
