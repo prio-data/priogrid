@@ -55,7 +55,7 @@ gen_geostat_pop_residence <- function() {
   if(any(higher_resolution)){
     gsagg <- terra::aggregate(gs,
                            fact = terra::res(pg)/terra::res(gs),
-                           fun = "median")
+                           fun = "mean")
   }
   equal_extent <- terra::ext(gsagg) == terra::ext(pg)
   if(!equal_extent){
