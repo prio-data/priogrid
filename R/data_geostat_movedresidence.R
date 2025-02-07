@@ -1,11 +1,11 @@
-
-#' read_geostat
-#'
 #' Reads the Geostat usual residence one year prior to cencus
 #' moved from outside of reporting country
 #'
-#' @return an object of class raster
+#' @return SpatRaster
 #' @export
+#'
+#' @references
+#' \insertRef{geographicinformationsystemofthecommissionGeostatCensusGrid2024}{priogrid}
 read_geostat_CHG_out <- function() {
   f <- get_pgfile(source_name = "GISCO Geostat Census Grid",
                   source_version = "2021",
@@ -39,8 +39,15 @@ read_geostat_CHG_out <- function() {
 #' Takes the geostat CHG_out raster and returns a raster
 #' in PRIO-GRID extent and resolution
 #'
+#' @return SpatRaster
 #' @export
-CHG_out <- function() {
+#'
+#' @examples
+#' # gs <- gen_geostat_pop_moved_residence
+#'
+#' @references
+#' \insertRef{geographicinformationsystemofthecommissionGeostatCensusGrid2024}{priogrid}
+gen_geostat_pop_moved_residence <- function() {
   gs <- read_geostat_CHG_out()
   pg <- prio_blank_grid()
   gs <- terra::project(gs, terra::crs(pg))
@@ -58,7 +65,7 @@ CHG_out <- function() {
                        nrow = nrow(pg))
     gs_resamp <- terra::resample(gsagg, tmp, method = "near", threads = T)
   }
-  names(gs_resamp) <- "geostat_pop_residence"
+  names(gs_resamp) <- "geostat_pop_moved_residence"
   return(gs_resamp)
 }
 
