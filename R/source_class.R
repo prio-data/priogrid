@@ -25,25 +25,64 @@ Source <- R6::R6Class("Source",
     #' @param prio_mirror String. Optional. Alternative download location
     #' @param tags String. Optional. Comma-separated tags
     #' @param reference_keys String. Optional. Other relevant bibkeys
+    #'
+    #' @examples
+    #' new_source <- Source$new(
+    #'   source_name = "my new source",
+    #'   source_version = "v1.0",
+    #'   license = "CC BY 4.0",
+    #'   website_url = "www.example.com",
+    #'   spatial_extent = "World",
+    #'   temporal_resolution = "Yearly",
+    #'   citation_keys = "doeNewSource2025",
+    #'   download_url = "www.example.com/path/to/my/new/source/file.csv",
+    #'   tags = "test"
+    #' )
+    #' new_source # gives warning that doeNewSource2025 does not exist in the bibliography
     initialize = function(source_name,
                           source_version,
                           license,
                           website_url,
                           spatial_extent,
                           temporal_resolution,
-                          citation_keys = NULL,
+                          citation_keys = NA_character_,
                           aws_bucket = NA_character_,
                           aws_region = NA_character_,
                           download_url = NA_character_,
                           prio_mirror = NA_character_,
                           tags = NA_character_,
-                          reference_keys = NA_character_) {
+                          reference_keys = NA_character_,
+                          bib_path = "inst/REFERENCES.bib") {
 
-      private$input_data <- as.list(environment())
+      if(base::missing(source_name)) stop("`source_name´ is required")
+      if(base::missing(source_version)) stop("`source_version´ is required")
+      if(base::missing(license)) stop("`license´ is required")
+      if(base::missing(website_url)) stop("`website_url´ is required")
+      if(base::missing(spatial_extent)) stop("`spatial_extent´ is required")
+      if(base::missing(temporal_resolution)) stop("`temporal_resolution´ is required")
 
-      validation_result <- private$validate_inputs()
-      if (!validation_result$valid) {
-        stop(validation_result$message)
+      valid_spatial_extents = c("World", "Multiple continents", "Single continent", "Several countries")
+      if(!checkmate::test_choice(spatial_extent, valid_spatial_extents)){
+        valid_spatial_extents <- paste("- ", valid_spatial_extents, collapse = "\n")
+        stop(sprintf("Invalid spatial extent `%s´: Must be one of:\n%s.", spatial_extent, valid_spatial_extents))
+      }
+
+      valid_temporal_resolutions = c("Static", "Higher than monthly", "Monthly", "Quarterly", "Yearly", "Less than yearly")
+      if(!checkmate::test_choice(temporal_resolution, valid_temporal_resolutions)){
+        valid_temporal_resolutions <- paste("- ", valid_temporal_resolutions, collapse = "\n")
+        stop(sprintf("Invalid temporal resolution `%s´: Must be one of:\n%s.", temporal_resolution, valid_temporal_resolutions))
+      }
+
+      if(grepl(";", tags)){
+        stop("`tags´ should be comma-separated, not semi-colon.")
+      }
+
+      if(grepl(",", citation_keys)){
+        stop("`citation_keys´ should be semi-colon separated, not comma-separated.")
+      }
+
+      if(grepl(",", reference_keys)){
+        stop("`reference_keys´ should be semi-colon separated, not comma-separated.")
       }
 
       private$data$id <- uuid::UUIDgenerate()
@@ -53,11 +92,15 @@ Source <- R6::R6Class("Source",
       private$data$website_url <- website_url
       private$data$spatial_extent <- spatial_extent
       private$data$temporal_resolution <- temporal_resolution
-      private$data$citation_keys <- citation_keys
+
+      private$citations <- private$handle_references(citation_keys, bib_path)
+      private$data$citation_keys <- private$citations$updated_reference_string
       private$data$aws_bucket <- aws_bucket
       private$data$aws_region <- aws_region
       private$data$tags <- tags
-      private$data$reference_keys <- reference_keys
+
+      private$other_references <- private$handle_references(reference_keys, bib_path)
+      private$data$reference_keys <- private$other_references$updated_reference_string
 
       # Handle URLs
       download_result <- private$handle_download_url(download_url, type = "urls")
@@ -72,6 +115,14 @@ Source <- R6::R6Class("Source",
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
       private$validate_website_url()
+    },
+
+    get_existing_tags = function(){
+      lapply(pgsources$tags |> unique(), strsplit, split = ",\\s*") |> unlist() |> unique() |> sort()
+    },
+
+    get_existing_licenses = function(){
+      pgsources$license |> unique() |> sort()
     },
 
     get_url_path = function() {
@@ -107,59 +158,48 @@ Source <- R6::R6Class("Source",
     },
 
     print = function(bib_path = "inst/REFERENCES.bib") {
+      # ANSI color codes for terminal output
+      green <- "\033[32m"
+      red <- "\033[31m"
+      reset <- "\033[0m"
+
       cat("Source:", private$data$source_name, "\n")
       cat("Version:", private$data$source_version, "\n")
       cat("License:", private$data$license, "\n")
-
-      if (!is.null(private$data$citation_keys) && nchar(private$data$citation_keys) > 0) {
-        citation_keys <- unlist(strsplit(private$data$citation_keys, ";\\s*"))
-        tryCatch({
-          bib <- RefManageR::ReadBib(bib_path)
-          cat("\nCitations:\n")
-          for (key in citation_keys) {
-            key <- trimws(key)
-            if (key %in% names(bib)) {
-              citation <- RefManageR::Cite(bib, key)
-              cat("- ", citation, "\n", sep = "")
-            } else {
-              cat("- [Missing citation for key:", key, "]\n")
-            }
-          }
-        }, error = function(e) {
-          cat("\nWarning: Could not read bibliography file:", e$message, "\n")
-          cat("Citation keys:", private$data$citation_keys, "\n")
-        })
+      if(!private$data$license %in% self$get_existing_licenses()){
+        existing_licenses <- paste("- ", self$get_existing_licenses(), collapse = "\n")
+        cat(sprintf("%s%s%s is not among the already registrered licenses. Are you sure the license is not any of the ones in this list?\n%s\n",
+                    red, private$data$license, reset, existing_licenses))
       }
 
-      if (!is.null(private$data$reference_keys) && nchar(private$data$reference_keys) > 0) {
-        reference_keys <- unlist(strsplit(private$data$reference_keys, ";\\s*"))
-        tryCatch({
-          bib <- RefManageR::ReadBib(bib_path)
-          cat("\nOther references:\n")
-          for (key in reference_keys) {
-            key <- trimws(key)
-            if (key %in% names(bib)) {
-              citation <- RefManageR::Cite(bib, key)
-              cat("- ", citation, "\n", sep = "")
-            } else {
-              cat("- [Missing citation for key:", key, "]\n")
-            }
-          }
-        }, error = function(e) {
-          cat("\nWarning: Could not read bibliography file:", e$message, "\n")
-          cat("Reference keys:", private$data$reference_keys, "\n")
-        })
-      }
+      private$display_citation_results(private$citations, "Citations:")
+      private$display_citation_results(private$other_references, "Other references:")
 
-      cat("\nURL Status:\n")
+      cat("URL Status:\n")
       if (!private$data$website_url_exists) {
-        cat("- Warning: Website URL not accessible:", private$data$website_url, "\n")
+        cat(sprintf("- Website URL: %s%s%s not accessible. \n", red, private$data$website_url, reset))
+      } else{
+        cat(sprintf("- Website URL: %s%s%s accessible. \n", green, private$data$website_url, reset))
       }
       if (!private$data$download_url_exists) {
-        cat("- Warning: Download URL not accessible:", private$data$download_url, "\n")
+        cat(sprintf("- Download URL/URLs: %s%s%s not accessible. \n", red, private$data$download_url, reset))
+      } else{
+        cat(sprintf("- Download URL/URLs: %s%s%s accessible. \n", green, private$data$download_url, reset))
       }
       if (!private$data$prio_mirror_exists) {
-        cat("- Warning: PRIO Mirror URL not accessible:", private$data$prio_mirror, "\n")
+        cat(sprintf("- PRIO mirror URL/URLs: %s%s%s not accessible. \n", red, private$data$prio_mirror, reset))
+      } else{
+        cat(sprintf("- PRIO mirror URL/URLs: %s%s%s accessible. \n", green, private$data$prio_mirror, reset))
+      }
+
+      tags <- strsplit(private$data$tags, split = ",\\s*") |> unlist() |> unique() |> sort()
+      new_tags <- tags[!(tags %in% self$get_existing_tags())]
+      if(length(new_tags) > 0){
+        cat("Tags:\n")
+        existing_tags <- paste("- ", self$get_existing_tags(), collapse = "\n")
+        new_tags <- paste(new_tags, collapse = ", ")
+        cat(sprintf("These tags are not in the system: %s%s%s. Could you use any of the existing tags instead (not required)?\n%s\n",
+                    red, new_tags, reset, existing_tags))
       }
 
       cat("\nCreated at:", private$data$created_at, "\n")
@@ -171,111 +211,72 @@ Source <- R6::R6Class("Source",
     input_data = NULL,
     data = list(),
     url_data = list(download = NULL, prio = NULL),
+    citations = list(),
+    other_references = list(),
 
-    valid_spatial_extents = c(
-      "World",
-      "Multiple continents",
-      "Single continent",
-      "Several countries"
-    ),
+    handle_references = function(reference_string, bib_path){
+      if (is.null(reference_string) || is.na(reference_string) || trimws(reference_string) == "") {
+        return(list(reference_string = NA_character_,
+                    updated_reference_string = NA_character_,
+                    found_citations = character(),
+                    missing_citations = character()))
+      }
 
-    valid_temporal_resolutions = c(
-      "Static",
-      "Higher than monthly",
-      "Monthly",
-      "Quarterly",
-      "Yearly",
-      "Less than yearly"
-    ),
+      reference_keys <- unlist(strsplit(reference_string, ";\\s*"))
+      reference_keys <- lapply(reference_keys, trimws)
 
-    validate_inputs = function() {
-      required_strings <- c(
-        "source_name",
-        "source_version",
-        "license",
-        "website_url",
-        "spatial_extent",
-        "temporal_resolution"
-      )
+      bib <- RefManageR::ReadBib(bib_path)
+      citations <- sapply(reference_keys, function(key) RefManageR::Cite(bib, key))
+      names(citations) <- reference_keys
 
-      for (field in required_strings) {
-        if (!checkmate::test_string(
-          private$input_data[[field]],
-          min.chars = 1,
-          null.ok = FALSE
-        )) {
-          return(list(
-            valid = FALSE,
-            message = sprintf(
-              "Invalid %s: Must be a non-empty string. Got: %s",
-              field,
-              private$input_data[[field]]
-            )
-          ))
+      missing_citations <- citations[citations == ""]
+      found_citations <- citations[citations != ""]
+
+      updated_reference_string <- names(found_citations) |> paste(collapse = ";")
+
+      return(list(reference_string = reference_string,
+                  updated_reference_string = updated_reference_string,
+                  found_citations = found_citations,
+                  missing_citations = missing_citations))
+    },
+
+    display_citation_results = function(reference_results, type) {
+      # Check if input is valid
+      if (!is.list(reference_results) ||
+          !all(c("found_citations", "missing_citations") %in% names(reference_results))) {
+        stop("Input must be the output of handle_references function")
+      }
+
+      # ANSI color codes for terminal output
+      green <- "\033[32m"
+      red <- "\033[31m"
+      reset <- "\033[0m"
+
+      cat(paste(type, "\n"))
+      # Display found citations
+      if (length(reference_results$found_citations) > 0) {
+        for (i in seq_along(reference_results$found_citations)) {
+          key <- names(reference_results$found_citations)[i]
+          citation <- reference_results$found_citations[i]
+          cat(sprintf("%s- %s%s: %s\n", green, key, reset, citation))
+        }
+      } else {
+        cat("- No bibliography-keys supplied.\n")
+      }
+
+      # Display missing citations
+      if (length(reference_results$missing_citations) > 0) {
+        for (i in seq_along(reference_results$missing_citations)) {
+          key <- names(reference_results$missing_citations)[i]
+          cat(sprintf("%s- %s%s: Citation not found in bibliography\n", red, key, reset))
         }
       }
-
-      optional_strings <- c(
-        "citation_keys",
-        "aws_bucket",
-        "aws_region",
-        "download_url",
-        "prio_mirror",
-        "tags",
-        "reference_keys"
-      )
-
-      for (field in optional_strings) {
-        value <- private$input_data[[field]]
-        if (!is.null(value) && !is.na(value)) {
-          if (!checkmate::test_string(
-            value,
-            min.chars = 0
-          )) {
-            return(list(
-              valid = FALSE,
-              message = sprintf(
-                "Invalid %s: Must be NULL, NA, or a non-empty string. Got: %s",
-                field,
-                value
-              )
-            ))
-          }
-        }
-      }
-
-      if (!checkmate::test_choice(
-        private$input_data$spatial_extent,
-        private$valid_spatial_extents
-      )) {
-        return(list(
-          valid = FALSE,
-          message = sprintf(
-            "Invalid spatial_extent: Must be one of: %s. Got: %s",
-            paste(private$valid_spatial_extents, collapse = ", "),
-            private$input_data$spatial_extent
-          )
-        ))
-      }
-
-      if (!checkmate::test_choice(
-        private$input_data$temporal_resolution,
-        private$valid_temporal_resolutions
-      )) {
-        return(list(
-          valid = FALSE,
-          message = sprintf(
-            "Invalid temporal_resolution: Must be one of: %s. Got: %s",
-            paste(private$valid_temporal_resolutions, collapse = ", "),
-            private$input_data$temporal_resolution
-          )
-        ))
-      }
-
-      return(list(valid = TRUE, message = NULL))
     },
 
     handle_download_url = function(url, type) {
+      if(!curl::has_internet()){
+        stop("Internet not available. Please rerun with internet connection.")
+      }
       # Handle NA, NULL, empty cases
       if (is.null(url) || is.na(url) || trimws(url) == "") {
         return(list(url = NA_character_, urls = NULL, valid = FALSE))
@@ -286,8 +287,7 @@ Source <- R6::R6Class("Source",
         return(list(
           url = NA_character_,
           urls = NULL,
-          valid = FALSE,
-          message = "URL cannot be a directory"
+          valid = FALSE
         ))
       }
 
@@ -298,42 +298,36 @@ Source <- R6::R6Class("Source",
           return(list(
             url = NA_character_,
             urls = NULL,
-            valid = FALSE,
-            message = sprintf("URL file not found: %s", file_path)
+            valid = FALSE
           ))
         }
         urls <- readLines(file_path)
-        valid_urls <- all(sapply(urls, function(u) {
+        urls_valid <- all(sapply(urls, function(u) {
           tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
         }))
-        return(list(url = url, urls = urls, valid = valid_urls))
+        return(list(url = url, urls = urls, valid = urls_valid))
       }
 
       # Handle local file case
       if (file.exists(url)) {
         urls <- readLines(url)
-        valid_urls <- all(sapply(urls, function(u) {
+        urls_valid <- all(sapply(urls, function(u) {
           tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
         }))
         return(list(
           url = file.path(type, paste0(private$data$id, ".txt")),
           urls = urls,
-          valid = valid_urls
+          valid = urls_valid
         ))
       }
 
       # Handle direct URL case
       url_valid <- tryCatch(RCurl::url.exists(url), error = function(e) FALSE)
-      if (url_valid) {
-        return(list(url = url, urls = c(url), valid = TRUE))
-      }
 
-      # Invalid URL
       return(list(
-        url = NA_character_,
-        urls = NULL,
-        valid = FALSE,
-        message = "Invalid URL"
+        url = url,
+        urls = c(url),
+        valid = url_valid
       ))
     },
 
