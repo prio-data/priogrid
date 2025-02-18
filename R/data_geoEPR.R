@@ -38,11 +38,11 @@ read_geoEPR <- function() {
 #' @export
 #'
 #' @examples
-#' # r <- gen_geoEPR_sum_bygroup(from = 1946, to = 1958, group_name = "Whites")
+#' # r <- gen_geoEPR(from = 1946, to = 1958, group_name = "Whites")
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
-gen_geoEPR_sum_bygroup <- function(geoEPR_sf = read_geoEPR(), from = NULL, to = NULL, group_name = NULL) {
+gen_geoEPR <- function(geoEPR_sf = read_geoEPR(), from = NULL, to = NULL, group_name = NULL) {
 
   pg <- prio_blank_grid()
 
