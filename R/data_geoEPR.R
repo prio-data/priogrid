@@ -14,3 +14,34 @@ read_geoEPR <- function() {
 
   return(df)
 }
+
+
+gen_geoEPR <- function(df = read_geoEPR(), pg = prio_blank_grid(), date_interval = NULL) {
+
+  if (!is.null(date_interval)) {
+    geoEPR_sf <- df |>
+      dplyr::filter(date_interval == date_interval) |>
+      dplyr::filter(!sf::st_is_empty(geometry))
+  }
+
+  raster_layers <- list()
+
+  for (grp in unique(geoEPR_sf$group)) {
+    group_sf <- geoEPR_sf |>
+      dplyr::filter(group == grp)
+
+    exact_values <- exactextractr::exact_extract(x = pg, y = group_sf, fun = "mode", progress = FALSE)
+
+    layer_raster <- terra::rast(pg)
+    layer_raster[] <- NA
+    layer_raster[] <- unlist(lapply(exact_values, function(x) if (is.na(x)) NA else grp))
+
+    raster_layers[[as.character(grp)]] <- layer_raster
+  }
+
+  raster_stack <- do.call(c, raster_layers)
+
+  return(raster_stack)
+}
+
+
