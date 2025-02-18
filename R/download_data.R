@@ -57,7 +57,7 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 
   parse_source_url <- function(url){
     if(grepl("urls/", url) |> all()){
-      url <- readLines(file.path("data", url))
+      url <- readLines(file.path("inst", url))
     }
     return(list(url))
   }
