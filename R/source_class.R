@@ -25,6 +25,7 @@ Source <- R6::R6Class("Source",
     #' @param prio_mirror String. Optional. Alternative download location
     #' @param tags String. Optional. Comma-separated tags
     #' @param reference_keys String. Optional. Other relevant bibkeys
+    #' @param bib_path String. Path to bibliography.
     #'
     #' @examples
     #' new_source <- Source$new(
@@ -85,6 +86,8 @@ Source <- R6::R6Class("Source",
         stop("`reference_keys´ should be semi-colon separated, not comma-separated.")
       }
 
+      private$bib_path <- bib_path
+
       private$data$id <- uuid::UUIDgenerate()
       private$data$source_name <- source_name
       private$data$source_version <- source_version
@@ -117,23 +120,26 @@ Source <- R6::R6Class("Source",
       private$validate_website_url()
     },
 
+    #' @description
+    #' Get tags from source data
+    #'
+    #' @returns character vector
     get_existing_tags = function(){
       lapply(pgsources$tags |> unique(), strsplit, split = ",\\s*") |> unlist() |> unique() |> sort()
     },
 
+    #' @description
+    #' Get licenses from source data
+    #'
+    #' @returns character vector
     get_existing_licenses = function(){
       pgsources$license |> unique() |> sort()
     },
 
-    get_url_path = function() {
-      return(private$save_url_file())
-    },
-
-    set_download_url = function(url) {
-      private$data$download_url <- url
-      invisible(self)
-    },
-
+    #' @description
+    #' Converts source to a single row tibble
+    #'
+    #' @returns tibble
     to_tibble = function() {
       dplyr::tibble(
         id = private$data$id,
@@ -157,7 +163,11 @@ Source <- R6::R6Class("Source",
       )
     },
 
-    print = function(bib_path = "inst/REFERENCES.bib") {
+    #' @description
+    #' Prints validation report of source.
+    #'
+    #' @returns text in console
+    print = function() {
       # ANSI color codes for terminal output
       green <- "\033[32m"
       red <- "\033[31m"
@@ -209,6 +219,7 @@ Source <- R6::R6Class("Source",
 
   private = list(
     input_data = NULL,
+    bib_path = NULL,
     data = list(),
     url_data = list(download = NULL, prio = NULL),
     citations = list(),
