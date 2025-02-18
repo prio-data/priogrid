@@ -1,7 +1,5 @@
 
-
 shapefile <- "GDL Shapefiles V6.4 large.shp"
-
 hdi_geom <- sf::read_sf(shapefile)
 
 shdi_globaldatalab <- read_csv("GDL-Subnational-HDI-data.csv") %>%
