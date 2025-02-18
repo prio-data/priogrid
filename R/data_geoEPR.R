@@ -1,5 +1,12 @@
-
-
+#' Reads the GeoEPR - Geo-referencing Ethnic Power Relations data
+#'
+#' Formats gwsdate and gwedate as date objects, and adds a utility column date_interval
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
 read_geoEPR <- function() {
   f <- get_pgfile(source_name = "ETH ICR GeoEPR",
                   source_version = "2023",
@@ -10,38 +17,61 @@ read_geoEPR <- function() {
   df <- df |>
     dplyr::mutate(gwsdate = as.Date(paste0(from, "-01-01")),
            gwedate = as.Date(paste0(to, "-12-31"))) |>
-    dplyr::mutate(date_interval = lubridate::interval(gwsdate, gwedate))
+    dplyr::mutate(date_interval = lubridate::interval(gwsdate, gwedate)) |>
+    dplyr::filter(!sf::st_is_empty(geometry))
 
   return(df)
 }
 
+#' Generate geoEPR sum by group
+#'
+#' Takes the sum of politically relevant ethnic groups
+#' within each PRIO-GRID cell per year
+#'
+#' @return SpatRast
+#'
+#' @param geoEPR_sf The geoEPR dataset, for instance given by [read_geoEPR()]
+#' @param from A single year as start year
+#' @param to A single year as end year
+#' @param group_name Name of politically relevant ethnic group
+#'
+#' @export
+#'
+#' @examples
+#' # r <- gen_geoEPR_sum_bygroup(from = 1946, to = 1958, group_name = "Whites")
+#'
+#' @references
+#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
+gen_geoEPR_sum_bygroup <- function(geoEPR_sf = read_geoEPR(), from = NULL, to = NULL, group_name = NULL) {
 
-gen_geoEPR <- function(df = read_geoEPR(), pg = prio_blank_grid(), date_interval = NULL) {
+  pg <- prio_blank_grid()
 
-  if (!is.null(date_interval)) {
-    geoEPR_sf <- df |>
-      dplyr::filter(date_interval == date_interval) |>
-      dplyr::filter(!sf::st_is_empty(geometry))
+  if (!is.null(from) & !is.null(to)) {
+    geoEPR_sf <- geoEPR_sf |> dplyr::filter(from <= to, to >= from)
   }
 
-  raster_layers <- list()
-
-  for (grp in unique(geoEPR_sf$group)) {
-    group_sf <- geoEPR_sf |>
-      dplyr::filter(group == grp)
-
-    exact_values <- exactextractr::exact_extract(x = pg, y = group_sf, fun = "mode", progress = FALSE)
-
-    layer_raster <- terra::rast(pg)
-    layer_raster[] <- NA
-    layer_raster[] <- unlist(lapply(exact_values, function(x) if (is.na(x)) NA else grp))
-
-    raster_layers[[as.character(grp)]] <- layer_raster
+  if (!is.null(group_name)) {
+    geoEPR_sf <- geoEPR_sf |> dplyr::filter(group %in% group_name)
   }
 
-  raster_stack <- do.call(c, raster_layers)
+  unique_groups <- unique(geoEPR_sf$group)
 
+  raster_list <- list()
+
+  for (grp in unique_groups) {
+    group_sf <- geoEPR_sf |> dplyr::filter(group == grp)
+
+    pg_r <- pg
+
+    extracted_values <- exactextractr::exact_extract(pg_r, group_sf, function(x, w) sum(w, na.rm = TRUE), progress = FALSE)
+
+    values(pg_r) <- extracted_values
+
+    raster_list[[grp]] <- pg_r
+  }
+
+  raster_stack <- terra::rast(raster_list)
+  names(raster_stack) <- unique_groups
   return(raster_stack)
 }
-
 
