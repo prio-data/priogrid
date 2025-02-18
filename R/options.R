@@ -175,6 +175,3 @@ PGOptionsManager <- R6::R6Class(
     }
   )
 )
-
-pgoptions <- PGOptionsManager$new()
-if(pgoptions$get_verbose()) pgoptions$print()
