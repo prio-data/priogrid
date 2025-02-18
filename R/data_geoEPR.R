@@ -30,7 +30,6 @@ read_geoEPR <- function() {
 #'
 #' @return SpatRast
 #'
-#' @param geoEPR_sf The geoEPR dataset, for instance given by [read_geoEPR()]
 #' @param from A single year as start year
 #' @param to A single year as end year
 #' @param group_name Name of politically relevant ethnic group
@@ -42,8 +41,9 @@ read_geoEPR <- function() {
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
-gen_geoEPR <- function(geoEPR_sf = read_geoEPR(), from = NULL, to = NULL, group_name = NULL) {
+gen_geoEPR <- function(from = NULL, to = NULL, group_name = NULL) {
 
+  geoEPR_sf = read_geoEPR()
   pg <- prio_blank_grid()
 
   if (!is.null(from) & !is.null(to)) {
