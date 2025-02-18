@@ -42,7 +42,7 @@ read_ghsl_population_grid <- function(){
 #'
 #' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
 #'
-#' @return
+#' @return SpatRast
 #' @export
 #'
 #' @examples

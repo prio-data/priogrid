@@ -3,8 +3,17 @@
 \name{Source}
 \alias{Source}
 \title{Source Class}
+\value{
+character vector
+
+character vector
+
+tibble
+
+text in console
+}
 \description{
-An R6 Class representing a data source with comprehensive validation
+An R6 Class representing a data source with comprehensive validation. Only for use in dev-mode (using devtools::load_all).
 }
 \examples{
 
@@ -31,8 +40,6 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \item \href{#method-Source-new}{\code{Source$new()}}
 \item \href{#method-Source-get_existing_tags}{\code{Source$get_existing_tags()}}
 \item \href{#method-Source-get_existing_licenses}{\code{Source$get_existing_licenses()}}
-\item \href{#method-Source-get_url_path}{\code{Source$get_url_path()}}
-\item \href{#method-Source-set_download_url}{\code{Source$set_download_url()}}
 \item \href{#method-Source-to_tibble}{\code{Source$to_tibble()}}
 \item \href{#method-Source-print}{\code{Source$print()}}
 \item \href{#method-Source-clone}{\code{Source$clone()}}
@@ -90,6 +97,8 @@ Create a new Source object
 \item{\code{tags}}{String. Optional. Comma-separated tags}
 
 \item{\code{reference_keys}}{String. Optional. Other relevant bibkeys}
+
+\item{\code{bib_path}}{String. Path to bibliography.}
 }
 \if{html}{\out{</div>}}
 }
@@ -117,6 +126,7 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \if{html}{\out{<a id="method-Source-get_existing_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-get_existing_tags}{}}}
 \subsection{Method \code{get_existing_tags()}}{
+Get tags from source data
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Source$get_existing_tags()}\if{html}{\out{</div>}}
 }
@@ -126,26 +136,9 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \if{html}{\out{<a id="method-Source-get_existing_licenses"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-get_existing_licenses}{}}}
 \subsection{Method \code{get_existing_licenses()}}{
+Get licenses from source data
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Source$get_existing_licenses()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Source-get_url_path"></a>}}
-\if{latex}{\out{\hypertarget{method-Source-get_url_path}{}}}
-\subsection{Method \code{get_url_path()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$get_url_path()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Source-set_download_url"></a>}}
-\if{latex}{\out{\hypertarget{method-Source-set_download_url}{}}}
-\subsection{Method \code{set_download_url()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$set_download_url(url)}\if{html}{\out{</div>}}
 }
 
 }
@@ -153,6 +146,7 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \if{html}{\out{<a id="method-Source-to_tibble"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-to_tibble}{}}}
 \subsection{Method \code{to_tibble()}}{
+Converts source to a single row tibble
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Source$to_tibble()}\if{html}{\out{</div>}}
 }
@@ -162,8 +156,9 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \if{html}{\out{<a id="method-Source-print"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-print}{}}}
 \subsection{Method \code{print()}}{
+Prints validation report of source.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$print(bib_path = "inst/REFERENCES.bib")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Source$print()}\if{html}{\out{</div>}}
 }
 
 }
