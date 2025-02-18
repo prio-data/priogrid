@@ -1,9 +1,10 @@
 
-shapefile <- "/Users/ingvildsmestad/Desktop/Gitprodjects/GDL Shapefiles V6/GDL Shapefiles V6.4 large.shp"
+
+shapefile <- "GDL Shapefiles V6.4 large.shp"
 
 hdi_geom <- sf::read_sf(shapefile)
 
-shdi_globaldatalab <- read_csv("/Users/ingvildsmestad/Desktop/Gitprodjects/GDL-Subnational-HDI-data.csv") %>%
+shdi_globaldatalab <- read_csv("GDL-Subnational-HDI-data.csv") %>%
   rename(gdlcode = GDLCODE, shdi = `2010`) %>% #example
   select(gdlcode, shdi)
 
@@ -25,8 +26,5 @@ gen_shdi_priogrid <- function(shdi_geom) {
   return(shdi_raster)
 }
 
-system.time(shdi_pg <- gen_shdi_priogrid(shdi_geom))
-
-plot(shdi_pg)
 
 
