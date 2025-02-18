@@ -5,7 +5,7 @@
 #' Source Class
 #'
 #' @description
-#' An R6 Class representing a data source with comprehensive validation
+#' An R6 Class representing a data source with comprehensive validation. Only for use in dev-mode (using devtools::load_all).
 #'
 Source <- R6::R6Class("Source",
   public = list(
@@ -335,14 +335,14 @@ Source <- R6::R6Class("Source",
       urls_saved <- FALSE
 
       if (!is.null(private$url_data$download)) {
-        fpath <- file.path("data", private$data$download_url)
+        fpath <- file.path("inst/extdata", private$data$download_url)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$download, fpath)
         urls_saved <- TRUE
       }
 
       if (!is.null(private$url_data$prio)) {
-        fpath <- file.path("data", private$data$prio_mirror)
+        fpath <- file.path("inst/extdata", private$data$prio_mirror)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$prio, fpath)
         urls_saved <- TRUE

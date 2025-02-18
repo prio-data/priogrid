@@ -1,4 +1,7 @@
 #' Add source to CSV file
+#'
+#' Only use this in devtools environment.
+#'
 #' @param source Source object to add
 #' @param csv_file Path to CSV file
 #' @return Invisible NULL
