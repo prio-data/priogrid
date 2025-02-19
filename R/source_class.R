@@ -121,6 +121,14 @@ Source <- R6::R6Class("Source",
     },
 
     #' @description
+    #' Saves url-files provided as a text-file with urls
+    #'
+    #' @returns Boolean vector
+    save_url_files = function(){
+      private$save_url_file()
+    },
+
+    #' @description
     #' Get tags from source data
     #'
     #' @returns character vector
@@ -304,7 +312,7 @@ Source <- R6::R6Class("Source",
 
       # Handle urls/ file case
       if (startsWith(url, "urls/")) {
-        file_path <- file.path("data", url)
+        file_path <- file.path("inst/extdata", url)
         if (!file.exists(file_path)) {
           return(list(
             url = NA_character_,

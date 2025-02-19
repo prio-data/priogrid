@@ -213,14 +213,11 @@ add_source <- function(source, csv_file = "data_raw/sources.csv") {
     stop("source must be a Source object")
   }
 
-  # Save URL file if exists and update download_url
-  url_path <- source$get_url_path()
-  if (!is.na(url_path)) {
-    source$set_download_url(url_path)
-  }
-
   # Convert to tibble
   source_tibble <- source$to_tibble()
+
+  # Save URLs to file if necessary
+  source$save_url_files()
 
   # Create or append to CSV
   if (!file.exists(csv_file)) {
