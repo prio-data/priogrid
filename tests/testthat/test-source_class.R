@@ -15,6 +15,18 @@ testthat::test_that("Setting up a new source works", {
   testthat::expect_false(new_source$to_tibble()$download_url_exists) # this file does not exist
   testthat::expect_equal(new_source$to_tibble()$citation_keys, "schvitzMappingInternationalSystem2022") # s is not a valid bib-key
 
+  new_source <- Source$new(
+    source_name = "my new source",
+    source_version = "v1.0",
+    license = "CC BY 4.0",
+    website_url = "www.example.com",
+    spatial_extent = "World",
+    temporal_resolution = "Yearly",
+    citation_keys = "schvitzMappingInternationalSystem2022; s",
+    download_url = "~/Downloads/urls_test.txt",
+    tags = "test"
+  )
+
   testthat::expect_error(Source$new(
     source_name = "my new source",
     source_version = "v1.0",
