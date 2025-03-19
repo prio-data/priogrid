@@ -11,12 +11,8 @@ We rely on the simple-features and terra packages. Please see these packages for
 ## Installation
 
 ```
-install.packages("renv")
-renv::install("prio-data/priogrid")
-
-source("data_raw/pgsources.R")
-source("data_raw/pgvariables.R")
-source("data_raw/pgchecksum.R")
+install.packages(“renv”)
+renv::install(“prio-data/priogrid”)
 ```
 
 You might need to additionally follow install instructions on https://github.com/rspatial/terra and https://github.com/isciences/exactextractr (geos). If you are prompted with

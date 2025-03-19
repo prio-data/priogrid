@@ -200,3 +200,31 @@ raster_to_pgtibble <- function(r){
   df <- as.data.frame(c(pg, r)) |> as_tibble()
   return(df)
 }
+
+#' Add source to CSV file
+#'
+#' Only use this in devtools environment.
+#'
+#' @param source Source object to add
+#' @param csv_file Path to CSV file
+#' @return Invisible NULL
+add_source <- function(source, csv_file = "data_raw/sources.csv") {
+  if (!inherits(source, "Source")) {
+    stop("source must be a Source object")
+  }
+
+  # Convert to tibble
+  source_tibble <- source$to_tibble()
+
+  # Save URLs to file if necessary
+  source$save_url_files()
+
+  # Create or append to CSV
+  if (!file.exists(csv_file)) {
+    readr::write_delim(source_tibble, csv_file, delim = "\t")
+  } else {
+    readr::write_delim(source_tibble, csv_file, append = TRUE, delim = "\t")
+  }
+
+  invisible(NULL)
+}
