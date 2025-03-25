@@ -23,55 +23,24 @@ read_geoepr <- function() {
   return(df)
 }
 
-#' Generate geoEPR sum by group
-#'
-#' Takes the sum of politically relevant ethnic groups
-#' within each PRIO-GRID cell per year
+#' PRIO-GRID cells with any regionally based politically excluded groups
 #'
 #' @return SpatRast
-#'
-#' @param from A single year as start year
-#' @param to A single year as end year
-#' @param group_name Name of politically relevant ethnic group
-#'
 #' @export
 #'
 #' @examples
-#' # r <- gen_geoEPR(from = 1946, to = 1958, group_name = "Whites")
+#' # r <- gen_geo_excluded()
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
-gen_geoepr <- function(from = NULL, to = NULL, group_name = NULL) {
+gen_geoepr_excluded <- function() {
 
-  geoEPR_sf <- read_geoepr()
+  geoepr <- read_geoepr()
   pg <- prio_blank_grid()
 
-  if (!is.null(from) & !is.null(to)) {
-    geoEPR_sf <- geoEPR_sf |> dplyr::filter(from <= to, to >= from)
-  }
 
-  if (!is.null(group_name)) {
-    geoEPR_sf <- geoEPR_sf |> dplyr::filter(group %in% group_name)
-  }
-
-  unique_groups <- unique(geoEPR_sf$group)
-
-  raster_list <- list()
-
-  for (grp in unique_groups) {
-    group_sf <- geoEPR_sf |> dplyr::filter(group == grp)
-
-    pg_r <- pg
-
-    extracted_values <- exactextractr::exact_extract(pg_r, group_sf, function(x, w) sum(w, na.rm = TRUE), progress = FALSE)
-
-    values(pg_r) <- extracted_values
-
-    raster_list[[grp]] <- pg_r
-  }
-
-  raster_stack <- terra::rast(raster_list)
-  names(raster_stack) <- unique_groups
-  return(raster_stack)
+  # raster_stack <- terra::rast(raster_list)
+  # names(raster_stack) <- unique_groups
+  # return(raster_stack)
 }
 
