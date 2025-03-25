@@ -43,7 +43,7 @@ read_geoepr <- function() {
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
 gen_geoepr <- function(from = NULL, to = NULL, group_name = NULL) {
 
-  geoEPR_sf <- read_geoEPR()
+  geoEPR_sf <- read_geoepr()
   pg <- prio_blank_grid()
 
   if (!is.null(from) & !is.null(to)) {
