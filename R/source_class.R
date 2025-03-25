@@ -353,14 +353,14 @@ Source <- R6::R6Class("Source",
     save_url_file = function() {
       urls_saved <- FALSE
 
-      if (!is.null(private$url_data$download)) {
+      if (grepl(private$data$id, private$data$download_url) & !is.null(private$url_data$download)) {
         fpath <- file.path("inst/extdata", private$data$download_url)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$download, fpath)
         urls_saved <- TRUE
       }
 
-      if (!is.null(private$url_data$prio)) {
+      if (grepl(private$data$id, private$data$prio_mirror) & !is.null(private$url_data$prio)) {
         fpath <- file.path("inst/extdata", private$data$prio_mirror)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
         writeLines(private$url_data$prio, fpath)
