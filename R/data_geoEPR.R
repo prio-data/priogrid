@@ -7,7 +7,7 @@
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
-read_geoEPR <- function() {
+read_geoepr <- function() {
   f <- get_pgfile(source_name = "ETH ICR GeoEPR",
                   source_version = "2023",
                   id = "3900b527-a728-4c26-b0ab-f4441d3ee2e8")
@@ -41,7 +41,7 @@ read_geoEPR <- function() {
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
-gen_geoEPR <- function(from = NULL, to = NULL, group_name = NULL) {
+gen_geoepr <- function(from = NULL, to = NULL, group_name = NULL) {
 
   geoEPR_sf <- read_geoEPR()
   pg <- prio_blank_grid()
