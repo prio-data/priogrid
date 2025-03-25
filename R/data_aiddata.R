@@ -8,12 +8,8 @@
 #' @return an object of class sf
 #' @export
 #'
-<<<<<<< HEAD
 #' @references
 #' \insertRef{isakssonAidInstitutionsLocal2023}{AidData}{priogrid}
-=======
-#' @references{isakssonAidInstitutionsLocal2023}
->>>>>>> e2c44b0136a5aa5f50f14d0d66ebe93ba7b76dc9
 read_aiddata <- function(unknown_enddate = NA) {
   zip_files <- get_pgfile(source_name = "World Bank Geocoded Research Release",
                   source_version = "1.4.2",
@@ -59,12 +55,8 @@ read_aiddata <- function(unknown_enddate = NA) {
 #' # r <- gen_aiddata_project_centroids()
 #'
 #'
-<<<<<<< HEAD
 #' @references
 #' \insertRef{isakssonAidInstitutionsLocal2023}{AidData}{priogrid}
-=======
-#' @references{isakssonAidInstitutionsLocal2023}
->>>>>>> e2c44b0136a5aa5f50f14d0d66ebe93ba7b76dc9
 gen_aiddata_project_centroids <- function() {
 
   f <- read_aiddata()
