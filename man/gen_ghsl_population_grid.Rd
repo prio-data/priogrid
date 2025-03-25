@@ -6,6 +6,9 @@
 \usage{
 gen_ghsl_population_grid()
 }
+\value{
+SpatRast
+}
 \description{
 This aggregates the high-resolution population grid to PRIO-GRID level across all 5-year intervals (1975 - 2030).
 }
