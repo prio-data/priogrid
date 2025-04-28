@@ -41,6 +41,16 @@ print(countryname_list)
 admin0_list <- as.list(unique(countries_df$admin0Pcode))
 #print(admin0_list)
 ```
+```{r}
+admin0 = get_idp_admin2_data(CountryName = 'Philippines (the)')
+head(admin0)
+
+for (country in countryname_list) {
+  print(country)
+}
+
+```
+
 
 From this list we are now set up to begin (re)constructing a metadata table that can be referenced: https://dtm.iom.int/data-and-analysis/dtm-api/data-coverage. Building this systematically within this repository affords autonomy and operability to interact with additional information for each country and define specific queries in later steps.
 
@@ -56,16 +66,12 @@ We are now generating a master dictionary to organize the relevant country level
 master_country_assessment_dict <- list()
 ```
 
-```{r}
-head(idp_admin0_Yemen)
-```
-
 Returns ADM0 level data
 
 ```{r}
 # Example list of countries
 # Assume last_3_countries is already defined (e.g., ["Yemen", "Somalia", "Ethiopia"])
-for (country in last_3_countries) {
+for (country in countryname_list) {
   cat("Fetching data for:", country, "\n")
   
   # Step 1: Get the data
@@ -106,6 +112,29 @@ for (country in last_3_countries) {
 ```
 
 
+```{r}
+safe_get_idp_data <- function(level, country_api) {
+  tryCatch({
+    result <- switch(level,
+                     admin0 = get_idp_admin0_data(CountryName = country_api),
+                     admin1 = get_idp_admin1_data(CountryName = country_api),
+                     admin2 = get_idp_admin2_data(CountryName = country_api))
+    
+    if (is.null(result) || nrow(result) == 0) {
+      message("  ⚠️ No data returned for ", country_api, " at ", level)
+      return(NULL)
+    }
+    
+    return(result)
+  }, error = function(e) {
+    message("  ❌ API error for ", country_api, " at ", level, ": ", conditionMessage(e))
+    return(NULL)
+  })
+}
+
+```
+
+
 
 ```{r}
 # Define admin levels to process
@@ -114,70 +143,70 @@ admin_levels <- c("admin0", "admin1", "admin2")  # Only include admin2 if suppor
 # Initialize master dictionary
 master_assessment_dict <- list()
 
-# Loop through countries and levels
-for (country in last_3_countries) {
+# Main loop through countries and levels
+for (country in countryname_list) {
   cat("\n🌍 Fetching data for:", country, "\n")
+  
+  # Convert underscore country name to API-compatible format
+  #country_api <- gsub("", "_", country)
+
   
   for (level in admin_levels) {
     cat("  ▶️ Admin level:", level, "\n")
     
-    # Step 1: Pull data using the correct function
-    result <- switch(level,
-                     admin0 = get_idp_admin0_data(CountryName = country),
-                     admin1 = get_idp_admin1_data(CountryName = country),
-                     admin2 = get_idp_admin2_data(CountryName = country))
+    # Step 1: Safely get data
+    result <- safe_get_idp_data(level, country)
     
-    # Step 2: Check for valid result
-    if (!is.null(result) && nrow(result) > 0 && "assessmentType" %in% colnames(result)) {
-      
-      # Step 3: Clean and validate round-to-year mapping
-      round_info <- result %>%
-        select(assessmentType, roundNumber, yearReportingDate) %>%
-        distinct()
-      
-      # Check for invalid roundNumber → yearReportingDate mappings
-      invalid_rounds <- round_info %>%
-        group_by(assessmentType, roundNumber) %>%
-        summarise(count = n_distinct(yearReportingDate), .groups = "drop") %>%
-        filter(count > 1)
-      
-      if (nrow(invalid_rounds) > 0) {
-        warning("❗ Some roundNumbers have multiple yearReportingDate values for ", country, " at ", level, ":\n",
-                paste(capture.output(print(invalid_rounds)), collapse = "\n"))
+    # Step 2: If result is NULL, move on
+    if (is.null(result)) {
+      if (level == "admin2") {
+        message("  ⏩ Skipping to next country after admin2 attempt.")
+        break  # Exit admin level loop, go to next country
+      } else {
+        next  # Move to next level (admin1 or admin2)
       }
-      
-      # Step 4: Build summary dictionary (1-to-1 round → year mapping)
-      country_dict <- round_info %>%
-        group_by(assessmentType) %>%
-        summarise(
-          roundNumber = list(unique(roundNumber)),
-          yearReportingDate = list(yearReportingDate[!duplicated(roundNumber)]),
-          .groups = "drop"
-        )
-      
-      # Step 5: Convert to named list-of-lists by assessmentType
-      country_dict_list <- setNames(
-        lapply(1:nrow(country_dict), function(i) {
-          list(
-            roundNumber = country_dict$roundNumber[[i]],
-            yearReportingDate = country_dict$yearReportingDate[[i]]
-          )
-        }),
-        country_dict$assessmentType
-      )
-      
-      # Step 6: Add full result table to the same list
-      country_dict_list[["Result"]] <- result
-      
-      # Step 7: Save into master dictionary
-      if (is.null(master_assessment_dict[[level]])) {
-        master_assessment_dict[[level]] <- list()
-      }
-      master_assessment_dict[[level]][[country]] <- country_dict_list
-      
-    } else {
-      message("  ⚠️ No valid data or missing 'assessmentType' for: ", country, " at ", level)
     }
+
+    # Step 3: Continue with data processing (your full validation, Result saving, etc.)
+    round_info <- result %>%
+      dplyr::select(assessmentType, roundNumber, yearReportingDate) %>%
+      dplyr::distinct()
+
+    invalid_rounds <- round_info %>%
+      dplyr::group_by(assessmentType, roundNumber) %>%
+      dplyr::summarise(count = dplyr::n_distinct(yearReportingDate), .groups = "drop") %>%
+      dplyr::filter(count > 1)
+
+    if (nrow(invalid_rounds) > 0) {
+      warning("❗ Some roundNumbers have multiple yearReportingDate values for ", country, " at ", level, ":\n",
+              paste(capture.output(print(invalid_rounds)), collapse = "\n"))
+    }
+
+    country_dict <- round_info %>%
+      dplyr::group_by(assessmentType) %>%
+      dplyr::summarise(
+        roundNumber = list(unique(roundNumber)),
+        yearReportingDate = list(yearReportingDate[!duplicated(roundNumber)]),
+        .groups = "drop"
+      )
+
+    country_dict_list <- setNames(
+      lapply(1:nrow(country_dict), function(i) {
+        list(
+          roundNumber = country_dict$roundNumber[[i]],
+          yearReportingDate = country_dict$yearReportingDate[[i]]
+        )
+      }),
+      country_dict$assessmentType
+    )
+
+    country_dict_list[["Result"]] <- result
+
+    if (is.null(master_assessment_dict[[level]])) {
+      master_assessment_dict[[level]] <- list()
+    }
+    
+    master_assessment_dict[[level]][[country]] <- country_dict_list
   }
 }
 
@@ -198,6 +227,7 @@ adm_fields <- list(
   admin1 = c("admin0Name", "admin0Pcode", "admin1Name", "admin1Pcode", "reportingDate", "numPresentIdpInd"),
   admin2 = c("admin0Name", "admin0Pcode", "admin2Name", "admin2Pcode", "reportingDate", "numPresentIdpInd")
 )
+
 
 # Iterate over the levels
 for (level in names(master_assessment_dict)) {
@@ -231,6 +261,85 @@ adm1_df <- dplyr::bind_rows(adm1_rows)
 adm2_df <- dplyr::bind_rows(adm2_rows)
 ```
 
+```{r}
+print(list(unique(adm1_df$admin0Name)))
+```
+
+Search for the appropriate admin data to associate to country IOM datasets:
+
+```{r}
+library(httr)
+library(jsonlite)
+
+# Function to search HDX and print available resources for a country
+search_admin_layers <- function(country_query) {
+  
+  # Set API base
+  base_url <- "https://data.humdata.org/api/3/action/package_search"
+  
+  # Set query
+  query_params <- list(q = paste0(country_query, " administrative boundaries"))
+  
+  # Make request
+  response <- GET(base_url, query = query_params)
+  
+  # Parse
+  response_content <- content(response, as = "text")
+  response_json <- fromJSON(response_content, flatten = TRUE)
+  
+  # Extract datasets
+  datasets <- response_json$result$results
+  
+  # Print datasets
+  if (nrow(datasets) > 0) {
+    for (i in seq_len(nrow(datasets))) {
+      cat(paste0("\nDataset ", i, ": ", datasets$title[i], "\n"))
+      cat(paste0("   ID: ", datasets$id[i], "\n"))
+      
+      # Now print available resources
+      resources <- datasets$resources[[i]]
+      
+      for (j in seq_len(nrow(resources))) {
+        cat(paste0("     Resource ", j, ": ", resources$name[j], "\n"))
+        cat(paste0("       Format: ", resources$format[j], "\n"))
+        cat(paste0("       URL: ", resources$url[j], "\n"))
+      }
+    }
+  } else {
+    cat("No datasets found for this query.\n")
+  }
+}
+
+# Example use
+search_admin_layers("Afghanistan")
+
+
+```
+
+
+
+```{r}
+library(sf)
+
+# Read the shapefile
+fewsnet_admin2 <- st_read("/Users/gbenz/Documents/FEWSNET Backup/FEWSnet/FEWSNET_World_Admin/FEWSNET_Admin2.shp")
+fewsnet_admin1 <- st_read("/Users/gbenz/Documents/FEWSNET Backup/FEWSnet/FEWSNET_World_Admin/FEWSNET_Admin1.shp")
+
+
+# Subset Afghanistan to compare fewsnet shapefile with IPC admin field codes:
+afghanistan_admin1 <- fewsnet_admin1[fewsnet_admin1$ADMIN0 == "Afghanistan", ]
+print('printing FEWSNET ADMIN LAYER: ')
+# See all field (column) names
+afghanistan_iom = adm1_df[adm1_df$admin0Name == 'Afghanistan',]
+```
+
+```{r}
+View(afghanistan_iom)
+
+View(afghanistan_admin1)
+```
+
+
 ## Lets investigate what attributes are available within the Admin 1 product for Yemen:
 
 ```{r}
@@ -246,7 +355,6 @@ cat("Latest reporting number:", max_rn, "\n")
 
 ```
 
-Now we pull the data from the API using these values:
 
 
 
