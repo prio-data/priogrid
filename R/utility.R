@@ -42,8 +42,84 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
   return(pg)
 }
 
+#' Get a sequence of dates
+#'
+#' This is a wrapper of [base::seq.Date], only with defaults that can be set in the options.
+#'
+#'
+#' @param from starting date
+#' @param to end date
+#' @param by increment of sequence. See details in [base::seq.Date].
+#'
+#' @return Date vector
+#' @export
+#'
+#' @examples
+#' pg_dates()
+pg_dates <- function(start_date = pgoptions$get_start_date(),
+                     end_date = pgoptions$get_end_date(),
+                     temporal_resolution = pgoptions$get_temporal_resolution()){
+  seq.Date(start_date, end_date, temporal_resolution)
+}
+
+#' Get a sequence of date intervals
+#'
+#' The start date is the last observed date in the first interval of the intervals you
+#' want to capture. E.g., if start date is 31 January 2010 with 1 month resolution, then the
+#' first interval goes from 1 January 2010 to 31 January 2010. The intervals are not necessary
+#' equal length.
+#'
+#' @param from starting date
+#' @param to end date
+#' @param by increment of sequence. See details in [base::seq.Date].
+#'
+#' @return Date interval vector
+#' @export
+#'
+#' @examples
+#' pg_date_intervals()
+pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
+                              end_date = pgoptions$get_end_date(),
+                              temporal_resolution = pgoptions$get_temporal_resolution()){
+  mydates <- seq.Date(start_date, end_date, temporal_resolution)
+  previous_date <- seq.Date(start_date, length.out = 2, by = paste0("-",temporal_resolution))[2] # Get the previous date in the interval
+  mydates <- c(previous_date, mydates)
+  lubridate::interval(mydates[-length(mydates)] + lubridate::days(1), mydates[-1])
+}
+
+#' Converts raster with variable to data.frame
+#'
+#' Assumes that the name of the raster layer is the name of the variable if static is true,
+#' otherwise, the user must supply the correct variable name. If static is false,
+#' the name of the raster layer is assumed to be the time variable.
+#'
+#' @param rast SpatRaster
+#' @param static True if no temporal dimension, False else.
+#' @param varname The variable name, only required if static is False.
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' ne <- gen_naturalearth_cover()
+#' rast_to_df(ne)
+rast_to_df <- function(rast, static = TRUE, varname = NULL){
+  pg <- prio_blank_grid()
+  df <- c(pg, rast) |> as.data.frame()
+
+  if(static){
+    return(df)
+  } else{
+    # Assumes variable names in raster are dates.
+    df <- df |> tidyr::pivot_longer(cols = -dplyr::all_of(c("pgid")), names_to = "measurement_date", values_to = varname)
+    return(df)
+  }
+}
 
 #' Transform raster to PRIO-GRID format
+#'
+#' This should generally not be used. Write exactly what you need to transform the data instead.
+#' It can be used as a general template for how to transform data, however.
 #'
 #' @param r Raster to transform
 #' @param agg_fun Aggregation function, see terra::aggregate
@@ -56,41 +132,49 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 #' robust_transformation(r, agg_fun = "mean")
 #' @export
 robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1, ...){
-  require(terra)
-
   pg <- prio_blank_grid()
+  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  dir.create(temporary_directory)
 
-  equal_projection <- crs(r) == crs(pg)
+  equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
-    r <- project(r, crs(pg))
+    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
   }
 
-  equal_extent <- ext(r) == ext(pg)
-  if(!equal_extent){
-    tmp <- rast(ext(pg),
-               crs = crs(r),
-               ncol = ncol(r),
-               nrow = nrow(r))
-    r <- resample(r, tmp, method = "near", threads = T)
+  pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
+  input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf()
+  input_extent_is_larger_or_equal <- sf::st_contains(input_rast_extent, pg_extent, sparse = FALSE) |> all()
+  input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
+  input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
+  if(input_extent_is_larger){
+    tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
   }
 
-  higher_resolution <- res(r) < res(pg)
+  higher_resolution <- terra::res(r) < terra::res(pg)
   if(any(higher_resolution)){
-    r <- aggregate(r,
-                  fact = res(pg)/res(r),
+    tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::aggregate(r,
+                  fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
+                  filename = tmp3,
+                  gdal=c("COMPRESS=LZW"),
                   cores = cores, ...)
   }
 
-  lower_resolution <- res(r) > res(pg)
+  lower_resolution <- terra::res(r) > terra::res(pg)
   if(any(lower_resolution)){
-    r <- disagg(r,
-               fact = res(r)/res(pg),
-               method = disagg_method)
+    tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::disagg(r,
+               fact = terra::res(r)/terra::res(pg),
+               method = disagg_method,
+               filename = tmp4)
   }
 
-  r <- resample(r, pg, method = "near", threads = T)
+  r <- terra::resample(r, pg, method = "near", threads = T)
 
+  unlink(temporary_directory, recursive = TRUE)
   return(r)
 }
 
@@ -115,4 +199,32 @@ raster_to_pgtibble <- function(r){
 
   df <- as.data.frame(c(pg, r)) |> as_tibble()
   return(df)
+}
+
+#' Add source to CSV file
+#'
+#' Only use this in devtools environment.
+#'
+#' @param source Source object to add
+#' @param csv_file Path to CSV file
+#' @return Invisible NULL
+add_source <- function(source, csv_file = "data_raw/sources.csv") {
+  if (!inherits(source, "Source")) {
+    stop("source must be a Source object")
+  }
+
+  # Convert to tibble
+  source_tibble <- source$to_tibble()
+
+  # Save URLs to file if necessary
+  source$save_url_files()
+
+  # Create or append to CSV
+  if (!file.exists(csv_file)) {
+    readr::write_delim(source_tibble, csv_file, delim = "\t")
+  } else {
+    readr::write_delim(source_tibble, csv_file, append = TRUE, delim = "\t")
+  }
+
+  invisible(NULL)
 }
