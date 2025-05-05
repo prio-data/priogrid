@@ -399,5 +399,6 @@ final_df <- bind_rows(result_list) %>%
 final_df %>%
   arrange(desc(prop_built_up)) %>%
   head(5)
+
 ```
 
