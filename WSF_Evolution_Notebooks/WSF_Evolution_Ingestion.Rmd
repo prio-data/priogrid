@@ -1,0 +1,403 @@
+
+
+```{r}
+# Load required libraries
+library(rvest)
+library(stringr)
+library(dplyr)
+# Load required libraries
+library(rvest)
+library(stringr)
+library(readr)
+
+library(terra)
+library(sf)
+
+#install.packages("viridisLite")  # Run once if needed
+library(viridisLite)
+
+```
+
+###WSF-Evolution Data
+```{r}
+
+
+# URL of the WSF Evolution download directory
+evo_base_url <- "https://download.geoservice.dlr.de/WSF_EVO/files/"
+
+# Read HTML content of the directory
+evo_page <- read_html(evo_base_url)
+
+# Extract all href links
+evo_all_links <- evo_page %>% html_nodes("a") %>% html_attr("href")
+
+# Filter for GeoTIFF tiles only (main data files)
+evo_tif_links <- evo_all_links[grepl("WSFevolution_v1_.*\\.tif$", evo_all_links)]
+
+# Convert to full URLs
+evo_full_urls <- paste0(evo_base_url, evo_tif_links)
+
+# Preview first few
+head(evo_full_urls)
+
+# Optional: Save to CSV
+# write.csv(full_urls, "wsf_evo_tile_links.csv", row.names = FALSE)
+
+```
+
+```{r}
+# Save the list to CSV
+write_csv(data.frame(tif_url = evo_full_urls), "/Users/gbenz/Documents/priogrid/pg_git/WSF_Evolution_Notebooks/WSF_Evolution_data_access/wsf_evo_tile_list.csv")
+
+```
+
+```{r}
+# Extract lon_lat portion from evo_full_urls
+evo_coord_tiles <- sub(".*_v1_(.*)\\.tif$", "\\1", evo_full_urls)
+
+head(evo_coord_tiles)
+
+```
+
+
+###WSF-2019 Data
+```{r}
+# Load required libraries
+library(rvest)
+library(stringr)
+
+# URL of the WSF 2019 download directory
+wsf2019_base_url <- "https://download.geoservice.dlr.de/WSF2019/files/"
+
+# Read HTML content of the directory
+wsf2019_page <- read_html(wsf2019_base_url)
+
+# Extract all href links
+wsf2019_all_links <- wsf2019_page %>% html_nodes("a") %>% html_attr("href")
+
+# Filter for WSF 2019 GeoTIFF tiles only
+# Pattern: WSF2019_v1_<lon>_<lat>.tif
+wsf2019_tif_links <- wsf2019_all_links[grepl("WSF2019_v1_.*\\.tif$", wsf2019_all_links)]
+
+# Convert to full URLs
+wsf2019_full_urls <- paste0(wsf2019_base_url, wsf2019_tif_links)
+
+# Preview first few
+head(wsf2019_full_urls)
+
+# Optional: Save to CSV
+# write.csv(full_urls, "wsf2019_tile_links.csv", row.names = FALSE)
+
+```
+
+```{r}
+# Save the list to CSV
+write_csv(data.frame(tif_url = wsf2019_full_urls), "/Users/gbenz/Documents/priogrid/pg_git/WSF_Evolution_Notebooks/WSF_Evolution_data_access/wsf_2019_tile_list.csv")
+
+```
+
+
+```{r}
+# Extract lon_lat portion from wsf2019_full_urls
+wsf2019_coord_tiles <- sub(".*_v1_(.*)\\.tif$", "\\1", wsf2019_full_urls)
+
+head(wsf2019_coord_tiles)
+
+```
+
+###Compare grid references:
+
+```{r}
+
+# 1. Find common grid references
+common_tiles <- intersect(wsf2019_coord_tiles, evo_coord_tiles)
+
+# 2. Find tiles in WSF 2019 but not in Evolution
+only_in_2019 <- setdiff(wsf2019_coord_tiles, evo_coord_tiles)
+
+# 3. Find tiles in Evolution but not in WSF 2019
+only_in_evo <- setdiff(evo_coord_tiles, wsf2019_coord_tiles)
+
+# 4. Summary
+cat("Total in WSF Evolution: ", length(evo_coord_tiles), "\n")
+cat("Total in WSF 2019: ", length(wsf2019_coord_tiles), "\n")
+cat("Shared Tiles: ", length(common_tiles), "\n")
+cat("Tiles only in WSF 2019: ", length(only_in_2019), "\n")
+cat("Tiles only in WSF Evolution: ", length(only_in_evo), "\n")
+
+```
+
+
+
+
+
+```{r}
+# # ---- Download first GeoTIFF to temporary file ----
+# first_tile_url <- full_urls[1]
+# 
+# # Create a temporary file
+# temp_file <- tempfile(fileext = ".tif")
+# 
+# # Download the GeoTIFF
+# download.file(first_tile_url, destfile = temp_file, mode = "wb")
+# cat("Downloaded to:", temp_file, "\n")
+# 
+# # ---- Load and Plot the Raster ----
+# r <- rast(temp_file)  # Load with terra
+# plot(r, main = "WSF Evolution Tile")
+```
+
+
+####36_-2
+```{r}
+# Load required libraries
+library(terra)
+
+# Define tile ID
+tile_id <- "36_-2"
+
+# Build URLs
+evo_url <- paste0("https://download.geoservice.dlr.de/WSF_EVO/files/WSFevolution_v1_", tile_id, ".tif")
+wsf2019_url <- paste0("https://download.geoservice.dlr.de/WSF2019/files/WSF2019_v1_", tile_id, ".tif")
+
+# Create separate temp file paths
+wsf2019_temp_file <- tempfile(fileext = ".tif")
+evo_temp_file <- tempfile(fileext = ".tif")
+
+# Download both tiles
+download.file(wsf2019_url, destfile = wsf2019_temp_file, mode = "wb")
+download.file(evo_url, destfile = evo_temp_file, mode = "wb")
+
+# Load rasters
+r_2019 <- rast(wsf2019_temp_file)
+r_evo <- rast(evo_temp_file)
+
+# Option 1: Plot side by side
+par(mfrow = c(1, 2))
+plot(r_2019, main = "WSF 2019 - Nairobi")
+plot(r_evo, main = "WSF Evolution - Nairobi")
+par(mfrow = c(1, 1))
+
+# Option 2: Overlay them (if they are perfectly aligned)
+# plot(r_2019, main = "Overlay of WSF 2019 & Evolution")
+# plot(r_evo, add = TRUE, col = rgb(1, 0, 0, 0.3))  # semi-transparent red overlay
+
+
+```
+
+### Recode the WSF-2019 data:
+```{r}
+# Step 1: Mask out non-built-up (value 0 becomes NA)
+r_2019[r_2019 == 0] <- NA
+
+# Step 2: Set built-up (255) values to 2019
+r_2019[r_2019 == 255] <- 2019
+
+# Optional: Verify changes
+unique_values <- unique(values(r_2019))
+print(unique_values)  # Should show 2019 and NA
+
+# Plot the cleaned raster
+plot(r_2019, main = "WSF 2019 (Built-up Masked and Recoded to Year)", col = viridisLite::viridis(1))
+
+```
+### Recode WSF-evolution data:
+
+```{r}
+# Set values <1985 (including 0s) to NA — these are non-data or pre-start year
+r_evo[r_evo < 1985] <- NA
+```
+
+### Mask previously developed pixels (<= 2015) from the WSF-2019 dataset:
+Remove anything from WSF 2019 that also appears in WSF Evolution
+
+```{r}
+# Step 1: Resample WSF Evolution to match WSF 2019 resolution/grid
+r_evo_upsampled <- resample(r_evo, r_2019, method = "near")
+
+# Step 2: Identify overlapping built-up areas
+already_built <- !is.na(r_2019) & !is.na(r_evo_upsampled)
+
+# Step 3: Mask new 2019 areas (exclude already built)
+r_2019_newest <- mask(r_2019, already_built, maskvalue = TRUE)
+
+# Step 4: Mask old 2019 areas (include only those already built)
+r_2019_old <- mask(r_2019, already_built, maskvalue = FALSE)
+
+# Step 5: Reclassify both to binary
+r_2019_newest_bin <- classify(r_2019_newest, matrix(c(2019, 1), ncol = 2, byrow = TRUE), right = NA)
+r_2019_old_bin <- classify(r_2019_old, matrix(c(2019, 1), ncol = 2, byrow = TRUE), right = NA)
+
+```
+
+```{r}
+# Plot previously built-up areas in gray
+plot(r_2019_old_bin,
+     main = "Built-up Comparison: Evolution vs. 2019",
+     col = "gray",
+     axes = FALSE)
+
+# Overlay new 2019 development in red
+plot(r_2019_newest_bin,
+     col = "red",
+     add = TRUE)
+
+```
+
+```{r}
+# Step 2: Merge layers: keep r_evo_upsampled values, fill in 2019 where missing
+r_combined <- cover(r_evo_upsampled, r_2019_newest)  # Evolution values preserved, 2019 fills NAs
+
+# Step 3: Confirm expected values (1985–2015 from Evolution, 2019 from new dev)
+print(sort(na.omit(unique(values(r_combined)))))  # should show years only
+
+# Step 4: Write to GeoTIFF
+writeRaster(r_combined, "WSF_EVO_1985-2015_plus_2019_new.tif", overwrite = TRUE)
+
+```
+
+
+```{r}
+# Load the CSV
+pg_data <- read.csv("/Users/gbenz/Documents/Retrieve PG Data/recent_onemonth_raw_pgm_withgeom.csv")
+
+# Convert to sf object using WKT geometry
+pg_sf <- st_as_sf(pg_data, wkt = "geometry", crs = 4326)
+```
+
+```{r}
+
+library(terra)
+library(sf)
+library(viridisLite)
+
+# Extract year values from raster and remove NA
+year_vals <- values(r_combined)
+year_vals <- year_vals[!is.na(year_vals)]
+
+
+# Define color palette for years 1985–2019
+color_palette <- viridis(2019 - 1985 + 1, option = "D")
+
+# Plot the combined raster
+plot(r_combined, 
+     main = "WSF Evolution (1985–2015) + New 2019 + PRIO-GRID",
+     col = color_palette,
+     zlim = c(1985, 2019),
+     axes = TRUE)
+
+# Overlay PRIO-GRID polygons (assumed to be in pg_sf)
+plot(st_geometry(pg_sf), add = TRUE, border = "pink", lwd = 1)
+
+# Create histogram
+hist(year_vals,
+     breaks = seq(1984.5, 2019.5, by = 1),  # one bin per year
+     col = "darkblue",
+     border = "white",
+     main = "Pixel Count by Year",
+     xlab = "Year",
+     ylab = "Number of Pixels")
+
+```
+
+```{r}
+
+# Ensure CRS match
+pg_sf_aligned <- st_transform(pg_sf, crs = crs(r_combined))
+
+# Get raster bounding box as sf polygon (fast and safe)
+r_extent_poly <- st_as_sfc(st_bbox(r_combined))
+st_crs(r_extent_poly) <- st_crs(pg_sf)  # assign correct CRS
+
+pg_in_raster <- pg_sf_aligned[st_within(pg_sf_aligned, r_extent_poly, sparse = FALSE), ]
+
+# Plot the raster background (optional, for context)
+plot(r_combined, main = "PRIO-GRID Cells Fully Within Raster", col = "lightgray")
+
+# Overlay the PG cells
+plot(st_geometry(pg_in_raster), add = TRUE, border = "blue", lwd = 1)
+
+```
+
+
+
+
+```{r}
+
+library(terra)
+library(sf)
+library(dplyr)
+library(tidyr)
+
+# Step 1: Define year bins and labels
+year_bins <- c(1984, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020)
+bin_labels <- c("1985", "1986-1990", "1991-1995", "1996-2000", 
+                "2001-2005", "2006-2010", "2011-2015", "2016-2019")
+
+# Step 2: Reproject raster and PG grid to a projected CRS (meters)
+target_crs <- "EPSG:3857"  # Web Mercator; or use appropriate UTM if known
+r_combined_proj <- project(r_combined, target_crs)
+pg_proj <- st_transform(pg_in_raster, crs = target_crs)
+
+# Step 3: Loop through each PG cell and extract values
+result_list <- vector("list", length = nrow(pg_proj))
+
+for (i in seq_len(nrow(pg_proj))) {
+  pg_cell <- pg_proj[i, ]
+  pg_id <- pg_cell$pg_id
+  
+  # Convert PG cell to SpatVector and calculate area in m²
+  pg_vect <- vect(pg_cell)
+  pg_area_m2 <- expanse(pg_vect, unit = "m")
+  
+  # Crop and mask raster to PG cell
+  r_crop <- crop(r_combined_proj, pg_vect)
+  r_masked <- mask(r_crop, pg_vect)
+  
+  # Extract valid raster values (years)
+  vals <- values(r_masked)
+  vals <- vals[!is.na(vals)]
+  
+  if (length(vals) == 0) next
+  
+  # Bin year values
+  year_bin <- cut(vals, breaks = year_bins, labels = bin_labels, right = TRUE)
+  bin_table <- table(year_bin)
+  
+  # Get pixel area (in m²)
+  res_m <- res(r_combined_proj)
+  px_area <- res_m[1] * res_m[2]
+  
+  # Total built-up area
+  built_area_m2 <- length(vals) * px_area
+  
+  # Proportional built-up area
+  row <- as.list(setNames(rep(0, length(bin_labels)), bin_labels))
+  bin_area_vals <- as.numeric(bin_table) * px_area
+  names(bin_area_vals) <- names(bin_table)
+  row[names(bin_area_vals)] <- bin_area_vals / pg_area_m2
+  
+  # Add ID and total built-up proportion
+  row$pg_id <- pg_id
+  row$prop_built_up <- built_area_m2 / pg_area_m2
+  
+  result_list[[i]] <- row
+}
+
+# Step 4: Combine into final DataFrame
+final_df <- bind_rows(result_list) %>%
+  replace(is.na(.), 0) %>%
+  select(pg_id, prop_built_up, all_of(bin_labels))
+
+  
+
+
+
+```
+
+```{r}
+final_df %>%
+  arrange(desc(prop_built_up)) %>%
+  head(5)
+```
+
