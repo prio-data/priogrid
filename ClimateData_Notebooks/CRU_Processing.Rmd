@@ -195,44 +195,54 @@ dev.off()
 ```
 
 
-
 ```{r}
+library(terra)
+library(sf)
+library(dplyr)
 
-# Ensure both layers are using WGS84 and geodesic calculations are enabled
-sf_use_s2(TRUE)  # enable spherical geometry engine
+# 1. Convert CRU raster to cell-centered points
+raster_pts <- as.points(dec_2020)              # SpatVector of cell centers
 
-# Compute distance matrix in meters (geodesic)
-dist_matrix_m <- st_distance(pg_centroids, raster_pts_sf)  # returns units in meters
+# 2. Convert PRIO-GRID polygons to centroids
+pg_centroids <- st_centroid(pg_sf)             # returns sf POINTS
 
-# For each PG centroid, get the minimum distance to any raster point
-min_distances_m <- apply(dist_matrix_m, 1, min)
+# 3. Convert both to sf for spatial join and distance calculation
+raster_pts_sf <- st_as_sf(raster_pts)          # from terra to sf
+raster_pts_sf <- st_transform(raster_pts_sf, crs = st_crs(pg_centroids))  # ensure matching CRS
 
-# Summarize distances
-cat("\n=== Minimum Distance (in meters) from PG Centroid to Raster Cell Center ===\n")
-print(summary(min_distances_m))
+# 4. Match each PG centroid to its nearest raster cell center
+nearest_match <- st_nearest_feature(pg_centroids, raster_pts_sf)
 
-# Threshold: within 5 meters is considered perfect alignment
-tolerance_m <- 5  # meters
-num_within <- sum(min_distances_m < tolerance_m)
-total <- length(min_distances_m)
+# 5. Calculate distance from PG centroid to raster point
+distances <- st_distance(pg_centroids, raster_pts_sf[nearest_match, ], by_element = TRUE)
 
-cat(sprintf("\nPG centroids within %.1f meters of raster cell center: %d of %d\n", tolerance_m, num_within, total))
+# 6. Summarize distances
+cat("\n=== DISTANCE FROM PRIO-GRID CENTROIDS TO NEAREST RASTER CELL CENTER ===\n")
+print(summary(distances))
 
-if (num_within == total) {
-  cat("✅ All PG centroids are aligned within tolerance.\n")
+# Optional: convert to numeric (in degrees or meters depending on CRS)
+dist_deg <- as.numeric(distances)
+
+cat(sprintf("Max offset: %.6f°\n", max(dist_deg)))
+cat(sprintf("Mean offset: %.6f°\n", mean(dist_deg)))
+
+# Optional: flag large offsets
+if (max(dist_deg) < 1e-6) {
+  cat("✅ PASS: All PG centroids perfectly match raster centers (within floating point tolerance).\n")
 } else {
-  cat("⚠️ Some PG centroids are offset more than", tolerance_m, "meters.\n")
+  cat("⚠️ Some PG centroids may be offset from raster centers.\n")
 }
 
-
-
 ```
+
+
+
 
 ```{r}
 library(ggplot2)
 
 # 1. Identify index of mismatched centroids
-mismatch_idx <- which(min_distances_m >= tolerance_m)
+mismatch_idx <- which(distances >= tolerance_m)
 
 # 2. Subset those PG polygons
 pg_mismatched <- pg_sf[mismatch_idx, ]
@@ -257,7 +267,7 @@ ggsave(
 ```{r}
 
 # 1. Convert raster to cell center points
-raster_pts <- as.points(dec_2020_mask)  # already masked to PG extent
+raster_pts <- as.points(dec_2020)  # already masked to PG extent
 raster_pts_sf <- st_as_sf(raster_pts)
 
 # 2. Spatial join: which raster points fall in which PG cell
@@ -288,6 +298,8 @@ ggsave(
 ```
 
 
+
+#This begins the coding:
 
 ```{r}
 # Define start and end year/month

@@ -1,0 +1,32 @@
+
+# Load CRU.R functions:
+```{r}
+source('../ClimateData_Notebooks/CRU_utils/CRU.R')
+library(sf)
+
+```
+
+#### This can be improved by iterating over all file_indexes (all years)
+```{r}
+
+pg_sf <- st_as_sf(read.csv("/Users/gbenz/Documents/Retrieve PG Data/recent_onemonth_raw_pgm_withgeom.csv"), wkt = "geometry", crs = 4326)
+
+climate_df <- process_cru_to_pg(
+  file_list_path = "../ClimateData_Notebooks/CRU_data_ref.txt",
+  file_index = 4,
+  nc_dir = "../ClimateData_Notebooks/CRU_Processed",
+  pg_sf = pg_sf,
+  start_year = 2020,
+  start_month = 1,
+  end_year = 2020,
+  end_month = 3
+)
+
+
+```
+
+```{r}
+head(climate_df)
+```
+
+
