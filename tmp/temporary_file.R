@@ -10,10 +10,162 @@ time_slices <- pg_dates()
 measurement_date <- time_slices[165]
 features <- cs |> dplyr::filter(measurement_date %within% date_interval)
 
-sf::st_geometry(features) |> plot()
 sf::sf_use_s2(TRUE)
 
 points$bdist2 <- units::set_units(NA, "km")
+points <- dplyr::bind_cols(points, sf::st_coordinates(points) |> dplyr::as_tibble())
+
+sample_points <- function(n = 500, min_distance = 5e5){
+  longs <- seq(-180, 180, 0.01)
+  lats <- seq(-90, 90, 0.01)
+
+  sf::sf_use_s2(TRUE)
+
+  sample_point <- function(x) sf::st_point(c(sample(longs, 1), sample(lats, 1)))
+
+  ps <- list()
+  i <- 1
+  q <- 0
+  while(i < n) {
+    p <- sample_point(i)
+
+    if(i > 1){
+      tp <- sf::st_sfc(p, crs = 4326)
+      tst <- sf::st_sf(tp = sf::st_sfc(ps, crs = 4326))
+      if(!any(sf::st_distance(tp, tst) < units::set_units(min_distance, "m"))){
+        ps[[i]] <- p
+        i <- i + 1
+      } else{
+        q <- q + 1
+      }
+    } else {
+      ps[[i]] <- p
+      i <- i + 1
+    }
+    if(q > 5000){
+      stop("Too many iterations, try a smaller n or smaller min_distance")
+    }
+  }
+
+  ps <- sf::st_sf(p = sf::st_sfc(ps, crs = 4326))
+  return(ps)
+}
+
+set.seed(42)
+m <- matrix(1:25, nrow=10, ncol=60)
+rm <- rast(m, crs = "ESRI:54009", ext = ext(-180, 180, -90, 90)) |>
+  terra::as.points() |> sf::st_as_sf() |>
+  sf::st_transform(crs = 4326)
+
+survey_points <- prio_blank_grid(ncol = 60, nrow = 10, extent = NULL, crs_string = "ESRI:54009") |> terra::as.points() |> sf::st_as_sf()
+#survey_points <- sample_points(n = 20, min_distance = 2e6)
+
+sf::st_geometry(features) |> plot()
+plot(sf::st_geometry(survey_points), pch = ".", col = "red", add = T)
+plot(sf::st_geometry(rm), pch = ".", col = "red", add = T)
+
+
+A <- points[seq(1, nrow(points), 4),]
+B <- points[seq(1, nrow(points), 4)+1,]
+C <- points[seq(1, nrow(points), 4)+2,]
+D <- points[seq(1, nrow(points), 4)+3,]
+
+plot(sf::st_geometry(A), pch = ".", col = "red", add = T)
+plot(sf::st_geometry(B), pch = ".", col = "red", add = T)
+plot(sf::st_geometry(C), pch = ".", col = "red", add = T)
+plot(sf::st_geometry(D), pch = ".", col = "red", add = T)
+
+
+start <- Sys.time()
+result <- list()
+sf::sf_use_s2(TRUE)
+for(i in 1:nrow(survey_points)){
+  print(i)
+  subset_id <- i%%4 + 1
+  if(subset_id == 1){
+    sub_points <- A
+  } else if(subset_id == 2){
+    sub_points <- B
+  } else if(subset_id == 3){
+    sub_points <- C
+  } else if(subset_id == 4){
+    sub_points <- D
+  } else{
+    stop("Error in subset id")
+  }
+  #sub_points <- points[sample(1:nrow(points), nrow(points)/100 |> ceiling()),]
+  #sub_points <- points
+
+  xy <- sf::st_coordinates(survey_points[i,])
+  stereographic_proj <- stringr::str_glue("+proj=stere +lat_0={xy[2]} +lon_0={xy[1]}") |> as.character()
+  sP <- sf::st_transform(survey_points[i,], crs = stereographic_proj)
+  sB <- sf::st_buffer(sP, dist = units::set_units(1000, "km"))
+
+  pT <- sf::st_transform(sub_points, crs = stereographic_proj)
+  pT <- sf::st_crop(pT, sB) # crops the points to the bounding box of the buffer
+
+  # Outer boundary
+  pB <- sf::st_buffer(pT, dist = units::set_units(4000, "km")) |> sf::st_combine() |> sf::st_boundary()
+
+  fT <- sf::st_transform(features, crs = stereographic_proj)
+  fC <- sf::st_crop(sf::st_make_valid(fT), pB) |>
+    sf::st_boundary() |>
+    sf::st_simplify() |>
+    sf::st_make_valid()
+
+  fIdx <- sf::st_nearest_feature(pT, fC)
+  nearest_features <- fC[fIdx,]
+  nearest_dyad <- sf::st_nearest_points(pT, nearest_features, pairwise = TRUE)
+  pT$bdist2 <- sf::st_length(nearest_dyad) |> units::set_units("km")
+  sf::st_geometry(pT) <- NULL
+  result[[i]] <- pT |> dplyr::select(pgid, bdist2)
+}
+end <- Sys.time()
+print(end-start)
+
+all <- dplyr::bind_rows(result)
+min_sampled_distances <- all |> dplyr::group_by(pgid) |>
+  dplyr::summarize(bdist2 = min(bdist2))
+
+pg <- prio_blank_grid()
+pg_dist <- pg
+values(pg_dist) <- dplyr::if_else(values(pg_dist) %in% min_sampled_distances$pgid, values(pg_dist), NA)
+pg_dist <- terra::classify(pg_dist, min_sampled_distances)
+names(pg_dist) <- "bdist2"
+
+terra::interpIDW(pg, pg_dist |> as_points(), radius = 1)
+
+interpolate_gstat <- function(model, x, crs = 4326, ...) {
+  v <- sf::st_as_sf(x, coords=c("x", "y"), crs=crs)
+  p <- predict(model, v, ...)
+  as.data.frame(p)[,1:2]
+}
+
+dist_samples <- terra::as.points(pg_dist) |> sf::st_as_sf()
+v <- gstat::variogram(log(bdist2) ~ 1, data = dist_samples)
+m <- gstat::fit.variogram(v, gstat::vgm(1, "Sph", 2000, 1))
+g <- gstat::gstat(NULL, "log.bdist2", log(bdist2)~1, dist_samples, model=m)
+plot(v, model = m)
+
+z <- terra::interpolate(pg_dist, g, fun = interpolate_gstat)
+
+plot(vc)
+
+res <- gstat::krige(formula = log(bdist2) ~ 1,
+                    locations = dist_samples,
+                    newdata = terra::as.points(pg) |> sf::st_as_sf(),
+                    nmax = 10,
+                    nsim = 5,
+                    model = m)
+sp::spplot(res)
+
+resp <- predict(res, terra::as.points(pg) |> sf::st_as_sf())
+resp$x <- st_coordinates(resp)[,1]
+resp$y <- st_coordinates(resp)[,2]
+resp$pred <- resp$var1.pred
+
+k <- gstat::gstat(formula = bdist2 ~ 1, data = dist_samples, model = gstat::vgm("Sph"))
+kpred <- predict(k, terra::as.points(pg) |> sf::st_as_sf())
 
 d6 <- list(c(0,0),
            c(90, 0),
