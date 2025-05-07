@@ -78,6 +78,31 @@ print(tif_files)
 ```
 
 
+
+```{r}
+library(terra)
+
+# Directory containing all your 2022 GeoTIFFs
+input_dir <- "/Volumes/One Touch/PRIO/PSI/GLC_2022"
+# List all .tif files
+tif_files <- list.files(input_dir, pattern = "\\.tif$", full.names = TRUE)
+
+# Load all rasters into a list
+raster_list <- lapply(tif_files, rast)
+
+# Mosaic them into one raster (this merges based on spatial overlap)
+mosaic_raster <- do.call(mosaic, raster_list)
+
+# Save the mosaicked raster
+output_file <- "/Volumes/One Touch/PRIO/PSI/Global_Mosaic/GLC_2022_mosaic.tif"
+writeRaster(mosaic_raster, output_file, overwrite = TRUE)
+
+# Plot a preview
+plot(mosaic_raster, main = "Mosaicked GLC_FCS30D - 2022")
+
+```
+
+
 ```{r}
 library(terra)
 
