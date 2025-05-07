@@ -4,6 +4,7 @@
 source("../WSF_Evolution_Notebooks/WSF_utils/retrieve_wsf_URLs.R")
 source("../WSF_Evolution_Notebooks/WSF_utils/preprocessing_WSF_scenes.R")
 source("../WSF_Evolution_Notebooks/WSF_utils/pg_processing.R")
+source("../WSF_Evolution_Notebooks/WSF_utils/wrapper.R")
 
 
 # Load required libraries
