@@ -1,0 +1,100 @@
+
+
+Batch process all data for 2022:
+```{r}
+library(terra)
+library(tools)
+
+# Define the root directory with multiple folders
+root_dir <- "/Volumes/One Touch/PRIO/PSI/GLC"
+
+# Define the output directory to save the 2022 layer extractions
+output_dir <- "/Volumes/One Touch/PRIO/PSI/GLC_2022"
+
+# Create output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+# Get all immediate subdirectories (folders)
+folder_list <- list.dirs(root_dir, recursive = FALSE)
+print(folder_list)
+
+# Loop through each subfolder
+for (folder_path in folder_list) {
+  message("🔍 Searching in folder: ", folder_path)
+
+  # Find all *_Annual.tif files in this folder
+  tif_files <- list.files(folder_path, pattern = "_Annual\\.tif$", full.names = TRUE)
+
+  # Skip folders with no matching files
+  if (length(tif_files) == 0) next
+
+  # Process each .tif file
+  for (tif_path in tif_files) {
+    message("📁 Processing: ", tif_path)
+
+    try({
+      r <- rast(tif_path)
+
+      if (nlyr(r) >= 23) {
+        r_2022 <- r[[23]]
+
+        # Preserve original filename, add _year2022
+        base_name <- file_path_sans_ext(basename(tif_path))
+        out_name <- paste0(base_name, "_year2022.tif")
+        out_path <- file.path(output_dir, out_name)
+
+        # Save the single-layer GeoTIFF
+        writeRaster(r_2022, out_path, overwrite = TRUE)
+        message("✅ Saved: ", out_name)
+      } else {
+        warning("⚠️ Skipping file with <23 bands: ", tif_path)
+      }
+    }, silent = TRUE)
+  }
+}
+
+
+```
+
+
+
+Unzip GLC data:
+```{r}
+
+# Define the directory where files are already extracted
+unzip_dir <- "/Volumes/One Touch/PRIO/PSI/GLC/GLC_FCS30D_19852022maps_E10-E15"
+
+# List all .tif files in the directory (including subdirectories if any)
+tif_files <- list.files(unzip_dir, pattern = "\\.tif$", recursive = TRUE, full.names = TRUE)
+
+# Print the list to confirm
+print(tif_files)
+
+
+
+
+```
+
+
+```{r}
+library(terra)
+
+# Define the path to the specific file
+tif_file <- "/Volumes/One Touch/PRIO/PSI/GLC/GLC_FCS30D_19852022maps_E10-E15/GLC_FCS30D_20002022_E15S30_Annual.tif"
+
+# Load the raster stack
+r <- rast(tif_file)
+
+# Optional: rename layers to match years
+if (nlyr(r) == 23) {
+  names(r) <- paste0("Year_", 2000:2022)
+}
+
+# Plot the 2022 layer (23rd band)
+plot(r[[23]], main = "GLC_FCS30D - 2022 Land Cover (E105S10)")
+
+
+```
+
