@@ -94,6 +94,11 @@
       ],
       "Hash": "6b868847b365672d6c1677b1608da9ed"
     },
+    "Rdpack": {
+      "Package": "Rdpack",
+      "Version": "2.6.4",
+      "Source": "Repository"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.2.0",
@@ -1127,6 +1132,11 @@
         "terra"
       ],
       "Hash": "7d6eda494f34a644420ac1bfd2a8023a"
+    },
+    "rbibutils": {
+      "Package": "rbibutils",
+      "Version": "2.3",
+      "Source": "Repository"
     },
     "readr": {
       "Package": "readr",
