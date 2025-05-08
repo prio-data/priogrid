@@ -168,3 +168,43 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes()){
   names(r) <- as.character(time_slices)
   r
 }
+
+
+bdist2 <- function(measurement_date, cshp = read_cshapes()){
+  # bdist2 gives the spherical distance (in kilometer) from the cell centroid to the border of the nearest neighboring country, regardless of whether the nearest country is located across international waters.
+  pg <- prio_blank_grid()
+
+  time_slices <- pg_dates()
+  features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+  boundaries <- sf::st_boundary(features)
+  boundaries <- sf::st_cast(boundaries, "MULTILINESTRING")
+
+  sf::sf_use_s2(TRUE)
+  shared_borders <- list()
+  for(i in 1:nrow(boundaries)){
+    shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
+  }
+  shared_borders <- dplyr::bind_rows(shared_borders)
+  shared_borders |> sf::st_geometry() |> plot()
+
+  res <- terra::distance(pg, shared_borders |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
+
+  cover <- cshapes_cover(measurement_date, cshp = cshp)
+  values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
+
+  return(res*cover)
+}
+
+gen_bdist2 <- function(cshp = read_cshapes()){
+  temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
+  time_slices <- pg_dates()
+  time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  r <- bdist2(time_slices[1], cshp = cshp)
+  for(i in 2:length(time_slices)){
+    t <- time_slices[i]
+    terra::add(r) <- bdist2(t, cshp = cshp)
+  }
+  names(r) <- as.character(time_slices)
+  r
+}

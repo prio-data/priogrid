@@ -10,6 +10,8 @@ time_slices <- pg_dates()
 measurement_date <- time_slices[165]
 features <- cs |> dplyr::filter(measurement_date %within% date_interval)
 
+res <- terra::distance(pg, features |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
+
 sf::sf_use_s2(TRUE)
 
 points$bdist2 <- units::set_units(NA, "km")
@@ -50,12 +52,6 @@ sample_points <- function(n = 500, min_distance = 5e5){
   ps <- sf::st_sf(p = sf::st_sfc(ps, crs = 4326))
   return(ps)
 }
-
-set.seed(42)
-m <- matrix(1:25, nrow=10, ncol=60)
-rm <- rast(m, crs = "ESRI:54009", ext = ext(-180, 180, -90, 90)) |>
-  terra::as.points() |> sf::st_as_sf() |>
-  sf::st_transform(crs = 4326)
 
 survey_points <- prio_blank_grid(ncol = 60, nrow = 10, extent = NULL, crs_string = "ESRI:54009") |> terra::as.points() |> sf::st_as_sf()
 #survey_points <- sample_points(n = 20, min_distance = 2e6)
