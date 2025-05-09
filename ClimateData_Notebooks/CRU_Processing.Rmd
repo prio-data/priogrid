@@ -12,6 +12,42 @@ library(lubridate)
 
 ```
 
+## Working from the team processes:
+
+#### Identify the appropriate identifying fields for
+- {harrisVersion4CRU2020} {priogrid}
+
+
+
+```{r}
+#' Reads the CRU data
+#'
+#' 
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{harrisVersion4CRU2020}{priogrid}
+read_cru <- function() {
+  f <- get_pgfile(source_name = "CRU Climate",
+                  source_version = "v4.09",
+                  id = "d9ffee47-4e83-4805-9b3f-5e0e889fd2db")
+
+  return(f)
+}
+```
+
+```{r}
+f <- read_cru()
+```
+
+```{r}
+print(f)
+```
+
+
+
 ```{r}
 # Replace the path with your actual file path
 file <- "/Users/gbenz/Documents/priogrid/data to ingest/cru_ts4.09.2011.2020.tmp.dat.nc"
