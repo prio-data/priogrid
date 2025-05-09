@@ -170,14 +170,40 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes()){
 }
 
 
-bdist2 <- function(measurement_date, cshp = read_cshapes()){
-  # bdist2 gives the spherical distance (in kilometer) from the cell centroid to the border of the nearest neighboring country, regardless of whether the nearest country is located across international waters.
+#' Calculates bdist2 variable for a single time slice.
+#'
+#' bdist2 gives the spherical distance (in kilometer) from the cell centroid to
+#' the border of the nearest neighboring country, regardless of whether the nearest
+#' country is located across international waters. Based on cShapes dataset.`
+#'
+#' The variable can be generated with up to daily temporal resolution. It does
+#' take quite a long time to estimate, but can use a past result if there are
+#' no changes in borders.
+#'
+#' @param measurement_date A single date as Date object
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
+#' @param past_result A past result of bdist2.
+#'
+#' @return list with SpatRast with bdist2, and Sf objects with country boundaries and shared_borders.
+#' @export
+#'
+#' @examples
+#' # bdist2 <- bdist2(as.Date("2010-01-01"))
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
   pg <- prio_blank_grid()
 
-  time_slices <- pg_dates()
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
   boundaries <- sf::st_cast(boundaries, "MULTILINESTRING")
+
+  if(!is.null(past_result)){
+    no_changes <- sf::st_equals(boundaries |> sf::st_combine(), past_result$boundaries |> sf::st_combine(), sparse = FALSE)
+    if(no_changes){
+      return(past_result)
+    }
+  }
 
   sf::sf_use_s2(TRUE)
   shared_borders <- list()
@@ -185,25 +211,47 @@ bdist2 <- function(measurement_date, cshp = read_cshapes()){
     shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
   }
   shared_borders <- dplyr::bind_rows(shared_borders)
-  shared_borders |> sf::st_geometry() |> plot()
+  #shared_borders |> sf::st_geometry() |> plot()
 
   res <- terra::distance(pg, shared_borders |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
 
   cover <- cshapes_cover(measurement_date, cshp = cshp)
   values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
 
-  return(res*cover)
+  return(list("bdist2" = res*cover, "boundaries" = boundaries, "shared_borders" = shared_borders))
 }
 
+#' Generate bdist2 variable
+#'
+#' bdist2 gives the spherical distance (in kilometer) from the cell centroid to
+#' the border of the nearest neighboring country, regardless of whether the nearest
+#' country is located across international waters. Based on cShapes dataset.`
+#'
+#' The variable can be generated with up to daily temporal resolution. It does
+#' take quite a long time to estimate, but uses a past result if there are
+#' no changes in borders.
+#'
+#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
+#'
+#' @return SpatRast
+#' @export
+#'
+#' @examples
+#' # bdist2 <- gen_bdist2()
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 gen_bdist2 <- function(cshp = read_cshapes()){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- pg_dates()
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  r <- bdist2(time_slices[1], cshp = cshp)
+  res <- bdist2(time_slices[1], cshp = cshp)
+  r <- res$bdist2
   for(i in 2:length(time_slices)){
+    print(i)
     t <- time_slices[i]
-    terra::add(r) <- bdist2(t, cshp = cshp)
+    res <- bdist2(t, cshp = cshp, past_result = res)
+    terra::add(r) <- res$bdist2
   }
   names(r) <- as.character(time_slices)
   r
