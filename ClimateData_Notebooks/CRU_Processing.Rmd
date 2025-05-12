@@ -361,10 +361,19 @@ plot_pg_stack_to_pdf <- function(pg_stack, f, nrow = 3, ncol = 4) {
 
 
 ```{r}
-output_path <- "/Users/gbenz/Documents/priogrid/CRU Climate/v4.09/d9ffee47-4e83-4805-9b3f-5e0e889fd2db/pg_stack_plots.pdf"
-plot_pg_stack_to_pdf(pg_stack, output_path)
+
+plot_pg_stack_to_pdf(pg_stack, f)
 
 ```
+
+
+
+
+
+
+
+
+
 
 # OLD -----
 ```{r}
