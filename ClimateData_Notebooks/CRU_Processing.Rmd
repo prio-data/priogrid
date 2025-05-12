@@ -19,6 +19,8 @@ library(lubridate)
 
 
 
+# Function 1:
+
 ```{r}
 #' Reads the CRU data
 #'
@@ -42,10 +44,338 @@ read_cru <- function() {
 f <- read_cru()
 ```
 
+#### Visualize the index
 ```{r}
 print(f)
 ```
 
+
+```{r}
+load_cru_temperature <- function(index, sources) {
+  library(terra)
+  library(R.utils)
+  library(tools)
+
+  # Validate index
+  if (index < 1 || index > length(sources)) {
+    stop(sprintf("Index %d is out of bounds. Found %d sources.", index, length(sources)))
+  }
+
+  gz_file <- sources[index]
+
+  # Extract file components
+  filename <- basename(gz_file)
+  base_name <- sub("\\.dat\\.nc\\.gz$", "", filename)  # "cru_ts4.09.1981.1990.tmp"
+  parent_dir <- dirname(gz_file)
+  target_dir <- file.path(parent_dir, sub("\\.tmp$", "", base_name))  # remove ".tmp"
+  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Define unzipped NetCDF file destination
+  nc_file <- file.path(target_dir, sub("\\.gz$", "", filename))  # "cru_ts4.09.1981.1990.tmp.dat.nc"
+
+  # Decompress if needed
+  if (!file.exists(nc_file)) {
+    message("📦 Decompressing to: ", nc_file)
+    gunzip(gz_file, destname = nc_file, remove = FALSE, overwrite = TRUE)
+  }
+
+  # Load NetCDF
+  temp <- rast(nc_file)
+  tmp_idx <- grep("^tmp", names(temp))
+  temp_only <- temp[[tmp_idx]]
+
+  # Annotate raster
+  start_year <- as.numeric(sub(".*(\\d{4})\\..*", "\\1", filename))
+  dates <- seq(as.Date(sprintf("%d-01-16", start_year)), by = "month", length.out = nlyr(temp_only))
+  time(temp_only) <- dates
+  names(temp_only) <- paste0("tmp_", format(dates, "%Y_%m"))
+
+  return(temp_only)
+}
+
+
+```
+
+## Loads just one index:
+```{r}
+temperature_stack <- load_cru_temperature(1, f) 
+
+```
+
+### Performs a batch process:
+```{r}
+load_all_cru_temperature <- function(sources) {
+  message("Processing ", length(sources), " CRU files...")
+
+  temp_list <- lapply(seq_along(sources), function(i) {
+    message("Loading file ", i, " of ", length(sources))
+    load_cru_temperature(i, sources)
+  })
+
+  # Merge into single SpatRaster if needed
+  combined <- do.call(c, temp_list)
+  return(combined)
+}
+```
+
+```{r}
+cru_temp <- load_all_cru_temperature(f)
+```
+
+#### Generate a raster stack from the unzipped .nc files just created:
+```{r}
+stack_cru_temperature_from_sources <- function(sources, save_name = 'cru_stack', plot_layer = "tmp_2020_01") {
+  library(terra)
+  
+  # 1. Derive parent directory from the first .gz path in sources
+  if (length(sources) == 0) stop("❌ 'sources' is empty.")
+  parent_dir <- dirname(sources[1])
+  message("📁 Searching unzipped .nc files in: ", parent_dir)
+
+  # 2. Recursively find all .nc files in subdirectories
+  nc_files <- list.files(parent_dir, pattern = "\\.nc$", full.names = TRUE, recursive = TRUE)
+  if (length(nc_files) == 0) stop("❌ No .nc files found in: ", parent_dir)
+
+  # 3. Function to load and annotate one .nc file
+  load_nc_file <- function(nc_path) {
+    temp <- rast(nc_path)
+    tmp_idx <- grep("^tmp", names(temp))
+    temp_only <- temp[[tmp_idx]]
+    
+    start_year <- as.numeric(sub(".*(\\d{4})\\..*", "\\1", basename(nc_path)))
+    dates <- seq(as.Date(sprintf("%d-01-16", start_year)), by = "month", length.out = nlyr(temp_only))
+    
+    time(temp_only) <- dates
+    names(temp_only) <- paste0("tmp_", format(dates, "%Y_%m"))
+    
+    return(temp_only)
+  }
+
+  # 4. Load all unzipped .nc files and build the full stack
+  temp_stack_list <- lapply(nc_files, load_nc_file)
+
+  # 5. Concatenate into a single time-series raster
+  cru_temp_stack <- do.call(c, temp_stack_list)
+  message("✅ Raster stack created with ", nlyr(cru_temp_stack), " monthly layers.")
+
+  # 6. Optional: Save to disk
+  
+  save_path <- file.path(parent_dir, paste0(save_name, ".tif"))
+
+  if (!is.null(save_path)) {
+    writeRaster(cru_temp_stack, save_path, overwrite = TRUE)
+    message("💾 Saved raster to: ", save_path)
+  }
+
+  # 7. Optional: Plot a specified layer
+  if (plot_layer %in% names(cru_temp_stack)) {
+    plot(cru_temp_stack[[plot_layer]], main = paste("CRU Monthly Temperature -", plot_layer))
+  } else {
+    warning("⚠️ Layer '", plot_layer, "' not found in stack.")
+  }
+
+  return(cru_temp_stack)
+}
+```
+
+
+```{r}
+cru_stack <- stack_cru_temperature_from_sources(f)
+```
+
+```{r}
+pg_grid = prio_blank_grid()
+
+# Plot it (will show extent, grid cells)
+plot(pg_grid, main = "Blank PRIO-GRID Raster")
+
+```
+
+```{r}
+build_ym_table <- function(start_year, start_month, end_year, end_month) {
+  years <- rep(start_year:end_year, each = 12)
+  months <- rep(1:12, times = length(start_year:end_year))
+  ym_df <- data.frame(year = years, month = months)
+  ym_df <- ym_df[with(ym_df, year > start_year | (year == start_year & month >= start_month)), ]
+  ym_df <- ym_df[with(ym_df, year < end_year | (year == end_year & month <= end_month)), ]
+  ym_df$layer_name <- paste0("tmp_", sprintf("%04d_%02d", ym_df$year, ym_df$month))
+  return(ym_df)
+}
+
+validate_date_range <- function(start_year, start_month, end_year, end_month, available_dates) {
+  # Convert all dates to year-month format (first day of month)
+  available_ym <- as.Date(format(available_dates, "%Y-%m-01"))
+  first_date <- available_ym[1]
+  last_date  <- available_ym[length(available_ym)]
+
+  start_date <- as.Date(sprintf("%04d-%02d-01", start_year, start_month))
+  end_date   <- as.Date(sprintf("%04d-%02d-01", end_year, end_month))
+
+  if (start_date < first_date) {
+    stop(sprintf("❌ Start date %s is before first raster date %s", format(start_date, "%Y-%m"), format(first_date, "%Y-%m")))
+  }
+
+  if (end_date > last_date) {
+    stop(sprintf("❌ End date %s is after last raster date %s", format(end_date, "%Y-%m"), format(last_date, "%Y-%m")))
+  }
+
+  return(list(start_date = start_date, end_date = end_date))
+}
+```
+
+```{r}
+start_year = 2000
+start_month = 01
+end_year = 2000
+end_month = 03
+
+# Step 2: Validate date range is compatible with the raster
+validate_date_range(start_year, start_month, end_year, end_month, time(cru_stack))
+print(validate_date_range)
+
+# Step 3: Build year-month table
+ym_df <- build_ym_table(start_year, start_month, end_year, end_month)
+print(ym_df)
+```
+
+```{r}
+mask_cru_to_pg_stack <- function(cru_stack, pg_grid, ym_df = NULL) {
+  library(terra)
+
+  # Ensure alignment
+  if (!compareGeom(cru_stack, pg_grid, stopOnError = FALSE)) {
+    stop("Geometry mismatch: 'cru_stack' and 'pg_grid' must have identical extent, resolution, and CRS.")
+  }
+
+
+  # Get full layer info
+  all_names <- names(cru_stack)
+  all_dates <- time(cru_stack)
+
+  full_ym_df <- data.frame(
+    layer_name = all_names,
+    year = as.integer(format(all_dates, "%Y")),
+    month = as.integer(format(all_dates, "%m")),
+    stringsAsFactors = FALSE
+  )
+
+  # Subset if ym_df is provided
+  if (!is.null(ym_df)) {
+    ym_df$layer_name <- paste0("tmp_", sprintf("%04d", ym_df$year), "_", sprintf("%02d", ym_df$month))
+    full_ym_df <- merge(full_ym_df, ym_df, by = "layer_name")
+    
+    # Drop duplicate .y columns and keep only merged year/month
+    full_ym_df$year <- full_ym_df$year.x
+    full_ym_df$month <- full_ym_df$month.x
+    full_ym_df <- full_ym_df[, c("layer_name", "year", "month")]
+  }
+
+  # Prepare output list
+  masked_layers <- list()
+
+  # Create mask once
+  pg_mask <- !is.na(values(pg_grid))
+
+  # Loop through selected layers
+  for (i in seq_len(nrow(full_ym_df))) {
+    lyr_name <- full_ym_df$layer_name[i]
+    r <- cru_stack[[lyr_name]]
+    r_masked <- mask(r, pg_grid)
+
+    # Explicitly drop values outside PRIO-GRID
+    vals <- values(r_masked)
+    vals[!pg_mask] <- NA
+    values(r_masked) <- vals
+
+    names(r_masked) <- lyr_name
+    masked_layers[[i]] <- r_masked
+  }
+
+  # Combine into stack
+  masked_stack <- rast(masked_layers)
+
+  # Preserve time if available
+  if (!is.null(all_dates)) {
+    matched_dates <- full_ym_df[match(names(masked_stack), full_ym_df$layer_name), ]
+    time(masked_stack) <- as.Date(sprintf("%04d-%02d-16", matched_dates$year, matched_dates$month))
+  }
+  
+
+  return(masked_stack)
+}
+
+```
+
+
+```{r}
+pg_stack <- mask_cru_to_pg_stack(cru_temp, pg_grid, ym_df)
+```
+
+
+
+```{r}
+plot_pg_stack_to_pdf <- function(pg_stack, f, nrow = 3, ncol = 4) {
+  library(terra)
+
+  # Derive base output directory from f[1]
+  base_dir <- dirname(f[1])
+  report_dir <- file.path(base_dir, "reports")
+
+  # Create 'reports' directory if it doesn't exist
+  if (!dir.exists(report_dir)) {
+    dir.create(report_dir, recursive = TRUE)
+  }
+
+  # Define final PDF path
+  output_pdf <- file.path(report_dir, "CRU_pg_review.pdf")
+
+  nlayers_total <- nlyr(pg_stack)
+  layer_names <- names(pg_stack)
+
+  # Calculate number of pages needed
+  layers_per_page <- nrow * ncol
+  n_pages <- ceiling(nlayers_total / layers_per_page)
+
+  # Start PDF
+  pdf(output_pdf, width = 11, height = 8.5)
+
+  for (i in seq_len(n_pages)) {
+    start_idx <- (i - 1) * layers_per_page + 1
+    end_idx <- min(i * layers_per_page, nlayers_total)
+    layer_subset <- pg_stack[[start_idx:end_idx]]
+
+    par(mfrow = c(nrow, ncol), mar = c(2, 2, 2, 2))
+
+    for (j in seq_len(nlyr(layer_subset))) {
+      lyr <- layer_subset[[j]]
+      plot(lyr, main = names(layer_subset)[j])
+    }
+  }
+
+  dev.off()
+  message("✅ PDF saved to: ", output_pdf)
+}
+
+
+```
+
+
+```{r}
+output_path <- "/Users/gbenz/Documents/priogrid/CRU Climate/v4.09/d9ffee47-4e83-4805-9b3f-5e0e889fd2db/pg_stack_plots.pdf"
+plot_pg_stack_to_pdf(pg_stack, output_path)
+
+```
+
+# OLD -----
+```{r}
+cru_dir <- "/Users/gbenz/Documents/priogrid/CRU Climate/v4.09/d9ffee47-4e83-4805-9b3f-5e0e889fd2db"
+
+cru_stack <- stack_cru_temperature_from_directory(
+  nc_dir = cru_dir,
+  save_path = "cru_monthly_1981_2024_stack.tif",  # Optional
+  plot_layer = "tmp_2020_01"                     # Optional
+)
+```
 
 
 ```{r}

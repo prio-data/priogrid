@@ -6,10 +6,27 @@ library(sf)
 
 ```
 
+
+```{r}
+library(terra)
+
+pg <- prio_blank_grid()
+
+pg
+
+class(pg)           # Returns the class (likely "SpatRaster" from terra)
+typeof(pg)          # Returns the internal type
+str(pg)             # Gives structure info (dimensions, resolution, etc.)
+
+plot(pg, main = "PRIO-GRID Blank Raster")
+
+```
+
+
 #### This can be improved by iterating over all file_indexes (all years)
 ```{r}
 
-pg_sf <- st_as_sf(read.csv("/Users/gbenz/Documents/Retrieve PG Data/recent_onemonth_raw_pgm_withgeom.csv"), wkt = "geometry", crs = 4326)
+#pg_sf <- st_as_sf(read.csv("/Users/gbenz/Documents/Retrieve PG Data/recent_onemonth_raw_pgm_withgeom.csv"), wkt = "geometry", crs = 4326)
 
 climate_df <- process_cru_to_pg(
   file_list_path = "../ClimateData_Notebooks/CRU_data_ref.txt",
