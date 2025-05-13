@@ -217,7 +217,7 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
   download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
   did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
 
-  if(nrow(did_not_finish > 0)){
+  if(nrow(did_not_finish) > 0){
     retry_number <- 0
     while(retry_number < max_retry){
       retry_number <- retry_number + 1
@@ -227,16 +227,11 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
       did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
     }
 
-    if(!dir.exists(file.path(destfolder, "tmp"))){
-      dir.create(file.path(destfolder, "tmp"))
+    if(nrow(did_not_finish) > 0){
+      warning(paste0(nrow(did_not_finish), " files did not finish downloading after ", max_retry, " retries. Please run again. If the problem persists, please file an issue on <https://github.com/prio-data/priogrid/issues>"))
     }
-    saveRDS(did_not_finish, file.path(destfolder, "tmp", "unfinished_downloads.rds"))
-    warning("Some files did not completely finish downloading (printed below). Run unfinished_downloads() to see which files did not finish.
-Try running download_pg_rawdata() again (will resume download if possible).
-If the problem persists, please file an issue on <https://github.com/prio-data/priogrid/issues> with results from unfinished_downloads().")
-  } else {
-    unlink(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
-  }
+
+   }
 
 }
 
