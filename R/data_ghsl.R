@@ -1,3 +1,5 @@
+ghsl_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid", "prio"))
+
 #' Reads the GHSL GHS Population Grid data
 #'
 #'
@@ -34,6 +36,19 @@ read_ghsl_population_grid <- function(){
   return(r)
 }
 
+ghsl_population_grid_uncached <- function(){
+  r <- read_ghsl_population_grid()
+  res <- robust_transformation(r, agg_fun = "sum")
+
+  #pg <- prio_blank_grid()
+  #ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")
+  #res <- terra::resample(ragg, pg, method = "near")
+
+  return(res)
+}
+
+ghsl_population_grid <- memoise::memoise(ghsl_population_grid_uncached, cache = ghsl_cache)
+
 #' Generate GHSL GHS Population Grid
 #'
 #' This aggregates the high-resolution population grid to PRIO-GRID level across all 5-year intervals (1975 - 2030).
@@ -50,12 +65,32 @@ read_ghsl_population_grid <- function(){
 #' @references
 #' \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}
 gen_ghsl_population_grid <- function(){
-  r <- read_ghsl_population_grid()
-  res <- robust_transformation(r, agg_fun = "sum")
+  res <- ghsl_population_grid()
 
-  #pg <- prio_blank_grid()
-  #ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")
-  #res <- terra::resample(ragg, pg, method = "near")
+
+  ghsl_dates <- names(res) |> as.Date()
+  time_intervals <- pg_date_intervals()
+
+  # If the GHSL data has a lower temporal resolution than PRIO-GRID,
+  # we can just return the data.
+  pg_interval <- lubridate::int_length(time_intervals[1])
+  ghsl_interval <- lubridate::interval(ghsl_dates[2], ghsl_dates[1]) |> lubridate::int_length()
+  if(pg_interval <= ghsl_interval){
+    return(res)
+  }
+
+  # If PRIO-GRID has a lower resolution than GHSL, then
+  # we need to aggregate GHSL.
+  pg_int <- pg_ints[1]
+  relevant_dates <- ghsl_dates[ghsl_dates %within% pg_int]
+  r <- mean(res[[as.character(relevant_dates)]])
+  for(i in 2:length(pg_ints)){
+    pg_int <- pg_ints[i]
+    relevant_dates <- ghsl_dates[ghsl_dates %within% pg_int]
+    terra::add(r) <- mean(res[[as.character(relevant_dates)]])
+  }
 
   return(res)
 }
+
+
