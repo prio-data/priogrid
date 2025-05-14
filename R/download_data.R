@@ -163,7 +163,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' @examples
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
-download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TRUE, max_retry = 10){
+download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size = 20, max_retry = 10){
   destfolder <- pgoptions$get_rawfolder()
 
   if(!dir.exists(destfolder)){
@@ -176,26 +176,11 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
   }
 
   if(is.null(file_info)){
-    if(resume){
-      # Only download unfinished downloads if file_info is null, resume is true, and there are unfinished downloads.
-      if(file.exists(file.path(destfolder, "tmp", "unfinished_downloads.rds"))){
-        did_not_finish <- readRDS(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
-        file_info <- file_info |>
-          dplyr::mutate(file_exists = dplyr::if_else((file.path(destfolder, filename) %in% did_not_finish), FALSE, file_exists))
-      } else{
-        # Default to using all sources.
-        file_info <- pg_rawfiles()
-      }
-    } else{
-      # Default to using all sources.
       file_info <- pg_rawfiles()
-    }
-
   }
 
   file_info$file_exists <- file.exists(file.path(destfolder, file_info$filename))
   file_info$subdir_exists <- dir.exists(file.path(destfolder, dirname(file_info$filename)))
-
 
 
   if(!overwrite){
@@ -214,30 +199,42 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, resume = TR
     }
   }
 
-  download_report <- curl::multi_download(file_info$url, file.path(destfolder, file_info$filename), resume = TRUE)
-  did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+  batch_download <- function(file_info, batch_size){
+    nr <- nrow(file_info)
+    file_batches <- split(file_info, rep(1:ceiling(nr/batch_size), each=batch_size, length.out=nr))
 
-  if(nrow(did_not_finish > 0)){
-    retry_number <- 0
-    while(retry_number < max_retry){
-      retry_number <- retry_number + 1
-      message(paste("Download interrupted, retrying...", retry_number))
-      unfinished_files_to_download <- file_info[file_info$url %in% did_not_finish$url,]
-      download_report <- curl::multi_download(unfinished_files_to_download$url, file.path(destfolder, unfinished_files_to_download$filename), resume = TRUE)
-      did_not_finish <- download_report |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+    download_reports <- list()
+    for(i in 1:length(file_batches)){
+      message(paste("Processing batch:", i, "/", length(file_batches)))
+      batch <- file_batches[[i]]
+      download_reports[[i]] <- curl::multi_download(batch$url, file.path(destfolder, batch$filename), resume = TRUE)
     }
 
-    if(!dir.exists(file.path(destfolder, "tmp"))){
-      dir.create(file.path(destfolder, "tmp"))
+    download_report <- dplyr::bind_rows(download_reports) |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
+
+    if(nrow(download_report) == 0){
+      return(dplyr::tibble())
     }
-    saveRDS(did_not_finish, file.path(destfolder, "tmp", "unfinished_downloads.rds"))
-    warning("Some files did not completely finish downloading (printed below). Run unfinished_downloads() to see which files did not finish.
-Try running download_pg_rawdata() again (will resume download if possible).
-If the problem persists, please file an issue on <https://github.com/prio-data/priogrid/issues> with results from unfinished_downloads().")
-  } else {
-    unlink(file.path(destfolder, "tmp", "unfinished_downloads.rds"))
+
+    unfinished_files <- file_info[file_info$url %in% download_report$url,]
+
+    return(unfinished_files)
   }
 
+  unfinished_files <- batch_download(file_info, batch_size)
+
+  if(nrow(unfinished_files) == 0){
+    return()
+  }
+
+  for(i in 1:max_retry){
+    warning("Download was interrupted before finished. Resuming.")
+    unfinished_files <- batch_download(unfinished_files, batch_size)
+
+    if(nrow(unfinished_files) == 0){
+      return()
+    }
+  }
 }
 
 #' Prints data.frame with unfinished downloads
