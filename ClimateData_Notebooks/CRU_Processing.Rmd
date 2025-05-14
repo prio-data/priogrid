@@ -40,9 +40,11 @@ read_cru <- function() {
 }
 ```
 
+
 ```{r}
 f <- read_cru()
 ```
+
 
 #### Visualize the index
 ```{r}
@@ -75,7 +77,7 @@ load_cru_temperature <- function(index, sources) {
 
   # Decompress if needed
   if (!file.exists(nc_file)) {
-    message("📦 Decompressing to: ", nc_file)
+    message("Decompressing to: ", nc_file)
     gunzip(gz_file, destname = nc_file, remove = FALSE, overwrite = TRUE)
   }
 
@@ -96,7 +98,11 @@ load_cru_temperature <- function(index, sources) {
 
 ```
 
+This is just an example -- do not run...
+
 ## Loads just one index:
+
+do not run....
 ```{r}
 temperature_stack <- load_cru_temperature(1, f) 
 
@@ -156,7 +162,7 @@ stack_cru_temperature_from_sources <- function(sources, save_name = 'cru_stack',
 
   # 5. Concatenate into a single time-series raster
   cru_temp_stack <- do.call(c, temp_stack_list)
-  message("✅ Raster stack created with ", nlyr(cru_temp_stack), " monthly layers.")
+  message("Raster stack created with ", nlyr(cru_temp_stack), " monthly layers.")
 
   # 6. Optional: Save to disk
   
@@ -164,7 +170,7 @@ stack_cru_temperature_from_sources <- function(sources, save_name = 'cru_stack',
 
   if (!is.null(save_path)) {
     writeRaster(cru_temp_stack, save_path, overwrite = TRUE)
-    message("💾 Saved raster to: ", save_path)
+    message("Saved raster to: ", save_path)
   }
 
   # 7. Optional: Plot a specified layer
@@ -182,6 +188,59 @@ stack_cru_temperature_from_sources <- function(sources, save_name = 'cru_stack',
 ```{r}
 cru_stack <- stack_cru_temperature_from_sources(f)
 ```
+## Here we consider pg options (date) parameters:
+```{r}
+# Get the layer names from the raster stack
+layer_names <- names(cru_stack)
+
+# Extract YYYY-MM from "tmp_YYYY_MM" and convert to proper Date
+layer_dates <- ymd(paste0(sub("tmp_", "", layer_names), "-01"))
+
+pg_intervals <- pg_date_intervals()
+
+
+# Determine which layer_dates fall within any pg_interval
+keep_layers <- sapply(layer_dates, function(d) any(d %within% pg_intervals))
+
+cru_stack_filtered <- cru_stack[[which(keep_layers)]]
+
+layer_names_filtered <- names(cru_stack_filtered)
+```
+
+
+```{r}
+
+#' Filter a raster stack by PRIO-GRID date intervals
+#'
+#' @param raster_stack A RasterStack or SpatRaster with layers named like "tmp_YYYY_MM"
+#' @return A list with the filtered raster stack and the filtered layer names
+#' @export
+filter_raster_by_pg_intervals <- function(raster_stack) {
+  # Extract layer names
+  layer_names <- names(raster_stack)
+  
+  pg_intervals <- pg_date_intervals()
+  
+  # Convert to Date objects assuming format "tmp_YYYY_MM"
+  layer_dates <- lubridate::ymd(paste0(sub("tmp_", "", layer_names), "-01"))
+  
+  # Identify which layers fall within any of the intervals
+  keep_layers <- sapply(layer_dates, function(d) any(d %within% pg_intervals))
+  
+  # Filter the raster stack
+  raster_filtered <- raster_stack[[which(keep_layers)]]
+  
+  # Return result
+  return(raster_filtered)
+}
+
+```
+
+
+```{r}
+cru_stack_filtered <- filter_raster_by_pg_intervals(cru_stack)
+```
+
 
 ```{r}
 pg_grid = prio_blank_grid()
@@ -190,6 +249,7 @@ pg_grid = prio_blank_grid()
 plot(pg_grid, main = "Blank PRIO-GRID Raster")
 
 ```
+
 
 ```{r}
 build_ym_table <- function(start_year, start_month, end_year, end_month) {
@@ -202,6 +262,7 @@ build_ym_table <- function(start_year, start_month, end_year, end_month) {
   return(ym_df)
 }
 
+
 validate_date_range <- function(start_year, start_month, end_year, end_month, available_dates) {
   # Convert all dates to year-month format (first day of month)
   available_ym <- as.Date(format(available_dates, "%Y-%m-01"))
@@ -212,16 +273,17 @@ validate_date_range <- function(start_year, start_month, end_year, end_month, av
   end_date   <- as.Date(sprintf("%04d-%02d-01", end_year, end_month))
 
   if (start_date < first_date) {
-    stop(sprintf("❌ Start date %s is before first raster date %s", format(start_date, "%Y-%m"), format(first_date, "%Y-%m")))
+    stop(sprintf("Start date %s is before first raster date %s", format(start_date, "%Y-%m"), format(first_date, "%Y-%m")))
   }
 
   if (end_date > last_date) {
-    stop(sprintf("❌ End date %s is after last raster date %s", format(end_date, "%Y-%m"), format(last_date, "%Y-%m")))
+    stop(sprintf("End date %s is after last raster date %s", format(end_date, "%Y-%m"), format(last_date, "%Y-%m")))
   }
 
   return(list(start_date = start_date, end_date = end_date))
 }
 ```
+
 
 ```{r}
 start_year = 2000
@@ -230,7 +292,7 @@ end_year = 2000
 end_month = 03
 
 # Step 2: Validate date range is compatible with the raster
-validate_date_range(start_year, start_month, end_year, end_month, time(cru_stack))
+validate_date_range(start_year, start_month, end_year, end_month, time(cru_stack_filtered))
 print(validate_date_range)
 
 # Step 3: Build year-month table
@@ -238,8 +300,9 @@ ym_df <- build_ym_table(start_year, start_month, end_year, end_month)
 print(ym_df)
 ```
 
+
 ```{r}
-mask_cru_to_pg_stack <- function(cru_stack, pg_grid, ym_df = NULL) {
+mask_cru_to_pg_stack <- function(cru_stack_filtered, pg_grid, ym_df = NULL) {
   library(terra)
 
   # Ensure alignment
