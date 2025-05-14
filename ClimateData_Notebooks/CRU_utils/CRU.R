@@ -12,6 +12,9 @@ read_cru <- function() {
   return(f)
 }
 
+
+
+
 #' Load a Single CRU Temperature File
 #'
 #' Decompresses and loads a gzipped NetCDF file containing temperature data.
