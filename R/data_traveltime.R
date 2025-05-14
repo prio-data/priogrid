@@ -51,7 +51,7 @@ gen_traveltime <- function(percentile = 50) {
 
   aggregated_raster <- terra::aggregate(tt, fact = terra::res(pg)/terra::res(tt), fun = quantile_fun)
 
-  ext(aggregated_raster) <- ext(pg)
+  terra::ext(aggregated_raster) <- terra::ext(pg)
   return(aggregated_raster)
 }
 
