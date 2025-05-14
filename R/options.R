@@ -84,14 +84,14 @@ PGOptionsManager <- R6::R6Class(
     #' @param value The date used globally to build PRIO-GRID. The month and day are used to define the
     #'   measurement date within the temporal resolution (e.g., as.Date(1900-06-30) would slice June 30 every year for compatible data sources).
     set_start_date = function(value){
-      private$options$start_date <- value
+      private$options$start_date <- as.character(value)
       private$save_options()
     },
 
     #' @description Set end date
     #' @param value a date or "today"
     set_end_date = function(value){
-      private$options$end_date <- value
+      private$options$end_date <- as.character(value)
       private$save_options()
     },
 
@@ -123,7 +123,7 @@ PGOptionsManager <- R6::R6Class(
       if(end_date == "today"){
         end_date <- Sys.Date()
       }
-      return(end_date)
+      return(as.Date(end_date))
     },
 
     #' @description Prints all options
