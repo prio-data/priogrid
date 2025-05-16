@@ -60,6 +60,44 @@ head(evo_coord_tiles)
 ```
 
 
+REFERENCE TO CRU PROCESS:
+
+#' Reads the CRU data
+#'
+#' 
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{harrisVersion4CRU2020}{priogrid}
+read_cru <- function() {
+  f <- get_pgfile(source_name = "CRU Climate",
+                  source_version = "v4.09",
+                  id = "9bba83b0-eca9-4f05-b1df-6aeaed55a9fa")
+
+  return(f)
+}
+
+IMPLEMENTED FOR WSF EVOLUTION:
+
+```{r}
+read_wsf <- function() {
+  f <- get_pgfile(source_name = "World Settlement Footprint Evolution", 
+                  source_version = "updated 2025",
+                  id = "9808ff86-6217-4283-a636-4965a5c140b7")
+
+  return(f)
+}
+```
+
+
+
+```{r}
+f <- read_wsf()
+```
+
+
 ###WSF-2019 Data
 ```{r}
 # Load required libraries
