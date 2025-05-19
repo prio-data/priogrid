@@ -1,0 +1,58 @@
+
+
+```{r}
+source("../WSF_Evolution_Notebooks/WSF_utils/retrieve_wsf_URLs.R")
+source("../WSF_Evolution_Notebooks/WSF_utils/preprocessing_WSF_scenes.R")
+source("../WSF_Evolution_Notebooks/WSF_utils/pg_processing.R")
+source("../WSF_Evolution_Notebooks/WSF_utils/wrapper.R")
+
+
+# Load required libraries
+library(rvest)
+library(stringr)
+library(dplyr)
+library(rvest)
+library(stringr)
+library(readr)
+
+library(terra)
+library(sf)
+library(viridisLite)
+```
+
+
+```{r}
+# Load the CSV
+pg_data <- read.csv("/Users/gbenz/Documents/Retrieve PG Data/recent_onemonth_raw_pgm_withgeom.csv")
+
+# Convert to sf object using WKT geometry
+pg_sf <- st_as_sf(pg_data, wkt = "geometry", crs = 4326)
+
+rm(pg_data)
+gc()
+```
+
+
+```{r}
+tile_info <- summarize_wsf_tile_coverage()
+```
+
+
+```{r}
+# Vector of tile IDs
+all_tiles <- c("36_-2")  # or from tile_info$common_tile_ids
+
+print(all_tiles)
+```
+
+
+
+```{r}
+processed_df <- process_all_tiles_summary(all_tiles, pg_sf) 
+```
+
+
+```{r}
+head(processed_df)
+```
+
