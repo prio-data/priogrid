@@ -123,71 +123,60 @@ pg_grid = prio_blank_grid()
 plot(pg_grid, main = "Blank PRIO-GRID Raster")
 ```
 
-
 ```{r}
 library(terra)
-library(dplyr)
-library(tidyr)
 
-process_wsf_tile <- function(wsf_file, priogrid_raster) {
-  message("Processing: ", basename(wsf_file))
-  
-  # Load the WSF Evolution raster tile
-  wsf <- rast(wsf_file)
-  
-  # Project if needed
-  if (!compareGeom(wsf, priogrid_raster, stopOnError = FALSE)) {
-    wsf <- project(wsf, crs(priogrid_raster))
-  }
-  
-  # Convert PRIO-GRID raster to polygons
-  priogrid_vect <- as.polygons(priogrid_raster, na.rm = TRUE)
-  names(priogrid_vect) <- "pg_id"
+# Load PRIO-GRID (global)
+pg_grid <- prio_blank_grid()
+names(pg_grid) <- "pg_id"
 
-  # Crop to WSF extent to reduce processing
-  priogrid_vect <- crop(priogrid_vect, ext(wsf))
+# Load one WSF Evolution tile (local)
+wsf_file <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif"
+wsf <- rast(wsf_file)
 
-  # Estimate pixel area in km² (approx. 30m resolution → ~0.0009 km²)
-  px_area_km2 <- res(wsf)[1] * res(wsf)[2] / 1e6  # m² to km²
-
-  # Extract WSF pixel values and associated pg_id
-  df_raw <- terra::extract(wsf, priogrid_vect, cells = TRUE, na.rm = TRUE)
-  colnames(df_raw) <- c("pg_id", "year", "cell")
-
-  # Drop background pixels (value <= 0)
-  df_raw <- df_raw %>% filter(year > 0)
-
-  # Aggregate: count pixels by pg_id and year
-  df_sum <- df_raw %>%
-    group_by(pg_id, year) %>%
-    summarise(pixel_count = n(), .groups = "drop") %>%
-    mutate(built_area_km2 = pixel_count * px_area_km2)
-
-  # Pivot wider: one row per pg_id, one column per year
-  df_wide <- df_sum %>%
-    select(pg_id, year, built_area_km2) %>%
-    pivot_wider(names_from = year, values_from = built_area_km2, values_fill = 0) %>%
-    arrange(pg_id)
-
-  return(df_wide)
+# Reproject WSF if needed to match PRIO-GRID CRS
+if (!compareGeom(pg_grid, wsf, stopOnError = FALSE)) {
+  wsf <- project(wsf, crs(pg_grid))
 }
 
+# Crop PRIO-GRID to extent of WSF
+pg_local <- crop(pg_grid, ext(wsf))
 
+# Convert to polygons and compute centroids
+pg_poly <- as.polygons(pg_local, na.rm = TRUE)
+names(pg_poly) <- "pg_id"
+pg_centroids <- centroids(pg_poly)
+
+# Plot WSF base layer
+plot(wsf, main = "WSF Evolution Tile with PRIO-GRID Overlay and pg_id Labels")
+
+# Overlay PRIO-GRID polygons
+lines(pg_poly, col = "red", lwd = 0.5)
+
+# Add pg_id labels at centroid locations
+text(pg_centroids, labels = round(pg_poly$pg_id), cex = 0.8, col = "white")
+
+# Extract and round pg_id values
+labeled_pg_ids <- round(pg_poly$pg_id)
+
+# Print as a sorted list
+cat("PRIO-GRID cell IDs in plot:\n", paste(sort(labeled_pg_ids), collapse = ", "), "\n")
 ```
 
 
-```{r}
-wsf_summary_df <- process_wsf_tile("/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif", pg_grid)
 
-```
+pg_grid <- prio_blank_grid()
+pg_grid[] <- as.integer(round(pg_grid[]))  # enforce integer IDs
+names(pg_grid) <- "pg_id"
 
-```{r}
-wsf_summary_df
-```
+
+
+# this is outdates
 ```{r}
 # Ensure pg_id values are integers and named
 pg_grid <- prio_blank_grid()
-pg_grid <- round(pg_grid)
+#pg_grid <- round(pg_grid)
+pg_grid[] <- as.integer(round(pg_grid[]))  # enforce integer IDs
 pg_grid <- classify(pg_grid, cbind(NA, NA))  # clean stray NA handling
 names(pg_grid) <- "pg_id"
 
@@ -196,8 +185,40 @@ pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
 
 ```
 
+pg_grid <- prio_blank_grid()
+pg_grid[] <- as.integer(round(pg_grid[]))
+names(pg_grid) <- "pg_id"
+
+# This is new:
 ```{r}
-print(pg_vect)
+# Load PRIO-GRID
+pg_grid <- prio_blank_grid()
+
+# Enforce integer pg_id values
+pg_grid[] <- as.integer(round(pg_grid[]))  # Ensure no floating-point errors
+
+# Name the layer properly
+names(pg_grid) <- "pg_id"
+
+# Optional: remove cells with NA if desired
+# pg_grid[is.na(pg_grid)] <- 0  # or leave as is if NA is meaningful
+
+# Convert to polygons with valid pg_id attribute
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+names(pg_vect) <- "pg_id"
+```
+
+
+```{r}
+# This ensures only polygons intersecting the WSF extent remain
+pg_vect <- crop(pg_vect, ext(wsf))
+
+```
+
+```{r}
+head(pg_vect)
+# Should include pg_id
+
 ```
 
 
@@ -205,38 +226,99 @@ print(pg_vect)
 library(terra)
 library(dplyr)
 
-# Load a WSF Evolution tile
-wsf_file <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif"  # Update to your actual path
+# Load WSF raster
+wsf_file <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif"
 wsf <- rast(wsf_file)
 
-# --- 3. Ensure CRS match ---
+# Reproject if CRS doesn't match
 if (!compareGeom(wsf, pg_grid, stopOnError = FALSE)) {
   wsf <- project(wsf, crs(pg_grid))
 }
 
+# This ensures only polygons intersecting the WSF extent remain
+pg_vect <- crop(pg_vect, ext(wsf))
 
-# --- 5. Extract raster values per PRIO-GRID polygon ---
-df_raw <- terra::extract(wsf, pg_vect, bind = TRUE, cells = TRUE, na.rm = TRUE)
-colnames(df_raw) <- c("pg_id", "year", "cell")
+# Compute accurate pixel area
+cell_area_raster <- cellSize(wsf, unit = "km")
 
-# --- 5a. Fix: Ensure year values are treated as integers ---
-df_raw$year <- as.integer(round(df_raw$year))  # <-- This is critical
+# Stack WSF (year) and pixel area
+wsf_stack <- c(wsf, cell_area_raster)
+names(wsf_stack) <- c("year", "area_km2")
 
-# --- 6. Summarize by year and pg_id ---
-px_area_km2 <- res(wsf)[1] * res(wsf)[2] * (111.32^2)
+# Extract values by PRIO-GRID polygons
+df_raw <- terra::extract(wsf_stack, pg_vect, bind = TRUE, na.rm = TRUE)
 
+# Reattach the true pg_id values using the ID column
+lookup_pg <- data.frame(ID = 1:nrow(pg_vect), pg_id = pg_vect$pg_id)
+df_raw <- left_join(df_raw, lookup_pg, by = "ID")
+
+# Ensure year is treated as an integer
+df_raw$year <- as.integer(round(df_raw$year))
+
+names(df_raw)
+
+# Summarize by pg_id and year
 summary_df <- df_raw %>%
-  filter(year > 1900 & year < 2100) %>%  # Optional sanity filter
+  filter(!is.na(year) & year >= 0 & year < 2100) %>%
   group_by(pg_id, year) %>%
-  summarise(pixel_count = n(), .groups = "drop") %>%
-  mutate(built_area_km2 = pixel_count * px_area_km2) %>%
+  summarise(
+    pixel_count = n(),
+    built_area_km2 = sum(area_km2, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
   arrange(pg_id, year)
 
-# --- 7. View summary table ---
+# View the result
 print(summary_df)
 
 ```
 
+```{r}
+summary_df <- summary_df %>%
+  arrange(pg_id, year)
+
+summary_df
+```
+
+```{r}
+freq(wsf)
+
+df_raw %>%
+  filter(is.na(year)) %>%
+  count(pg_id)
+
+head(pg_vect)
+
+```
+
+
+```{r}
+n_unique_pg <- summary_df %>%
+  distinct(pg_id) %>%
+  nrow()
+
+cat("Number of unique PRIO-GRID cells:", n_unique_pg, "\n")
+
+```
+
+
+```{r}
+pg_local <- crop(pg_grid, ext(wsf))
+expected_pg_ids <- unique(na.omit(values(pg_local)[,1]))
+result_pg_ids <- unique(summary_df$pg_id)
+
+cat("PRIO-GRID pg_id(s) in summary_df:\n", paste(sort(result_pg_ids), collapse = ", "), "\n")
+
+
+missing_pg_ids <- setdiff(expected_pg_ids, result_pg_ids)
+cat("Missing PRIO-GRID pg_id(s):", paste(missing_pg_ids, collapse = ", "), "\n")
+
+```
+
+PRIO-GRID cell IDs in plot:               
+153065, 153066, 153067, 153068, 153785, 153786, 153787, 153788, 154505, 154506, 154507, 154508, 155225, 155226, 155227, 155228 
+ 
+Missing PRIO-GRID pg_id(s): 155225, 155226, 154505, 154506, 154507, 153785, 153065 
 
 ```{r}
 library(terra)
@@ -278,6 +360,14 @@ summary_df <- df_raw %>%
 print(summary_df)
 
 ```
+
+
+PRIO-GRID cell IDs in plot:               
+ 153065, 153066, 153067, 153068, 153785, 153786, 153787, 153788, 154505, 154506, 154507, 154508, 155225, 155226, 155227, 155228 
+
+
+
+
 
 
 ```{r}
