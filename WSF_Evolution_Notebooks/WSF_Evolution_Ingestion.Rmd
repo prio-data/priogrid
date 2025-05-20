@@ -87,7 +87,7 @@ IMPLEMENTED FOR WSF EVOLUTION:
 read_wsf <- function() {
   f <- get_pgfile(source_name = "World Settlement Footprint Evolution", 
                   source_version = "updated 2025",
-                  id = "eb979e39-41bf-4a6b-93da-3e7a9f9a9e8d")
+                  id = "f52c5d59-8867-4b5b-8504-bcc6dcf6839d")
 
   return(f)
 }
@@ -96,9 +96,251 @@ read_wsf <- function() {
 
 
 ```{r}
-f <- read_wsf()
+wsf_files <- read_wsf()
+```
+ World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_100_34.tif
+ 
+```{r}
+print(wsf_files)
 ```
 
+
+```{r}
+# List 2–3 WSF Evolution tiles for testing
+wsf_dir <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025"
+wsf_files <- list.files(wsf_dir, pattern = "\\.tif$", full.names = TRUE, recursive = TRUE)[1]  # Adjust indices
+
+```
+
+```{r}
+wsf_files
+```
+
+```{r}
+pg_grid = prio_blank_grid()
+
+# Plot it (will show extent, grid cells)
+plot(pg_grid, main = "Blank PRIO-GRID Raster")
+```
+
+
+```{r}
+library(terra)
+library(dplyr)
+library(tidyr)
+
+process_wsf_tile <- function(wsf_file, priogrid_raster) {
+  message("Processing: ", basename(wsf_file))
+  
+  # Load the WSF Evolution raster tile
+  wsf <- rast(wsf_file)
+  
+  # Project if needed
+  if (!compareGeom(wsf, priogrid_raster, stopOnError = FALSE)) {
+    wsf <- project(wsf, crs(priogrid_raster))
+  }
+  
+  # Convert PRIO-GRID raster to polygons
+  priogrid_vect <- as.polygons(priogrid_raster, na.rm = TRUE)
+  names(priogrid_vect) <- "pg_id"
+
+  # Crop to WSF extent to reduce processing
+  priogrid_vect <- crop(priogrid_vect, ext(wsf))
+
+  # Estimate pixel area in km² (approx. 30m resolution → ~0.0009 km²)
+  px_area_km2 <- res(wsf)[1] * res(wsf)[2] / 1e6  # m² to km²
+
+  # Extract WSF pixel values and associated pg_id
+  df_raw <- terra::extract(wsf, priogrid_vect, cells = TRUE, na.rm = TRUE)
+  colnames(df_raw) <- c("pg_id", "year", "cell")
+
+  # Drop background pixels (value <= 0)
+  df_raw <- df_raw %>% filter(year > 0)
+
+  # Aggregate: count pixels by pg_id and year
+  df_sum <- df_raw %>%
+    group_by(pg_id, year) %>%
+    summarise(pixel_count = n(), .groups = "drop") %>%
+    mutate(built_area_km2 = pixel_count * px_area_km2)
+
+  # Pivot wider: one row per pg_id, one column per year
+  df_wide <- df_sum %>%
+    select(pg_id, year, built_area_km2) %>%
+    pivot_wider(names_from = year, values_from = built_area_km2, values_fill = 0) %>%
+    arrange(pg_id)
+
+  return(df_wide)
+}
+
+
+```
+
+
+```{r}
+wsf_summary_df <- process_wsf_tile("/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif", pg_grid)
+
+```
+
+```{r}
+wsf_summary_df
+```
+```{r}
+# Ensure pg_id values are integers and named
+pg_grid <- prio_blank_grid()
+pg_grid <- round(pg_grid)
+pg_grid <- classify(pg_grid, cbind(NA, NA))  # clean stray NA handling
+names(pg_grid) <- "pg_id"
+
+# Convert to polygon AFTER ensuring integer values
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+
+```
+
+```{r}
+print(pg_vect)
+```
+
+
+```{r}
+library(terra)
+library(dplyr)
+
+# Load a WSF Evolution tile
+wsf_file <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif"  # Update to your actual path
+wsf <- rast(wsf_file)
+
+# --- 3. Ensure CRS match ---
+if (!compareGeom(wsf, pg_grid, stopOnError = FALSE)) {
+  wsf <- project(wsf, crs(pg_grid))
+}
+
+
+# --- 5. Extract raster values per PRIO-GRID polygon ---
+df_raw <- terra::extract(wsf, pg_vect, bind = TRUE, cells = TRUE, na.rm = TRUE)
+colnames(df_raw) <- c("pg_id", "year", "cell")
+
+# --- 5a. Fix: Ensure year values are treated as integers ---
+df_raw$year <- as.integer(round(df_raw$year))  # <-- This is critical
+
+# --- 6. Summarize by year and pg_id ---
+px_area_km2 <- res(wsf)[1] * res(wsf)[2] * (111.32^2)
+
+summary_df <- df_raw %>%
+  filter(year > 1900 & year < 2100) %>%  # Optional sanity filter
+  group_by(pg_id, year) %>%
+  summarise(pixel_count = n(), .groups = "drop") %>%
+  mutate(built_area_km2 = pixel_count * px_area_km2) %>%
+  arrange(pg_id, year)
+
+# --- 7. View summary table ---
+print(summary_df)
+
+```
+
+
+```{r}
+library(terra)
+library(dplyr)
+
+# --- 1. Load the WSF tile ---
+wsf_file <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_32_16.tif"  # Change to your path
+wsf <- rast(wsf_file)
+
+# --- 2. Load and prepare PRIO-GRID raster ---
+
+# Ensure CRS match
+if (!compareGeom(wsf, priogrid_raster, stopOnError = FALSE)) {
+  wsf <- project(wsf, crs(priogrid_raster))
+}
+
+# --- 3. Convert PRIO-GRID raster to polygons for zonal stats ---
+priogrid_vect <- as.polygons(priogrid_raster, na.rm = TRUE)
+names(priogrid_vect) <- "pg_id"
+
+# Crop to WSF extent to reduce unnecessary calculations
+priogrid_vect <- crop(priogrid_vect, ext(wsf))
+
+# --- 4. Extract pixel values and pg_id using zonal polygons ---
+df_raw <- terra::extract(wsf, priogrid_vect, cells = TRUE, na.rm = TRUE)
+colnames(df_raw) <- c("pg_id", "year", "cell")  # reassign columns
+
+# --- 5. Filter background and compute stats ---
+px_area_km2 <- res(wsf)[1] * res(wsf)[2] * (111.32^2)  # area in km²
+
+summary_df <- df_raw %>%
+  filter(year > 0) %>%  # remove background
+  group_by(pg_id, year) %>%
+  summarise(pixel_count = n(), .groups = "drop") %>%
+  mutate(built_area_km2 = pixel_count * px_area_km2) %>%
+  arrange(pg_id, year)
+
+# --- 6. View results ---
+print(summary_df)
+
+```
+
+
+```{r}
+# -----------------------------
+# 4. Spread results into wide format for raster stacking
+# -----------------------------
+
+# Get all unique years
+years <- sort(unique(df_all$year))
+pg_ids <- unique(df_all$pg_id)
+
+# Pivot to wide format (rows = pg_id, columns = years)
+df_wide <- tidyr::pivot_wider(df_all, names_from = year, values_from = built_area_km2, values_fill = 0)
+
+# -----------------------------
+# 5. Rebuild a SpatRaster stack
+# -----------------------------
+
+# Create empty template raster
+pg_template <- crop(priogrid, ext(priogrid[priogrid %in% df_wide$pg_id]))
+
+# Initialize stack
+year_rasters <- list()
+
+for (yr in years) {
+  r <- classify(priogrid, cbind(NA, NA, NA))  # Empty copy
+  pg_data <- df_wide[, c("pg_id", as.character(yr)), drop = FALSE]
+  vals <- pg_data[[2]]
+  names(vals) <- pg_data$pg_id
+  r[] <- vals[as.character(priogrid[])]
+  names(r) <- paste0("built_", yr)
+  year_rasters[[as.character(yr)]] <- r
+}
+
+# Combine into a raster stack
+stack_out <- rast(year_rasters)
+
+# -----------------------------
+# 6. Plot output stack
+# -----------------------------
+plot(stack_out, main = names(stack_out))
+```
+
+
+# All a sandbox!
+```{r}
+# Load one file
+f <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_-2_8.tif"
+
+r <- rast(f)
+```
+
+
+```{r}
+
+summary(r)
+unique(values(r))
+```
+
+pg_grid = prio_blank_grid()
+
+# Plot it (will show extent, grid cells)
+plot(pg_grid, main = "Blank PRIO-GRID Raster")
 
 ###WSF-2019 Data
 ```{r}
