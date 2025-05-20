@@ -13,7 +13,8 @@ read_ruggedterrain <- function() {
 
   unzip_to <- file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)))
   unzip(zip_file, exdir = unzip_to)
-  return(sf::st_read(file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)), "GMTED2010_Spatial_Metadata/GMTED2010_Spatial_Metadata.shp")))
+  fpath <- file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)), "GMTED2010_Spatial_Metadata/GMTED2010_Spatial_Metadata.shp")
+  return(sf::st_read(fpath))
 
 }
 
@@ -35,7 +36,7 @@ read_ruggedterrain <- function() {
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
-gen_ruggedterrain_variable <- function(variable) {
+ruggedterrain_variable <- function(variable) {
   rt <- read_ruggedterrain()
   pg <- prio_blank_grid()
 
@@ -54,3 +55,5 @@ gen_ruggedterrain_variable <- function(variable) {
 
   return(rt_var)
 }
+
+gen_ruggedterrain_elevation_mean <- ruggedterrain_variable("elevation_mean")
