@@ -1,6 +1,5 @@
 #' Reads the Estimated Travel Time to Major Cities version year 2000 data
-#' Unzips the folder and reads import the .tif file as SpatRaster
-#' Adds date
+#' Unzips the folder and imports the .tif file as SpatRaster
 #'
 #' @return an object of class SpatRast
 #' @export
