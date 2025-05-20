@@ -4,6 +4,8 @@
 \alias{Source}
 \title{Source Class}
 \value{
+Boolean vector
+
 character vector
 
 character vector
@@ -38,6 +40,7 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Source-new}{\code{Source$new()}}
+\item \href{#method-Source-save_url_files}{\code{Source$save_url_files()}}
 \item \href{#method-Source-get_existing_tags}{\code{Source$get_existing_tags()}}
 \item \href{#method-Source-get_existing_licenses}{\code{Source$get_existing_licenses()}}
 \item \href{#method-Source-to_tibble}{\code{Source$to_tibble()}}
@@ -119,6 +122,16 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 }
 \if{html}{\out{</div>}}
 
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Source-save_url_files"></a>}}
+\if{latex}{\out{\hypertarget{method-Source-save_url_files}{}}}
+\subsection{Method \code{save_url_files()}}{
+Saves url-files provided as a text-file with urls
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Source$save_url_files()}\if{html}{\out{</div>}}
 }
 
 }
