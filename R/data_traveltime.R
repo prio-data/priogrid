@@ -16,9 +16,8 @@ read_traveltime <- function() {
   unzip(zip_file, exdir = unzip_to)
   tif_file <- terra::rast(file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)), "acc_50k.tif"))
 
-  tif_date <- lubridate::ymd("2000-01-01") |> as.character()
 
-  names(tif_file) <- tif_date
+  names(tif_file) <- "travel_time"
   return(tif_file)
 }
 
@@ -28,7 +27,10 @@ read_traveltime <- function() {
 #'
 #' Returns the distribution of travel time for the given percentile.
 #'
-#' @param percentile 25, 50, 75, 90. Default 50.
+#' @param aggregation_function function used to aggregate values. Either an actual function,
+#' or for the following, their name: "mean", "max", "min", "median", "sum", "modal", "any",
+#' "all", "prod", "which.min", "which.max", "table", "sd" (sample standard deviation) and
+#' "std" (population standard deviation)
 #' @export
 #'
 #' @examples
@@ -37,22 +39,20 @@ read_traveltime <- function() {
 #'
 #' @references
 #' \insertRef{nelsonTravelTimeMajor2008}{priogrid}
-gen_traveltime <- function(percentile = 50) {
+calc_traveltime <- function(aggregation_function) {
   tt <- read_traveltime()
-  pg <- prio_blank_grid()
-
-  if (!percentile %in% c(25, 50, 75, 90)) {
-    stop("percentile must be one of 25, 50, 75, or 90.")
-  }
-
-  quantile_fun <- function(x) {
-    return(quantile(x, probs = percentile / 100, na.rm = TRUE))
-  }
-
-  aggregated_raster <- terra::aggregate(tt, fact = terra::res(pg)/terra::res(tt), fun = quantile_fun)
-
-  terra::ext(aggregated_raster) <- terra::ext(pg)
-  return(aggregated_raster)
+  r <- robust_transformation(tt, agg_fun = aggregation_function, na.rm = T)
+  return(r)
 }
 
+gen_traveltime_min <- function(){
+  r <- calc_traveltime(aggregation_function = "min")
+  names(r) <- "traveltime_min"
+  r
+}
 
+gen_traveltime_mean <- function(){
+  r <- calc_traveltime(aggregation_function = "mean")
+  names(r) <- "traveltime_mean"
+  r
+}
