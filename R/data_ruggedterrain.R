@@ -1,5 +1,5 @@
 #' Reads the Global Multi-resolution Terrain Elevation Data (GMTED2010)
-#' Unzips the folder and reads in the .shp file as sf object
+#' Unzips the folder and reads the .shp file as sf object
 #'
 #' @return an object of class sf
 #' @export
@@ -18,7 +18,7 @@ read_ruggedterrain <- function() {
 
 }
 
-#' Generate elevation in PRIO-GRID format with set variable
+#' Calculate elevation in PRIO-GRID format with set variable
 #'
 #' Takes either the min, max, mean or sdev of elevation in each PRIO-GRID cell
 #'
@@ -31,7 +31,7 @@ read_ruggedterrain <- function() {
 #' @export
 #'
 #' @examples
-#' # rt <- gen_ruggedterrain_variable(variable = "elevation_mean")
+#' # rt <- ruggedterrain_variable(variable = "elevation_mean")
 #'
 #'
 #' @references
@@ -56,4 +56,21 @@ ruggedterrain_variable <- function(variable) {
   return(rt_var)
 }
 
-gen_ruggedterrain_elevation_mean <- ruggedterrain_variable("elevation_mean")
+
+#' Generate the average (mean) elevation
+#'
+#' @return SpatRast
+#' @export
+#'
+#' @examples
+#' # r <- gen_ruggedterrain_elevation_mean()
+#'
+#'
+#' @references
+#' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
+gen_ruggedterrain_elevation_mean <- function(){
+  r <- ruggedterrain_variable("elevation_mean")
+  names(r) <- "elevation_mean"
+  r
+}
+
