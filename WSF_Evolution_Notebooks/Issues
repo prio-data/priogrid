@@ -1,0 +1,27 @@
+May 21 issues:
+
+# Load one WSF Evolution tile (local)
+wsf_file <- '/Documents/priogrid/World Settlement Footprint Evolution/updated 2025/f52c5d59-8867-4b5b-8504-bcc6dcf6839d/WSFevolution_v1_-76_40.tif'
+wsf <- rast(wsf_file)
+
+1. There are still missing (empty) tiles in the download
+- we previously downloaded in bins of 2 (we will have to download 1 at a time in order to retrieve all tiles)
+- an example of missing data is displayed above (U.S. east coast)
+- another example is southern nigeria
+
+*How did we overcome this previously with Jonas?
+  A) we updated the URL list in the inst/url directory
+  B) then do we 're-load' the data source?
+
+2. Processing speed is very slow
+
+- We cannot generate a global mosaic
+  * Warning: [mosaic] Estimated disk space needed without compression: 591GB. Available: 75 GB.Error: [mosaic] aborted
+- Therefore we must loop over all tiles which will be very time consuming (and memory intensive)
+
+3. Concerns about whether users will have to regenerate this entire process or whether they will be able to
+reference a 'compiled' version?
+- Are we requiring a user to go through the same script we are developing or will they be able to reference
+a 'finished' ingestion?
+- will a user who wants to interact with the WSF layers be required to compile the entire process themselves?
+  - if now, describe how this process is referencing a 'compiled' result from the wrapper function?
