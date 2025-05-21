@@ -40,45 +40,170 @@ names(pg_vect) <- "pg_id"
 ```
 
 
-
 ```{r}
-# initialize master table
-master_df <- tibble(pg_id = integer(), year = integer(), built_area_km2 = double())
+library(terra)
+library(dplyr)
 
+# Initialize full timer
+tile_time <- system.time({
+  
+# Initialize empty master table
+master_df <- tibble(pg_id = integer(), year = integer(), built_area_m2 = double())
+
+# ---- Explanation: Why Some pg_ids Are Missing or Incomplete in Each Loop ----
+# terra::extract() only returns rows for polygons that intersect valid raster pixels 
+# (i.e., cells with built-up area in the current WSF tile). Therefore:
+#
+# 1. If a PRIO-GRID polygon (pg_id) does NOT intersect any WSF pixels in the current tile,
+#    it is entirely excluded from the extraction result (df_raw) — it is never seen or summarized.
+#
+# 2. If a polygon does intersect the tile but only touches pixels with NA or invalid values,
+#    those are removed in the filtering step:
+#       filter(!is.na(year) & year >= 0 & year < 2100)
+#
+# 3. Only pg_ids and years with valid, non-NA, in-range data proceed to the summarise() step.
+#    There is no global list of all possible pg_id × year combinations referenced during summarization.
+#    Each loop processes only the intersecting and valid data from its own tile.
+#
+# As a result:
+# - The output will only include pg_ids with non-zero, valid overlap for that specific tile.
+# - Polygons with partial coverage (i.e., intersecting across multiple adjacent tiles) will be
+#   incrementally 'completed' as the loop progresses across all WSF tiles.
+#
+# Important Note:
+# - If the WSF tile set being processed is only a *subset* of the global dataset (e.g., regional only),
+#   then some pg_ids will appear *incomplete* — only reflecting partial overlap.
+# - This is expected behavior and not an error.
+#
+# To ensure complete pg_id coverage globally, the full set of WSF tiles must be processed
+#    across the entire spatial domain of interest.
+# -------------------------------------------------------------------------------
+
+
+# Loop through all WSF tiles
 for (tile in tif_files) {
+  cat("\nProcessing:", basename(tile), "\n")
+  scene_time <- system.time({
   wsf <- rast(tile)
 
-  # (Optional: crop pg_vect to tile extent first)
+# ---- Prepare WSF + Cell Area Raster Stack ----
 
-  # cell area
-  cell_area <- cellSize(wsf, unit = "km")
+# Compute the area of each raster cell in square meters.
+# This accounts for differences in latitude (since pixels are not uniform in size globally).
+  cell_area <- cellSize(wsf, unit = "m")
+
+# Stack the WSF built-up raster with the computed cell area raster.
+# The result is a two-band raster:
+#   - Band 1: the built-up classification year for each cell
+#   - Band 2: the area of that same cell in square meters
   wsf_stack <- c(wsf, cell_area)
-  names(wsf_stack) <- c("year", "area_km2")
+  
+# Rename the bands for clarity:
+#   - 'year' represents the year the cell was classified as built-up
+#   - 'area_m2' is the size of the cell, enabling us to convert pixel counts into true land area
+  names(wsf_stack) <- c("year", "area_m2")
+  
+# This stacked raster structure is key to our analysis because it:
+# - Associates each cell's built-up year with its physical area
+# - Allows us to later extract these values by polygon (pg_id) and
+#   calculate the total built-up area per year for each PRIO-GRID cell
+# - Ensures we are summarizing real-world area (m²), not just raw pixel counts
 
-  df_raw <- terra::extract(wsf_stack, pg_vect, bind = TRUE, na.rm = TRUE)
+# ----------------------------------------------------
 
-  # restore pg_id if needed
+# ---- Extract Built-Up Year and Area for Each Polygon ----
+
+# We extract values from the stacked raster (wsf_stack) using the PRIO-GRID polygons (pg_vect).
+# This returns a flat data table with one row per raster cell that intersects a polygon.
+
+# Each row contains:
+# - The polygon ID (automatically matched via bind = TRUE)
+# - 'year': the year that specific cell was classified as built-up
+# - 'area_m2': the area of that individual cell in square meters
+
+# In effect, we're retrieving a pixel-level table of built-up classification and physical area,
+# allowing us to later summarize the total built-up area by year and by pg_id.
+
+# Note:
+# - Polygons with no intersecting raster cells are excluded entirely
+# - Cells with NA values in the 'year' band will be dropped later in the filter() step
+  
+# ---- Explanation: Suppressing extract() warning ----
+# We're extracting pixel-level raster values (WSF + cell area) for each PRIO-GRID polygon.
+# Each polygon may intersect multiple raster cells, so the number of extracted rows is 
+# typically much greater than the number of polygons.
+#
+# By setting `bind = TRUE`, terra::extract() returns a flat data frame where each row
+# represents a pixel-polygon match, not one row per polygon.
+#
+# The warning from `terra::extract()` simply indicates that it can't return a SpatVector
+# because there's no 1:1 match between polygons and output rows. This is expected and
+# completely fine in our case.
+#
+# We summarize the extracted pixel data ourselves using dplyr::group_by() and summarise(),
+# so the warning is irrelevant for our workflow.
+# -----------------------------------------------------
+
+  # Extract pixel values + area
+  df_raw <- suppressWarnings(
+    terra::extract(wsf_stack, pg_vect, bind = TRUE, na.rm = TRUE)
+  )
+
+# ---- Restore pg_id Column if Missing ----
+
+# In some cases, terra::extract() may not retain the original 'pg_id' field from pg_vect,
+# especially if the input polygons were passed without preserving attribute names in the output.
+# However, it always includes an 'ID' column that corresponds to the row number of the polygon
+# in the original pg_vect object (i.e., ID == row index of pg_vect).
+
+# To ensure consistency and downstream compatibility, we check whether 'pg_id' is missing.
+# If so, we recreate it by joining the extracted data (df_raw) with a lookup table that maps
+# the internal 'ID' back to its corresponding 'pg_id' from pg_vect.
+
+# This step ensures that every extracted raster cell remains correctly associated with
+# the PRIO-GRID polygon it came from.
   if (!"pg_id" %in% names(df_raw)) {
     lookup_pg <- data.frame(ID = 1:nrow(pg_vect), pg_id = pg_vect$pg_id)
     df_raw <- left_join(df_raw, lookup_pg, by = "ID")
   }
 
-  df_raw$year <- as.integer(round(df_raw$year))
+# ---- Clean and Convert Built-Up Year Values ----
 
-  # summarize for this tile
+# The 'year' values extracted from the WSF raster should ideally be clean integers (e.g., 1990, 2000, etc.).
+# However, due to raster encoding, some values appeared as floating-point
+# numbers with very small decimals (e.g., 2000.000488 or 1999.999).
+
+# To safely coerce these to integers, we round them first, then cast to integer.
+# This works under the assumption that the classification raster uses consistent, rounded year labels.
+  df_raw$year <- as.integer(round(df_raw$year))
+  
+# --------------------------------------------------------------------------------------------
+
   df_tile <- df_raw %>%
     filter(!is.na(year) & year >= 0 & year < 2100) %>%
     group_by(pg_id, year) %>%
-    summarise(built_area_km2 = sum(area_km2, na.rm = TRUE), .groups = "drop")
+    summarise(built_area_m2 = sum(area_m2, na.rm = TRUE), .groups = "drop")
 
-  # add to master
+  # Append to master table
   master_df <- bind_rows(master_df, df_tile)
+
+  # Print timing info
+  })
+  cat("→ Completed in", round(scene_time["elapsed"] / 60, 2), "minutes\n")
 }
 
-# final cumulative summary
+# Final aggregation step
 summary_df <- master_df %>%
   group_by(pg_id, year) %>%
-  summarise(built_area_km2 = sum(built_area_km2), .groups = "drop")
+  summarise(built_area_m2 = sum(built_area_m2), .groups = "drop")
 
+# Total runtime
+})
+cat("→ Completed in", round(tile_time["elapsed"] / 60, 2), "minutes\n")
+
+```
+
+```{r}
+summary_df
 ```
 
