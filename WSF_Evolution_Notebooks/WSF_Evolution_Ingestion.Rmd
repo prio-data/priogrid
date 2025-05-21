@@ -165,30 +165,6 @@ cat("PRIO-GRID cell IDs in plot:\n", paste(sort(labeled_pg_ids), collapse = ", "
 
 
 
-pg_grid <- prio_blank_grid()
-pg_grid[] <- as.integer(round(pg_grid[]))  # enforce integer IDs
-names(pg_grid) <- "pg_id"
-
-
-
-# this is outdates
-```{r}
-# Ensure pg_id values are integers and named
-pg_grid <- prio_blank_grid()
-#pg_grid <- round(pg_grid)
-pg_grid[] <- as.integer(round(pg_grid[]))  # enforce integer IDs
-pg_grid <- classify(pg_grid, cbind(NA, NA))  # clean stray NA handling
-names(pg_grid) <- "pg_id"
-
-# Convert to polygon AFTER ensuring integer values
-pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
-
-```
-
-pg_grid <- prio_blank_grid()
-pg_grid[] <- as.integer(round(pg_grid[]))
-names(pg_grid) <- "pg_id"
-
 # This is new:
 ```{r}
 # Load PRIO-GRID

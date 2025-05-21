@@ -1,5 +1,8 @@
-
-
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 
 ```{r}
 # Set your WSF folder path
@@ -18,10 +21,10 @@ head(tif_files)
 
 ```
 
-
 ## Treatments for the PG Raster
 
 ```{r}
+
 # Load PRIO-GRID
 pg_grid <- prio_blank_grid()
 
@@ -38,7 +41,6 @@ names(pg_grid) <- "pg_id"
 pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
 names(pg_vect) <- "pg_id"
 ```
-
 
 ```{r}
 library(terra)
@@ -206,4 +208,3 @@ cat("→ Completed in", round(tile_time["elapsed"] / 60, 2), "minutes\n")
 ```{r}
 summary_df
 ```
-
