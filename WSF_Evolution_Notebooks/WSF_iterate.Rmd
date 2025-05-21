@@ -1,0 +1,84 @@
+
+
+
+```{r}
+# Set your WSF folder path
+wsf_dir <- "/Users/gbenz/Documents/priogrid/World Settlement Footprint Evolution/Rwanda_9_tiles_subset"
+
+# List all .tif files, recursively
+tif_files <- list.files(
+  path = wsf_dir,
+  pattern = "\\.tif$",        # regex: match .tif
+  full.names = TRUE,          # return full paths
+  recursive = TRUE            # search subdirectories
+)
+
+# Preview first few files
+head(tif_files)
+
+```
+
+
+## Treatments for the PG Raster
+
+```{r}
+# Load PRIO-GRID
+pg_grid <- prio_blank_grid()
+
+# Enforce integer pg_id values
+pg_grid[] <- as.integer(round(pg_grid[]))  # Ensure no floating-point errors
+
+# Name the layer properly
+names(pg_grid) <- "pg_id"
+
+# Optional: remove cells with NA if desired
+# pg_grid[is.na(pg_grid)] <- 0  # or leave as is if NA is meaningful
+
+# Convert to polygons with valid pg_id attribute
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+names(pg_vect) <- "pg_id"
+```
+
+
+
+```{r}
+# initialize master table
+master_df <- tibble(pg_id = integer(), year = integer(), built_area_km2 = double())
+
+for (tile in tif_files) {
+  wsf <- rast(tile)
+
+  # (Optional: crop pg_vect to tile extent first)
+
+  # cell area
+  cell_area <- cellSize(wsf, unit = "km")
+  wsf_stack <- c(wsf, cell_area)
+  names(wsf_stack) <- c("year", "area_km2")
+
+  df_raw <- terra::extract(wsf_stack, pg_vect, bind = TRUE, na.rm = TRUE)
+
+  # restore pg_id if needed
+  if (!"pg_id" %in% names(df_raw)) {
+    lookup_pg <- data.frame(ID = 1:nrow(pg_vect), pg_id = pg_vect$pg_id)
+    df_raw <- left_join(df_raw, lookup_pg, by = "ID")
+  }
+
+  df_raw$year <- as.integer(round(df_raw$year))
+
+  # summarize for this tile
+  df_tile <- df_raw %>%
+    filter(!is.na(year) & year >= 0 & year < 2100) %>%
+    group_by(pg_id, year) %>%
+    summarise(built_area_km2 = sum(area_km2, na.rm = TRUE), .groups = "drop")
+
+  # add to master
+  master_df <- bind_rows(master_df, df_tile)
+}
+
+# final cumulative summary
+summary_df <- master_df %>%
+  group_by(pg_id, year) %>%
+  summarise(built_area_km2 = sum(built_area_km2), .groups = "drop")
+
+```
+
