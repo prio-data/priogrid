@@ -1,0 +1,3 @@
+https://zenodo.org/records/7254221/files/ESA_WorldCover_10m_2021_v200_60deg_macrotile_N30E000.zip?download=1
+https://zenodo.org/records/7254221/files/ESA_WorldCover_10m_2021_v200_60deg_macrotile_N30E060.zip?download=1
+https://zenodo.org/records/7254221/files/ESA_WorldCover_10m_2021_v200_60deg_macrotile_N30E120.zip?download=1

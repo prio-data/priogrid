@@ -1,0 +1,163 @@
+
+
+```{r}
+#install.packages("terra")     # For raster and NetCDF handling
+library(terra)
+library(sf)
+library(dplyr)
+library(ggplot2)
+
+library(lubridate)
+
+```
+
+
+```{r}
+#' Reads the ESA data
+#'
+#' 
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{zanagaESAWorldCover102022}{priogrid}
+read_cru <- function() {
+  f <- get_pgfile(source_name = "WorldCover 2021",
+                  source_version = "v200",
+                  id = "3a67fc8e-88a0-4c6b-86dc-295bcfd490df")
+
+  return(f)
+}
+```
+
+```{r}
+f <- read_cru()
+```
+
+```{r}
+print(f)
+```
+
+```{r}
+unzip_esa_landcover_batch <- function(index, sources) {
+  library(tools)
+
+  # Validate index
+  if (index < 1 || index > length(sources)) {
+    stop(sprintf("Index %d is out of bounds. Found %d sources.", index, length(sources)))
+  }
+
+  zip_file <- sources[index]
+
+  # Get the parent directory and create the shared output folder
+  parent_dir <- dirname(zip_file)
+  output_dir <- file.path(parent_dir, "unzipped_esa_worldcover_2021")
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Avoid re-unzipping existing files
+  existing_tifs <- list.files(output_dir, pattern = "\\.tif$", full.names = TRUE)
+  existing_names <- basename(existing_tifs)
+
+  # List files in zip archive
+  zip_contents <- unzip(zip_file, list = TRUE)$Name
+  new_files <- zip_contents[!basename(zip_contents) %in% existing_names]
+
+  if (length(new_files) > 0) {
+    message(sprintf("Unzipping %s to %s", basename(zip_file), output_dir))
+    unzip(zip_file, exdir = output_dir, overwrite = FALSE)
+  } else {
+    message(sprintf("Skipping %s (already unzipped)", basename(zip_file)))
+  }
+
+  return(list.files(output_dir, pattern = "\\.tif$", full.names = TRUE))
+}
+
+```
+
+```{r}
+# Loop over all .zip files and unzip
+all_tifs <- unique(unlist(
+  lapply(seq_along(f), function(i) unzip_esa_landcover_batch(i, f))
+))
+
+```
+
+```{r}
+# Load PRIO-GRID
+pg_grid <- prio_blank_grid()
+
+# Enforce integer pg_id values
+pg_grid[] <- as.integer(round(pg_grid[]))  # Ensure no floating-point errors
+
+# Name the layer properly
+names(pg_grid) <- "pg_id"
+
+# Optional: remove cells with NA if desired
+# pg_grid[is.na(pg_grid)] <- 0  # or leave as is if NA is meaningful
+
+# Convert to polygons with valid pg_id attribute
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+names(pg_vect) <- "pg_id"
+```
+
+
+
+```{r}
+compute_pg_landcover_area <- function(esa_tile, pg_polygons) {
+  library(terra)
+  library(dplyr)
+
+  message("Processing: ", basename(esa_tile))
+  esa <- rast(esa_tile)
+
+  # Check column name for extracted layer
+  lc_name <- names(esa)[1]  # should be "ESA_WorldCover_10m_2021_v200" or similar
+
+  # Extract raster values to polygons
+  extract_result <- terra::extract(esa, pg_polygons, fun = NULL, bind = TRUE)
+
+  # Defensive check
+  if (!(lc_name %in% colnames(extract_result))) {
+    stop("Landcover column not found in extract result.")
+  }
+
+  # Count pixels by pg_id and landcover class
+  summary_df <- extract_result %>%
+    dplyr::filter(!is.na(.data[[lc_name]])) %>%
+    dplyr::group_by(pg_id, landcover = .data[[lc_name]]) %>%
+    dplyr::summarise(count = dplyr::n(), .groups = "drop") %>%
+    dplyr::mutate(class_area = count * prod(res(esa))) %>%
+    dplyr::select(pg_id, landcover, class_area)
+
+  return(summary_df)
+}
+
+```
+
+
+```{r}
+# Limit to first three tiles
+esa_subset <- all_tifs[1:3]
+```
+
+```{r}
+esa_subset
+```
+
+
+```{r}
+# Run the aggregation function only on the subset
+test_pg_landcover <- bind_rows(
+  lapply(esa_subset, compute_pg_landcover_area, pg_polygons = pg_vect)
+)
+
+# Aggregate to combine overlapping tiles
+test_pg_summary <- test_pg_landcover %>%
+  group_by(pg_id, landcover) %>%
+  summarise(class_area = sum(class_area, na.rm = TRUE), .groups = "drop")
+
+# Optional: Preview
+print(head(test_pg_summary))
+```
+
