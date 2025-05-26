@@ -63,6 +63,15 @@ ucdpged_distance_within_country <- function(measurement_date, cshp = read_cshape
   return(result)
 }
 
+#' Generate UCDP GED distance within country
+#'
+#' Calculates UCDP GED distance to the nearest UCDP GED even within each country for each time interval in [pg_date_intervals()].
+#'
+#' @param ged UCDP GED sf data frame, defaults to [read_ucdp_ged()]
+#' @param cshp cShapes sf data frame, defaults to [read_cshapes()]
+#'
+#' @returns SpatRaster with multiple layers, one for each time interval in [pg_date_intervals()].
+#' @export
 gen_ucdpged_distance_within_country <- function(ged = read_ucdp_ged(), cshp = read_cshapes()){
   time_slices <- pg_dates()
   temporal_interval <- lubridate::interval(min(ged$date_start), max(ged$date_end))
