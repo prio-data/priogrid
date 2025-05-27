@@ -1,0 +1,327 @@
+
+```{r}
+#install.packages("terra") # For raster and NetCDF handling
+library(terra)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+```
+
+
+```{r}
+#' Reads the CRU data
+#'
+#'
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
+read_hilde <- function() {
+f <- get_pgfile(source_name = "HILDE",
+source_version = "v1.0",
+id = "82bc4c6f-9904-484f-aa9a-77771d076690")
+return(f)
+}
+
+```
+
+```{r}
+f <- read_hilde()
+```
+
+```{r}
+print(f)
+```
+
+
+```{r}
+zip_file <- function(f) {
+  # Load necessary package
+  library(tools)
+
+  # Validate the zip file path
+  if (!file.exists(f)) {
+    stop("File not found: ", f)
+  }
+
+  # Build unzipped folder name
+  zip_name <- basename(f)  # "hildap_vGLOB-1.0_geotiff.zip"
+  base_name <- file_path_sans_ext(zip_name)  # "hildap_vGLOB-1.0_geotiff"
+  target_dir <- file.path(dirname(f), paste0(base_name, "_unzipped"))
+
+  # Create the directory
+  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Unzip contents
+  message("Unzipping to: ", target_dir)
+  unzip(f, exdir = target_dir)
+
+  return(target_dir)
+}
+
+```
+
+```{r}
+unzipped_directory <- zip_file(f) 
+```
+
+```{r}
+# List all files (with full paths) in the unzipped directory
+unzipped_files <- list.files(unzipped_directory, full.names = TRUE)
+print(unzipped_files)
+```
+
+```{r}
+# Define the target subdirectory
+states_dir <- file.path(unzipped_directory, "hildap_vGLOB-1.0_geotiff_wgs84", "hildap_GLOB-v1.0_lulc-states")
+
+# List all files in that directory (non-recursive since you’re targeting a specific folder)
+state_files <- list.files(states_dir, full.names = TRUE)
+print(state_files)
+```
+
+```{r}
+filter_files_by_year <- function(file_paths, start_year, end_year) {
+  # Extract 4-digit year from each file name
+  years <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(file_paths)))
+
+  # Filter files based on year range
+  keep <- years >= start_year & years <= end_year
+  return(file_paths[keep])
+}
+
+```
+
+```{r}
+# Define your year range
+start_year <- 2000
+end_year <- 2010
+
+# Assume this is the full list of .tif files
+tif_files <- list.files(states_dir, pattern = "\\.tif$", full.names = TRUE)
+
+# Filter the list
+filtered_files <- filter_files_by_year(tif_files, start_year, end_year)
+
+print(filtered_files)
+
+```
+
+```{r}
+library(terra)
+
+# Load the first file from filtered_files
+r <- rast(filtered_files[1])
+
+# Plot the raster
+plot(r, main = basename(filtered_files[1]))
+
+```
+
+```{r}
+pg_grid = prio_blank_grid()
+# Plot it (will show extent, grid cells)
+plot(pg_grid, main = "Blank PRIO-GRID Raster")
+```
+
+```{r}
+# Convert PRIO-GRID to polygons
+pg_grid <- prio_blank_grid()
+pg_grid[] <- as.integer(round(pg_grid[]))
+names(pg_grid) <- "pg_id"
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+names(pg_vect) <- "pg_id"
+
+```
+
+```{r}
+library(terra)
+library(dplyr)
+library(tidyr)
+library(tools)
+
+process_landcover_by_index <- function(index, tif_list, pg_vect) {
+  # Validate index
+  if (index < 1 || index > length(tif_list)) {
+    stop(sprintf("Index %d out of range (1 to %d)", index, length(tif_list)))
+  }
+
+  # Load raster and extract year
+  tif_path <- tif_list[index]
+  year <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(tif_path)))
+  r <- rast(tif_path)
+
+  # Get pixel resolution in meters → area in km²
+  pixel_area_km2 <- prod(res(r)) / 1e6
+
+  # Extract landcover values per PRIO-GRID cell
+  extract_df <- terra::extract(r, pg_vect, fun = table, cells = FALSE)
+  extract_df <- as.data.frame(extract_df)
+  names(extract_df)[1] <- "pg_id"
+
+  # Reshape to long format
+  long_df <- extract_df %>%
+    pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
+    filter(!is.na(count)) %>%
+    mutate(
+      landcover_type = as.integer(gsub("lyr.1.", "", landcover_type, fixed = TRUE)),
+      year = year,
+      area_km2 = count * pixel_area_km2
+    )
+
+  return(long_df)
+}
+
+```
+
+```{r}
+result_df <- process_landcover_by_index(1, filtered_files, pg_vect)
+
+```
+
+```{r}
+pg_grid
+```
+```{r}
+get_valid_tile_sizes <- function(pg_grid, increment = 10) {
+  e <- ext(pg_grid)
+  
+  x_extent <- e[2] - e[1]  # xmax - xmin
+  y_extent <- e[4] - e[3]  # ymax - ymin
+
+  max_size <- min(x_extent, y_extent)
+  candidates <- seq(increment, max_size, by = increment)
+  
+  valid_sizes <- candidates[
+    (x_extent %% candidates) == 0 & (y_extent %% candidates) == 0
+  ]
+  
+  return(valid_sizes)
+}
+
+generate_tiles_checked <- function(pg_grid, tile_size, increment = 10) {
+  # Step 1: Get valid sizes based on pg_grid extent
+  valid_sizes <- get_valid_tile_sizes(pg_grid, increment = increment)
+  
+  # Step 2: Validate user input
+  if (!(tile_size %in% valid_sizes)) {
+    stop(sprintf(
+      "Invalid tile size: %d°. It does not divide evenly into the PRIO-GRID extent.\n Valid options: %s",
+      tile_size,
+      paste(valid_sizes, collapse = ", ")
+    ))
+  }
+
+  # Step 3: Extract extent and generate tile boundaries
+  e <- ext(pg_grid)
+  xmin <- floor(e[1])
+  xmax <- ceiling(e[2])
+  ymin <- floor(e[3])
+  ymax <- ceiling(e[4])
+  
+  lon_seq <- seq(xmin, xmax - tile_size, by = tile_size)
+  lat_seq <- seq(ymin, ymax - tile_size, by = tile_size)
+  
+  grid <- expand.grid(lon = lon_seq, lat = lat_seq)
+  tile_df <- data.frame(
+    tile_id = seq_len(nrow(grid)),
+    xmin = grid$lon,
+    xmax = grid$lon + tile_size,
+    ymin = grid$lat,
+    ymax = grid$lat + tile_size
+  )
+  
+  return(tile_df)
+}
+
+
+```
+
+```{r}
+
+# If not already loaded
+# pg_grid <- prio_blank_grid()
+
+valid_sizes <- get_valid_tile_sizes(pg_grid)
+print(valid_sizes)
+
+```
+
+```{r}
+tile_df <- generate_tiles_checked(pg_grid, tile_size = 60)
+print(tile_df)
+
+```
+
+
+
+
+
+```{r}
+
+# Step : Convert each extent to a SpatVector polygon
+tile_polys <- lapply(1:nrow(tile_df), function(i) {
+  e <- ext(tile_df$xmin[i], tile_df$xmax[i], tile_df$ymin[i], tile_df$ymax[i])
+  p <- as.polygons(e)
+  crs(p) <- "EPSG:4326"
+  return(p)
+})
+
+# Step 4: Combine all polygons into one SpatVector
+tile_vector <- do.call(rbind, tile_polys)
+
+# Step 5: Plot the tile grid
+# Plot the PRIO-GRID raster
+plot(pg_grid, main = "PRIO-GRID with 20°x20° Tiles")
+
+# Overlay the tile grid as borders
+lines(tile_vector, col = "red", lwd = 2)
+
+```
+
+
+```{r}
+process_landcover_in_tiles <- function(tif_path, pg_vect, tile_df) {
+  r <- rast(tif_path)
+  year <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(tif_path)))
+  pixel_area_km2 <- prod(res(r)) / 1e6
+  
+  results <- list()
+  
+  for (i in seq_len(nrow(tile_df))) {
+    bbox <- ext(tile_df[i, ])
+    r_tile <- crop(r, bbox)
+    
+    if (nlyr(r_tile) == 0) next  # Skip empty tiles
+
+    # Extract values from tile using full PRIO-GRID
+    extract_df <- terra::extract(r_tile, pg_vect, fun = table, cells = FALSE)
+    extract_df <- as.data.frame(extract_df)
+    names(extract_df)[1] <- "pg_id"
+    
+    long_df <- extract_df %>%
+      pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
+      filter(!is.na(count)) %>%
+      mutate(
+        landcover_type = as.integer(gsub("lyr.1.", "", landcover_type, fixed = TRUE)),
+        year = year,
+        area_km2 = count * pixel_area_km2
+      )
+    
+    results[[i]] <- long_df
+    message(sprintf("Finished tile %d of %d for year %d", i, nrow(tile_df), year))
+  }
+  
+  # Combine and aggregate across overlapping tiles
+  combined_df <- bind_rows(results) %>%
+    group_by(pg_id, landcover_type, year) %>%
+    summarize(area_km2 = sum(area_km2), .groups = "drop")
+  
+  return(combined_df)
+}
+
+```
+
