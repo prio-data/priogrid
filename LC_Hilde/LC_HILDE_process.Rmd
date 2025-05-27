@@ -26,6 +26,7 @@ id = "82bc4c6f-9904-484f-aa9a-77771d076690")
 return(f)
 }
 
+
 ```
 
 ```{r}
@@ -137,50 +138,6 @@ names(pg_vect) <- "pg_id"
 
 ```
 
-```{r}
-library(terra)
-library(dplyr)
-library(tidyr)
-library(tools)
-
-process_landcover_by_index <- function(index, tif_list, pg_vect) {
-  # Validate index
-  if (index < 1 || index > length(tif_list)) {
-    stop(sprintf("Index %d out of range (1 to %d)", index, length(tif_list)))
-  }
-
-  # Load raster and extract year
-  tif_path <- tif_list[index]
-  year <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(tif_path)))
-  r <- rast(tif_path)
-
-  # Get pixel resolution in meters → area in km²
-  pixel_area_km2 <- prod(res(r)) / 1e6
-
-  # Extract landcover values per PRIO-GRID cell
-  extract_df <- terra::extract(r, pg_vect, fun = table, cells = FALSE)
-  extract_df <- as.data.frame(extract_df)
-  names(extract_df)[1] <- "pg_id"
-
-  # Reshape to long format
-  long_df <- extract_df %>%
-    pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
-    filter(!is.na(count)) %>%
-    mutate(
-      landcover_type = as.integer(gsub("lyr.1.", "", landcover_type, fixed = TRUE)),
-      year = year,
-      area_km2 = count * pixel_area_km2
-    )
-
-  return(long_df)
-}
-
-```
-
-```{r}
-result_df <- process_landcover_by_index(1, filtered_files, pg_vect)
-
-```
 
 ```{r}
 pg_grid
@@ -240,18 +197,15 @@ generate_tiles_checked <- function(pg_grid, tile_size, increment = 10) {
 
 ```
 
+
 ```{r}
-
-# If not already loaded
-# pg_grid <- prio_blank_grid()
-
 valid_sizes <- get_valid_tile_sizes(pg_grid)
 print(valid_sizes)
-
 ```
 
+
 ```{r}
-tile_df <- generate_tiles_checked(pg_grid, tile_size = 60)
+tile_df <- generate_tiles_checked(pg_grid, tile_size = 30)
 print(tile_df)
 
 ```
@@ -261,7 +215,6 @@ print(tile_df)
 
 
 ```{r}
-
 # Step : Convert each extent to a SpatVector polygon
 tile_polys <- lapply(1:nrow(tile_df), function(i) {
   e <- ext(tile_df$xmin[i], tile_df$xmax[i], tile_df$ymin[i], tile_df$ymax[i])
@@ -282,6 +235,12 @@ lines(tile_vector, col = "red", lwd = 2)
 
 ```
 
+```{r}
+#Select just 1 tile to process for tests:
+first_file <- filtered_files[1]
+first_file
+```
+
 
 ```{r}
 process_landcover_in_tiles <- function(tif_path, pg_vect, tile_df) {
@@ -290,20 +249,34 @@ process_landcover_in_tiles <- function(tif_path, pg_vect, tile_df) {
   pixel_area_km2 <- prod(res(r)) / 1e6
   
   results <- list()
+  total_start <- Sys.time()  # Start global timer
   
   for (i in seq_len(nrow(tile_df))) {
-    bbox <- ext(tile_df[i, ])
+    tile_start <- Sys.time()  # Start tile timer
+    
+    # Report which tile is being processed
+    tile_info <- tile_df[i, ]
+    message(sprintf("Processing tile %d of %d: [%d°, %d°, %d°, %d°]",
+                    i, nrow(tile_df),
+                    tile_info$xmin, tile_info$xmax,
+                    tile_info$ymin, tile_info$ymax))
+    
+    # Create extent and crop
+    bbox <- ext(tile_info$xmin, tile_info$xmax, tile_info$ymin, tile_info$ymax)
     r_tile <- crop(r, bbox)
     
-    if (nlyr(r_tile) == 0) next  # Skip empty tiles
-
-    # Extract values from tile using full PRIO-GRID
+    if (nlyr(r_tile) == 0) {
+      message(sprintf("Skipping tile %d (no data)", i))
+      next
+    }
+    
+    # Extract values from full PRIO-GRID
     extract_df <- terra::extract(r_tile, pg_vect, fun = table, cells = FALSE)
     extract_df <- as.data.frame(extract_df)
     names(extract_df)[1] <- "pg_id"
     
     long_df <- extract_df %>%
-      pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
+      tidyr::pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
       filter(!is.na(count)) %>%
       mutate(
         landcover_type = as.integer(gsub("lyr.1.", "", landcover_type, fixed = TRUE)),
@@ -312,16 +285,31 @@ process_landcover_in_tiles <- function(tif_path, pg_vect, tile_df) {
       )
     
     results[[i]] <- long_df
-    message(sprintf("Finished tile %d of %d for year %d", i, nrow(tile_df), year))
+    
+    tile_time <- difftime(Sys.time(), tile_start, units = "mins")
+    message(sprintf("Finished tile %d in %.2f minutes", i, tile_time))
   }
   
-  # Combine and aggregate across overlapping tiles
+  # Combine and summarize
   combined_df <- bind_rows(results) %>%
     group_by(pg_id, landcover_type, year) %>%
     summarize(area_km2 = sum(area_km2), .groups = "drop")
   
+  total_time <- difftime(Sys.time(), total_start, units = "mins")
+  message(sprintf("Finished all tiles for year %d in %.2f minutes", year, total_time))
+  
   return(combined_df)
 }
+
+```
+
+```{r}
+tile_df
+```
+
+
+```{r}
+lc_output <- process_landcover_in_tiles(first_file, pg_vect, tile_df) 
 
 ```
 
