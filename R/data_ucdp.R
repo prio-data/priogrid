@@ -12,13 +12,13 @@ read_ucdp_ged <- function(){
   return(df)
 }
 
-ucdpged_distance_within_country <- function(measurement_date, cshp = read_cshapes()){
+ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes()){
   cshp <- cshp |> dplyr::filter(measurement_date %within% date_interval)
 
   pg_interval <- pg_date_intervals()[measurement_date %within% pg_date_intervals()]
 
   pg <- prio_blank_grid()
-  ged <- read_ucdp_ged() |>
+  ged <- ged |>
     sf::st_transform(crs = sf::st_crs(pg)) |>
     dplyr::filter(lubridate::int_overlaps(date_interval, pg_interval)) |>
     dplyr::filter(where_prec < 6) # Remove where_prec >= 6 (i.e. not sub-national precision)
@@ -103,11 +103,11 @@ gen_ucdpged_distance_within_country <- function(ged = read_ucdp_ged(), cshp = re
   #   }
   # }
   #plot(1/((raster_list[[1]]/1e6)+1))
-  r <- ucdpged_distance_within_country(time_slices[1], cshp = cshp)
+  r <- ucdpged_distance_within_country(time_slices[1], ged = ged, cshp = cshp)
   for(i in 2:length(time_slices)){
     t <- time_slices[i]
     print(paste("Processing", i,"/",  length(time_slices)))
-    rt <- ucdpged_distance_within_country(t, cshp = cshp)
+    rt <- ucdpged_distance_within_country(t, ged = ged, cshp = cshp)
     names(rt) <- as.character(t)
     terra::add(r) <- rt
   }
