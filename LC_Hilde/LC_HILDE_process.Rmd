@@ -1,3 +1,11 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
 
 ```{r}
 #install.packages("terra") # For raster and NetCDF handling
@@ -8,9 +16,10 @@ library(ggplot2)
 library(lubridate)
 ```
 
+This function retrieves the HILDA (Human-Influenced Land-use and Degradation Assessment) version 1.0 dataset from a predefined source. It acts as a wrapper around a custom get_pgfile() function, which fetches the appropriate spatial file based on its metadata ID.
 
 ```{r}
-#' Reads the CRU data
+#' Reads the HILDE+ data
 #'
 #'
 #'
@@ -20,41 +29,72 @@ library(lubridate)
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
 read_hilde <- function() {
-f <- get_pgfile(source_name = "HILDE",
-source_version = "v1.0",
-id = "82bc4c6f-9904-484f-aa9a-77771d076690")
-return(f)
+  f <- get_pgfile(source_name = "HILDE",
+  source_version = "v1.0",
+  id = "82bc4c6f-9904-484f-aa9a-77771d076690")
+  return(f)
 }
 
 
 ```
 
-```{r}
-f <- read_hilde()
-```
+We begin by loading the HILDA v1.0 dataset
 
 ```{r}
+f <- read_hilde()
 print(f)
 ```
 
+The following utility function automates the extraction of .zip archives in reproducible workflows. Given a .zip file, it validates the file's existence, constructs a uniquely named output directory (_unzipped suffix), and extracts the contents into that location. This approach ensures organization and avoids clutter or overwriting issues during batch processing of geospatial or climate datasets.
 
 ```{r}
+#' Unzip a File to a Structured Directory (with Safety Check)
+#'
+#' Extracts the contents of a `.zip` file into a uniquely named subdirectory 
+#' in the same location as the original file. The output folder is named after 
+#' the zip file with a `_unzipped` suffix.
+#'
+#' If the target directory already exists and contains files or subdirectories, 
+#' the function skips unzipping and returns the existing directory path.
+#'
+#' @param f Character. Full path to the `.zip` file to be extracted.
+#'
+#' @return A character string indicating the full path to the directory 
+#' where the contents were (or would have been) unzipped.
+#'
+#' @examples
+#' \dontrun{
+#' zip_path <- "/path/to/hildap_vGLOB-1.0_geotiff.zip"
+#' unzipped_dir <- zip_file(zip_path)
+#' list.files(unzipped_dir)
+#' }
+#'
+#' @importFrom tools file_path_sans_ext
+#' @export
 zip_file <- function(f) {
-  # Load necessary package
   library(tools)
 
-  # Validate the zip file path
   if (!file.exists(f)) {
     stop("File not found: ", f)
   }
 
-  # Build unzipped folder name
-  zip_name <- basename(f)  # "hildap_vGLOB-1.0_geotiff.zip"
-  base_name <- file_path_sans_ext(zip_name)  # "hildap_vGLOB-1.0_geotiff"
+  zip_name <- basename(f)
+  base_name <- file_path_sans_ext(zip_name)
   target_dir <- file.path(dirname(f), paste0(base_name, "_unzipped"))
 
-  # Create the directory
-  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+  # Check if target_dir exists and is non-empty
+  if (dir.exists(target_dir)) {
+    contents <- list.files(target_dir, all.files = TRUE, no.. = TRUE)
+    if (length(contents) > 0) {
+      message("Target directory already exists and is not empty: ", target_dir)
+      return(target_dir)
+    } else {
+      message("Target directory exists but is empty, proceeding to unzip...")
+    }
+  } else {
+    dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+    message("Created target directory: ", target_dir)
+  }
 
   # Unzip contents
   message("Unzipping to: ", target_dir)
@@ -65,15 +105,21 @@ zip_file <- function(f) {
 
 ```
 
+The zipped HILDA dataset is extracted to a structured directory using the zip_file(f) utility, storing the output path in unzipped_directory.
+
 ```{r}
 unzipped_directory <- zip_file(f) 
 ```
 
+The HILDA archive contains subdirectories, we use list.files() with full.names = TRUE to capture their complete paths for downstream processing.
+
 ```{r}
 # List all files (with full paths) in the unzipped directory
-unzipped_files <- list.files(unzipped_directory, full.names = TRUE)
-print(unzipped_files)
+unzipped_subdir <- list.files(unzipped_directory, full.names = TRUE)
+print(unzipped_subdir)
 ```
+
+We define the target subdirectory containing land-use state layers and list all files within it using list.files(), capturing their full paths for organized access to the HILDA land cover state rasters.
 
 ```{r}
 # Define the target subdirectory
@@ -81,10 +127,29 @@ states_dir <- file.path(unzipped_directory, "hildap_vGLOB-1.0_geotiff_wgs84", "h
 
 # List all files in that directory (non-recursive since you’re targeting a specific folder)
 state_files <- list.files(states_dir, full.names = TRUE)
-print(state_files)
+print(head(state_files))
 ```
 
+To select land-use files corresponding to a specific time range, we apply filter_files_by_year(), which extracts the year from each filename and returns only those within the desired year interval. This ensures that only temporally relevant data are passed to subsequent processing steps.
+
 ```{r}
+#' Filter File Paths by Year
+#'
+#' Filters a list of file paths by extracting the 4-digit year from each file name
+#' and retaining only those within the specified year range.
+#'
+#' @param file_paths Character vector. A list of file paths with year-encoded filenames.
+#' @param start_year Integer. The beginning year of the desired range (inclusive).
+#' @param end_year Integer. The ending year of the desired range (inclusive).
+#'
+#' @return A character vector of file paths that fall within the specified year range.
+#'
+#' @examples
+#' files <- c("lulc_state_1992.tif", "lulc_state_2001.tif", "lulc_state_2015.tif")
+#' filtered <- filter_files_by_year(files, 2000, 2020)
+#' print(filtered)
+#'
+#' @export
 filter_files_by_year <- function(file_paths, start_year, end_year) {
   # Extract 4-digit year from each file name
   years <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(file_paths)))
@@ -95,6 +160,10 @@ filter_files_by_year <- function(file_paths, start_year, end_year) {
 }
 
 ```
+
+We define a target year range (2000–2010) and filter the list of .tif raster files in the land-use states directory to include only those with filenames corresponding to years within this interval. This step ensures that downstream analysis only uses data relevant to the specified temporal window.
+
+The next development step is to align these filtered rasters with the PRIO-GRID temporal structure by referencing the pg_intervals <- pg_date_intervals() function.
 
 ```{r}
 # Define your year range
@@ -107,26 +176,29 @@ tif_files <- list.files(states_dir, pattern = "\\.tif$", full.names = TRUE)
 # Filter the list
 filtered_files <- filter_files_by_year(tif_files, start_year, end_year)
 
-print(filtered_files)
+print(head(filtered_files))
 
 ```
 
-```{r}
-library(terra)
+To verify the contents of the filtered HILDA land-use rasters, we load the first file using the terra::rast() function and generate a quick visual check with plot().
 
+```{r}
 # Load the first file from filtered_files
 r <- rast(filtered_files[1])
 
 # Plot the raster
 plot(r, main = basename(filtered_files[1]))
-
 ```
+
+We load a blank PRIO-GRID raster using the prio_blank_grid() utility. This serves as a spatial template to which other datasets (e.g., HILDA rasters) will be aligned or aggregated
 
 ```{r}
 pg_grid = prio_blank_grid()
 # Plot it (will show extent, grid cells)
 plot(pg_grid, main = "Blank PRIO-GRID Raster")
 ```
+
+To enable spatial extraction and zonal statistics, we convert the blank PRIO-GRID raster into a vector (polygon) format. This process assigns each cell a unique pg_id, allowing it to serve as a spatial unit for aggregating raster-based land-use data.
 
 ```{r}
 # Convert PRIO-GRID to polygons
@@ -135,14 +207,49 @@ pg_grid[] <- as.integer(round(pg_grid[]))
 names(pg_grid) <- "pg_id"
 pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
 names(pg_vect) <- "pg_id"
-
 ```
 
+The object pg_grid represents the blank PRIO-GRID raster, where each cell corresponds to a unique grid square at a resolution of 0.5° × 0.5°. This raster serves as the spatial foundation for aggregating land-use rasters (and other external sources) from HILDA. Calling pg_grid in the console allows users to inspect its structure, resolution, and metadata
 
 ```{r}
 pg_grid
 ```
+
+### Tiling the PRIO-GRID Spatial Extent:
+
+To conserve memory and increase processing speed, we generate a set of evenly spaced spatial tiles that divide the full PRIO-GRID extent into manageable chunks. This tiling strategy enables raster operations to be performed on smaller subsets of data, reducing computational overhead and improving the efficiency of spatial extraction and aggregation routines.
+
+#### Step 1: Determine Valid Tile Sizes
+
+We first identify valid tile sizes using get_valid_tile_sizes(), which checks which candidate sizes (e.g., 10°, 20°, etc.) divide evenly into both the longitudinal and latitudinal extent of the PRIO-GRID raster.
+
+#### Step 2: Generate Tiling Schema
+
+We then use generate_tiles_checked() to produce a grid of bounding boxes based on a user-defined tile size (e.g., 10°). The function validates that the tile size is compatible with the PRIO-GRID spatial extent before creating the tiles.
+
+The resulting tile_df is a data frame where each row represents one tile with:
+
+- tile_id: Unique identifier for the tile
+- xmin, xmax: Longitudinal bounds
+- ymin, ymax: Latitudinal bounds
+
+This schema can be used to clip rasters, loop through spatial regions in chunks.
+
 ```{r}
+#' Get Valid Tile Sizes for PRIO-GRID Extent
+#'
+#' Computes a list of valid tile sizes that evenly divide both the longitudinal and latitudinal
+#' extents of the input `pg_grid` raster.
+#'
+#' @param pg_grid A SpatRaster object representing the PRIO-GRID raster.
+#' @param increment Integer. Step size (in degrees) to evaluate for tiling (default is 10).
+#'
+#' @return A numeric vector of valid tile sizes (in degrees) that evenly divide the grid extent.
+#'
+#' @examples
+#' valid_sizes <- get_valid_tile_sizes(pg_grid)
+#'
+#' @export
 get_valid_tile_sizes <- function(pg_grid, increment = 10) {
   e <- ext(pg_grid)
   
@@ -158,6 +265,22 @@ get_valid_tile_sizes <- function(pg_grid, increment = 10) {
   
   return(valid_sizes)
 }
+
+#' Generate Tiling Grid Over PRIO-GRID Extent
+#'
+#' Generates a tiling grid over the PRIO-GRID raster extent, ensuring the specified `tile_size`
+#' evenly divides the full spatial extent. Raises an error if the input tile size is invalid.
+#'
+#' @param pg_grid A SpatRaster object representing the PRIO-GRID raster.
+#' @param tile_size Integer. Desired size of the tile (in degrees).
+#' @param increment Integer. Step size to evaluate valid tile sizes (default is 10).
+#'
+#' @return A data.frame with one row per tile, including the bounding box coordinates and a tile ID.
+#'
+#' @examples
+#' tiles <- generate_tiles_checked(pg_grid, tile_size = 10)
+#'
+#' @export
 
 generate_tiles_checked <- function(pg_grid, tile_size, increment = 10) {
   # Step 1: Get valid sizes based on pg_grid extent
@@ -197,22 +320,21 @@ generate_tiles_checked <- function(pg_grid, tile_size, increment = 10) {
 
 ```
 
+We use the get_valid_tile_sizes() function to compute all tile sizes (in degrees) that evenly divide both the longitudinal and latitudinal extent of the PRIO-GRID raster. This ensures that any spatial tiling applied will align cleanly with the global grid structure without leaving partial or misaligned tiles.
 
 ```{r}
 valid_sizes <- get_valid_tile_sizes(pg_grid)
 print(valid_sizes)
 ```
 
+We generate a data frame of spatial tiles using the generate_tiles_checked() function, specifying a tile size of 30 degrees. This ensures that the PRIO-GRID extent is divided into evenly sized, non-overlapping rectangular regions that align with global coordinates.
 
 ```{r}
 tile_df <- generate_tiles_checked(pg_grid, tile_size = 30)
 print(tile_df)
-
 ```
 
-
-
-
+As an independent validation step, we visualize how the 30° spatial tiles align with the PRIO-GRID raster. This exploratory process is not part of the main wrapper function but serves to confirm that the tiling logic correctly segments the global extent without misalignment.
 
 ```{r}
 # Step : Convert each extent to a SpatVector polygon
@@ -235,81 +357,279 @@ lines(tile_vector, col = "red", lwd = 2)
 
 ```
 
+To begin testing the raster processing workflow, we select a single file from the filtered list of land cover rasters using `first_file <- filtered_files[1]`. This selects the first raster from `filtered_files`, a vector previously generated using `filtered_files <- filter_files_by_year(tif_files, start_year, end_year)`. 
+
+In the final wrapper function, the index `1` in `filtered_files[1]` will be replaced with a loop variable (e.g., `i`) to iterate over all filtered files, allowing for scalable batch processing across all selected years.
+
 ```{r}
 #Select just 1 tile to process for tests:
 first_file <- filtered_files[1]
 first_file
 ```
 
+This core function processes a single raster file containing global land cover data (e.g., HILDA .tif files) and computes the proportional coverage of each land cover class per PRIO-GRID cell.
+
+To conserve memory and increase processing speed, the raster is processed tile-by-tile using a predefined set of spatial chunks (tile_df). Each tile represents a bounded 30°x30° area, allowing localized operations instead of loading the entire global raster at once.
+
+#### Summary of Steps:
+
+1. **Read and Prepare Input Raster**  
+   The raster is loaded using `terra::rast()`, and the year is extracted from the filename for tracking purposes.
+
+2. **Optionally Subset Tiles for Testing**  
+   If `runtest = TRUE`, only tiles 28 to 30 are processed. This is useful for debugging or estimating runtime without processing the full global extent.
+
+3. **Clip PRIO-GRID to Tile Extent**  
+   The `pg_vect` object (PRIO-GRID polygons) is cropped to the spatial extent covered by the current tile(s), reducing unnecessary computations.
+
+4. **Compute PRIO-GRID Cell Area**  
+   Accurate cell areas (in square kilometers) are calculated using `terra::expanse()` to enable proper scaling of land cover area by grid cell size.
+
+5. **Loop Over Each Tile**  
+   For each tile:
+   - Crop the raster to the tile's bounding box
+   - Compute pixel-level areas with `terra::cellSize()`
+   - Extract land cover class and pixel area values for each grid cell
+   - Aggregate results by `pg_id` and `landcover_type`
+
+6. **Compute Proportional Area (`p_area`)**  
+   The area of each land cover class within a grid cell is expressed as a proportion of that cell’s total area.
+
+7. **Post-Processing: Validate Coverage**  
+   A coverage check is performed to verify that all land cover proportions in a given grid cell sum to approximately 1. A logical flag (`fully_covered`) is added to identify complete coverage.
+
 
 ```{r}
-process_landcover_in_tiles <- function(tif_path, pg_vect, tile_df) {
+#' Process Land Cover Data by PRIO-GRID Tiles with Area Proportions
+#'
+#' Processes a single land cover raster file by dividing the global extent into tiles and 
+#' extracting the proportional area of each land cover class per PRIO-GRID cell.
+#' This approach conserves memory and improves processing speed by working in spatial chunks.
+#'
+#' @param tif_path Character. File path to a single land cover raster (.tif) dataset.
+#' @param pg_vect SpatVector. Vectorized PRIO-GRID polygons with a 'pg_id' attribute.
+#' @param tile_df Data frame. Output from `generate_tiles_checked()` containing tile bounding boxes.
+#' @param runtest Logical. If TRUE, only a small subset of tiles (28:30) is processed for test purposes. Default is FALSE.
+#'
+#' @return A data frame with proportional land cover area per `pg_id`, `landcover_type`, and `year`.
+#' Includes fields:
+#' \itemize{
+#'   \item `pg_id`: Unique PRIO-GRID identifier
+#'   \item `landcover_type`: Integer land cover class from raster
+#'   \item `year`: Year parsed from the raster filename
+#'   \item `p_area`: Proportion of grid cell covered by this land cover type
+#'   \item `p_area_sum`: Sum of all land cover proportions within the grid cell (should be ~1)
+#'   \item `fully_covered`: Logical indicating if cell coverage is complete
+#' }
+#'
+#' @examples
+#' result <- process_landcover_in_tiles_proportional("hilda_plus_2000_states_GLOB-v1-0_wgs84-nn.tif", pg_vect, tile_df)
+#'
+#' @importFrom terra rast crop cellSize extract ext values ncell expanse
+#' @importFrom dplyr group_by summarise mutate filter select bind_rows left_join
+#' @export
+
+process_landcover_in_tiles_proportional <- function(tif_path, pg_vect, tile_df, runtest = FALSE) {
   r <- rast(tif_path)
   year <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(tif_path)))
-  pixel_area_km2 <- prod(res(r)) / 1e6
-  
+
   results <- list()
-  total_start <- Sys.time()  # Start global timer
+  total_start <- Sys.time()
+
+  # Optional test subset
+  if (runtest == TRUE) {
+    tile_df <- tile_df[28:30, ]
+  }
+
+  # Create bounding box for selected tiles
+  tile_extent <- ext(
+    min(tile_df$xmin), max(tile_df$xmax),
+    min(tile_df$ymin), max(tile_df$ymax)
+  )
   
+  # Crop vector to relevant region
+  pg_vect <- crop(pg_vect, tile_extent)
+  
+  # Precompute total cell area (in km²)
+  message("Calculating total area of PRIO-GRID polygons (pg_id)...")
+  pg_vect$cell_area_km2 <- expanse(pg_vect, unit = "km", transform = TRUE)
+
   for (i in seq_len(nrow(tile_df))) {
-    tile_start <- Sys.time()  # Start tile timer
-    
-    # Report which tile is being processed
+    tile_start <- Sys.time()
+
     tile_info <- tile_df[i, ]
     message(sprintf("Processing tile %d of %d: [%d°, %d°, %d°, %d°]",
                     i, nrow(tile_df),
                     tile_info$xmin, tile_info$xmax,
                     tile_info$ymin, tile_info$ymax))
-    
-    # Create extent and crop
+
+    # Crop raster to tile
     bbox <- ext(tile_info$xmin, tile_info$xmax, tile_info$ymin, tile_info$ymax)
     r_tile <- crop(r, bbox)
-    
-    if (nlyr(r_tile) == 0) {
+
+    if (ncell(r_tile) == 0 || all(is.na(values(r_tile)))) {
       message(sprintf("Skipping tile %d (no data)", i))
       next
     }
-    
-    # Extract values from full PRIO-GRID
-    extract_df <- terra::extract(r_tile, pg_vect, fun = table, cells = FALSE)
-    extract_df <- as.data.frame(extract_df)
-    names(extract_df)[1] <- "pg_id"
-    
+
+    # Compute accurate per-pixel area
+    area_tile <- cellSize(r_tile, unit = "km")
+    vals <- c(r_tile, area_tile)
+    names(vals) <- c("landcover_type", "area_km2")
+
+    # Extract landcover and pixel area per pg_id
+    extract_df <- terra::extract(vals, pg_vect, bind = FALSE)
+
+    if (nrow(extract_df) == 0) next
+
+    # Add pg_id
+    extract_df$pg_id <- pg_vect$pg_id[extract_df$ID]
+    extract_df$cell_area_km2 <- pg_vect$cell_area_km2[extract_df$ID]
+
+    # Summarize area per landcover type and pg_id
     long_df <- extract_df %>%
-      tidyr::pivot_longer(cols = -pg_id, names_to = "landcover_type", values_to = "count") %>%
-      filter(!is.na(count)) %>%
+      dplyr::filter(!is.na(landcover_type)) %>%
+      group_by(pg_id, landcover_type) %>%
+      summarise(
+        area_km2 = sum(area_km2, na.rm = TRUE),
+        cell_area_km2 = first(cell_area_km2),
+        .groups = "drop"
+      ) %>%
       mutate(
-        landcover_type = as.integer(gsub("lyr.1.", "", landcover_type, fixed = TRUE)),
+        landcover_type = as.integer(landcover_type),
         year = year,
-        area_km2 = count * pixel_area_km2
-      )
-    
+        p_area = area_km2 / cell_area_km2
+      ) %>%
+      select(pg_id, landcover_type, year, area_km2, cell_area_km2)
+
     results[[i]] <- long_df
-    
+
     tile_time <- difftime(Sys.time(), tile_start, units = "mins")
     message(sprintf("Finished tile %d in %.2f minutes", i, tile_time))
   }
-  
-  # Combine and summarize
+
+  # Combine and summarize per landcover type
   combined_df <- bind_rows(results) %>%
     group_by(pg_id, landcover_type, year) %>%
-    summarize(area_km2 = sum(area_km2), .groups = "drop")
+    summarise(
+      area_km2 = sum(area_km2, na.rm = TRUE),
+      cell_area_km2 = first(cell_area_km2),  # constant per pg_id
+      .groups = "drop"
+    ) %>%
+    mutate(
+      p_area = area_km2 / cell_area_km2
+    )
   
+  # Optional: check coverage completeness by summing p_area per pg_id
+  coverage_check <- combined_df %>%
+    group_by(pg_id, year) %>%
+    summarise(
+      p_area_sum = sum(p_area, na.rm = TRUE),
+      fully_covered = abs(sum(p_area, na.rm = TRUE) - 1) < 1e-4,
+      .groups = "drop"
+    )
+  
+  # Optionally join this check back to the main results
+  combined_df <- combined_df %>%
+    left_join(coverage_check, by = c("pg_id", "year")) %>%
+    select(pg_id, landcover_type, year, p_area, p_area_sum, fully_covered)
+  
+  # Runtime message
   total_time <- difftime(Sys.time(), total_start, units = "mins")
   message(sprintf("Finished all tiles for year %d in %.2f minutes", year, total_time))
   
   return(combined_df)
 }
-
 ```
 
-```{r}
-tile_df
-```
+To validate the proportional land cover extraction workflow, we run the `process_landcover_in_tiles_proportional()` function on a single raster file using a small subset of tiles for testing. Setting `runtest = TRUE` limits the operation to tiles 28 through 30, helping verify functionality while conserving time and memory to process the complete collection of 72 tiles.
 
 
 ```{r}
-lc_output <- process_landcover_in_tiles(first_file, pg_vect, tile_df) 
+lc_output_test <- process_landcover_in_tiles_proportional(first_file, pg_vect, tile_df, runtest=TRUE) 
+```
+
+```{r}
+lc_output_test
+```
+
+We use the `create_landcover_area_stack()` function to convert the land cover extraction results into a spatially explicit raster stack. Each layer in the resulting stack represents the proportion of area covered by a specific land cover class (`p_area`) within each PRIO-GRID cell.
+
+```{r}
+#' Create Raster Stack of Land Cover Proportions per PRIO-GRID Cell
+#'
+#' Converts a data frame of land cover proportions (output from 
+#' `process_landcover_in_tiles_proportional()`) into a raster stack. Each layer represents
+#' the proportional area of a specific land cover type in each PRIO-GRID cell.
+#'
+#' @param lc_output Data frame. Output from `process_landcover_in_tiles_proportional()`, containing columns:
+#'   - `pg_id`: PRIO-GRID cell ID
+#'   - `landcover_type`: Integer representing the land cover class
+#'   - `p_area`: Proportion of the grid cell area covered by the class
+#' @param pg_grid SpatRaster. PRIO-GRID raster template, where each cell value represents a `pg_id`.
+#'
+#' @return A `SpatRaster` stack with one layer per land cover type, plus one base layer (`pg_id`).
+#'   Each layer name follows the format `"lc_<type>"`.
+#'
+#' @examples
+#' r_stack <- create_landcover_area_stack(lc_output_test, pg_grid)
+#' plot(r_stack)
+#'
+#' @importFrom dplyr mutate filter
+#' @importFrom terra classify
+#' @export
+
+create_landcover_area_stack <- function(lc_output, pg_grid) {
+  # Ensure pg_id is integer to match raster values
+  lc_output <- lc_output %>%
+    mutate(pg_id = as.integer(pg_id))
+
+  # Get unique landcover types
+  landcover_types <- sort(unique(lc_output$landcover_type))
+
+  # Initialize list to hold area rasters
+  area_rasters <- list()
+
+  # Loop through each landcover type and classify
+  for (lc in landcover_types) {
+    lc_subset <- lc_output %>% filter(landcover_type == lc)
+    lookup <- lc_subset[, c("pg_id", "p_area")]
+    
+    area_r <- classify(pg_grid, lookup, others = NA)
+    names(area_r) <- paste0("lc_", lc)
+    
+    area_rasters[[length(area_rasters) + 1]] <- area_r
+  }
+
+  # Stack: first layer is pg_id, rest are landcover area rasters
+  r_stack <- c(pg_grid, do.call(c, area_rasters))
+  names(r_stack)[1] <- "pg_id"
+
+  return(r_stack)
+}
 
 ```
+
+Now this process applies the `create_landcover_area_stack()` function to convert the proportional land cover data into a spatial raster format
+
+```{r}
+landcover_stack <- create_landcover_area_stack(lc_output_test, pg_grid)
+```
+
+To view the contents of the land cover stack, we list the names of each raster layer. Each raster in the stack corresponds to a unique land cover type, and the values in each layer represent the proportional area covered by that land cover class within each PRIO-GRID cell. This structure allows for clear interpretation and straightforward access to spatial distributions of individual land cover categories across the global grid.
+
+```{r}
+names(landcover_stack)
+```
+
+The `plot()` function visualizes a single layer from the land cover stack
+
+```{r}
+plot(landcover_stack[["lc_22"]])
+```
+
+
+
+
+
 
