@@ -11,7 +11,21 @@ read_hilde <- function() {
   f <- get_pgfile(source_name = "HILDE",
                   source_version = "v1.0",
                   id = "82bc4c6f-9904-484f-aa9a-77771d076690")
-  return(f)
+
+  # Unzip archive
+  unzipped_directory <- zip_file(f)
+
+  # Construct the path to the raster state files directory
+  states_dir <- file.path(unzipped_directory,
+                          "hildap_vGLOB-1.0_geotiff_wgs84",
+                          "hildap_GLOB-v1.0_lulc-states")
+
+  # Filter raster .tif files to those matching PRIO-GRID year intervals
+  filtered_files <- filter_tifs_by_pg_intervals(states_dir)
+
+  r <- terra::rast(filtered_files)
+
+  return(r)
 }
 
 #------
@@ -592,4 +606,32 @@ generate_landcover_stack_list <- function(zip_path = NULL, tile_size = 30, runte
   landcover_stack_list <- batch_create_landcover_area_stack(year_compile_df, pg_grid)
 
   return(landcover_stack_list)
+}
+
+
+hilde_landcover <- function(landcovertype, max_cells_in_memory = (18000*36000*2)){
+  r <- read_hilde()
+  my_fun <- function(values, coverage_fractions){weighted.mean(values == landcovertype, coverage_fractions)}
+  pg <- prio_blank_grid()
+  pg_vect <- terra::as.polygons(pg) |> sf::st_as_sf()
+
+  # Check if projection of r is same as pg, and transform accordingly
+  # Check if extent of r is same as pg, and crop accordingly
+
+  res <- exactextractr::exact_extract(r, pg_vect, fun = my_fun, max_cells_in_memory = max_cells_in_memory, stack_apply = T)
+  all <- lapply(1:ncol(res), function(i){
+    values(pg) <- res[,i]
+    pg <- terra::flip(pg)
+    pg
+  })
+  all <- terra::rast(all)
+
+  # Make sure that layer names are reflecting the dates of the rasters.
+  # names(all) <- ...
+
+  all
+}
+
+gen_hilde_barren <- function(){
+  hilde_landcover(landcovertype == 66) # assuming 66 is the barren land type
 }
