@@ -1,0 +1,671 @@
+
+
+```{r}
+#install.packages("terra")     # For raster and NetCDF handling
+library(terra)
+library(sf)
+library(dplyr)
+library(ggplot2)
+
+library(lubridate)
+
+
+```
+
+## Working from the team processes:
+
+#### Identify the appropriate identifying fields for
+- {harrisVersion4CRU2020} {priogrid}
+
+
+
+# Function 1:
+### Reading CRU Climate Data
+
+The `read_cru()` function retrieves the local file path to version 4.09 of the CRU (Climatic Research Unit) gridded climate dataset using the `get_pgfile()` utility. This ensures consistent access to curated data sources within the PRIO-GRID project structure.
+
+Internally, `get_pgfile()` queries the metadata registry by `source_name`, `source_version`, and a unique `id`, returning the path to the corresponding file on the local system. In this case, the climate data is accessed by specifying:
+
+- **Source name**: `"CRU Climate"`
+- **Version**: `"v4.09"`
+- **ID**: `"d9ffee47-4e83-4805-9b3f-5e0e889fd2db"`
+
+This approach abstracts data access from file locations, allowing seamless updates and reproducibility across project environments.
+
+Reference: Harris et al. (2020)
+
+
+```{r}
+#' Reads the CRU data
+#'
+#' 
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{harrisVersion4CRU2020}{priogrid}
+read_cru <- function() {
+  f <- get_pgfile(source_name = "CRU Climate",
+                  source_version = "v4.09",
+                  id = "9bba83b0-eca9-4f05-b1df-6aeaed55a9fa")
+
+  return(f)
+}
+```
+
+### Reading CRU Climate Data
+
+```{r}
+f <- read_cru()
+```
+
+#### Visualize the index
+```{r}
+print(f)
+```
+
+## Loading and Preparing CRU Temperature Data
+
+The `load_cru_temperature()` function takes an individual NetCDF `.gz` file from the CRU temperature data archive and performs the following steps:
+
+- Validates the file index within the source list.
+- Decompresses the `.gz` archive to obtain the `.nc` NetCDF file (if not already decompressed).
+- Loads the NetCDF data using `terra::rast()`, extracts temperature-only layers (`tmp`), and assigns temporal metadata (monthly time steps).
+- Returns a `SpatRaster` object with appropriately named and time-tagged layers.
+
+```{r}
+load_cru_temperature <- function(index, sources) {
+  library(terra)
+  library(R.utils)
+  library(tools)
+
+  # Validate index
+  if (index < 1 || index > length(sources)) {
+    stop(sprintf("Index %d is out of bounds. Found %d sources.", index, length(sources)))
+  }
+
+  gz_file <- sources[index]
+
+  # Extract file components
+  filename <- basename(gz_file)
+  base_name <- sub("\\.dat\\.nc\\.gz$", "", filename)  # "cru_ts4.09.1981.1990.tmp"
+  parent_dir <- dirname(gz_file)
+  target_dir <- file.path(parent_dir, sub("\\.tmp$", "", base_name))  # remove ".tmp"
+  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+
+  # Define unzipped NetCDF file destination
+  nc_file <- file.path(target_dir, sub("\\.gz$", "", filename))  # "cru_ts4.09.1981.1990.tmp.dat.nc"
+
+  # Decompress if needed
+  if (!file.exists(nc_file)) {
+    message("Decompressing to: ", nc_file)
+    gunzip(gz_file, destname = nc_file, remove = FALSE, overwrite = TRUE)
+  }
+
+  # Load NetCDF
+  temp <- rast(nc_file)
+  tmp_idx <- grep("^tmp", names(temp))
+  temp_only <- temp[[tmp_idx]]
+
+  # Annotate raster
+  start_year <- as.numeric(sub(".*(\\d{4})\\..*", "\\1", filename))
+  dates <- seq(as.Date(sprintf("%d-01-16", start_year)), by = "month", length.out = nlyr(temp_only))
+  time(temp_only) <- dates
+  names(temp_only) <- paste0("tmp_", format(dates, "%Y_%m"))
+
+  return(temp_only)
+}
+
+```
+
+#### Load a single CRU temperature file (example only — do not run)
+
+This example demonstrates how to load a single `.nc` file from the CRU archive using `load_cru_temperature()`. The function accepts the index of the file in the source list and returns a `SpatRaster` of monthly temperature layers.
+
+```{r}
+temperature_stack <- load_cru_temperature(1, f) 
+```
+
+## Batch Processing of CRU Temperature Files
+
+The `load_all_cru_temperature()` function automates the batch loading of all CRU temperature `.nc` files. It sequentially decompresses and reads each file using the `load_cru_temperature()` helper, then merges the resulting rasters into a single `SpatRaster` object.
+
+This batch process supports efficient and structured access to decades of monthly temperature data, enabling further spatiotemporal analyses.
+
+```{r}
+#' Load and Combine All CRU Temperature Rasters
+#'
+#' This function loads multiple CRU temperature raster files (e.g., NetCDF) from a list of sources,
+#' using a helper function `load_cru_temperature()` to read each one. It then combines the
+#' individual raster layers into a single `SpatRaster` object.
+#'
+#' @param sources A character vector of file paths or identifiers for the CRU temperature files.
+#' Each element is passed to `load_cru_temperature()` via its index.
+#'
+#' @return A combined `SpatRaster` object containing temperature layers from all specified sources.
+#'
+#' @details This function is typically used to batch-load monthly or sub-monthly CRU temperature data
+#' for a full analysis period. It expects the `load_cru_temperature()` function to return a
+#' `SpatRaster` object for each file.
+#'
+#' @seealso \code{\link{load_cru_temperature}} for the individual raster file loading logic.
+#' @export
+load_all_cru_temperature <- function(sources) {
+  message("Processing ", length(sources), " CRU files...")
+
+  temp_list <- lapply(seq_along(sources), function(i) {
+    message("Loading file ", i, " of ", length(sources))
+    load_cru_temperature(i, sources)
+  })
+
+  # Merge into single SpatRaster if needed
+  combined <- do.call(c, temp_list)
+  return(combined)
+}
+
+```
+
+#### Load Full CRU Temperature Stack
+
+After defining the batch processing function, the full set of temperature files returned by `read_cru()` can be loaded into a single multi-layer `SpatRaster` object using:
+
+```{r}
+cru_temp <- load_all_cru_temperature(f)
+```
+
+## Assemble Full CRU Temperature Raster Stack from Unzipped Files
+
+The `stack_cru_temperature_from_sources()` function reconstructs a complete monthly temperature time series from previously unzipped CRU `.nc` files. It performs the following steps:
+
+1. Identifies the parent directory where `.nc` files were decompressed.
+2. Recursively finds all NetCDF files.
+3. Extracts only temperature (`tmp`) layers from each file.
+4. Assigns proper time indexing to each layer using the year encoded in the filename.
+5. Concatenates the rasters into a single `SpatRaster` time-series stack.
+6. Optionally saves the final stack as a `.tif` file to disk.
+7. Optionally plots a selected monthly layer for visual inspection.
+
+
+```{r}
+#' Stack CRU Temperature Rasters from Extracted NetCDF Files
+#'
+#' This function locates, reads, and stacks monthly temperature data from a set of extracted
+#' CRU NetCDF files located in subdirectories of the directory containing the original `.gz` sources.
+#' It renames each layer according to the corresponding year and month, optionally saves the stack
+#' to disk, and plots a selected layer.
+#'
+#' @param sources A character vector of paths to `.gz` files or any placeholder pointing to the parent directory.
+#' Only the first path is used to determine where the unzipped `.nc` files are located.
+#'
+#' @param save_name A character string for the output raster file name (without file extension).
+#' The full path will be constructed automatically in the same parent directory. Default is `'cru_stack'`.
+#'
+#' @param plot_layer The name of a layer to plot after stacking, e.g., `"tmp_2020_01"`.
+#' If the specified layer is not found, a warning is issued. Default is `"tmp_2020_01"`.
+#'
+#' @return A `SpatRaster` object containing all monthly CRU temperature layers stacked by time.
+#'
+#' @details
+#' The function recursively finds all `.nc` (NetCDF) files in the parent directory of the first `sources` path.
+#' It extracts layers matching the `"tmp"` prefix, assigns timestamps, and renames layers using the format
+#' `"tmp_YYYY_MM"`. The result is a concatenated monthly time-series raster stack.
+#'
+#' The raster stack is saved as a `.tif` file using `terra::writeRaster()` and plotted if the specified layer exists.
+#'
+#' @seealso \code{\link[terra]{rast}}, \code{\link[terra]{writeRaster}}
+#' @export
+stack_cru_temperature_from_sources <- function(sources, save_name = 'cru_stack', plot_layer = "tmp_2020_01") {
+  library(terra)
+  
+  # 1. Derive parent directory from the first .gz path in sources
+  if (length(sources) == 0) stop("'sources' is empty.")
+  parent_dir <- dirname(sources[1])
+  message("📁 Searching unzipped .nc files in: ", parent_dir)
+
+  # 2. Recursively find all .nc files in subdirectories
+  nc_files <- list.files(parent_dir, pattern = "\\.nc$", full.names = TRUE, recursive = TRUE)
+  if (length(nc_files) == 0) stop("no .nc files found in: ", parent_dir)
+
+  # 3. Function to load and annotate one .nc file
+  load_nc_file <- function(nc_path) {
+    temp <- rast(nc_path)
+    tmp_idx <- grep("^tmp", names(temp))
+    temp_only <- temp[[tmp_idx]]
+    
+    start_year <- as.numeric(sub(".*(\\d{4})\\..*", "\\1", basename(nc_path)))
+    dates <- seq(as.Date(sprintf("%d-01-16", start_year)), by = "month", length.out = nlyr(temp_only))
+    
+    time(temp_only) <- dates
+    names(temp_only) <- paste0("tmp_", format(dates, "%Y_%m"))
+    
+    return(temp_only)
+  }
+
+  # 4. Load all unzipped .nc files and build the full stack
+  temp_stack_list <- lapply(nc_files, load_nc_file)
+
+  # 5. Concatenate into a single time-series raster
+  cru_temp_stack <- do.call(c, temp_stack_list)
+  message("Raster stack created with ", nlyr(cru_temp_stack), " monthly layers.")
+
+  # 6. Optional: Save to disk
+  save_path <- file.path(parent_dir, paste0(save_name, ".tif"))
+
+  if (!is.null(save_path)) {
+    writeRaster(cru_temp_stack, save_path, overwrite = TRUE)
+    message("Saved raster to: ", save_path)
+  }
+
+  # 7. Optional: Plot a specified layer
+  if (plot_layer %in% names(cru_temp_stack)) {
+    plot(cru_temp_stack[[plot_layer]], main = paste("CRU Monthly Temperature -", plot_layer))
+  } else {
+    warning("⚠️ Layer '", plot_layer, "' not found in stack.")
+  }
+
+  return(cru_temp_stack)
+}
+
+```
+
+#### Final CRU Temperature Stack
+
+The following call runs the full stack-building process from the previously downloaded and decompressed `.nc` files:
+
+```{r}
+cru_stack <- stack_cru_temperature_from_sources(f)
+```
+
+## Filtering the CRU Stack to Match PRIO-GRID Time Intervals
+
+To ensure alignment with PRIO-GRID's time series structure, the `filter_raster_by_pg_intervals()` function filters the CRU temperature raster stack to retain only the monthly layers that match PRIO-GRID-defined intervals.
+
+```{r}
+
+#' Filter a raster stack by PRIO-GRID date intervals
+#'
+#' @param raster_stack A RasterStack or SpatRaster with layers named like "tmp_YYYY_MM"
+#' @return A list with the filtered raster stack and the filtered layer names
+#' @export
+filter_raster_by_pg_intervals <- function(raster_stack) {
+  # Extract layer names
+  layer_names <- names(raster_stack)
+  
+  pg_intervals <- pg_date_intervals()
+  
+  # Convert to Date objects assuming format "tmp_YYYY_MM"
+  layer_dates <- lubridate::ymd(paste0(sub("tmp_", "", layer_names), "-01"))
+  
+  # Identify which layers fall within any of the intervals
+  keep_layers <- sapply(layer_dates, function(d) any(d %within% pg_intervals))
+  
+  # Filter the raster stack
+  raster_filtered <- raster_stack[[which(keep_layers)]]
+  
+    # Get the filtered layer names
+  filtered_names <- names(raster_filtered)
+  
+  # Print the first and last layer names
+  if (length(filtered_names) > 0) {
+    cat("First layer:", filtered_names[1], "\n")
+    cat("Last layer:", filtered_names[length(filtered_names)], "\n")
+  } else {
+    cat("No layers matched the date intervals.\n")
+  }
+  
+  # Return result
+  return(raster_filtered)
+}
+
+```
+
+
+#### Apply PRIO-GRID Time Filtering
+
+The CRU temperature stack is now filtered to retain only those layers that match the monthly time intervals defined by PRIO-GRID. This ensures temporal alignment with the CRU dataset.
+
+```{r}
+cru_stack_filtered <- filter_raster_by_pg_intervals(cru_stack)
+```
+
+### Load PRIO-GRID Blank Raster
+
+The `prio_blank_grid()` function creates a blank `SpatRaster` template that reflects the PRIO-GRID spatial structure. Each cell corresponds to a unique PRIO-GRID identifier (`pg_id`) and covers 0.5° x 0.5° resolution globally.
+
+
+```{r}
+pg_grid = prio_blank_grid()
+
+# Plot it (will show extent, grid cells)
+plot(pg_grid, main = "Blank PRIO-GRID Raster")
+
+```
+
+## Build and Validate Time Ranges for Climate Raster Layers
+
+Two helper functions are provided to ensure that time filtering is precise and aligned with available CRU raster layers:
+
+### 1. `build_ym_table()`
+
+This function constructs a `data.frame` of year-month combinations between a specified start and end date. It is useful for generating expected raster layer names or for subsetting stacks by date.
+
+### 2. `validate_date_range()`
+
+This function checks whether the requested start and end year-month range falls within the dates available in a CRU raster stack. It ensures that no out-of-bounds subsetting is attempted.
+
+```{r}
+build_ym_table <- function(start_year, start_month, end_year, end_month) {
+  years <- rep(start_year:end_year, each = 12)
+  months <- rep(1:12, times = length(start_year:end_year))
+  ym_df <- data.frame(year = years, month = months)
+  ym_df <- ym_df[with(ym_df, year > start_year | (year == start_year & month >= start_month)), ]
+  ym_df <- ym_df[with(ym_df, year < end_year | (year == end_year & month <= end_month)), ]
+  ym_df$layer_name <- paste0("tmp_", sprintf("%04d_%02d", ym_df$year, ym_df$month))
+  return(ym_df)
+}
+
+
+validate_date_range <- function(start_year, start_month, end_year, end_month, available_dates) {
+  # Convert all dates to year-month format (first day of month)
+  available_ym <- as.Date(format(available_dates, "%Y-%m-01"))
+  first_date <- available_ym[1]
+  last_date  <- available_ym[length(available_ym)]
+
+  start_date <- as.Date(sprintf("%04d-%02d-01", start_year, start_month))
+  end_date   <- as.Date(sprintf("%04d-%02d-01", end_year, end_month))
+
+  if (start_date < first_date) {
+    stop(sprintf("Start date %s is before first raster date %s", format(start_date, "%Y-%m"), format(first_date, "%Y-%m")))
+  }
+
+  if (end_date > last_date) {
+    stop(sprintf("End date %s is after last raster date %s", format(end_date, "%Y-%m"), format(last_date, "%Y-%m")))
+  }
+
+  return(list(start_date = start_date, end_date = end_date))
+}
+```
+
+#### Select and Validate a Custom Time Window
+
+To extract or summarize temperature data for a specific period, the following steps allow us to define, validate, and generate the relevant layer names.
+
+```{r}
+start_year = 2000
+start_month = 01
+end_year = 2000
+end_month = 03
+
+# Step 2: Validate date range is compatible with the raster
+validate_date_range(start_year, start_month, end_year, end_month, time(cru_stack_filtered))
+print(validate_date_range)
+
+# Step 3: Build year-month table
+ym_df <- build_ym_table(start_year, start_month, end_year, end_month)
+print(ym_df)
+```
+
+### Mask CRU Temperature Stack to PRIO-GRID Extent
+
+The `mask_cru_to_pg_stack()` function transforms a full CRU temperature raster stack by spatially filtering it to retain only those grid cells that fall within the PRIO-GRID system. This ensures that all climate data aligns precisely with the spatial coverage used in PRIO-GRID-based analyses.
+
+This transformation assumes that both the input CRU stack and the PRIO-GRID reference raster:
+- Have the **same extent**
+- Are on the **same resolution and CRS**
+- Share **pixel alignment**
+
+This is verified using: `compareGeom(cru_stack, pg_grid, stopOnError = FALSE)`. Since both raster sources are geometrically aligned, no resampling is performed — a simple masking operation is applied: `r_masked <- mask(r, pg_grid)`. This preserves data fidelity while ensuring only PRIO-GRID-relevant cells are included.
+
+- The output is a new SpatRaster containing only temperature values for PRIO-GRID locations, optionally restricted to specific year-month combinations.
+
+```{r}
+#' Mask CRU Temperature Raster Stack to PRIO-GRID Extent
+#'
+#' This function masks a CRU temperature raster stack (`SpatRaster`) to match the valid area
+#' defined by a PRIO-GRID raster. Optionally, it can subset specific year-month combinations
+#' before masking, based on a user-supplied data frame.
+#'
+#' @param cru_stack A `SpatRaster` object containing CRU temperature layers with names like "tmp_YYYY_MM".
+#' @param pg_grid A `SpatRaster` representing the PRIO-GRID extent and shape. Must have identical resolution,
+#' extent, and CRS as `cru_stack`.
+#' @param ym_df Optional. A data frame with `year` and `month` columns specifying which layers to subset
+#' and mask. If NULL (default), all layers are included.
+#'
+#' @return A `SpatRaster` object of the same structure as `cru_stack`, but masked to the PRIO-GRID footprint.
+#' The resulting raster retains the same layer names and time stamps (e.g., "tmp_2015_06").
+#'
+#' @details
+#' The function ensures geometric alignment between `cru_stack` and `pg_grid`, and applies the PRIO-GRID mask
+#' using `terra::mask()`. Layers outside the PRIO-GRID valid area (i.e., cells with NA in `pg_grid`)
+#' are set to NA. If `ym_df` is provided, only those year-month combinations are processed.
+#'
+#' Time metadata is preserved based on the layer names, assigning mid-month dates (e.g., "YYYY-MM-16").
+#'
+#' @seealso \code{\link[terra]{mask}}, \code{\link[terra]{rast}}, \code{\link[terra]{time}}, \code{\link{pgoptions}}
+#' @export
+mask_cru_to_pg_stack <- function(cru_stack, pg_grid, ym_df = NULL) {
+  library(terra)
+
+  # Ensure alignment
+  if (!compareGeom(cru_stack, pg_grid, stopOnError = FALSE)) {
+    stop("Geometry mismatch: 'cru_stack' and 'pg_grid' must have identical extent, resolution, and CRS.")
+  }
+
+  # Get full layer info
+  all_names <- names(cru_stack)
+  all_dates <- time(cru_stack)
+
+  full_ym_df <- data.frame(
+    layer_name = all_names,
+    year = as.integer(format(all_dates, "%Y")),
+    month = as.integer(format(all_dates, "%m")),
+    stringsAsFactors = FALSE
+  )
+
+  # Subset if ym_df is provided
+  if (!is.null(ym_df)) {
+    ym_df$layer_name <- paste0("tmp_", sprintf("%04d", ym_df$year), "_", sprintf("%02d", ym_df$month))
+    full_ym_df <- merge(full_ym_df, ym_df, by = "layer_name")
+    
+    # Drop duplicate .y columns and keep only merged year/month
+    full_ym_df$year <- full_ym_df$year.x
+    full_ym_df$month <- full_ym_df$month.x
+    full_ym_df <- full_ym_df[, c("layer_name", "year", "month")]
+  }
+
+  # Prepare output list
+  masked_layers <- list()
+
+  # Create mask once
+  pg_mask <- !is.na(values(pg_grid))
+
+  # Loop through selected layers
+  for (i in seq_len(nrow(full_ym_df))) {
+    lyr_name <- full_ym_df$layer_name[i]
+    r <- cru_stack[[lyr_name]]
+    r_masked <- mask(r, pg_grid)
+
+    # Explicitly drop values outside PRIO-GRID
+    vals <- values(r_masked)
+    vals[!pg_mask] <- NA
+    values(r_masked) <- vals
+
+    names(r_masked) <- lyr_name
+    masked_layers[[i]] <- r_masked
+  }
+
+  # Combine into stack
+  masked_stack <- rast(masked_layers)
+
+  # Preserve time if available
+  if (!is.null(all_dates)) {
+    matched_dates <- full_ym_df[match(names(masked_stack), full_ym_df$layer_name), ]
+    time(masked_stack) <- as.Date(sprintf("%04d-%02d-16", matched_dates$year, matched_dates$month))
+  }
+
+  return(masked_stack)
+}
+
+
+```
+
+### Apply Spatial Mask to Temperature Stack
+
+The following line applies the `mask_cru_to_pg_stack()` function to the CRU temperature stack, filtering it both **spatially** (to PRIO-GRID extent) and **temporally** (to the months specified in `ym_df`):
+
+```{r}
+pg_stack <- mask_cru_to_pg_stack(cru_stack_filtered, pg_grid)
+```
+
+## `aggregate_if_needed()`
+This function conditionally aggregates a `SpatRaster` object (e.g., monthly climate data) to match the desired temporal resolution specified in `pgoptions$get_temporal_resolution()` (e.g., "1 year" or "5 years"). The aggregation is performed only when the native temporal resolution of the raster stack is finer (e.g., monthly → yearly).
+
+The grouping is based on `pg_date_intervals()`, ensuring alignment with PRIO-GRID’s standard temporal intervals.
+
+#### Key Features
+
+- Detects native resolution by inspecting the difference between time-stamped layer names (e.g., "tmp_1990_01").
+- Compares native resolution to the user-defined setting in `pgoptions`.
+- If aggregation is needed, raster layers are grouped by matching `lubridate::Intervals`.
+- Applies an aggregation function (default: `mean`) temporally, not spatially.
+
+```{r}
+#' Aggregate a raster stack to pgoptions$get_temporal_resolution(), if needed
+#'
+#' @param raster_stack A SpatRaster with layers named like "tmp_YYYY_MM"
+#' @param fun Aggregation function, default is mean
+#' @return A SpatRaster aggregated over pg_date_intervals(), or original raster if no change needed
+#' @export
+aggregate_if_needed <- function(raster_stack, fun = mean) {
+  # Extract dates from layer names
+  layer_names <- names(raster_stack)
+  layer_dates <- lubridate::ymd(paste0(sub("tmp_", "", layer_names), "-01"))
+  
+  # Check native resolution: most common difference between consecutive dates
+  delta_days <- diff(layer_dates)
+  native_resolution <- as.numeric(median(delta_days))  # In days
+
+  # Get desired resolution in days
+  temporal_setting <- pgoptions$get_temporal_resolution()
+  pg_intervals <- pg_date_intervals()
+  desired_resolution_days <- as.numeric(median(int_length(pg_intervals)) / (60 * 60 * 24))  # seconds to days
+
+  # If aggregation is needed
+  if (native_resolution < desired_resolution_days) {
+    message("Aggregating from ~", round(native_resolution), " day resolution to ", temporal_setting)
+
+    # Assign each date to a pg_interval index
+    interval_index <- sapply(layer_dates, function(d) {
+      match(TRUE, d %within% pg_intervals, nomatch = NA_integer_)
+    })
+
+    valid_idxs <- which(!is.na(interval_index))
+    raster_stack <- raster_stack[[valid_idxs]]
+    interval_index <- interval_index[valid_idxs]
+
+    grouped <- split(seq_along(interval_index), interval_index)
+
+    # Aggregate layers per interval
+    aggregated <- lapply(seq_along(grouped), function(i) {
+      lyr_idxs <- grouped[[i]]
+      agg_layer <- terra::app(raster_stack[[lyr_idxs]], fun = fun, na.rm = TRUE)
+      
+      # Format the interval string (drop UTC)
+      interval <- pg_intervals[i]
+      interval_label <- paste0(
+        format(int_start(interval), "%Y-%m-%d"), "--",
+        format(int_end(interval), "%Y-%m-%d")
+      )
+      
+      names(agg_layer) <- interval_label
+      agg_layer
+    })
+
+    result_stack <- do.call(c, aggregated)
+    return(result_stack)
+  } else {
+    message("No temporal aggregation needed.")
+    return(raster_stack)
+  }
+}
+
+```
+
+
+```{r}
+cru_stack_check_for_temp_aggregation <- aggregate_if_needed(pg_stack)
+```
+
+
+```{r}
+#' Plot PRIO-GRID Raster Stack to Multi-Page PDF
+#'
+#' This function creates a multi-page PDF containing tiled plots of raster layers from a PRIO-GRID-aligned
+#' CRU temperature raster stack. It saves the PDF to a `/reports` folder located in the same directory as the source files.
+#'
+#' @param cru_stack_check_for_temp_aggregation A `SpatRaster` object (e.g., masked and aggregated CRU temperature data).
+#' @param f A character vector of file paths (e.g., the original `.gz` or `.nc` file list).
+#' Only the first element is used to determine the output location.
+#' @param nrow Number of rows per page of plots. Default is 3.
+#' @param ncol Number of columns per page of plots. Default is 4.
+#'
+#' @return A side effect: A PDF file saved to the `/reports` directory with one or more pages of raster plots.
+#' No object is returned.
+#'
+#' @details
+#' The function automatically creates a `reports/` folder in the same parent directory as the first file
+#' in `f`. It arranges plots using `par(mfrow = ...)`, and splits the raster stack across multiple pages if needed.
+#'
+#' This is useful for visually inspecting large raster stacks (e.g., for checking alignment, data quality, or naming).
+#'
+#' @seealso \code{\link[terra]{plot}}, \code{\link[grDevices]{pdf}}, \code{\link[terra]{nlyr}}
+#' @export
+plot_pg_stack_to_pdf <- function(cru_stack_check_for_temp_aggregation, f, nrow = 3, ncol = 4) {
+  library(terra)
+
+  # Derive base output directory from f[1]
+  base_dir <- dirname(f[1])
+  report_dir <- file.path(base_dir, "reports")
+  print(report_dir)
+  
+  # Create 'reports' directory if it doesn't exist
+  if (!dir.exists(report_dir)) {
+    dir.create(report_dir, recursive = TRUE)
+  }
+
+  # Define final PDF path
+  output_pdf <- file.path(report_dir, "CRU_pg_review.pdf")
+
+  nlayers_total <- nlyr(cru_stack_check_for_temp_aggregation)
+  layer_names <- names(cru_stack_check_for_temp_aggregation)
+
+  # Calculate number of pages needed
+  layers_per_page <- nrow * ncol
+  n_pages <- ceiling(nlayers_total / layers_per_page)
+
+  # Start PDF
+  pdf(output_pdf, width = 11, height = 8.5)
+
+  for (i in seq_len(n_pages)) {
+    start_idx <- (i - 1) * layers_per_page + 1
+    end_idx <- min(i * layers_per_page, nlayers_total)
+    layer_subset <- cru_stack_check_for_temp_aggregation[[start_idx:end_idx]]
+
+    par(mfrow = c(nrow, ncol), mar = c(2, 2, 2, 2))
+
+    for (j in seq_len(nlyr(layer_subset))) {
+      lyr <- layer_subset[[j]]
+      plot(lyr, main = names(layer_subset)[j])
+    }
+  }
+
+  dev.off()
+  message("PDF saved to: ", output_pdf)
+}
+
+
+
+```
+
+
