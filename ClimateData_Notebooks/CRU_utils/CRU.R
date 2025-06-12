@@ -8,11 +8,29 @@
 #' @references
 #' \insertRef{harrisVersion4CRU2020}{priogrid}
 read_cru <- function() {
-  f <- get_pgfile(source_name = "CRU Climate",
+  cru_files <- get_pgfile(source_name = "CRU Climate",
                   source_version = "v4.09",
                   id = "9bba83b0-eca9-4f05-b1df-6aeaed55a9fa")
 
-  return(f)
+  nc_files <- tools::file_path_sans_ext(cru_files)
+
+  for(i in 1:length(cru_files)){
+    R.utils::gunzip(cru_files[i], destname = nc_files[i], remove = FALSE, overwrite = FALSE)
+  }
+
+  r <- terra::rast(nc_files)
+  names(r) # this needs some fixing
+
+  return(r)
+}
+
+gen_cru_tmp <- function(){
+  r <- read_cru()
+  r <- terra::subset(r, grep("^tmp", names(r), value = TRUE))
+
+  res <- robust_transformation(r, agg_fun = "sum")
+
+  return(res)
 }
 
 # checked
