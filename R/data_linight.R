@@ -8,6 +8,7 @@
 #’ @references
 #’ \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 read_linight <- function(){
+
   zip_file <- get_pgfile(source_name="Li Nighttime",
                          source_version="v8",
                          id="24d76a3b-927e-42ad-b8a5-2e7443e6a275")
@@ -67,21 +68,72 @@ read_linight <- function(){
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 gen_linight_grid <- function(){
   r <- read_linight()
-  pg <- prio_blank_grid()
 
+  pg <- prio_blank_grid()
   temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
 
-  tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
+  equal_projection <- terra::crs(r) == terra::crs(pg)
+  if(!equal_projection){
+    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
+  }
 
-  r <- terra::aggregate(r,
-                        fact = terra::res(pg)/terra::res(r),
-                        fun = mean,
-                        filename = tmp3,
-                        gdal=c("COMPRESS=LZW"),
-                        cores = cores)
+  pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf() # Check extent of PRIO-GRID
+
+  input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf() # Check extent of Raster Stack
+
+  input_extent_is_larger_or_equal <- sf::st_contains(input_rast_extent, pg_extent, sparse = FALSE) |> all()
+  input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
+
+  input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
+
+  if(input_extent_is_larger){
+    tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
+  }
+
+
+  higher_resolution <- terra::res(r) < terra::res(pg)
+  lower_resolution <- terra::res(r) > terra::res(pg)
+
+  if(any(higher_resolution)){
+    tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::aggregate(r,
+                          fact = terra::res(pg)/terra::res(r),
+                          fun = mean,
+                          filename = tmp3,
+                          gdal=c("COMPRESS=LZW"),
+                          cores = cores)
+  }
+
+  if(any(lower_resolution)){
+    tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
+    r <- terra::disagg(r,
+                       fact = terra::res(r)/terra::res(pg),
+                       method = mean,
+                       filename = tmp4)
+  }
 
   r <- terra::resample(r, pg, method = "near", threads = T)
+
+  unlink(temporary_directory, recursive = TRUE)
+
+  # pg <- prio_blank_grid()
+  #
+  # temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  # dir.create(temporary_directory)
+  #
+  # tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
+  #
+  # r <- terra::aggregate(r,
+  #                       fact = terra::res(pg)/terra::res(r),
+  #                       fun = mean,
+  #                       filename = tmp3,
+  #                       gdal=c("COMPRESS=LZW"),
+  #                       cores = cores)
+  #
+  # r <- terra::resample(r, pg, method = "near", threads = T)
 
   return(r)
 }
