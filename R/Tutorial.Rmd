@@ -1,0 +1,22 @@
+---
+title: "Tutorial for using the PRIO-GRID package"
+subtitle: "Including how to change PGOptions"
+author: "Kristine Helskog"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Thank you for your interest in using the PRIO-GRID package in your work.
+
+PRIO-GRID is an open-source initiative to survey, collect, and provide easy access to the wealth of open sub-national data relevant for conflict research and political science.
+
+### How to install and load the PRIO-GRID package 
+
+The first time you want to use the PRIO-GRID package, make sure to install it to your package library first.
+
+```{r}
+
+install.packages("renv")
+renv::install("prio-data/priogrid")
+
+```
