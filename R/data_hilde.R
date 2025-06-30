@@ -322,18 +322,19 @@ process_landcover_in_tiles_proportional <- function(tif_path, pg_vect, tile_df, 
     # Summarize area per landcover type and pg_id
     long_df <- extract_df %>%
       dplyr::filter(!is.na(landcover_type)) %>%
-      group_by(pg_id, landcover_type) %>%
-      summarise(
+      dplyr::group_by(pg_id, landcover_type) %>%
+      dplyr::summarise(
         area_km2 = sum(area_km2, na.rm = TRUE),
-        cell_area_km2 = first(cell_area_km2),
+        cell_area_km2 = dplyr::first(cell_area_km2),
         .groups = "drop"
       ) %>%
-      mutate(
+      dplyr::mutate(
         landcover_type = as.integer(landcover_type),
         year = year,
         p_area = area_km2 / cell_area_km2
       ) %>%
-      select(pg_id, landcover_type, year, area_km2, cell_area_km2)
+      dplyr::select(pg_id, landcover_type, year, area_km2, cell_area_km2)
+
 
     results[[i]] <- long_df
 
@@ -364,8 +365,9 @@ process_landcover_in_tiles_proportional <- function(tif_path, pg_vect, tile_df, 
 
   # Optionally join this check back to the main results
   combined_df <- combined_df %>%
-    left_join(coverage_check, by = c("pg_id", "year")) %>%
-    select(pg_id, landcover_type, year, p_area, p_area_sum, fully_covered)
+    dplyr::left_join(coverage_check, by = c("pg_id", "year")) %>%
+    dplyr::select(pg_id, landcover_type, year, p_area, p_area_sum, fully_covered)
+
 
   # Runtime message
   total_time <- difftime(Sys.time(), total_start, units = "mins")
@@ -632,6 +634,49 @@ hilde_landcover <- function(landcovertype, max_cells_in_memory = (18000*36000*2)
   all
 }
 
-gen_hilde_barren <- function(){
+# Reference: https://ceos.org/gst/HILDAplus.html
+#
+#
+# OCEAN
+gen_hilde_ocean <- function(){
+  hilde_landcover(landcovertype == 00) # assuming 66 is the barren land type
+}
+
+# URBAN
+gen_hilde_urban <- function(){
+  hilde_landcover(landcovertype == 11) # assuming 66 is the barren land type
+}
+
+# CROPLAND
+gen_hilde_cropland <- function(){
+  hilde_landcover(landcovertype == 22) # assuming 66 is the barren land type
+}
+
+# PASTURE/RANGELAND
+gen_hilde_pasture_rangeland <- function(){
+  hilde_landcover(landcovertype == 33) # assuming 66 is the barren land type
+}
+# FOREST
+gen_hilde_forest <- function(){
+  hilde_landcover(landcovertype == 44) # assuming 66 is the barren land type
+}
+
+# UNAMANGED GRASS/SHRUBLAND
+gen_hilde_unmanaged_grass_shrubland <- function(){
+  hilde_landcover(landcovertype == 55) # assuming 66 is the barren land type
+}
+
+# SPARSE/ NO VEGETATION
+gen_hilde_sparse_no_vegetation <- function(){
   hilde_landcover(landcovertype == 66) # assuming 66 is the barren land type
+}
+
+# WATER
+gen_hilde_water <- function(){
+  hilde_landcover(landcovertype == 77) # assuming 66 is the barren land type
+}
+
+# NO DATA
+gen_hilde_nodata <- function(){
+  hilde_landcover(landcovertype == 99) # assuming 66 is the barren land type
 }
