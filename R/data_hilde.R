@@ -28,65 +28,6 @@ read_hilde <- function() {
   return(r)
 }
 
-#------
-
-#' Unzip a File to a Structured Directory (with Safety Check)
-#'
-#' Extracts the contents of a `.zip` file into a uniquely named subdirectory
-#' in the same location as the original file. The output folder is named after
-#' the zip file with a `_unzipped` suffix.
-#'
-#' If the target directory already exists and contains files or subdirectories,
-#' the function skips unzipping and returns the existing directory path.
-#'
-#' @param f Character. Full path to the `.zip` file to be extracted.
-#'
-#' @return A character string indicating the full path to the directory
-#' where the contents were (or would have been) unzipped.
-#'
-#' @examples
-#' \dontrun{
-#' zip_path <- "/path/to/hildap_vGLOB-1.0_geotiff.zip"
-#' unzipped_dir <- zip_file(zip_path)
-#' list.files(unzipped_dir)
-#' }
-#'
-#' @importFrom tools file_path_sans_ext
-#' @export
-zip_file <- function(f) {
-  library(tools)
-
-  if (!file.exists(f)) {
-    stop("File not found: ", f)
-  }
-
-  zip_name <- basename(f)
-  base_name <- file_path_sans_ext(zip_name)
-  target_dir <- file.path(dirname(f), paste0(base_name, "_unzipped"))
-
-  # Check if target_dir exists and is non-empty
-  if (dir.exists(target_dir)) {
-    contents <- list.files(target_dir, all.files = TRUE, no.. = TRUE)
-    if (length(contents) > 0) {
-      message("Target directory already exists and is not empty: ", target_dir)
-      return(target_dir)
-    } else {
-      message("Target directory exists but is empty, proceeding to unzip...")
-    }
-  } else {
-    dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
-    message("Created target directory: ", target_dir)
-  }
-
-  # Unzip contents
-  message("Unzipping to: ", target_dir)
-  unzip(f, exdir = target_dir)
-
-  return(target_dir)
-}
-
-#-----
-
 #' Filter File Paths by Year
 #'
 #' Filters a list of file paths by extracting the 4-digit year from each file name
@@ -103,7 +44,6 @@ zip_file <- function(f) {
 #' filtered <- filter_files_by_year(files, 2000, 2020)
 #' print(filtered)
 #'
-#' @export
 filter_files_by_year <- function(file_paths, start_year, end_year) {
   # Extract 4-digit year from each file name
   years <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(file_paths)))
