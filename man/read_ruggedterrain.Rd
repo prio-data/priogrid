@@ -2,18 +2,39 @@
 % Please edit documentation in R/data_ruggedterrain.R
 \name{read_ruggedterrain}
 \alias{read_ruggedterrain}
-\title{Reads the Global Multi-resolution Terrain Elevation Data (GMTED2010)
-Unzips the folder and reads the .shp file as sf object}
+\title{Read Global Multi-resolution Terrain Elevation Data (GMTED2010)}
 \usage{
 read_ruggedterrain()
 }
 \value{
-an object of class sf
+An sf object containing the GMTED2010 spatial metadata with elevation
+information including minimum, maximum, and mean elevation values
 }
 \description{
-Reads the Global Multi-resolution Terrain Elevation Data (GMTED2010)
-Unzips the folder and reads the .shp file as sf object
+Unzips and reads the GMTED2010 spatial metadata as an sf object.
+This function locates the local GMTED2010 dataset file, extracts it,
+and reads the spatial metadata shapefile for use in elevation calculations.
+}
+\details{
+The function performs the following steps:
+\enumerate{
+\item Locates the local GMTED2010 dataset file using \code{\link{get_pgfile}}
+\item Unzips the file to a local directory
+\item Reads the spatial metadata shapefile from the extracted data
+}
+}
+\examples{
+\dontrun{
+# Read the GMTED2010 elevation data
+elevation_data <- read_ruggedterrain()
+print(elevation_data)
+}
+
 }
 \references{
 \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
+}
+\seealso{
+\code{\link{ruggedterrain_variable}} for calculating elevation statistics,
+\code{\link{get_pgfile}} for the underlying data retrieval function
 }

@@ -1,38 +1,85 @@
-#' Reads the Global Multi-resolution Terrain Elevation Data (GMTED2010)
-#' Unzips the folder and reads the .shp file as sf object
+#' Read Global Multi-resolution Terrain Elevation Data (GMTED2010)
 #'
-#' @return an object of class sf
+#' Unzips and reads the GMTED2010 spatial metadata as an sf object.
+#' This function locates the local GMTED2010 dataset file, extracts it,
+#' and reads the spatial metadata shapefile for use in elevation calculations.
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Locates the local GMTED2010 dataset file using \code{\link{get_pgfile}}
+#'   \item Unzips the file to a local directory
+#'   \item Reads the spatial metadata shapefile from the extracted data
+#' }
+#'
+#' @return An sf object containing the GMTED2010 spatial metadata with elevation
+#' information including minimum, maximum, and mean elevation values
+#'
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Read the GMTED2010 elevation data
+#' elevation_data <- read_ruggedterrain()
+#' print(elevation_data)
+#' }
+#'
+#' @seealso
+#' \code{\link{ruggedterrain_variable}} for calculating elevation statistics,
+#' \code{\link{get_pgfile}} for the underlying data retrieval function
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
 read_ruggedterrain <- function() {
-  zip_file <- get_pgfile(source_name = "Global Multi-resolution Terrain Elevation Data",
-                  source_version = "GMTED2010",
-                  id = "8c8192eb-cc29-4598-8f8a-ec190ba35c2d")
+  # Locate the GMTED2010 zip file
+  zip_file <- get_pgfile(
+    source_name = "Global Multi-resolution Terrain Elevation Data",
+    source_version = "GMTED2010",
+    id = "8c8192eb-cc29-4598-8f8a-ec190ba35c2d"
+  )
 
-  unzip_to <- file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)))
-  unzip(zip_file, exdir = unzip_to)
-  fpath <- file.path(dirname(zip_file), tools::file_path_sans_ext(basename(zip_file)), "GMTED2010_Spatial_Metadata/GMTED2010_Spatial_Metadata.shp")
-  return(sf::st_read(fpath))
+  # Create extraction directory (same location as zip, without .zip extension)
+  zip_basename <- tools::file_path_sans_ext(basename(zip_file))
+  extract_dir <- file.path(dirname(zip_file), zip_basename)
 
+  # Build path to the shapefile
+  shapefile_path <- file.path(
+    extract_dir,
+    "GMTED2010_Spatial_Metadata",
+    "GMTED2010_Spatial_Metadata.shp"
+  )
+
+  # Extract the zip file only if shapefile doesn't already exist
+  if (!file.exists(shapefile_path)) {
+    unzip(zip_file, exdir = extract_dir)
+  }
+
+  # Read and return the shapefile
+  sf::st_read(shapefile_path)
 }
 
 #' Calculate elevation in PRIO-GRID format with set variable
 #'
-#' Takes either the min, max, mean or sdev of elevation in each PRIO-GRID cell
+#' Estimates either the min, max, or mean of elevation in each PRIO-GRID cell
+#' based on vector data from GMTED2010.
 #'
-#' Returns the value of elevation
+#' @param variable Character string indicating elevation function.
+#' Must be one of: "elevation_min", "elevation_max", "elevation_mean"
 #'
-#' @param variable Variable indicating elevation function.
-#' "elevation_min", "elevation_max", "elevation_mean", "elevation_sdev"
-#'
-#' @return SpatRast
+#' @return A SpatRaster object containing elevation values for each PRIO-GRID cell
 #' @export
 #'
 #' @examples
-#' # rt <- ruggedterrain_variable(variable = "elevation_mean")
+#' \dontrun{
+#' # Get mean elevation for each PRIO-GRID cell
+#' mean_elev <- ruggedterrain_variable(variable = "elevation_mean")
 #'
+#' # Get minimum elevation for each PRIO-GRID cell
+#' min_elev <- ruggedterrain_variable(variable = "elevation_min")
+#'
+#' # Get maximum elevation for each PRIO-GRID cell
+#' max_elev <- ruggedterrain_variable(variable = "elevation_max")
+#' }
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
@@ -40,31 +87,67 @@ ruggedterrain_variable <- function(variable) {
   rt <- read_ruggedterrain()
   pg <- prio_blank_grid()
 
-  if (!variable %in% c("elevation_min", "elevation_max", "elevation_mean", "elevation_sdev")) {
-    stop("Invalid variable. Choose from 'elevation_min', 'elevation_max', 'elevation_mean', 'elevation_sdev'.")
+  if (!variable %in% c("elevation_min", "elevation_max", "elevation_mean")) {
+    stop("Invalid variable. Choose from 'elevation_min', 'elevation_max', 'elevation_mean'.")
   }
 
-  rt <- rt |>
-    dplyr::rename(elevation_min = MIN_ELEV,
-                  elevation_max = MAX_ELEV,
-                  elevation_mean = MEAN_ELEV,
-                  elevation_sdev = SDEV_ELEV) |>
-    dplyr::mutate(value = .data[[variable]])
+  # If source data is different than PRIO-GRID projection, transform it to desired projection.
+  if(sf::st_crs(rt) != sf::st_crs(pg)){
+    rt <- sf::st_transform(rt, sf::st_crs(pg))
+  }
 
-  rt_var <- terra::rasterize(rt, pg, field = "value", background = NA)
+  col_mapping <- c("elevation_min" = "MIN_ELEV",
+                   "elevation_max" = "MAX_ELEV",
+                   "elevation_mean" = "MEAN_ELEV")
 
-  return(rt_var)
+  # Get the original column name
+  source_col <- col_mapping[variable]
+
+  # Check if the required column exists
+  if (!source_col %in% names(rt)) {
+    stop(paste("Column", source_col, "not found in elevation data"))
+  }
+
+  coversh <- exactextractr::exact_extract(pg, rt)
+  names(coversh) <- rt[[source_col]]
+  matching_table <- dplyr::bind_rows(coversh, .id = variable)
+
+  # Function mapping
+  fun_map <- list(
+    mean = function(x, w) weighted.mean(x, w, na.rm = TRUE),
+    min = function(x, w) min(x, na.rm = TRUE),
+    max = function(x, w) max(x, na.rm = TRUE)
+  )
+
+  myfun <- sub("elevation_", "", variable)
+
+  matching_table <- matching_table |>
+    dplyr::group_by(value) |>
+    dplyr::mutate(!!variable := as.numeric(!!rlang::sym(variable))) |>
+    dplyr::summarize(!!variable := fun_map[[myfun]](!!rlang::sym(variable), coverage_fraction))
+
+  values(pg)[!values(pg) %in% matching_table$value] <- NA
+  res <- terra::classify(pg, matching_table)
+
+  return(res)
 }
 
-
-#' Generate the average (mean) elevation
+#' Generate the average (mean) elevation for PRIO-GRID cells
 #'
-#' @return SpatRast
+#' A convenience wrapper function that calculates mean elevation values for each
+#' PRIO-GRID cell using \code{\link{ruggedterrain_variable}}.
+#'
+#' @return A SpatRaster object with mean elevation values named "elevation_mean"
 #' @export
 #'
 #' @examples
-#' # r <- gen_ruggedterrain_elevation_mean()
+#' \dontrun{
+#' # Generate mean elevation raster
+#' mean_elevation <- gen_ruggedterrain_elevation_mean()
+#' }
 #'
+#' @seealso \code{\link{ruggedterrain_variable}} for the underlying function that
+#' supports min, max, and mean elevation calculations
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}

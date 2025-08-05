@@ -7,21 +7,27 @@
 ruggedterrain_variable(variable)
 }
 \arguments{
-\item{variable}{Variable indicating elevation function.
-"elevation_min", "elevation_max", "elevation_mean", "elevation_sdev"}
+\item{variable}{Character string indicating elevation function.
+Must be one of: "elevation_min", "elevation_max", "elevation_mean"}
 }
 \value{
-SpatRast
+A SpatRaster object containing elevation values for each PRIO-GRID cell
 }
 \description{
-Takes either the min, max, mean or sdev of elevation in each PRIO-GRID cell
-}
-\details{
-Returns the value of elevation
+Estimates either the min, max, or mean of elevation in each PRIO-GRID cell
+based on vector data from GMTED2010.
 }
 \examples{
-# rt <- ruggedterrain_variable(variable = "elevation_mean")
+\dontrun{
+# Get mean elevation for each PRIO-GRID cell
+mean_elev <- ruggedterrain_variable(variable = "elevation_mean")
 
+# Get minimum elevation for each PRIO-GRID cell
+min_elev <- ruggedterrain_variable(variable = "elevation_min")
+
+# Get maximum elevation for each PRIO-GRID cell
+max_elev <- ruggedterrain_variable(variable = "elevation_max")
+}
 
 }
 \references{

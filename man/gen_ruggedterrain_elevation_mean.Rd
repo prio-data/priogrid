@@ -2,21 +2,28 @@
 % Please edit documentation in R/data_ruggedterrain.R
 \name{gen_ruggedterrain_elevation_mean}
 \alias{gen_ruggedterrain_elevation_mean}
-\title{Generate the average (mean) elevation}
+\title{Generate the average (mean) elevation for PRIO-GRID cells}
 \usage{
 gen_ruggedterrain_elevation_mean()
 }
 \value{
-SpatRast
+A SpatRaster object with mean elevation values named "elevation_mean"
 }
 \description{
-Generate the average (mean) elevation
+A convenience wrapper function that calculates mean elevation values for each
+PRIO-GRID cell using \code{\link{ruggedterrain_variable}}.
 }
 \examples{
-# r <- gen_ruggedterrain_elevation_mean()
-
+\dontrun{
+# Generate mean elevation raster
+mean_elevation <- gen_ruggedterrain_elevation_mean()
+}
 
 }
 \references{
 \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
+}
+\seealso{
+\code{\link{ruggedterrain_variable}} for the underlying function that
+supports min, max, and mean elevation calculations
 }
