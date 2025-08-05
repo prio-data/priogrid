@@ -1,0 +1,7 @@
+# Auto-merge CSV files by combining all additions
+data_raw/sources.csv merge=csv-union
+data_raw/variables.csv merge=csv-union
+
+# Auto-regenerate RDA files from R scripts
+data/pgsources.rda binary merge=rda-regenerate
+data/pgvariables.rda binary merge=rda-regenerate
