@@ -232,7 +232,7 @@ hilde_landcover <- function(landcovertype, max_cells_in_memory = (18000*36000*2)
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_ocean <- function(){
-  hilde_landcover(landcovertype == 00)
+  hilde_landcover(landcovertype = 00)
 }
 
 #' Extract Urban Coverage from HILDE+ Data
@@ -246,7 +246,7 @@ gen_hilde_ocean <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_urban <- function(){
-  hilde_landcover(landcovertype == 11)
+  hilde_landcover(landcovertype = 11)
 }
 
 #' Extract Cropland Coverage from HILDE+ Data
@@ -260,7 +260,7 @@ gen_hilde_urban <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_cropland <- function(){
-  hilde_landcover(landcovertype == 22)
+  hilde_landcover(landcovertype = 22)
 }
 
 #' Extract Pasture/Rangeland Coverage from HILDE+ Data
@@ -274,7 +274,7 @@ gen_hilde_cropland <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_pasture <- function(){
-  hilde_landcover(landcovertype == 33)
+  hilde_landcover(landcovertype = 33)
 }
 
 #' Extract Forest Coverage from HILDE+ Data
@@ -288,7 +288,7 @@ gen_hilde_pasture <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_forest <- function(){
-  hilde_landcover(landcovertype == 44)
+  hilde_landcover(landcovertype = 44)
 }
 
 #' Extract Unmanaged Grass/Shrubland Coverage from HILDE+ Data
@@ -302,7 +302,7 @@ gen_hilde_forest <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_grassland <- function(){
-  hilde_landcover(landcovertype == 55)
+  hilde_landcover(landcovertype = 55)
 }
 
 #' Extract Sparse/No Vegetation Coverage from HILDE+ Data
@@ -316,7 +316,7 @@ gen_hilde_grassland <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_sparse <- function(){
-  hilde_landcover(landcovertype == 66)
+  hilde_landcover(landcovertype = 66)
 }
 
 #' Extract Water Coverage from HILDE+ Data
@@ -330,6 +330,6 @@ gen_hilde_sparse <- function(){
 #' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
 #' @export
 gen_hilde_water <- function(){
-  hilde_landcover(landcovertype == 77)
+  hilde_landcover(landcovertype = 77)
 }
 
