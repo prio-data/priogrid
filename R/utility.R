@@ -268,10 +268,8 @@ zip_file <- function(f) {
   if (dir.exists(target_dir)) {
     contents <- list.files(target_dir, all.files = TRUE, no.. = TRUE)
     if (length(contents) > 0) {
-      message("Target directory already exists and is not empty: ", target_dir)
+      #Target directory already exists and is not empty
       return(target_dir)
-    } else {
-      message("Target directory exists but is empty, proceeding to unzip...")
     }
   } else {
     dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
