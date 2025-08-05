@@ -206,12 +206,16 @@ hilde_landcover <- function(landcovertype, max_cells_in_memory = (18000*36000*2)
   my_fun <- function(values, coverage_fractions){weighted.mean(values == landcovertype, coverage_fractions)}
 
   res <- exactextractr::exact_extract(r, pg_vect, fun = my_fun, max_cells_in_memory = max_cells_in_memory, stack_apply = T)
-  all <- lapply(1:ncol(res), function(i){
-    values(pg) <- res[,i]
-    pg <- terra::flip(pg)
-    pg
-  })
-  all <- terra::rast(all)
+  if(is.null(ncol(res))){
+    values(pg) <- res
+    all <- terra::flip(pg)
+  } else{
+    all <- lapply(1:ncol(res), function(i){
+      values(pg) <- res[,i]
+      pg <- terra::flip(pg)
+    })
+    all <- terra::rast(all)
+  }
 
   # Make sure that layer names are reflecting the dates of the rasters.
   names(all) <- names(r)
