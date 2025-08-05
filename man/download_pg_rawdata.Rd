@@ -7,7 +7,7 @@
 download_pg_rawdata(
   file_info = NULL,
   overwrite = FALSE,
-  resume = TRUE,
+  batch_size = 20,
   max_retry = 10
 )
 }
