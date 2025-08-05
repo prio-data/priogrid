@@ -29,8 +29,8 @@
 #'     \item Temporal coverage: Years matching PRIO-GRID dates (max 1899-2019)
 #'   }
 #'
-#' The function depends on the internal \code{get_pgfile()}, \code{zip_file()},
-#' and \code{pg_dates()} functions from the priogrid package.
+#' The function depends on the internal [get_pgfile], [zip_file],
+#' and [pg_dates] functions from the priogrid package.
 #'
 #' @seealso
 #' \code{\link{pg_dates}} for PRIO-GRID temporal coverage,
@@ -114,7 +114,7 @@ read_hilde <- function() {
 #'         area-weighted averaging
 #' }
 #'
-#' The aggregation uses \code{exactextractr::exact_extract} to calculate the
+#' The aggregation uses \code{\link[exactextractr]{exact_extract}} to calculate the
 #' proportion of each PRIO-GRID cell covered by the specified land cover type,
 #' accounting for partial pixel overlap at cell boundaries.
 #'
@@ -151,7 +151,7 @@ read_hilde <- function() {
 #' @seealso
 #' \code{\link{read_hilde}} for reading raw HILDE+ data,
 #' \code{\link{prio_blank_grid}} for PRIO-GRID structure,
-#' \code{\link[exactextractr]{exact_extract}} for spatial aggregation details
+#' \code{\link[exactextractr]{exact_extract}} for spatial aggregation details,
 #' \link{https://ceos.org/gst/HILDAplus.html}
 #'
 #' @examples

@@ -42,7 +42,7 @@ This function performs several key operations:
 area-weighted averaging
 }
 
-The aggregation uses \code{exactextractr::exact_extract} to calculate the
+The aggregation uses \code{\link[exactextractr]{exact_extract}} to calculate the
 proportion of each PRIO-GRID cell covered by the specified land cover type,
 accounting for partial pixel overlap at cell boundaries.
 
@@ -94,6 +94,6 @@ terra::global(cropland_props[["2000-12-31"]], "mean", na.rm = TRUE)
 \seealso{
 \code{\link{read_hilde}} for reading raw HILDE+ data,
 \code{\link{prio_blank_grid}} for PRIO-GRID structure,
-\code{\link[exactextractr]{exact_extract}} for spatial aggregation details
+\code{\link[exactextractr]{exact_extract}} for spatial aggregation details,
 \link{https://ceos.org/gst/HILDAplus.html}
 }

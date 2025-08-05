@@ -17,8 +17,8 @@ formatted as dates (YYYY-MM-DD). The raster has:
 \item Temporal coverage: Years matching PRIO-GRID dates (max 1899-2019)
 }
 
-The function depends on the internal \code{get_pgfile()}, \code{zip_file()},
-and \code{pg_dates()} functions from the priogrid package.
+The function depends on the internal \link{get_pgfile}, \link{zip_file},
+and \link{pg_dates} functions from the priogrid package.
 
 an object of class sf
 }
