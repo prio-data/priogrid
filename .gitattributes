@@ -5,3 +5,4 @@ data_raw/variables.csv merge=csv-union
 # Auto-regenerate RDA files from R scripts
 data/pgsources.rda binary merge=rda-regenerate
 data/pgvariables.rda binary merge=rda-regenerate
+NAMESPACE merge=csv-union
