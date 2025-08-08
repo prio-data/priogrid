@@ -2,28 +2,91 @@
 % Please edit documentation in R/utility.R
 \name{robust_transformation}
 \alias{robust_transformation}
-\title{Transform raster to PRIO-GRID format}
+\title{Robustly transform any raster to PRIO-GRID format}
 \usage{
 robust_transformation(r, agg_fun, disagg_method = "near", cores = 1, ...)
 }
 \arguments{
-\item{r}{Raster to transform}
+\item{r}{SpatRaster object to transform. Can have any projection, extent, or resolution.}
 
-\item{agg_fun}{Aggregation function, see terra::aggregate}
+\item{agg_fun}{Character string or function for aggregating high-resolution data.
+Common options include "mean", "sum", "max", "min", "median", "modal".
+See \code{\link[terra]{aggregate}} for all options.}
 
-\item{disagg_method}{Disaggregation method, see terra::disagg}
+\item{disagg_method}{Character string specifying disaggregation method for
+low-resolution data. Options are "near" (nearest neighbor, default),
+"bilinear", or "cubic". See \code{\link[terra]{disagg}} for details.}
 
-\item{cores}{The number of cores to use when aggregating data}
+\item{cores}{Integer specifying number of CPU cores to use for aggregation
+operations. Defaults to 1. Higher values can speed up processing of large datasets.}
+
+\item{...}{Additional arguments passed to \code{\link[terra]{aggregate}}.
+Useful for controlling aggregation behavior (e.g., na.rm = TRUE).}
 }
 \value{
-SpatRaster
+SpatRaster object conforming to PRIO-GRID specifications:
+\itemize{
+\item CRS: As specified in global options (default: EPSG:4326)
+\item Extent: As specified in global options (default: global extent)
+\item Resolution: Calculated from nrow/ncol in global options
+\item Grid alignment: Exactly matched to PRIO-GRID cell boundaries
+}
 }
 \description{
-This should generally not be used. Write exactly what you need to transform the data instead.
-It can be used as a general template for how to transform data, however.
+This function performs a comprehensive transformation of input rasters to match
+the PRIO-GRID specification. It handles rasters with different projections,
+extents, and resolutions through an intelligent workflow that includes
+reprojection, cropping, aggregation, disaggregation, and final resampling
+as needed.
 }
+\details{
+The transformation workflow automatically detects and handles:
+\itemize{
+\item \strong{Projection differences}: Reprojects to PRIO-GRID CRS if needed
+\item \strong{Extent mismatches}: Crops input if larger than PRIO-GRID extent
+\item \strong{Resolution differences}:
+\itemize{
+\item Aggregates high-resolution data using specified aggregation function
+\item Disaggregates low-resolution data using specified method
+}
+\item \strong{Final alignment}: Uses nearest-neighbor resampling for exact grid matching
+}
+
+All intermediate files are written to temporary storage to handle large datasets
+efficiently and are automatically cleaned up after processing.
+}
+\section{Performance Notes}{
+
+For large datasets, consider:
+\itemize{
+\item Increasing \code{cores} parameter for faster aggregation
+\item Ensuring adequate disk space in the raw data folder for temporary files
+\item Pre-cropping input data to region of interest before transformation
+}
+}
+
+\section{Global Options}{
+
+This function uses global PRIO-GRID options set via PGOptionsManager:
+\itemize{
+\item \code{pgoptions$get_rawfolder()}: Location for temporary file storage
+\item \code{pgoptions$get_ncol()}, \code{pgoptions$get_nrow()}: Output grid dimensions
+\item \code{pgoptions$get_extent()}: Output spatial extent
+\item \code{pgoptions$get_crs()}: Output coordinate reference system
+}
+}
+
 \examples{
-r <- prio_blank_grid(ncol = 1440, nrow = 720)
-r <- project(r, "ESRI:54009")
-robust_transformation(r, agg_fun = "mean")
+\dontrun{
+# Downloads and transfomrs GHSL to PRIO-GRID resolution
+download_pg_rawdata(pg_rawfiles() |> dplyr::filter(id == "ae6a7612-4bef-452f-acd6-d2212cf9a7c5"))
+r <- read_ghsl_population_grid()
+res <- robust_transformation(r, agg_fun = "sum")
+}
+
+}
+\seealso{
+\code{\link{prio_blank_grid}} for creating empty PRIO-GRID templates,
+\code{\link{PGOptionsManager}} for setting global options,
+\code{\link[terra]{aggregate}}, \code{\link[terra]{disagg}}, \code{\link[terra]{resample}}
 }
