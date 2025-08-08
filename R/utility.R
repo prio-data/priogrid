@@ -59,7 +59,24 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 pg_dates <- function(start_date = pgoptions$get_start_date(),
                      end_date = pgoptions$get_end_date(),
                      temporal_resolution = pgoptions$get_temporal_resolution()){
-  seq.Date(start_date, end_date, temporal_resolution)
+
+  unit <- dplyr::case_when(
+    grepl("month", temporal_resolution) ~ "month",
+    grepl("week", temporal_resolution) ~ "week",
+    grepl("quarter", temporal_resolution) ~ "quarter",
+    grepl("year", temporal_resolution) ~ "year"
+  )
+
+  is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
+
+  if(is_end_of_month){
+    base_seq <- seq.Date(lubridate::floor_date(start_date, unit), end_date, temporal_resolution)
+    base_seq <- lubridate::ceiling_date(base_seq, "month") - lubridate::days(1)
+  } else{
+    base_seq <- seq.Date(start_date, end_date, temporal_resolution)
+  }
+
+  base_seq[base_seq <= end_date]
 }
 
 #' Get a sequence of date intervals
@@ -81,10 +98,30 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
 pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
                               end_date = pgoptions$get_end_date(),
                               temporal_resolution = pgoptions$get_temporal_resolution()){
-  mydates <- seq.Date(start_date, end_date, temporal_resolution)
-  previous_date <- seq.Date(start_date, length.out = 2, by = paste0("-",temporal_resolution))[2] # Get the previous date in the interval
-  mydates <- c(previous_date, mydates)
-  lubridate::interval(mydates[-length(mydates)] + lubridate::days(1), mydates[-1])
+
+
+
+  unit <- dplyr::case_when(
+    grepl("month", temporal_resolution) ~ "month",
+    grepl("week", temporal_resolution) ~ "week",
+    grepl("quarter", temporal_resolution) ~ "quarter",
+    grepl("year", temporal_resolution) ~ "year"
+  )
+
+  is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
+
+  base_seq <- pg_dates(start_date, end_date, temporal_resolution)
+  floor <- lubridate::floor_date(base_seq, unit)
+  #ceil <- lubridate::ceiling_date(base_seq, unit) - lubridate::days(1)
+
+  if(is_end_of_month & unit == "month"){
+    previous <- seq.Date(lubridate::floor_date(start_date, unit), end_date, temporal_resolution)
+  } else{
+    previous <- seq.Date(base_seq[1], length.out = 2, by = paste("-1", unit))[2] + lubridate::days(1)
+    previous <- seq.Date(previous, length.out = length(base_seq), by = paste("1", unit))
+  }
+
+  lubridate::interval(previous[previous < max(base_seq)], base_seq)
 }
 
 #' Converts raster with variable to data.frame
