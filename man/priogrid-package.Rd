@@ -8,14 +8,35 @@
 \description{
 Codebase for building PRIO-GRID from a diverse set of raw data.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{http://prio-data.github.io/priogrid/}
+}
+
+}
 \author{
 \strong{Maintainer}: Jonas Vestby \email{jonves@prio.org}
 
 Authors:
 \itemize{
   \item Andreas Forø Tollefsen \email{andreas@prio.org}
-  \item Peder Landsverk \email{pglandsverk@gmail.com}
-  \item Vilde villar@prio.org Bergstad Larsen
+  \item Karim Bahgat \email{karim.bahgat@outlook.com}
+}
+
+Other contributors:
+\itemize{
+  \item Peace Research Institute Oslo (PRIO) [copyright holder, funder]
+  \item Håvard Strand \email{hs@prio.org} [funder]
+  \item Scott Gates \email{scott@prio.org} [funder]
+  \item Halvard Buhaug \email{halvard@prio.org} [funder]
+  \item Kristine Helskog \email{krihel@prio.org} [contributor]
+  \item Garret Benz \email{garben@prio.org} [contributor]
+  \item Ingvild Kjelstrup Smestad \email{ingviksm@ifi.uio.no} [contributor]
+  \item Tiril Rahn \email{tiril.rahn@univ.ox.ac.uk} [contributor]
+  \item Christian Oswald \email{christian.oswald@unibw.de} [contributor]
+  \item Peder Landsverk \email{pglandsverk@gmail.com} [contributor]
+  \item Vilde Bergstad Larsen \email{villar@prio.org} [contributor]
 }
 
 }
