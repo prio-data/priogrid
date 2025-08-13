@@ -3,10 +3,20 @@ Title: PRIO-GRID Replication Code
 Version: 0.0.0.9000
 Authors@R: c(person("Jonas", "Vestby", email = "jonves@prio.org", role = c("aut", "cre")),
              person("Andreas", "Forø Tollefsen", email = "andreas@prio.org", role = "aut"),
-             person("Peder", "Landsverk", email = "pglandsverk@gmail.com", role = "aut"),
-             person("Vilde", "Bergstad Larsen", "villar@prio.org", role = "aut"))
+             person("Karim", "Bahgat", email = "karim.bahgat@outlook.com", role = "aut"),
+             person("Peace Research Institute Oslo (PRIO)", role = c("cph", "fnd")),
+             person("Håvard", "Strand", email = "hs@prio.org", role = "fnd"),
+             person("Scott", "Gates", email = "scott@prio.org", role = "fnd"),
+             person("Halvard", "Buhaug", email = "halvard@prio.org", role = "fnd"),
+             person("Kristine", "Helskog", email = "krihel@prio.org", role = "ctb"),
+             person("Garret", "Benz", email = "garben@prio.org", role = "ctb"),
+             person("Ingvild", "Kjelstrup Smestad", email = "ingviksm@ifi.uio.no", role = "ctb"),
+             person("Tiril", "Rahn", email = "tiril.rahn@univ.ox.ac.uk", role = "ctb"),
+             person("Christian", "Oswald", email = "christian.oswald@unibw.de", role = "ctb"),
+             person("Peder", "Landsverk", email = "pglandsverk@gmail.com", role = "ctb"),
+             person("Vilde", "Bergstad Larsen", email = "villar@prio.org", role = "ctb"))
 Description: Codebase for building PRIO-GRID from a diverse set of raw data. 
-License: What license is it under?
+License: MIT + ODC-By + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
@@ -30,3 +40,5 @@ Imports:
     Rdpack
 Depends: 
     R (>= 3.5)
+URL: http://prio-data.github.io/priogrid/
+BugReports: https://github.com/prio-data/priogrid/issues
