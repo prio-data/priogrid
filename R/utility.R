@@ -69,14 +69,15 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
 
   is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
 
-  if(is_end_of_month){
+  if(is_end_of_month & unit != "year"){
     base_seq <- seq.Date(lubridate::floor_date(start_date, unit), end_date, temporal_resolution)
     base_seq <- lubridate::ceiling_date(base_seq, "month") - lubridate::days(1)
   } else{
     base_seq <- seq.Date(start_date, end_date, temporal_resolution)
   }
 
-  base_seq[base_seq <= end_date]
+  base_seq <- base_seq[base_seq <= end_date]
+  base_seq[base_seq >= start_date]
 }
 
 #' Get a sequence of date intervals
