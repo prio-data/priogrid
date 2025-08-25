@@ -26,7 +26,9 @@ LinkingTo:
     Rcpp
 Suggests: 
     testthat (>= 3.0.0),
-    assertthat
+    assertthat,
+    knitr,
+    rmarkdown
 Config/testthat/edition: 3
 Imports:
     tidyverse,
@@ -42,3 +44,4 @@ Depends:
     R (>= 3.5)
 URL: http://prio-data.github.io/priogrid/
 BugReports: https://github.com/prio-data/priogrid/issues
+VignetteBuilder: knitr
