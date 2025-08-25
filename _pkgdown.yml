@@ -9,6 +9,7 @@ navbar:
   left:
     - icon: fa-home fa-lg
       href: index.html
+      aria-label: "Home"
     - text: "Vignettes"
       href: articles/index.html
     - text: "Functions"
