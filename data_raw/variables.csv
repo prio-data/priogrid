@@ -13,7 +13,7 @@ hilde_urban	FALSE	82bc4c6f-9904-484f-aa9a-77771d076690
 hilde_water	FALSE	82bc4c6f-9904-484f-aa9a-77771d076690
 naturalearth_cover	TRUE	92da9800-4520-4e87-a855-b28255452189
 naturalearth_cover_share	TRUE	92da9800-4520-4e87-a855-b28255452189
-ruggedterrain_elevation_mean TRUE 8c8192eb-cc29-4598-8f8a-ec190ba35c2d
-traveltime_mean TRUE 9aa052f6-4d04-4ed1-9eed-e47e08828d38
-traveltime_min TRUE 9aa052f6-4d04-4ed1-9eed-e47e08828d38
-cru_tmp FALSE 9bba83b0-eca9-4f05-b1df-6aeaed55a9fa
+ruggedterrain_elevation_mean	TRUE	8c8192eb-cc29-4598-8f8a-ec190ba35c2d
+traveltime_mean	TRUE	9aa052f6-4d04-4ed1-9eed-e47e08828d38
+traveltime_min	TRUE	9aa052f6-4d04-4ed1-9eed-e47e08828d38
+cru_tmp	FALSE	9bba83b0-eca9-4f05-b1df-6aeaed55a9fa

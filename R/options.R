@@ -151,7 +151,7 @@ PGOptionsManager <- R6::R6Class(
       rawfolder = NA,
       verbose = TRUE,
       temporal_resolution = "1 year",
-      start_date = "1850-01-01",
+      start_date = "1850-12-31",
       end_date = "today"
     ),
 

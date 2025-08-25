@@ -2,17 +2,12 @@ url: http://prio-data.github.io/priogrid/
 template:
   bootstrap: 5
   light-switch: yes
-  bootswatch: flatly
+  bootswatch: lumen
+  includes:
+    in_header: |
+      <link rel="stylesheet" href="extra.css">
 
 navbar:
-  title: "PRIO-GRID"
-  left:
-    - icon: fa-home fa-lg
-      href: index.html
-      aria-label: "Home"
-    - text: "Vignettes"
-      href: articles/index.html
-    - text: "Functions"
-      href: reference/index.html
-
-
+  structure:
+    left: [intro, reference, articles, tutorials, news]
+    right: [search, github, lightswitch]

@@ -1,8 +1,8 @@
 ---
-title: "Gettings Started with PRIO-GRID"
+title: "Getting Started with PRIO-GRID"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Gettings Started with PRIO-GRID}
+  %\VignetteIndexEntry{Getting Started with PRIO-GRID}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
