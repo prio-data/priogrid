@@ -38,12 +38,12 @@ prio_blank_grid()
 ## Basic Usage
 To read data from PRIOGRID, you will first need to download it. This will download
 PRIOGRID data using `download_priogrid()` to the folder specified using `pgoptions$set_rawfolder()`.
-This will download the latest version of PRIOGRID to your local machine. `priogrid()` will then read
+This will download the latest version of PRIOGRID to your local machine. `read_priogrid()` will then read
 this file into memory.
 
 ```
 download_priogrid()
-df <- priogrid()
+df <- read_priogrid()
 View(df)
 ```
 
@@ -51,13 +51,13 @@ View(df)
 If you want to transform data to a user specified format, or use the original data, you will
 first need to download it. We keep a list of sources in `pgsources`, and we have
 a convenience function `pg_rawfiles()` that returns a dataset with one line per
-file to download from each source. `download_pg_rawfiles()` downloads these files
+file to download from each source. `download_pg_rawdata()` downloads these files
 to the folder specified using `pgoptions$set_rawfolder()`.
 
 ```
 View(pgsources)
 files_to_download <- pg_rawfiles() |> dplyr::filter(source_name == "UCDP GED")
-download_pg_rawfiles(file_info = files_to_download)
+download_pg_rawdata(file_info = files_to_download)
 ```
 
 We use `read_[source]()` to read a specific source into R. Large files are not read into memory,

@@ -2,10 +2,7 @@ url: http://prio-data.github.io/priogrid/
 template:
   bootstrap: 5
   light-switch: yes
-  bootswatch: lumen
-  includes:
-    in_header: |
-      <link rel="stylesheet" href="extra.css">
+  bootswatch: yeti
 
 navbar:
   structure:
