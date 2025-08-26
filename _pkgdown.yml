@@ -3,8 +3,26 @@ template:
   bootstrap: 5
   light-switch: yes
   bootswatch: yeti
+  bslib:
+    base_font: {google: "Roboto"}
+    heading_font: {google: "Roboto Slab"}
+    code_font: {google: "JetBrains Mono"}
 
 navbar:
   structure:
-    left: [intro, reference, articles, tutorials, news]
+    left: [reference, citation, articles]
     right: [search, github, lightswitch]
+
+home:
+  sidebar:
+    structure: [links, license, community, custom_cite, authors]
+    components:
+      custom_cite:
+        title: Citation
+        text: '<a href="articles/citation.html">Citing PRIOGRID</a>'
+
+citation:
+  path: "inst/CITATION"
+  title: "How to cite PRIOGRID"
+  show_bibtex: true
+  show_text: true
