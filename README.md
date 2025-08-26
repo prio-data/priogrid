@@ -131,14 +131,14 @@ r_quarterly <- gen_cru_tmp()
 # Lower resolution with custom extent
 pgoptions$set_ncol(36)
 pgoptions$set_nrow(18)
-pgoptions$set_extent(c(0, 180, 0, 90))
+pgoptions$set_extent(c("xmin" = 0, "xmax" = 180, "ymin" =  0, "ymax" = 90))
 r_low_res <- gen_cru_tmp()
 plot(r_low_res)
 
 # Compare different resolutions
 pgoptions$set_ncol(360)
 pgoptions$set_nrow(180)
-pgoptions$set_extent(c(-180, 180, -90, 90))
+pgoptions$set_extent(c("xmin" = -180, "xmax" = 180, "ymin" =  -90, "ymax" = 90))
 plot(prio_blank_grid())  # High resolution
 
 pgoptions$set_ncol(36)

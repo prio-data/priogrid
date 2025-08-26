@@ -21,7 +21,8 @@ PGOptionsManager <- R6::R6Class(
 
     #' @description Reset options to defaults.
     reset_options = function(){
-      private$set_default_options()
+      pgconfig_cache$reset()
+      private$load_options()
     },
 
     #' @description Set output spatial extent
