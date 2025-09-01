@@ -144,12 +144,18 @@ pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
 rast_to_df <- function(rast, static = TRUE, varname = NULL){
   pg <- prio_blank_grid()
   df <- c(pg, rast) |> as.data.frame()
+  df <- df[rowSums(!is.na(df)) > 1,] # remove rows with only missing elements.
+  names(df)
 
   if(static){
     return(df)
   } else{
     # Assumes variable names in raster are dates.
-    df <- df |> tidyr::pivot_longer(cols = -dplyr::all_of(c("pgid")), names_to = "measurement_date", values_to = varname)
+    df <- tidyr::pivot_longer(df,
+                              cols = -dplyr::all_of(c("pgid")),
+                              names_to = "measurement_date",
+                              values_to = varname,
+                              names_transform = as.Date)
     return(df)
   }
 }
@@ -230,7 +236,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #' \code{\link[terra]{aggregate}}, \code{\link[terra]{disagg}}, \code{\link[terra]{resample}}
 #'
 #' @export
-robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1, ...){
+robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
   pg <- prio_blank_grid()
   temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
@@ -238,7 +244,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
     tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
+    r <- terra::project(r, terra::crs(pg), filename = tmp1)
   }
 
   pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
@@ -248,7 +254,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
   input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
   if(input_extent_is_larger){
     tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
+    r <- terra::crop(r, pg, filename = tmp2)
   }
 
   higher_resolution <- terra::res(r) < terra::res(pg)
@@ -258,8 +264,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", cores = 1,
                   fact = terra::res(pg)/terra::res(r),
                   fun = agg_fun,
                   filename = tmp3,
-                  gdal=c("COMPRESS=LZW"),
-                  cores = cores, ...)
+                  ...)
   }
 
   lower_resolution <- terra::res(r) > terra::res(pg)

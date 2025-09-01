@@ -28,14 +28,14 @@ PGOptionsManager <- R6::R6Class(
     #' @description Set output spatial extent
     #' @param value A vector with extent, c(xmin, xmax, ymin, ymax)
     set_extent = function(value) {
-      private$options$extent <- terra::ext(value)
+      private$options$extent <- value
       private$save_options()
     },
 
     #' @description Set output CRS
     #' @param value CRS string
     set_crs = function(value) {
-      private$options$crs <- terra::crs(value)
+      private$options$crs <- value
       private$save_options()
     },
 
@@ -97,9 +97,9 @@ PGOptionsManager <- R6::R6Class(
     },
 
     #' @description Get crs option
-    get_crs = function() private$options$crs,
+    get_crs = function() terra::crs(private$options$crs),
     #' @description Get extent option
-    get_extent = function() private$options$extent,
+    get_extent = function() terra::ext(private$options$extent),
     #' @description Get nrow option
     get_nrow = function() private$options$nrow,
     #' @description Get ncol option
@@ -153,7 +153,7 @@ PGOptionsManager <- R6::R6Class(
       verbose = TRUE,
       temporal_resolution = "1 year",
       start_date = "1850-12-31",
-      end_date = "today"
+      end_date = "2025-08-26"
     ),
 
     options = list(),
