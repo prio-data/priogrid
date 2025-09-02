@@ -7,46 +7,65 @@
 #’
 #’ @references
 #’ \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
-read_linight <- function(){
+read_linight <- function(overwrite_files = FALSE){
 
   zip_file <- get_pgfile(source_name="Li Nighttime",
                          source_version="v8",
                          id="24d76a3b-927e-42ad-b8a5-2e7443e6a275")
 
-  extractdir <-  paste0(stringr::str_sub(zip_file,start = 1,end = stringr::str_length(zip_file)-1))
 
-  unzip(zipfile = zip_file, overwrite = FALSE, exdir = paste0(stringr::str_sub(zip_file,start = 1,end = stringr::str_length(zip_file)-1)))
+  suppressWarnings(unzip(zipfile = zip_file, overwrite = overwrite_files, exdir = dirname(zip_file)))
 
-  allfiles <- list.files(extractdir,pattern = "Harmonized")
+  allfiles <- list.files(dirname(zip_file),pattern = "^Harmonized", full.names = TRUE)
 
-  stdext <- c(-180,180,-90,90)
+  # Extents vary depending on the source, and is often marginally larger than the world.
+  #extents <- lapply(allfiles, function(x) terra::ext(terra::rast(x)))
+  #allfiles[!sapply(extents, function(x) x == terra::ext(c(-180, 180, -90, 90)))]
 
-  for(i in 1:length(allfiles)){
-    print("Harmonizing extent of harmonized files")
-    print(paste("File",i,sep=" "))
-    rsub <- terra::rast(x = paste0(extractdir,allfiles[i]))
-    terra::ext(rsub) <- stdext
-    terra::writeRaster(x = rsub, filename = paste0(extractdir,"extent_",allfiles[i]),overwrite=TRUE)
+  fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
+  if(overwrite_files){
+    # Re-calculate from source file
+    file.remove(fixed_files)
+    fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
   }
 
-  extfiles <- list.files(extractdir,pattern = "extent_")
+  fixed_files <- fixed_files[file.info(fixed_files)$size > 3e7] # can occur if resampling is interrupted
 
-  r <- terra::rast(paste0(extractdir,extfiles))
+  files_to_fix <- allfiles[!basename(allfiles) %in% stringr::str_remove(basename(fixed_files), "^fixed_")]
 
-  # for(i in 1:length(allfiles)){
-  #   if(i==1){
-  #     print("1")
-  #     r <- rsub <- terra::rast(allfiles[1])
-  #   }
-  #   if(i>1){
-  #     print(i)
-  #     rsub <- terra::rast(allfiles[i])
-  #     terra::ext(rsub) <- terra::ext(terra::rast(allfiles[1]))
-  #     terra::add(r) <- terra::rast(rsub)
-  #   }
-  # }
-  yearnames <- readr::parse_number(allfiles)
-  yearnames <- lubridate::as_date(paste(yearnames,"-12-31"))
+  if(length(files_to_fix) > 0){
+    message("Harmonizing extent of Li Nighttime rasters. Next time you run the function, this will not be required")
+
+    # Extent of many tifs are wrong, use template
+    template <- terra::rast(vals = NA,
+                             nrows = 21600, # Note that this is 1 cell less than original data
+                             ncols = 43200, # Note that this is 1 cell less than original data
+                             extent = terra::ext(c(-180, 180, -90, 90)),
+                             crs = "EPSG:4326"
+    )
+
+    #template <- terra::rast(x = files_to_fix[1])
+    #template <- terra::extend(template, terra::ext(c(-180, 180, -90, 90)))
+
+    n <- length(files_to_fix)
+    pb <- txtProgressBar(min = 0, max = n, style = 3)
+
+    for(i in 1:n){
+      setTxtProgressBar(pb, i)
+      rsub <- terra::rast(x = files_to_fix[i])
+      fname <- paste0("fixed_", basename(files_to_fix[i]))
+      res <- terra::resample(rsub, template, method = "near", threads = T, overwrite = TRUE, progress = FALSE, filename = file.path(dirname(zip_file), fname))
+    }
+    close(pb)
+  }
+
+  fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
+  r <- terra::rast(fixed_files)
+
+  pgmonth <- pg_dates()[1] |> lubridate::month()
+  pgday <- pg_dates()[1] |> lubridate::day()
+  yearnames <- readr::parse_number(basename(allfiles))
+  yearnames <- as.Date(paste(yearnames, pgmonth, pgday, sep = "-"))
   names(r) <- yearnames
   return(r)
 }
@@ -55,86 +74,20 @@ read_linight <- function(){
 #'
 #' This aggregates the high-resolution Li Nighttime Light to PRIO-GRID level across all years (1992-2021).
 #'
-#' This does take some time.
-#'
-#' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
+#' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.This is done in [read_linight()].
 #'
 #' @return SpatRast
 #' @export
 #'
 #' @examples
-#' # r <- gen_linight_grid()
+#' # r <- gen_linight_mean()
 #' @references
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
-gen_linight_grid <- function(){
+gen_linight_mean <- function(){
   r <- read_linight()
 
-  pg <- prio_blank_grid()
-  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
+  res <- robust_transformation(r, agg_fun = "mean")
 
-  equal_projection <- terra::crs(r) == terra::crs(pg)
-  if(!equal_projection){
-    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
-  }
-
-  pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf() # Check extent of PRIO-GRID
-
-  input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf() # Check extent of Raster Stack
-
-  input_extent_is_larger_or_equal <- sf::st_contains(input_rast_extent, pg_extent, sparse = FALSE) |> all()
-  input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
-
-  input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
-
-  if(input_extent_is_larger){
-    tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
-  }
-
-
-  higher_resolution <- terra::res(r) < terra::res(pg)
-  lower_resolution <- terra::res(r) > terra::res(pg)
-
-  if(any(higher_resolution)){
-    tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::aggregate(r,
-                          fact = terra::res(pg)/terra::res(r),
-                          fun = mean,
-                          filename = tmp3,
-                          gdal=c("COMPRESS=LZW"),
-                          cores = cores)
-  }
-
-  if(any(lower_resolution)){
-    tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::disagg(r,
-                       fact = terra::res(r)/terra::res(pg),
-                       method = mean,
-                       filename = tmp4)
-  }
-
-  r <- terra::resample(r, pg, method = "near", threads = T)
-
-  unlink(temporary_directory, recursive = TRUE)
-
-  # pg <- prio_blank_grid()
-  #
-  # temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
-  # dir.create(temporary_directory)
-  #
-  # tmp3 <- tempfile(pattern = "aggregate", fileext = ".tif", tmpdir = temporary_directory)
-  #
-  # r <- terra::aggregate(r,
-  #                       fact = terra::res(pg)/terra::res(r),
-  #                       fun = mean,
-  #                       filename = tmp3,
-  #                       gdal=c("COMPRESS=LZW"),
-  #                       cores = cores)
-  #
-  # r <- terra::resample(r, pg, method = "near", threads = T)
-
-  return(r)
+  return(res)
 }
 
