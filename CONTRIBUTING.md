@@ -10,6 +10,8 @@ editor_options:
     wrap: 72
 ---
 
+## Contributing to PRIO-GRID v3
+
 Thank you for showing interest in contributing to PRIO-GRID! This guide
 will help you get started with contributing to our open-source
 geospatial platform for conflict research and political science.
