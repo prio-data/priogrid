@@ -27,6 +27,7 @@ Imports:
     exactextractr,
     httr2,
     curl,
+    R.utils,
     Rdpack
 Depends: 
     R (>= 3.5)
