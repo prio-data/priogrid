@@ -10,7 +10,7 @@ Thank you for your interest in using the PRIO-GRID package in your work.
 
 PRIO-GRID is an open-source initiative to survey, collect, and provide easy access to the wealth of open sub-national data relevant for conflict research and political science.
 
-### How to install and load the PRIO-GRID package 
+### How to install and load the PRIO-GRID package
 
 The first time you want to use the PRIO-GRID package, make sure to install it to your package library first.
 
@@ -18,5 +18,13 @@ The first time you want to use the PRIO-GRID package, make sure to install it to
 
 install.packages("renv")
 renv::install("prio-data/priogrid")
+
+```
+
+After installing the PRIO-GRID package to you library you can load as you normally would load your R-packages.
+
+```{r}
+
+library(priogrid)
 
 ```
