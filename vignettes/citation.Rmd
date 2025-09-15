@@ -18,7 +18,7 @@ library(priogrid)
 The PRIOGRID package makes citation easy. If your dataset includes PRIOGRID variables that haven't been renamed, simply use the `pgcitations()` function to retrieve the appropriate citations for all data sources in your dataset.
 
 ```{r citation, echo = TRUE, results='markup'}
-variables <- c("hilde_urban", "cru_tmp")
+variables <- c("hilda_urban", "cru_tmp")
 pgcitations(variables)
 ```
 
