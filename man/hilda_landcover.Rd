@@ -4,16 +4,25 @@
 \alias{hilda_landcover}
 \title{Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells}
 \usage{
-hilda_landcover(landcovertype, max_cells_in_memory = (18000 * 36000 * 2))
+hilda_landcover(landcovertype)
 }
 \arguments{
 \item{landcovertype}{Numeric. The land cover class identifier to extract from
 HILDA+ data. Must be a valid land cover code according to the HILDA+
-classification scheme (see Details for common codes).}
+classification scheme (see Details for common codes).
 
-\item{max_cells_in_memory}{Numeric. Maximum number of raster cells to process
-in memory at once. Default is \code{18000*36000*2} (approximately 1.3 billion
-cells). Reduce this value if encountering memory limitations.}
+HILDA+ land cover class codes (for stable categories):
+\itemize{
+\item 00: Ocean
+\item 11: Urban
+\item 22: Cropland
+\item 33: Pasture/rangeland
+\item 44: Forest
+\item 55: Unmanaged grass/shrubland
+\item 66: Sparse/no vegetation
+\item 77: Water
+\item 99: No data
+}}
 }
 \value{
 A \code{SpatRaster} object (terra package) with the same structure as
@@ -31,39 +40,8 @@ cover type using HILDA+ global land use/land cover data. The function performs
 spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
 cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
 }
-\details{
-This function performs several key operations:
-\enumerate{
-\item Downloads HILDA+ data using \code{\link{read_hilda}}
-\item Creates a blank PRIO-GRID template using \code{\link{prio_blank_grid}}
-\item Reprojects HILDA+ data to match PRIO-GRID projection if necessary
-\item Crops HILDA+ data to PRIO-GRID extent if necessary
-\item Aggregates high-resolution land cover data to PRIO-GRID cells using
-area-weighted averaging
-}
-
-The aggregation uses \code{\link[exactextractr]{exact_extract}} to calculate the
-proportion of each PRIO-GRID cell covered by the specified land cover type,
-accounting for partial pixel overlap at cell boundaries.
-
-HILDA+ land cover class codes (for stable categories):
-\itemize{
-\item 00: Ocean
-\item 11: Urban
-\item 22: Cropland
-\item 33: Pasture/rangeland
-\item 44: Forest
-\item 55: Unmanaged grass/shrubland
-\item 66: Sparse/no vegetation
-\item 77: Water
-\item 99: No data
-}
-}
 \note{
 \itemize{
-\item This function can be memory-intensive due to processing high-resolution
-global rasters. Reduce \code{max_cells_in_memory} if encountering
-memory errors.
 \item Temporary files can be created during processing but are automatically cleaned up.
 }
 }
@@ -78,13 +56,6 @@ print(cropland_props)
 # Plot cropland proportions for a specific year
 terra::plot(cropland_props[["2000-12-31"]],
             main = "Cropland Proportion 2000")
-
-# Extract urban area proportions with reduced memory usage
-urban_props <- hilda_landcover(landcovertype = 11,
-                               max_cells_in_memory = 1e8)
-
-# Calculate summary statistics
-terra::global(cropland_props[["2000-12-31"]], "mean", na.rm = TRUE)
 }
 
 }
@@ -94,6 +65,5 @@ terra::global(cropland_props[["2000-12-31"]], "mean", na.rm = TRUE)
 \seealso{
 \code{\link{read_hilda}} for reading raw HILDA+ data,
 \code{\link{prio_blank_grid}} for PRIO-GRID structure,
-\code{\link[exactextractr]{exact_extract}} for spatial aggregation details,
 \link{https://ceos.org/gst/HILDAplus.html}
 }

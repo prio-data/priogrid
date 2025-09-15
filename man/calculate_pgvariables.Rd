@@ -14,7 +14,7 @@ calculate_pgvariables(gen_functions = NULL, overwrite = FALSE)
 \description{
 In PRIO-GRID, all functions that are named "gen_something()" are functions that
 return final variables as a SpatRaster (or a stack of these). This function
-calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/variable_name.rds".
+calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/{options_hash}/variable_name.rds".
 }
 \examples{
 calculate_pgvariables()

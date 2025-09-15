@@ -4,7 +4,7 @@
 \alias{robust_transformation}
 \title{Robustly transform any raster to PRIO-GRID format}
 \usage{
-robust_transformation(r, agg_fun, disagg_method = "near", cores = 1, ...)
+robust_transformation(r, agg_fun, disagg_method = "near", ...)
 }
 \arguments{
 \item{r}{SpatRaster object to transform. Can have any projection, extent, or resolution.}
@@ -17,11 +17,11 @@ See \code{\link[terra]{aggregate}} for all options.}
 low-resolution data. Options are "near" (nearest neighbor, default),
 "bilinear", or "cubic". See \code{\link[terra]{disagg}} for details.}
 
-\item{cores}{Integer specifying number of CPU cores to use for aggregation
-operations. Defaults to 1. Higher values can speed up processing of large datasets.}
-
 \item{...}{Additional arguments passed to \code{\link[terra]{aggregate}}.
 Useful for controlling aggregation behavior (e.g., na.rm = TRUE).}
+
+\item{cores}{Integer specifying number of CPU cores to use for aggregation
+operations. Defaults to 1. Higher values can speed up processing of large datasets.}
 }
 \value{
 SpatRaster object conforming to PRIO-GRID specifications:

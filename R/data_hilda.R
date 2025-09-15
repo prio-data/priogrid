@@ -99,24 +99,6 @@ read_hilda <- function() {
 #' @param landcovertype Numeric. The land cover class identifier to extract from
 #'   HILDA+ data. Must be a valid land cover code according to the HILDA+
 #'   classification scheme (see Details for common codes).
-#' @param max_cells_in_memory Numeric. Maximum number of raster cells to process
-#'   in memory at once. Default is \code{18000*36000*2} (approximately 1.3 billion
-#'   cells). Reduce this value if encountering memory limitations.
-#'
-#' @details
-#' This function performs several key operations:
-#' \enumerate{
-#'   \item Downloads HILDA+ data using \code{\link{read_hilda}}
-#'   \item Creates a blank PRIO-GRID template using \code{\link{prio_blank_grid}}
-#'   \item Reprojects HILDA+ data to match PRIO-GRID projection if necessary
-#'   \item Crops HILDA+ data to PRIO-GRID extent if necessary
-#'   \item Aggregates high-resolution land cover data to PRIO-GRID cells using
-#'         area-weighted averaging
-#' }
-#'
-#' The aggregation uses \code{\link[exactextractr]{exact_extract}} to calculate the
-#' proportion of each PRIO-GRID cell covered by the specified land cover type,
-#' accounting for partial pixel overlap at cell boundaries.
 #'
 #' HILDA+ land cover class codes (for stable categories):
 #' \itemize{
@@ -142,16 +124,12 @@ read_hilda <- function() {
 #'
 #' @note
 #' \itemize{
-#'   \item This function can be memory-intensive due to processing high-resolution
-#'         global rasters. Reduce \code{max_cells_in_memory} if encountering
-#'         memory errors.
 #'   \item Temporary files can be created during processing but are automatically cleaned up.
 #' }
 #'
 #' @seealso
 #' \code{\link{read_hilda}} for reading raw HILDA+ data,
 #' \code{\link{prio_blank_grid}} for PRIO-GRID structure,
-#' \code{\link[exactextractr]{exact_extract}} for spatial aggregation details,
 #' \link{https://ceos.org/gst/HILDAplus.html}
 #'
 #' @examples
@@ -165,64 +143,18 @@ read_hilda <- function() {
 #' # Plot cropland proportions for a specific year
 #' terra::plot(cropland_props[["2000-12-31"]],
 #'             main = "Cropland Proportion 2000")
-#'
-#' # Extract urban area proportions with reduced memory usage
-#' urban_props <- hilda_landcover(landcovertype = 11,
-#'                                max_cells_in_memory = 1e8)
-#'
-#' # Calculate summary statistics
-#' terra::global(cropland_props[["2000-12-31"]], "mean", na.rm = TRUE)
 #' }
 #'
 #' @export
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
-hilda_landcover <- function(landcovertype, max_cells_in_memory = (18000*36000*2)){
+hilda_landcover <- function(landcovertype){
+  memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
+  terra::terraOptions(memfrac = 0.8)
   r <- read_hilda()
-  pg <- prio_blank_grid()
-  pg_vect <- terra::as.polygons(pg) |> sf::st_as_sf()
-
-  # Check if projection of r is same as pg, and transform accordingly
-  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
-
-  equal_projection <- terra::crs(r) == terra::crs(pg)
-  if(!equal_projection){
-    tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::project(r, terra::crs(pg), filename = tmp1, gdal=c("COMPRESS=LZW"))
-  }
-
-  # Check if extent of r is same as pg, and crop accordingly
-  pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
-  input_rast_extent <- terra::vect(terra::ext(r)) |> sf::st_as_sf()
-  input_extent_is_larger_or_equal <- sf::st_contains(input_rast_extent, pg_extent, sparse = FALSE) |> all()
-  input_extent_is_equal <- terra::ext(pg) == terra::ext(r)
-  input_extent_is_larger <- input_extent_is_larger_or_equal & !input_extent_is_equal
-  if(input_extent_is_larger){
-    tmp2 <- tempfile(pattern = "crop", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::crop(r, pg, filename = tmp2, gdal=c("COMPRESS=LZW"))
-  }
-
-  my_fun <- function(values, coverage_fractions){weighted.mean(values == landcovertype, coverage_fractions)}
-
-  res <- exactextractr::exact_extract(r, pg_vect, fun = my_fun, max_cells_in_memory = max_cells_in_memory, stack_apply = T)
-  if(is.null(ncol(res))){
-    values(pg) <- res
-    all <- terra::flip(pg)
-  } else{
-    all <- lapply(1:ncol(res), function(i){
-      values(pg) <- res[,i]
-      pg <- terra::flip(pg)
-    })
-    all <- terra::rast(all)
-  }
-
-  # Make sure that layer names are reflecting the dates of the rasters.
-  names(all) <- names(r)
-
-  unlink(temporary_directory, recursive = TRUE)
-
-  all
+  res <- robust_transformation(r, function(x) mean(x == landcovertype))
+  terra::terraOptions(memfrac = memfrac_option)
+  return(res)
 }
 
 #' Extract Ocean Coverage from HILDA+ Data
