@@ -2,6 +2,7 @@
 #'
 #' Reads the Admin 0 – Breakaway, Disputed Areas dataset from Natural Earth.
 #' This dataset shows de facto boundaries based on control versus de jure.
+#' The data entries are not dated.
 #'
 #' @return sf data.frame
 #' @export
@@ -11,8 +12,8 @@
 #' disputed_areas <- read_disputed_areas()
 #' plot(sf::st_geometry(disputed_areas), main = "Disputed Areas")
 #' @references
-#' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
-read_disputed_areas <- function() {
+#' \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}
+read_ne_disputed_areas <- function() {
   f <- get_pgfile(
     source_name = "Natural Earth Breakaway and Disputed Areas",
     source_version = "5.1.1",
@@ -25,85 +26,81 @@ read_disputed_areas <- function() {
   return(sf::read_sf(fname))
 }
 
-#' Generate raster for disputed areas coverage
-#'
-#' Creates a raster in PRIO-GRID resolution indicating the share of each cell
-#' covered by disputed areas from the Natural Earth dataset.
-#'
-#' @param data sf object of disputed areas, default is from `read_disputed_areas()`.
-#' @return terra SpatRaster
-#' @export
-#'
-#' @examples
-#' # Generate disputed areas coverage raster
-#' disputed_cover <- gen_disputed_areas_cover()
-#' terra::plot(disputed_cover, main = "Disputed Areas Coverage")
-#' @references
-#' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
-gen_disputed_areas_cover <- function(data = read_disputed_areas()) {
-  pgcrs <- sf::st_crs(pgoptions$get_crs())
-  if (sf::st_crs(data) != pgcrs) {
-    data <- sf::st_transform(data, crs = pgcrs)
-  }
-  pg <- prio_blank_grid()
-
-  data_combined <- data |> dplyr::summarize(geometry = sf::st_combine(geometry))
-  coversh <- exactextractr::exact_extract(pg, data_combined)
-
-  ra <- exactextractr::rasterize_polygons(data_combined, pg)
-  pg <- pg*ra # Remove non-land cells
-
-  disputed_coversh <- terra::classify(pg, coversh[[1]])
-  names(disputed_coversh) <- "disputed_land_share_of_cell"
-  return(disputed_coversh)
-}
-
 #' Generate raster for disputed areas by type of dispute
 #'
 #' Creates a raster in PRIO-GRID resolution for a specified type of disputed area.
-#' The options include: "Breakaway", "Disputed", "Geo subunit","Geo unit", "Indeterminate", "Lease" and "Overlay"
-#' If no type is specified, defaults to "Disputed".
+#' The options include: "all", "breakaway", "disputed", "geo subunit","geo unit", "indeterminate", "lease" and "overlay"
 #'
 #' @param type Character string indicating the disputed area type (e.g., "Disputed").
-#' Default is "Disputed".
 #' @param disputed_areas sf object of disputed areas, default is from `read_disputed_areas()`.
 #' @return terra SpatRaster
 #' @export
 #'
 #' @examples
-#' # Generate raster for "Disputed" type (default)
-#' disputed_raster <- gen_naturalearth_disputed_areas_type()
-#' terra::plot(disputed_raster, main = "Disputed Areas: Disputed")
+#' \dontrun{
+#'   # Generate raster for "Disputed" type
+#'   disputed_raster <- ne_disputed_area_share("Disputed")
+#'   terra::plot(disputed_raster, main = "Disputed Areas: Disputed")
+#' }
 #'
-#' # Generate raster for another type (e.g., "Breakaway")
-#' breakaway_raster <- gen_naturalearth_disputed_areas_type(type = "Breakaway")
-#' terra::plot(breakaway_raster, main = "Disputed Areas: Breakaway")
 #' @references
-#' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
-gen_naturalearth_disputed_areas_type <- function(type = "Disputed", disputed_areas = read_disputed_areas()) {
-  if (!type %in% unique(disputed_areas$TYPE)) {
-    stop("Invalid type. Please choose from: ", paste(unique(disputed_areas$TYPE), collapse = ", "))
+#' \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}
+ne_disputed_area_share <- function(type) {
+  if(!is.character(type)){
+    stop("Invalid type. Please choose from: ", paste(valid_types, collapse = ", "))
   }
 
-  disputed_type <- disputed_areas |>
-    dplyr::filter(TYPE == type)
+  disputed_areas = read_ne_disputed_areas()
+
+  # Consistent lower-case
+  disputed_areas$TYPE <- tolower(disputed_areas$TYPE)
+  type <- tolower(type)
+
+  valid_types <- c("all", unique(disputed_areas$TYPE))
+  if (!type %in% valid_types) {
+    stop("Invalid type. Please choose from: ", paste(valid_types, collapse = ", "))
+  }
+
+  if(type == "all"){
+    df <- disputed_areas
+  } else{
+    df <- disputed_areas |> dplyr::filter(TYPE == type)
+  }
 
   pgcrs <- sf::st_crs(pgoptions$get_crs())
-  if (sf::st_crs(disputed_type) != pgcrs) {
-    disputed_type <- sf::st_transform(disputed_type, crs = pgcrs)
+  if (sf::st_crs(df) != pgcrs) {
+    df <- sf::st_transform(df, crs = pgcrs)
   }
 
   pg <- prio_blank_grid()
 
-  data_combined <- disputed_type |> dplyr::summarize(geometry = sf::st_combine(geometry))
+  data_combined <- df |> dplyr::summarize(geometry = sf::st_combine(geometry))
   coversh <- exactextractr::exact_extract(pg, data_combined)
 
   ra <- exactextractr::rasterize_polygons(data_combined, pg)
   pg <- pg*ra # Remove non-land cells
 
   r <- terra::classify(pg, coversh[[1]])
-  names(r) <- paste0("naturalearth_disputed_areas_", type) |> tolower()
+  names(r) <- paste0("ne_disputed_area_share", type)
 
   return(r)
 }
 
+#' Generate raster for disputed areas by type of dispute
+#'
+#' Creates a raster in PRIO-GRID resolution for disputed areas from the
+#' Natural Earth Disputed Areas dataset using all types of disputes. The timing
+#' of the disputes are not dated.
+#'
+#' @return terra SpatRaster
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   rast <- gen_ne_disputed_area_share()
+#' }
+#' @references
+#' \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}
+gen_ne_disputed_area_share <- function() {
+  ne_disputed_area_share(type = "All")
+}
