@@ -1,21 +1,50 @@
-#' Get a hash of options that affect data generation
-get_options_hash <- function() {
-  # Get the options that actually affect the output
-  relevant_options <- list(
+get_spatial_hash <- function() {
+  spatial_options <- list(
     nrow = pgoptions$get_nrow(),
     ncol = pgoptions$get_ncol(),
-    crs = pgoptions$get_crs(),
-    extent = as.vector(pgoptions$get_extent()),
-    temporal_resolution = pgoptions$get_temporal_resolution(),
-    start_date = pgoptions$get_start_date(),
-    end_date = pgoptions$get_end_date()
+    crs = pgoptions$get_crs(unparsed = TRUE),
+    extent = as.vector(pgoptions$get_extent())
   )
 
-  # Create a short hash
-  hash_input <- paste(relevant_options, collapse = "_")
-  digest::digest(hash_input, algo = "md5")
+  hash_input <- paste(spatial_options, collapse = "_")
+  digest::digest(hash_input, algo = "md5") |> substr(1,6)
 }
 
+get_temporal_hash <- function() {
+  # Avoid building new hash for small changes in end date.
+  # Round to first date given temporal resolution.
+  rounded_end_date <- lubridate::floor_date(
+    pgoptions$get_end_date(),
+    pgoptions$get_temporal_resolution()
+  )
+
+  temporal_options <- list(
+    temporal_resolution = pgoptions$get_temporal_resolution(),
+    start_date = pgoptions$get_start_date(),
+    end_date = rounded_end_date
+  )
+
+  hash_input <- paste(temporal_options, collapse = "_")
+  digest::digest(hash_input, algo = "md5") |> substr(1,6)
+}
+
+
+#' Path to store PRIOGRID results
+#'
+#' The path varies depending on your [pgoptions]:
+#'  rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
+#'
+#' @returns File path
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   pgout_path()
+#'   list.files(pgout_path())
+#' }
+pgout_path <- function(){
+  file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), get_spatial_hash(), get_temporal_hash())
+}
 
 #' Calculates all PRIO-GRID variables
 #'
@@ -23,65 +52,89 @@ get_options_hash <- function() {
 #' return final variables as a SpatRaster (or a stack of these). This function
 #' calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/{options_hash}/variable_name.rds".
 #'
-#' @param gen_functions Character vector with priogrid functions starting with gen_. If NULL, then all are used.
+#' @param varnames Vector with names of variables in PRIOGRID. See [pgvariables]. If NULL, then all variables are used.
 #' @param overwrite Boolean, if false, will ignore updating variables that already exist in the result folder
 #'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   calculate_pgvariables()
-#'   r <- readRDS(file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "naturalearth_cover.rds"))
+#'   calc_pg("ne_disputed_area_share")
+#'   r <- load_pgvariable()
 #' }
-calculate_pgvariables <- function(gen_functions = NULL, overwrite = FALSE){
-  pg_functions <- ls("package:priogrid")
-  if(is.null(gen_functions)){
-
-    gen_functions <- pg_functions[grepl("gen_", pg_functions)]
-  } else{
-    assertthat::assert_that(all(gen_functions %in% pg_functions), msg = "Some functions provided does not exist.")
+#'
+calc_pg <- function(varnames = NULL, overwrite = FALSE){
+  if(is.null(varnames)){
+    varnames <- pgvariables$name
   }
 
-  # Include options hash in the path
-  options_hash <- get_options_hash()
-  priogrid_outpath <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), options_hash)
-
-  if(!dir.exists(priogrid_outpath)){
-    dir.create(priogrid_outpath, recursive = T)
+  valid_varnames <- varnames[varnames %in% pgvariables$name]
+  invalid_varnames <- varnames[!varnames %in% pgvariables$name]
+  if(length(invalid_varnames)> 0){
+    message(paste("Ignored varnames:", paste(invalid_varnames, collapse = ", ")))
   }
 
-  varnames <- stringr::str_remove(gen_functions, "gen_")
-  existing_files <- list.files(priogrid_outpath) |> tools::file_path_sans_ext()
+  if(length(valid_varnames) == 0){
+    stop("No valid varnames supplied. Use names in `pgvariables`")
+  }
+
+  if(!dir.exists(pgout_path())){
+    dir.create(pgout_path(), recursive = T)
+  }
+
+  existing_files <- list.files(pgout_path()) |> tools::file_path_sans_ext()
 
   if(!overwrite){
-    ignore_these <- varnames[varnames %in% existing_files]
-  } else{
-    ignore_these <- c("")
+    valid_varnames <- valid_varnames[!valid_varnames %in% existing_files]
   }
 
-  for(f in gen_functions){
-    varname <- stringr::str_remove(f, "gen_")
-    if(varname %in% ignore_these){
-      next()
-    }
-
-    fname <- paste0(varname, ".rds")
-    r <- get(f)()
-    r_wrapped <- terra::wrap(r)
-    saveRDS(r_wrapped, file.path(priogrid_outpath, fname))
+  # Calculate variable
+  message(paste("Variables to calculate:", paste(valid_varnames, collapse = ", ")))
+  message(paste("Saving to:", pgout_path()))
+  for(varname in valid_varnames){
+    message(paste("Calculating", varname, "and saving to", pgout_path()))
+    r <- get(paste0("gen_", varname))()
+    save_pgvariable(r, varname)
   }
 }
 
+#' Save a PRIO-GRID variable
+#'
+#' Save a PRIO-GRID variable to a standard folder depending on your pgoptions:
+#'  rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
+#'
+#' Correctly wrap the terra object before writing it, and checks if the variable
+#' is included in the list of variables in PRIOGRID [pgvariables].
+#'
+#' @param rast Terra SpatRast from a gen_ function
+#' @param varname Character string with the variable name
+#' @export
+save_pgvariable <- function(rast, varname) {
+
+  if(!varname %in% pgvariables$name){
+    stop("varname not found in pgvariables.")
+  }
+
+  filepath <- file.path(pgout_path(), paste0(varname, ".rds"))
+
+  if(class(rast) != "PackedSpatVector"){
+    rast <- terra::wrap(rast)
+  }
+
+  saveRDS(rast, filepath)
+}
+
 #' Load a PRIO-GRID variable
+#'
+#' This points to different folders depending on your pgoptions:
+#'  rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
+#'
 #'
 #' @param varname Character string with the variable name
 #' @return A SpatRaster object
 #' @export
 load_pgvariable <- function(varname) {
-  options_hash <- get_options_hash()
-  priogrid_outpath <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), options_hash)
-  fname <- paste0(varname, ".rds")
-  filepath <- file.path(priogrid_outpath, fname)
+  filepath <- file.path(pgout_path(), paste0(varname, ".rds"))
 
   if (!file.exists(filepath)) {
     return(NA)
@@ -107,7 +160,6 @@ load_pgvariable <- function(varname) {
 #'   nrow(pg$static)
 #'   nrow(pg$timevarying)
 #' }
-
 collate_pgdata <- function(return_raster = FALSE){
   static_variables <- pgvariables |> dplyr::filter(static)
   nonstatic_variables <- pgvariables |> dplyr::filter(!static)

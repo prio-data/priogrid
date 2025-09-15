@@ -97,7 +97,8 @@ PGOptionsManager <- R6::R6Class(
     },
 
     #' @description Get crs option
-    get_crs = function() terra::crs(private$options$crs),
+    #' @param unparsed Boolean, if TRUE, then return the user input string, else parse with [terra::crs].
+    get_crs = function(unparsed = FALSE) if(unparsed){private$options$crs} else{terra::crs(private$options$crs)},
     #' @description Get extent option
     get_extent = function() terra::ext(private$options$extent),
     #' @description Get nrow option

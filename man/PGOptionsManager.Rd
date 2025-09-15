@@ -228,9 +228,16 @@ Set end date
 \subsection{Method \code{get_crs()}}{
 Get crs option
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_crs()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_crs(unparsed = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{unparsed}}{Boolean, if TRUE, then return the user input string, else parse with \link[terra:crs]{terra::crs}.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PGOptionsManager-get_extent"></a>}}

@@ -13,5 +13,6 @@ load_pgvariable(varname)
 A SpatRaster object
 }
 \description{
-Load a PRIO-GRID variable
+This points to different folders depending on your pgoptions:
+rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
 }
