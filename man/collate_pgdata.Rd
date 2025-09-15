@@ -4,18 +4,21 @@
 \alias{collate_pgdata}
 \title{Collects PRIO-GRID data from rasters and pulls it into two data.frames}
 \usage{
-collate_pgdata()
+collate_pgdata(return_raster = FALSE)
 }
 \value{
 a list with two data.frames
 }
 \description{
-One dataframe is called "static", with data without any time-varying dimension. The "non_static"
+One dataframe is called "static", with data without any time-varying dimension. The "timevarying"
 dataframe provides data from pgoptions$get_start_date() to pgoptions$get_end_date() with
 pgoptions$get_temporal_resolution() for all variables with a time-varying dimension.
+Cells and time-periods without any non-missing data are dropped.
 }
 \examples{
-pg <- collate_pgdata()
-nrow(pg$static)
-nrow(pg$non_static)
+\donotrun{
+  pg <- collate_pgdata()
+  nrow(pg$static)
+  nrow(pg$timevarying)
+}
 }

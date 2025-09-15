@@ -25,5 +25,5 @@ PRIO-GRID cells with any regionally based politically excluded groups
 }
 \references{
 \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
-\insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
+\insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
 }

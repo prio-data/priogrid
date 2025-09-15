@@ -61,7 +61,7 @@ read_epr <- function() {
 #'
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
-#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
+#' \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
 gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")) {
 
   geoepr <- read_geoepr() |> dplyr::filter(type == "Regionally based") |>

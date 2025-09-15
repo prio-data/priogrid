@@ -1,12 +1,12 @@
-#' Reads the HILDE+ data
+#' Reads the HILDA+ data
 #'
-#' Downloads and processes HILDE+ (Historic Land Dynamics Assessment) global
+#' Downloads and processes HILDA+ (Historic Land Dynamics Assessment) global
 #' land use and land cover change data, filtering to years compatible with
 #' PRIO-GRID temporal coverage. The function returns a multi-layer raster
 #' with annual land use/land cover states.
 #'
 #' @details
-#' HILDE+ provides global land use and land cover change data at 1 km spatial
+#' HILDA+ provides global land use and land cover change data at 1 km spatial
 #' resolution from 1960 to 2019. This function:
 #' \itemize{
 #'   \item Extracts downloaded raster files containing annual land use/land cover states
@@ -14,10 +14,10 @@
 #'   \item Creates a multi-layer SpatRaster with standardized date names
 #' }
 #'
-#' The land use/land cover classes in HILDE+ include various categories such as:
+#' The land use/land cover classes in HILDA+ include various categories such as:
 #' cropland, pasture, urban areas, forests, and other natural land covers.
 #' Each pixel value represents a specific land use/land cover class according
-#' to the HILDE+ classification scheme.
+#' to the HILDA+ classification scheme.
 #'
 #' @return A \code{SpatRaster} object (terra package) containing annual land
 #'   use/land cover states. Each layer represents one year, with layer names
@@ -38,21 +38,21 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Read HILDE+ data
-#' hilde_data <- read_hilde()
+#' # Read HILDA+ data
+#' hilda_data <- read_hilda()
 #'
 #' # Examine the structure
-#' print(hilde_data)
+#' print(hilda_data)
 #'
 #' # Get available years
-#' years <- names(hilde_data)
+#' years <- names(hilda_data)
 #' print(years)
 #'
 #' # Extract data for a specific year (e.g., 2000)
-#' hilde_2000 <- hilde_data[["2000-12-31"]]
+#' hilda_2000 <- hilda_data[["2000-12-31"]]
 #'
 #' # Plot land use for a specific year
-#' terra::plot(hilde_2000, main = "HILDE+ Land Use 2000")
+#' terra::plot(hilda_2000, main = "HILDA+ Land Use 2000")
 #' }
 #'
 #' @return an object of class sf
@@ -60,8 +60,8 @@
 #'
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
-read_hilde <- function() {
-  f <- get_pgfile(source_name = "HILDE",
+read_hilda <- function() {
+  f <- get_pgfile(source_name = "HILDA+",
                   source_version = "v1.0",
                   id = "82bc4c6f-9904-484f-aa9a-77771d076690")
 
@@ -89,18 +89,18 @@ read_hilde <- function() {
   return(r)
 }
 
-#' Extract Land Cover Proportions from HILDE+ Data for PRIO-GRID Cells
+#' Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells
 #'
 #' Calculates the proportion of each PRIO-GRID cell covered by a specific land
-#' cover type using HILDE+ global land use/land cover data. The function performs
-#' spatial aggregation from high-resolution HILDE+ rasters (1km) to PRIO-GRID
-#' cells (see \code{\link{pgoptions}}).
+#' cover type using HILDA+ global land use/land cover data. The function performs
+#' spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
+#' cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
 #'
 #' @param landcovertype Numeric. The land cover class identifier to extract from
-#'   HILDE+ data. Must be a valid land cover code according to the HILDE+
+#'   HILDA+ data. Must be a valid land cover code according to the HILDA+
 #'   classification scheme (see Details for common codes).
 #'
-#' HILDE+ land cover class codes (for stable categories):
+#' HILDA+ land cover class codes (for stable categories):
 #' \itemize{
 #'   \item 00: Ocean
 #'   \item 11: Urban
@@ -118,7 +118,7 @@ read_hilde <- function() {
 #'   by the specified land cover type. The raster contains:
 #'   \itemize{
 #'     \item Values: Proportions ranging from 0 (no coverage) to 1 (full coverage)
-#'     \item Layers: One layer per year matching HILDE+ and PRIO-GRID temporal coverage
+#'     \item Layers: One layer per year matching HILDA+ and PRIO-GRID temporal coverage
 #'     \item Layer names: Dates in YYYY-MM-DD format
 #'   }
 #'
@@ -128,14 +128,14 @@ read_hilde <- function() {
 #' }
 #'
 #' @seealso
-#' \code{\link{read_hilde}} for reading raw HILDE+ data,
+#' \code{\link{read_hilda}} for reading raw HILDA+ data,
 #' \code{\link{prio_blank_grid}} for PRIO-GRID structure,
 #' \link{https://ceos.org/gst/HILDAplus.html}
 #'
 #' @examples
 #' \dontrun{
 #' # Extract cropland proportions
-#' cropland_props <- hilde_landcover(landcovertype = 22)
+#' cropland_props <- hilda_landcover(landcovertype = 22)
 #'
 #' # View the result
 #' print(cropland_props)
@@ -148,124 +148,124 @@ read_hilde <- function() {
 #' @export
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
-hilde_landcover <- function(landcovertype){
+hilda_landcover <- function(landcovertype){
   memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
   terra::terraOptions(memfrac = 0.8)
-  r <- read_hilde()
+  r <- read_hilda()
   res <- robust_transformation(r, function(x) mean(x == landcovertype))
   terra::terraOptions(memfrac = memfrac_option)
   return(res)
 }
 
-#' Extract Ocean Coverage from HILDE+ Data
+#' Extract Ocean Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' ocean coverage proportions (class code 00) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with ocean coverage proportions (0-1) for each
-#'   PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_ocean <- function(){
-  hilde_landcover(landcovertype = 00)
+gen_hilda_ocean <- function(){
+  hilda_landcover(landcovertype = 00)
 }
 
-#' Extract Urban Coverage from HILDE+ Data
+#' Extract Urban Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' urban coverage proportions (class code 11) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with urban coverage proportions (0-1) for each
-#'   PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_urban <- function(){
-  hilde_landcover(landcovertype = 11)
+gen_hilda_urban <- function(){
+  hilda_landcover(landcovertype = 11)
 }
 
-#' Extract Cropland Coverage from HILDE+ Data
+#' Extract Cropland Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' cropland coverage proportions (class code 22) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with cropland coverage proportions (0-1) for each
-#'   PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_cropland <- function(){
-  hilde_landcover(landcovertype = 22)
+gen_hilda_cropland <- function(){
+  hilda_landcover(landcovertype = 22)
 }
 
-#' Extract Pasture/Rangeland Coverage from HILDE+ Data
+#' Extract Pasture/Rangeland Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' pasture/rangeland coverage proportions (class code 33) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with pasture/rangeland coverage proportions (0-1)
-#'   for each PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_pasture <- function(){
-  hilde_landcover(landcovertype = 33)
+gen_hilda_pasture <- function(){
+  hilda_landcover(landcovertype = 33)
 }
 
-#' Extract Forest Coverage from HILDE+ Data
+#' Extract Forest Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' forest coverage proportions (class code 44) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with forest coverage proportions (0-1) for each
-#'   PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_forest <- function(){
-  hilde_landcover(landcovertype = 44)
+gen_hilda_forest <- function(){
+  hilda_landcover(landcovertype = 44)
 }
 
-#' Extract Unmanaged Grass/Shrubland Coverage from HILDE+ Data
+#' Extract Unmanaged Grass/Shrubland Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' unmanaged grass/shrubland coverage proportions (class code 55) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with unmanaged grass/shrubland coverage proportions
-#'   (0-1) for each PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_grassland <- function(){
-  hilde_landcover(landcovertype = 55)
+gen_hilda_grassland <- function(){
+  hilda_landcover(landcovertype = 55)
 }
 
-#' Extract Sparse/No Vegetation Coverage from HILDE+ Data
+#' Extract Sparse/No Vegetation Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' sparse/no vegetation coverage proportions (class code 66) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with sparse/no vegetation coverage proportions
-#'   (0-1) for each PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_sparse <- function(){
-  hilde_landcover(landcovertype = 66)
+gen_hilda_sparse <- function(){
+  hilda_landcover(landcovertype = 66)
 }
 
-#' Extract Water Coverage from HILDE+ Data
+#' Extract Water Coverage from HILDA+ Data
 #'
-#' A convenience wrapper for \code{\link{hilde_landcover}} that extracts
+#' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' water coverage proportions (class code 77) for PRIO-GRID cells.
 #'
-#' @inheritParams hilde_landcover
+#' @inheritParams hilda_landcover
 #' @return A \code{SpatRaster} with water coverage proportions (0-1) for each
-#'   PRIO-GRID cell. See \code{\link{hilde_landcover}} for details.
-#' @seealso \code{\link{hilde_landcover}} for full documentation and parameters
+#'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
+#' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilde_water <- function(){
-  hilde_landcover(landcovertype = 77)
+gen_hilda_water <- function(){
+  hilda_landcover(landcovertype = 77)
 }
 
