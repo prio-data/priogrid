@@ -1,4 +1,4 @@
-# PRIOGRID <img src="man/figures/priogridlogo.png" align="right" />
+# PRIOGRID
 
 A comprehensive R package for accessing and transforming spatial-temporal data for conflict research at the PRIO-GRID resolution.
 
