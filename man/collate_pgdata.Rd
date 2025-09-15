@@ -16,7 +16,7 @@ pgoptions$get_temporal_resolution() for all variables with a time-varying dimens
 Cells and time-periods without any non-missing data are dropped.
 }
 \examples{
-\donotrun{
+\dontrun{
   pg <- collate_pgdata()
   nrow(pg$static)
   nrow(pg$timevarying)

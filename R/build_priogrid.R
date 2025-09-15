@@ -100,7 +100,7 @@ load_pgvariable <- function(varname) {
 #' @export
 #'
 #' @examples
-#' \donotrun{
+#' \dontrun{
 #'   pg <- collate_pgdata()
 #'   nrow(pg$static)
 #'   nrow(pg$timevarying)
