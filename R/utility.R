@@ -282,29 +282,6 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
   return(r)
 }
 
-#' Convert a pgraster to tabular format
-#'
-#' @param r An input raster that must have the same projection, resolution, and extent as PRIO-GRID
-#' @return tibble
-#' @examples
-#' pg <- prio_blank_grid()
-#' names(pg) <- "test"
-#' raster_to_pgtibble(pg)
-#' @export
-raster_to_pgtibble <- function(r){
-  require(terra)
-  require(assertthat)
-  require(dplyr)
-
-  pg <- prio_blank_grid()
-  assert_that(all(res(r) == res(pg)))
-  assert_that(ext(r) == ext(pg))
-  assert_that(crs(r) == crs(pg))
-
-  df <- as.data.frame(c(pg, r)) |> as_tibble()
-  return(df)
-}
-
 #' Add source to CSV file
 #'
 #' Only use this in devtools environment.
