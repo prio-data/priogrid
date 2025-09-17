@@ -144,52 +144,75 @@ load_pgvariable <- function(varname) {
   terra::unwrap(r_wrapped)
 }
 
-#' Collects PRIO-GRID data from rasters and pulls it into two data.frames
-#'
-#' One dataframe is called "static", with data without any time-varying dimension. The "timevarying"
-#' dataframe provides data from pgoptions$get_start_date() to pgoptions$get_end_date() with
-#' pgoptions$get_temporal_resolution() for all variables with a time-varying dimension.
-#' Cells and time-periods without any non-missing data are dropped.
-#'
-#' @return a list with two data.frames
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#'   pg <- collate_pgdata()
-#'   nrow(pg$static)
-#'   nrow(pg$timevarying)
-#' }
-collate_pgdata <- function(return_raster = FALSE){
-  static_variables <- pgvariables |> dplyr::filter(static)
-  nonstatic_variables <- pgvariables |> dplyr::filter(!static)
+static_pg <- function(as_raster = FALSE, test = FALSE){
+  static <- pgvariables |> dplyr::filter(static)
+  rasters <- lapply(static$name, load_pgvariable)
+  names(rasters) <- static$name
+  rasters <- rasters[!is.na(rasters)]
 
-
-  variables <- lapply(pgvariables$name, load_pgvariable)
-  names(variables) <- pgvariables$name
-
-  variables <- variables[!is.na(variables)]
-
-  static <- variables[names(variables) %in% pgvariables$name[pgvariables$static]]
-  timevarying <- variables[names(variables) %in% pgvariables$name[!pgvariables$static]]
-
-  if(return_raster){
-    return(list("static" = static, "timevarying" = timevarying))
+  if(as_raster){
+    return(rasters)
   }
 
-  static_df <- rast_to_df(terra::rast(static), static = TRUE)
-  timevarying_lst <- mapply(rast_to_df, timevarying, names(timevarying), static = FALSE, SIMPLIFY = FALSE)
+  df <- rast_to_df(terra::rast(rasters), static = TRUE)
 
-  timevarying_df <- expand.grid(pgid = create_pg_indices(), measurement_date = pg_dates())
+  if(test){
+    cols <- setdiff(names(df), "pgid")
+    pg_idx <- length(create_pg_indices())
 
-  for(df in timevarying_lst){
-    timevarying_df <- dplyr::left_join(timevarying_df, df, by = c("pgid", "measurement_date"))
+    coverage_test <- df |>
+      dplyr::summarise(dplyr::across(dplyr::all_of(cols), ~ sum(!is.na(.x)))) |>
+      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "variable", values_to = "pgid_cov") |>
+      dplyr::mutate(pgid_cov_pct = pgid_cov / pg_idx)
+
+
+    message("# ---- Testing variable coverage ---- #")
+    message(paste(capture.output(print(coverage_test, nrows = 50)), collapse = "\n"))
   }
 
-  timevarying_df <- timevarying_df[rowSums(!is.na(timevarying_df)) > 2,] # remove rows with only missing elements.
-  timevarying_df <- timevarying_df |> dplyr::arrange(pgid, measurement_date)
+  return(df)
+}
 
-  return(list("static" = static_df, "timevarying" = timevarying_df))
+
+
+timevarying_pg <- function(as_raster = FALSE, test = FALSE){
+  timevarying <- pgvariables |> dplyr::filter(!static)
+
+  rasters <- lapply(timevarying$name, load_pgvariable)
+  names(rasters) <- timevarying$name
+  rasters <- rasters[!is.na(rasters)]
+
+  if(as_raster){
+    return(rasters)
+  }
+
+  timevarying_lst <- mapply(rast_to_df, rasters, names(rasters), static = FALSE, SIMPLIFY = FALSE)
+
+  # Only return dates that are within the data scope
+  min_date <- do.call(min, lapply(timevarying_lst, function(x) min(x$measurement_date)))
+  #max_date <- do.call(max, lapply(timevarying_lst, function(x) max(x$measurement_date)))
+  my_dates <- pg_dates()
+  my_dates <- my_dates[my_dates >= min_date]
+
+  if(test){
+    pg_idx <- create_pg_indices()
+    date_coverage <- sapply(timevarying_lst, function(x) length(unique(x$measurement_date) %in% my_dates))
+    pgid_coverage <- sapply(timevarying_lst, function(x) length(unique(x$pgid) %in% pg_idx))
+    coverage_test <- data.table::as.data.table(cbind(date_coverage, pgid_coverage), keep.rownames = "variable")
+    coverage_test[, `:=`(date_cov_pct = date_coverage/length(my_dates),
+                         pgid_cov_pct = pgid_coverage/length(pg_idx))]
+
+    message("# ---- Testing variable coverage ---- #")
+    message(paste(capture.output(print(coverage_test, nrow = 50)), collapse = "\n"))
+  }
+
+  df <- expand.grid(pgid = create_pg_indices(), measurement_date = my_dates)
+  df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
+
+  for(sdt in timevarying_lst) {
+    df <- sdt[df, on = .(pgid, measurement_date)]
+  }
+  return(df)
 }
 
 build_priogrid_default <- function(){
