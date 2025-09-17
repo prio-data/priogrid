@@ -145,9 +145,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
   pg <- prio_blank_grid()
   df <- c(pg, rast) |> as.data.frame()
   df <- df[rowSums(!is.na(df)) > 1,] # remove rows with only missing elements.
-  names(df)
 
   if(static){
+    df <- data.table::setDT(df, key = "pgid")
     return(df)
   } else{
     # Assumes variable names in raster are dates.
@@ -156,6 +156,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
                               names_to = "measurement_date",
                               values_to = varname,
                               names_transform = as.Date)
+    df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
     return(df)
   }
 }
