@@ -144,43 +144,110 @@ load_pgvariable <- function(varname) {
   terra::unwrap(r_wrapped)
 }
 
+<<<<<<< HEAD
 static_pg <- function(as_raster = FALSE, test = FALSE){
+=======
+#' Collects and returns static (non-timevarying) PRIO-GRID data
+#'
+#' See [pgvariables] for an overview of variables.
+#'
+#' @param as_raster Boolean (default FALSE). Set to TRUE to return a list of rasters. Defaults to returning a data.table.
+#' @param test Boolean. Prints coverage summary (percentage cells with data) for each variable.
+#' @param overwrite Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
+#'  If it does, then it returns the data.table. If not, it saves the data.table to disk as .csv.gz and .parquet.
+#'
+#' @return a data.table with pgid as rows and variables as columns or a list of terra SpatRasters
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   pg_dt <- read_pg_static(test = TRUE) # prints coverage summary for each variable
+#'   pg_rast <- read_pg_static(as_raster = TRUE)
+#' }
+read_pg_static <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
+  fname <- file.path(pgout_path(), "pg_static.parquet")
+  if(as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite){
+    return(arrow::read_parquet(fname))
+  }
+
+>>>>>>> 8f6f3af (Updated build step.)
   static <- pgvariables |> dplyr::filter(static)
   rasters <- lapply(static$name, load_pgvariable)
   names(rasters) <- static$name
   rasters <- rasters[!is.na(rasters)]
 
+  if(test){
+    pg_idx <- length(create_pg_indices())
+    coverage_test <- dplyr::bind_rows(lapply(rasters, function(x) terra::freq(is.na(x))), .id = "variable") |>
+      dplyr::filter(value == 0) |> # non-missing
+      dplyr::mutate(coverage_pct = round(count / pg_idx, 4)) |>
+      dplyr::select(variable, coverage_n = count, coverage_pct)
+    message("# ---- Testing variable coverage ---- #")
+    message(paste(capture.output(print(coverage_test, nrows = 50)), collapse = "\n"))
+  }
+
+
   if(as_raster){
     return(rasters)
   }
 
+  if(as_raster == FALSE & file.exists(fname) & !overwrite){
+    return(arrow::read_parquet(fname))
+  }
+
   df <- rast_to_df(terra::rast(rasters), static = TRUE)
 
-  if(test){
-    cols <- setdiff(names(df), "pgid")
-    pg_idx <- length(create_pg_indices())
-
-    coverage_test <- df |>
-      dplyr::summarise(dplyr::across(dplyr::all_of(cols), ~ sum(!is.na(.x)))) |>
-      tidyr::pivot_longer(cols = dplyr::everything(), names_to = "variable", values_to = "pgid_cov") |>
-      dplyr::mutate(pgid_cov_pct = pgid_cov / pg_idx)
-
-
-    message("# ---- Testing variable coverage ---- #")
-    message(paste(capture.output(print(coverage_test, nrows = 50)), collapse = "\n"))
-  }
+  data.table::fwrite(df, paste0(tools::file_path_sans_ext(fname), ".csv.gz"), compress = "gzip")
+  arrow::write_parquet(df, fname)
 
   return(df)
 }
 
 
+#' Collects and returns timevarying (non-static) PRIO-GRID data
+#'
+#' See [pgvariables] for an overview of variables.
+#'
+#' @param as_raster Boolean. Set to TRUE to return a list of rasters. Defaults to FALSE (returns data.table).
+#' @param test Boolean. Returns only coverage summary (percentage cells with data) for each variable for each date.
+#' @param overwrite Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
+#'  If it does, then it returns the data.table. If not, it saves the data.table to disk as .csv.gz and .parquet.
+#'
+#' @return a data.table with pgid + measurement_date as rows and variables as columns or a list of terra SpatRasters with each measurement date as layers or coverage test
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   pg_dt <- read_pg_timevarying() # data.table
+#'   coverage_test <- read_pg_timevarying(test = TRUE) # coverage test data frame
+#'   pg_rast <- read_pg_timevarying(as_raster = TRUE) # list of rasters
+#' }
+read_pg_timevarying <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
+  fname <- file.path(pgout_path(), "pg_timevarying.parquet")
+  if(as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite){
+    return(arrow::read_parquet(fname))
+  }
 
-timevarying_pg <- function(as_raster = FALSE, test = FALSE){
   timevarying <- pgvariables |> dplyr::filter(!static)
 
   rasters <- lapply(timevarying$name, load_pgvariable)
   names(rasters) <- timevarying$name
   rasters <- rasters[!is.na(rasters)]
+
+  if(test){
+    pg_idx <- length(create_pg_indices())
+    coverage_test <- dplyr::bind_rows(lapply(rasters, function(x) terra::freq(is.na(x))), .id = "variable") |>
+      dplyr::filter(value == 0) |> # non-missing
+      dplyr::mutate(coverage_pct = round(count / pg_idx, 4),
+                    measurement_date = lapply(rasters, names) |> unlist()) |>
+      dplyr::select(variable, measurement_date, coverage_n = count, coverage_pct)
+
+    return(coverage_test)
+  }
+
+  if(as_raster == FALSE & file.exists(fname) & !overwrite){
+    return(arrow::read_parquet(fname))
+  }
 
   if(as_raster){
     return(rasters)
@@ -194,28 +261,19 @@ timevarying_pg <- function(as_raster = FALSE, test = FALSE){
   my_dates <- pg_dates()
   my_dates <- my_dates[my_dates >= min_date]
 
-  if(test){
-    pg_idx <- create_pg_indices()
-    date_coverage <- sapply(timevarying_lst, function(x) length(unique(x$measurement_date) %in% my_dates))
-    pgid_coverage <- sapply(timevarying_lst, function(x) length(unique(x$pgid) %in% pg_idx))
-    coverage_test <- data.table::as.data.table(cbind(date_coverage, pgid_coverage), keep.rownames = "variable")
-    coverage_test[, `:=`(date_cov_pct = date_coverage/length(my_dates),
-                         pgid_cov_pct = pgid_coverage/length(pg_idx))]
-
-    message("# ---- Testing variable coverage ---- #")
-    message(paste(capture.output(print(coverage_test, nrow = 50)), collapse = "\n"))
-  }
-
   df <- expand.grid(pgid = create_pg_indices(), measurement_date = my_dates)
   df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
 
   for(sdt in timevarying_lst) {
-    df <- sdt[df, on = .(pgid, measurement_date)]
+    df <- merge(df, sdt, all.x = TRUE)
   }
+
+  data.table::fwrite(df, paste0(tools::file_path_sans_ext(fname), ".csv.gz"), compress = "gzip")
+  arrow::write_parquet(df, fname)
   return(df)
 }
 
-build_priogrid_default <- function(){
+build_priogrid_05deg_yearly <- function(){
   pgoptions$set_nrow(360)
   pgoptions$set_ncol(720)
   pgoptions$set_crs("epsg:4326")
@@ -224,8 +282,18 @@ build_priogrid_default <- function(){
   pgoptions$set_start_date(as.Date("1850-12-31"))
   pgoptions$set_end_date(as.Date("2025-08-26"))
 
-  calculate_pgvariables(overwrite = TRUE)
+  calc_pg(overwrite = TRUE)
 
-  pg <- collate_pgdata()
+  pg_t <- timevarying_pg(overwrite = TRUE)
+  pg_s <- static_pg(overwrite = TRUE)
 
+  persistent_path <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "05deg_yearly")
+  dir.create(persistent_path)
+  file.copy(from = list.files(pgout_path(), full = TRUE), to = persistent_path, copy.mode = TRUE, copy.date = FALSE)
+
+  oldwd <- getwd()
+  setwd(file.path(pgoptions$get_rawfolder(), "priogrid"))
+  zip(paste("priogrid", packageVersion("priogrid"), "05deg_yearly.zip", sep = "_"),
+      files = file.path(packageVersion("priogrid"), "05deg_yearly"), flags = "-r")
+  setwd(oldwd)
 }
