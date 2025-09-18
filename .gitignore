@@ -9,3 +9,5 @@ R/.depr/*
 tests/testthat/.depr/*
 
 wtt.yaml
+docs
+inst/doc

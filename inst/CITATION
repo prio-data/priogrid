@@ -1,0 +1,22 @@
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(
+  bibtype = "Article",
+  title = "PRIO-GRID: A Unified Spatial Data Structure",
+  author = "Andreas Forø Tollefsen and Håvard Strand and Halvard Buhaug",
+  year = "2012",
+  journal = "Journal of Peace Research",
+  volume = "49",
+  number = "2",
+  pages = "363--374",
+  doi = "10.1177/0022343311431287"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title = "priogrid: the R-package",
+  author = "Jonas Vestby and Andreas Forø Tollefsen and Kristine Helskog and Garret Benz",
+  year = 2025,
+  note = note,
+  url = "http://prio-data.github.io/priogrid"
+)

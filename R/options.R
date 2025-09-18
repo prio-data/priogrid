@@ -21,20 +21,21 @@ PGOptionsManager <- R6::R6Class(
 
     #' @description Reset options to defaults.
     reset_options = function(){
-      private$set_default_options()
+      pgconfig_cache$reset()
+      private$load_options()
     },
 
     #' @description Set output spatial extent
     #' @param value A vector with extent, c(xmin, xmax, ymin, ymax)
     set_extent = function(value) {
-      private$options$extent <- terra::ext(value)
+      private$options$extent <- value
       private$save_options()
     },
 
     #' @description Set output CRS
     #' @param value CRS string
     set_crs = function(value) {
-      private$options$crs <- terra::crs(value)
+      private$options$crs <- value
       private$save_options()
     },
 
@@ -84,21 +85,21 @@ PGOptionsManager <- R6::R6Class(
     #' @param value The date used globally to build PRIO-GRID. The month and day are used to define the
     #'   measurement date within the temporal resolution (e.g., as.Date(1900-06-30) would slice June 30 every year for compatible data sources).
     set_start_date = function(value){
-      private$options$start_date <- value
+      private$options$start_date <- as.character(value)
       private$save_options()
     },
 
     #' @description Set end date
     #' @param value a date or "today"
     set_end_date = function(value){
-      private$options$end_date <- value
+      private$options$end_date <- as.character(value)
       private$save_options()
     },
 
     #' @description Get crs option
-    get_crs = function() private$options$crs,
+    get_crs = function() terra::crs(private$options$crs),
     #' @description Get extent option
-    get_extent = function() private$options$extent,
+    get_extent = function() terra::ext(private$options$extent),
     #' @description Get nrow option
     get_nrow = function() private$options$nrow,
     #' @description Get ncol option
@@ -123,7 +124,7 @@ PGOptionsManager <- R6::R6Class(
       if(end_date == "today"){
         end_date <- Sys.Date()
       }
-      return(end_date)
+      return(as.Date(end_date))
     },
 
     #' @description Prints all options
@@ -151,8 +152,8 @@ PGOptionsManager <- R6::R6Class(
       rawfolder = NA,
       verbose = TRUE,
       temporal_resolution = "1 year",
-      start_date = "1850-01-01",
-      end_date = "today"
+      start_date = "1850-12-31",
+      end_date = "2025-08-26"
     ),
 
     options = list(),

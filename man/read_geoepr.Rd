@@ -13,5 +13,6 @@ an object of class sf
 Formats gwsdate and gwedate as date objects, and adds a utility column date_interval
 }
 \references{
-\insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
+\insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
+\insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
 }

@@ -1,0 +1,27 @@
+---
+title: "How to cite"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to cite}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(priogrid)
+```
+
+## Citing Data Sources
+
+**Always cite the original data providers when using their data.** This is not only required by most data licenses (such as CC-BY), but is also an essential practice in research.
+
+The PRIOGRID package makes citation easy. If your dataset includes PRIOGRID variables that haven't been renamed, simply use the `pgcitations()` function to retrieve the appropriate citations for all data sources in your dataset.
+
+```{r citation, echo = TRUE, results='markup'}
+variables <- c("hilda_urban", "cru_tmp")
+pgcitations(variables)
+```
+
+By maintaining original variable names and using this function, you ensure proper attribution to all data providers whose work contributes to your research.
+
+You can also just get the biblatex entries using `pgcitations(variables, as_biblatex = T)`.

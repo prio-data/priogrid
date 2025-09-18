@@ -6,7 +6,8 @@
 #' @export
 #'
 #' @references
-#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
+#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
+#' \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
 read_geoepr <- function() {
   f <- get_pgfile(source_name = "ETH ICR GeoEPR",
                   source_version = "2023",
@@ -59,7 +60,8 @@ read_epr <- function() {
 #' # r <- gen_geoepr_reg_excluded()
 #'
 #' @references
-#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{vogtIntegratingDataEthnicity2015}{priogrid}
+#' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
+#' \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
 gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")) {
 
   geoepr <- read_geoepr() |> dplyr::filter(type == "Regionally based") |>
