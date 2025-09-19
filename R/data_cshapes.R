@@ -148,38 +148,6 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
   return(res)
 }
 
-#' Takes the cShapes data and returns
-#' a raster-mask that is true for the grid cells that intersects with country borders
-#' included in the international state system at the measurement_date
-#'
-#' @param measurement_date A single date as Date object
-#' @param cshp The CShapes dataset, for instance as given by [read_cshapes()]
-#'
-#' @export
-#' @examples
-#' # cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
-#' @references
-#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
-  assertthat::assert_that(lubridate::is.Date(measurement_date))
-
-  pg <- prio_blank_grid()
-  cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
-  #cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
-
-  cs_combined <- cs |> dplyr::summarize(geometry = sf::st_combine(geometry))
-  coversh <- exactextractr::exact_extract(pg, cs_combined)
-
-  ra <- exactextractr::rasterize_polygons(cs_combined, pg)
-  pg <- pg*ra # Remove non-land cells
-
-  res <- terra::classify(pg, coversh[[1]])
-
-
-
-  names(res) <- "cshapes_cover_share"
-  return(res)
-}
 
 #' Binary Mask for Grid Cells Intersecting International State System (cShapes 2.0)
 #'
