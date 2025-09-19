@@ -1,12 +1,34 @@
-#’ Reads the Li Nighttime data
-#’
-#’
-#’
-#’ @return an object of class sf
-#’ @export
-#’
-#’ @references
-#’ \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
+#' Reads the Li Nighttime data
+#'
+#' Downloads, preprocesses, and harmonizes the Li et al. global nighttime
+#' light dataset (v8). This dataset provides global, annual composites
+#' of nighttime light intensity, harmonized across multiple satellite
+#' sensors to produce a consistent multi-decadal time series.
+#'
+#' @details
+#' The function:
+#' \itemize{
+#'   \item Downloads the zipped Li Nighttime Lights raster files from the
+#'         PRIO-GRID data repository
+#'   \item Extracts TIF files, caching results to avoid repeated unzipping
+#'   \item Identifies rasters with extent mismatches (common in the dataset)
+#'   \item Resamples problematic rasters to a standardized global template
+#'         (\code{EPSG:4326}, extent -180/180, -90/90) using nearest neighbor
+#'         resampling
+#'   \item Stores corrected rasters with a \code{"fixed_"} prefix for reuse
+#'   \item Combines corrected rasters into a multi-layer \code{SpatRaster}
+#'   \item Assigns layer names as dates, aligned to PRIO-GRID temporal
+#'         conventions (January 1 of each year by default)
+#' }
+#'
+#' @param overwrite_files Logical. If \code{TRUE}, previously fixed rasters are
+#'   recalculated and overwritten. Defaults to \code{FALSE}.
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 read_linight <- function(overwrite_files = FALSE){
 
   zip_file <- get_pgfile(source_name="Li Nighttime",
