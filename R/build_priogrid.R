@@ -29,8 +29,10 @@ get_options_hash <- function() {
 #' @export
 #'
 #' @examples
-#' calculate_pgvariables()
-#' r <- readRDS(file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "naturalearth_cover.rds"))
+#' \dontrun{
+#'   calculate_pgvariables()
+#'   r <- readRDS(file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "naturalearth_cover.rds"))
+#' }
 calculate_pgvariables <- function(gen_functions = NULL, overwrite = FALSE){
   pg_functions <- ls("package:priogrid")
   if(is.null(gen_functions)){

@@ -7,16 +7,18 @@
 gen_cshapes_gwcode(cshp = read_cshapes())
 }
 \arguments{
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
+Gleditsch-Ward country codes and temporal information. Defaults to
+\code{\link{read_cshapes}()} if not provided.}
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-The variable can be generated with up to daily temporal resolution.
-}
-\examples{
-# gwcode <- gen_cshapes_gwcode()
+Creates a multi-layer raster containing Gleditsch-Ward country codes for
+all PRIO-GRID temporal slices. The function generates time series data
+showing how country assignments to grid cells change over time due to
+territorial changes, state formation, and dissolution events.
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}

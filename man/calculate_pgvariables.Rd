@@ -17,6 +17,8 @@ return final variables as a SpatRaster (or a stack of these). This function
 calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/{options_hash}/variable_name.rds".
 }
 \examples{
-calculate_pgvariables()
-r <- readRDS(file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "naturalearth_cover.rds"))
+\dontrun{
+  calculate_pgvariables()
+  r <- readRDS(file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "naturalearth_cover.rds"))
+}
 }

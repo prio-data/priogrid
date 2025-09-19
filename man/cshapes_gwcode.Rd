@@ -2,23 +2,32 @@
 % Please edit documentation in R/data_cshapes.R
 \name{cshapes_gwcode}
 \alias{cshapes_gwcode}
-\title{The Gleditsch-Ward (cShapes 2.0 version) code in each grid-cell}
+\title{Assign Gleditsch-Ward Country Codes to PRIO-GRID Cells}
 \usage{
 cshapes_gwcode(measurement_date, cshp = read_cshapes())
 }
 \arguments{
-\item{measurement_date}{A single date as Date object}
+\item{measurement_date}{A single \code{Date} object specifying the date for
+country assignment. Must be within the temporal range of the CShapes dataset.}
 
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
+Gleditsch-Ward country codes. Defaults to \code{\link{read_cshapes}()} if not provided.}
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-Uses max area for cells with multiple countries. If actual tie, the algorithm will use the lowest index.
+Determines the dominant country in each PRIO-GRID cell using CShapes 2.0
+boundary data and assigns the corresponding Gleditsch-Ward country code.
+For cells containing multiple countries, the country with the largest area
+coverage is assigned, with ties broken by selecting the lowest country code.
 }
-\examples{
-# gwcode_one_cross_section <- cshapes_gwcode(as.Date("2010-01-01"))
+\note{
+\itemize{
+\item Small countries or territories may not appear if they don't dominate any grid cells
+\item The function includes an assertion check to verify all countries are represented
+\item Future versions may include provisions for minority country representation
+}
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}

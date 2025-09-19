@@ -2,22 +2,33 @@
 % Please edit documentation in R/data_cshapes.R
 \name{cshapes_cover}
 \alias{cshapes_cover}
-\title{Whether or not a grid-cell intersects with the international state system (cShapes 2.0)}
+\title{Binary Mask for Grid Cells Intersecting International State System (cShapes 2.0)}
 \usage{
 cshapes_cover(measurement_date, min_cover = 0, cshp = read_cshapes())
 }
 \arguments{
-\item{measurement_date}{A single date as Date object}
+\item{measurement_date}{A single \code{Date} object specifying the date for
+boundary analysis. Must be within CShapes temporal coverage.}
 
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{min_cover}{Numeric. Minimum coverage threshold (0-1). Grid cells with
+state coverage below this value are set to NA. Default is 0 (any intersection).}
+
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.
+Defaults to \code{\link{read_cshapes}()} if not provided.}
 }
 \description{
-Takes the cShapes data and returns
-a raster-mask that is true for the grid cells that intersects with country borders
-included in the international state system at the measurement_date
+Creates a binary raster mask indicating whether PRIO-GRID cells intersect
+with country boundaries from the international state system (CShapes 2.0)
+at a specified date, with optional minimum coverage threshold.
 }
-\examples{
-# cshapes_cover_one_cross_section <- cshapes_cover(as.Date("2010-01-01"))
+\details{
+This function builds on \code{\link{cshapes_cover_share}} to create a binary
+classification of grid cells. It:
+\itemize{
+\item Calculates proportional coverage using CShapes boundary data
+\item Applies a minimum coverage threshold (cells below threshold become NA)
+\item Returns a binary mask where non-NA values indicate state system intersection
+}
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}

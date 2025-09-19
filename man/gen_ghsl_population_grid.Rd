@@ -7,18 +7,45 @@
 gen_ghsl_population_grid()
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-This aggregates the high-resolution population grid to PRIO-GRID level across all 5-year intervals (1975 - 2030).
+Aggregates the high-resolution GHSL (Global Human Settlement Layer) GHS
+Population Grid data to PRIO-GRID resolution for all available 5-year
+intervals (1975–2030). This provides population counts per PRIO-GRID cell.
 }
 \details{
-This does take some time.
+This operation can be computationally intensive and may take time depending
+on system performance and the size of the underlying rasters.
 
 A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
 }
+\note{
+\itemize{
+\item Aggregation uses sum to preserve total population counts
+\item Nearest-neighbor resampling is applied for spatial alignment
+\item Large rasters may require significant memory and processing time
+}
+}
 \examples{
-# r <- gen_ghsl_population_grid()
+\dontrun{
+# Generate PRIO-GRID level GHSL population rasters
+ghsl_pg <- gen_ghsl_population_grid()
+
+# Inspect structure
+print(ghsl_pg)
+
+# Plot population for 2020
+terra::plot(ghsl_pg[["2020-12-31"]],
+            main = "PRIO-GRID Population Distribution 2020")
+
+# Compute total population per PRIO-GRID cell change over time
+pop_1990 <- ghsl_pg[["1990-12-31"]]
+pop_2020 <- ghsl_pg[["2020-12-31"]]
+change <- pop_2020 - pop_1990
+terra::plot(change, main = "Population Change 1990–2020")
+}
+
 }
 \references{
 \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}

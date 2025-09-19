@@ -2,17 +2,53 @@
 % Please edit documentation in R/data_traveltime.R
 \name{read_traveltime}
 \alias{read_traveltime}
-\title{Reads the Estimated Travel Time to Major Cities version year 2000 data
-Unzips the folder and imports the .tif file as SpatRaster}
+\title{Read Estimated Travel Time to Major Cities (Year 2000)}
 \usage{
 read_traveltime()
 }
 \value{
-an object of class SpatRast
+A \code{SpatRaster} object
 }
 \description{
-Reads the Estimated Travel Time to Major Cities version year 2000 data
-Unzips the folder and imports the .tif file as SpatRaster
+Downloads and reads the global raster dataset of estimated travel time to
+major cities for the year 2000, as developed by Nelson (2008). The dataset
+represents travel time in minutes to the nearest major city using multimodal
+transport networks.
+}
+\details{
+The function:
+\itemize{
+\item Locates the local travel time dataset using \code{\link{get_pgfile}}
+\item Extracts the zip archive containing the raster files
+\item Imports the main \code{.tif} file as a \code{SpatRaster} object
+using the \code{terra} package
+\item Sets the layer name to \code{"travel_time"} for clarity
+}
+}
+\note{
+\itemize{
+\item The dataset provides estimates based on the transportation network circa 2000
+\item Raster extraction is cached locally after the first download
+\item Large raster files may take time and memory to process
+}
+}
+\examples{
+\dontrun{
+# Load estimated travel time raster
+travel_time_raster <- read_traveltime()
+
+# Inspect raster properties
+travel_time_raster
+
+# Plot global travel time
+terra::plot(travel_time_raster, main = "Estimated Travel Time to Major Cities (2000)")
+
+# Extract travel time for a specific region
+africa_extent <- terra::ext(-20, 50, -35, 37)
+africa_travel <- terra::crop(travel_time_raster, africa_extent)
+terra::plot(africa_travel, main = "Travel Time in Africa")
+}
+
 }
 \references{
 \insertRef{nelsonTravelTimeMajor2008}{priogrid}
