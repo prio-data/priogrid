@@ -24,9 +24,43 @@
 #' @param overwrite_files Logical. If \code{TRUE}, previously fixed rasters are
 #'   recalculated and overwritten. Defaults to \code{FALSE}.
 #'
-#' @return an object of class sf
-#' @export
+#' @return A \code{SpatRaster} object
 #'
+#' @note
+#' \itemize{
+#'   \item Initial preprocessing (extent harmonization) may take time, but is
+#'         cached for faster subsequent runs
+#'   \item Large raster files may require substantial disk space and memory
+#'   \item Nighttime lights are influenced by sensor calibration, atmospheric
+#'         conditions, and moonlight; Li et al. provide harmonization but
+#'         residual inconsistencies may remain
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Read harmonized Li Nighttime Lights data
+#' linight <- read_linight()
+#'
+#' # Inspect structure
+#' print(linight)
+#'
+#' # Plot nighttime lights for year 2000
+#' terra::plot(linight[["2000-01-01"]],
+#'             main = "Global Nighttime Lights 2000")
+#'
+#' # Compare change between 2000 and 2020
+#' lights_2000 <- linight[["2000-01-01"]]
+#' lights_2020 <- linight[["2020-01-01"]]
+#' change <- lights_2020 - lights_2000
+#' terra::plot(change, main = "Nighttime Lights Change 2000–2020")
+#'
+#' # Extract regional time series
+#' # example_extent <- terra::ext(100, 120, 20, 40) # East Asia
+#' # region_lights <- terra::crop(linight, example_extent)
+#' # terra::plot(region_lights[[1]], main = "Regional Nighttime Lights")
+#' }
+#'
+#' @export
 #' @references
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 read_linight <- function(overwrite_files = FALSE){
@@ -94,15 +128,54 @@ read_linight <- function(overwrite_files = FALSE){
 
 #' Generate Li Nighttime Light
 #'
-#' This aggregates the high-resolution Li Nighttime Light to PRIO-GRID level across all years (1992-2021).
+#' Aggregates the high-resolution Li et al. harmonized global nighttime lights
+#' dataset to PRIO-GRID resolution for all available years (1992–2021).
+#' This produces PRIO-GRID cell-level averages of nighttime light intensity,
+#' harmonized with PRIO-GRID’s spatial and temporal structure.
 #'
-#' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.This is done in [read_linight()].
+#' @details
+#' The function:
+#' \itemize{
+#'   \item Reads annual nighttime lights rasters via \code{\link{read_linight}}
+#'   \item Aggregates 1 km nighttime light intensity values into PRIO-GRID
+#'         cells using mean values
+#'   \item Retains global temporal coverage (1992–2021) as a multi-layer
+#'         \code{SpatRaster}
+#'   \item Aligns precisely to PRIO-GRID spatial extent (resampling handled
+#'         in \code{\link{read_linight}})
+#' }
 #'
-#' @return SpatRast
-#' @export
+#' @return A \code{SpatRaster} object
+#'
+#' @note
+#' \itemize{
+#'   \item Aggregation uses mean values to represent typical nighttime light
+#'         intensity per PRIO-GRID cell
+#'   \item For sum-based aggregation (e.g., total light output per cell),
+#'         see \code{\link{robust_transformation}} with \code{agg_fun = "sum"}
+#'   \item Large rasters may take time and memory to process
+#' }
 #'
 #' @examples
-#' # r <- gen_linight_mean()
+#' \dontrun{
+#' # Generate PRIO-GRID level Li Nighttime Lights data
+#' linight_pg <- gen_linight_mean()
+#'
+#' # Inspect structure
+#' print(linight_pg)
+#'
+#' # Plot mean nighttime lights for 2000
+#' terra::plot(linight_pg[["2000-01-01"]],
+#'             main = "PRIO-GRID Nighttime Lights (Mean, 2000)")
+#'
+#' # Compare mean intensity change between 2000 and 2020
+#' lights_2000 <- linight_pg[["2000-01-01"]]
+#' lights_2020 <- linight_pg[["2020-01-01"]]
+#' change <- lights_2020 - lights_2000
+#' terra::plot(change, main = "Change in Mean Nighttime Lights 2000–2020")
+#' }
+#'
+#' @export
 #' @references
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 gen_linight_mean <- function(){
