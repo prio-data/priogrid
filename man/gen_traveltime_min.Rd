@@ -7,14 +7,29 @@
 gen_traveltime_min()
 }
 \value{
-SpatRast
+A single-layer \code{SpatRaster} object
 }
 \description{
-Generate the minimum travel time to nearest major city
+Aggregates the high-resolution travel time raster to PRIO-GRID cells and
+computes the \strong{minimum} travel time within each cell. This is useful for
+identifying the fastest travel access to major cities within a PRIO-GRID cell.
+}
+\details{
+This function is a convenience wrapper around \code{\link{calc_traveltime}}
+using \code{aggregation_function = "min"}. It reads the global travel time
+raster and summarizes each PRIO-GRID cell to the minimum travel time value.
 }
 \examples{
-# r <- gen_traveltime_min()
+\dontrun{
+# Generate minimum travel time raster
+r <- gen_traveltime_min()
+terra::plot(r, main = "Minimum Travel Time to Nearest Major City")
 
+# Extract values for a specific region (e.g., West Africa)
+africa_extent <- terra::ext(-20, 20, 0, 20)
+r_africa <- terra::crop(r, africa_extent)
+terra::plot(r_africa, main = "Minimum Travel Time in West Africa")
+}
 
 }
 \references{

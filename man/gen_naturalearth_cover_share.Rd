@@ -2,13 +2,44 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{gen_naturalearth_cover_share}
 \alias{gen_naturalearth_cover_share}
-\title{Share of grid-cell that intersects with land (NaturalEarth)}
+\title{Share of PRIO-GRID Cells Covered by Land (Natural Earth)}
 \usage{
 gen_naturalearth_cover_share()
 }
+\value{
+A single-layer \code{SpatRaster} object
+}
 \description{
-Takes the NaturalEarth 10m raster and returns a raster
-in PRIO-GRID resolution with the share of the cell that intersects with land.
+Computes the proportion of each PRIO-GRID cell that intersects with land,
+based on the Natural Earth 1:10m Physical Land dataset. Returns a raster
+layer aligned to PRIO-GRID resolution with values in the range \code{[0, 1]}
+indicating land coverage share.
+}
+\note{
+\itemize{
+\item Values of \code{0} correspond to ocean-only cells
+\item Values of \code{1} correspond to cells fully covered by land
+\item Intermediate values represent fractional coverage (e.g., coastal areas)
+}
+}
+\examples{
+\dontrun{
+# Compute PRIO-GRID land cover share
+land_share <- gen_naturalearth_cover_share()
+
+# Inspect values
+summary(values(land_share))
+
+# Plot global land cover share
+terra::plot(land_share,
+            main = "Share of PRIO-GRID Cells Covered by Land")
+
+# Extract land share for a region (e.g., West Africa)
+africa_extent <- terra::ext(-20, 20, 0, 20)
+terra::plot(terra::crop(land_share, africa_extent),
+            main = "Land Share in West Africa")
+}
+
 }
 \references{
 \insertRef{naturalearthLand10mPhysical2024}{priogrid}

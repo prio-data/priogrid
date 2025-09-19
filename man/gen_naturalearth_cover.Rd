@@ -2,13 +2,45 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{gen_naturalearth_cover}
 \alias{gen_naturalearth_cover}
-\title{Whether or not a grid-cell intersects with land (NaturalEarth)}
+\title{Land Mask for PRIO-GRID Cells (Natural Earth)}
 \usage{
 gen_naturalearth_cover(min_cover = 0)
 }
+\arguments{
+\item{min_cover}{Numeric, default \code{0}. Minimum fraction of a grid cell
+that must be covered by land for the cell to be classified as land.
+Should be between \code{0} and \code{1}.}
+}
+\value{
+A single-layer \code{SpatRaster} object
+}
 \description{
-Takes the NaturalEarth 50m raster and returns
-a raster-mask that is true for the grid cells that intersects with land.
+Generates a binary raster mask indicating which PRIO-GRID cells intersect
+with land, based on the Natural Earth land dataset. By default, any nonzero
+land coverage qualifies a cell as land. The minimum proportion of land cover
+required to classify a cell as land can be adjusted with \code{min_cover}.
+}
+\details{
+The function:
+\itemize{
+\item Calls \code{\link{gen_naturalearth_cover_share}} to compute the
+fractional land cover of each grid cell
+\item Sets cells with land coverage below \code{min_cover} to \code{NA}
+\item Returns a raster aligned to PRIO-GRID resolution with non-\code{NA}
+values representing land cells
+}
+}
+\examples{
+\dontrun{
+# Generate default land mask
+land_mask <- gen_naturalearth_cover()
+terra::plot(land_mask, main = "PRIO-GRID Land Mask (Natural Earth)")
+
+# Require 50\% land cover to classify as land
+land_mask50 <- gen_naturalearth_cover(min_cover = 0.5)
+terra::plot(land_mask50, main = "PRIO-GRID Land Mask (≥50\% Land)")
+}
+
 }
 \references{
 \insertRef{naturalearthLand10mPhysical2024}{priogrid}

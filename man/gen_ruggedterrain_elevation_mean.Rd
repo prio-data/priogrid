@@ -7,7 +7,7 @@
 gen_ruggedterrain_elevation_mean()
 }
 \value{
-A SpatRaster object with mean elevation values named "elevation_mean"
+A \code{SpatRaster} object
 }
 \description{
 A convenience wrapper function that calculates mean elevation values for each

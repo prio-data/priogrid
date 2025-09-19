@@ -7,17 +7,35 @@
 calc_traveltime(aggregation_function)
 }
 \arguments{
-\item{aggregation_function}{function used to aggregate values. Either an actual function,
-or for the following, their name: "mean", "max", "min", "median", "sum", "modal", "any",
-"all", "prod", "which.min", "which.max", "table", "sd" (sample standard deviation) and
-"std" (population standard deviation)}
+\item{aggregation_function}{Function or character string specifying the
+aggregation method (see details above)}
+}
+\value{
+A \code{SpatRaster} object
 }
 \description{
-Aggregates the high resolution travel time data to PRIO-GRID level
+Aggregates the high-resolution global travel time raster to the PRIO-GRID
+structure. Users can specify the aggregation function to summarize travel
+time values within each PRIO-GRID cell.
+}
+\details{
+Supported aggregation functions include:
+\code{"mean"}, \code{"max"}, \code{"min"}, \code{"median"}, \code{"sum"},
+\code{"modal"}, \code{"any"}, \code{"all"}, \code{"prod"}, \code{"which.min"},
+\code{"which.max"}, \code{"table"}, \code{"sd"} (sample standard deviation),
+and \code{"std"} (population standard deviation). Users may also provide a
+custom function.
 }
 \examples{
-# r <- calc_traveltime(aggregation_function = "median")
+\dontrun{
+# Aggregate global travel time using median
+travel_time_median <- calc_traveltime(aggregation_function = "median")
+terra::plot(travel_time_median, main = "PRIO-GRID Median Travel Time")
 
+# Aggregate using maximum travel time
+travel_time_max <- calc_traveltime(aggregation_function = "max")
+terra::plot(travel_time_max, main = "PRIO-GRID Maximum Travel Time")
+}
 
 }
 \references{

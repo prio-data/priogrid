@@ -2,22 +2,31 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{gen_ne_disputed_area_share}
 \alias{gen_ne_disputed_area_share}
-\title{Generate raster for disputed areas by type of dispute}
+\title{Generate Raster for All Disputed Areas}
 \usage{
 gen_ne_disputed_area_share()
 }
 \value{
-terra SpatRaster
+A single-layer \code{SpatRaster} object
 }
 \description{
-Creates a raster in PRIO-GRID resolution for disputed areas from the
-Natural Earth Disputed Areas dataset using all types of disputes. The timing
-of the disputes are not dated.
+Creates a PRIO-GRID raster representing the fraction of each cell covered
+by \strong{all types} of disputed areas from the Natural Earth Admin 0 Breakaway
+and Disputed Areas dataset. The dataset does not include temporal information,
+so all disputes are treated as current/undated.
+}
+\details{
+This function is a convenience wrapper around
+\code{\link{ne_disputed_area_share}}, automatically using \code{type = "all"}
+to combine all disputed area types into a single raster layer.
 }
 \examples{
 \dontrun{
-  rast <- gen_ne_disputed_area_share()
+# Generate raster covering all disputed areas
+rast <- gen_ne_disputed_area_share()
+terra::plot(rast, main = "PRIO-GRID Coverage: All Disputed Areas")
 }
+
 }
 \references{
 \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}

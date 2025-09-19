@@ -2,15 +2,46 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{read_naturalearth_10m_land}
 \alias{read_naturalearth_10m_land}
-\title{Reads the Natural Earth 10m Physical Vector Data}
+\title{Reads the Natural Earth 10m Physical Land Data}
 \usage{
 read_naturalearth_10m_land()
 }
 \value{
-an object of class sf
+An \code{sf} object
 }
 \description{
-Reads the Natural Earth 10m Physical Vector Data
+Downloads and imports the Natural Earth 1:10m scale Physical Land dataset,
+which provides global polygon boundaries of landmasses at a coarse
+cartographic scale suitable for mapping and contextual analysis.
+}
+\details{
+The function:
+\itemize{
+\item Downloads the Natural Earth 1:10m Physical Land shapefile from the
+PRIO-GRID data repository
+\item Extracts the contents of the zip archive
+\item Reads the shapefile into R as an \code{sf} object
+}
+}
+\note{
+\itemize{
+\item The Natural Earth dataset is intended for mapping and general
+analysis, not for precise cadastral or legal boundary use
+\item The file is cached locally after download
+}
+}
+\examples{
+\dontrun{
+# Read Natural Earth 10m land polygons
+land <- read_naturalearth_10m_land()
+
+# Inspect structure
+print(land)
+
+# Plot global landmasses
+plot(sf::st_geometry(land), col = "lightgray", border = "darkgray")
+}
+
 }
 \references{
 \insertRef{naturalearthLand10mPhysical2024}{priogrid}

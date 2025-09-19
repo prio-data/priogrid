@@ -5,13 +5,15 @@
 \title{Calculate Grid Cell Coverage by International State System Boundaries (cShapes 2.0)}
 \usage{
 cshapes_cover_share(measurement_date, cshp = read_cshapes())
-
-cshapes_cover_share(measurement_date, cshp = read_cshapes())
 }
 \arguments{
-\item{measurement_date}{A single date as Date object}
+\item{measurement_date}{A single \code{Date} object specifying the date for
+which to calculate boundary coverage. Must be within the temporal range
+of the CShapes dataset (1886 onwards).}
 
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
+properly formatted date intervals. Defaults to \code{\link{read_cshapes}()}
+if not provided.}
 }
 \description{
 Computes the proportion of each PRIO-GRID cell that intersects with country
@@ -57,11 +59,8 @@ terra::plot(coverage_change,
 
 }
 
-# cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
 }
 \references{
-\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }
 \seealso{

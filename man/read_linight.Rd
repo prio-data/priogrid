@@ -11,7 +11,7 @@ read_linight(overwrite_files = FALSE)
 recalculated and overwritten. Defaults to \code{FALSE}.}
 }
 \value{
-an object of class sf
+A \code{SpatRaster} object
 }
 \description{
 Downloads, preprocesses, and harmonizes the Li et al. global nighttime
@@ -34,6 +34,41 @@ resampling
 \item Assigns layer names as dates, aligned to PRIO-GRID temporal
 conventions (January 1 of each year by default)
 }
+}
+\note{
+\itemize{
+\item Initial preprocessing (extent harmonization) may take time, but is
+cached for faster subsequent runs
+\item Large raster files may require substantial disk space and memory
+\item Nighttime lights are influenced by sensor calibration, atmospheric
+conditions, and moonlight; Li et al. provide harmonization but
+residual inconsistencies may remain
+}
+}
+\examples{
+\dontrun{
+# Read harmonized Li Nighttime Lights data
+linight <- read_linight()
+
+# Inspect structure
+print(linight)
+
+# Plot nighttime lights for year 2000
+terra::plot(linight[["2000-01-01"]],
+            main = "Global Nighttime Lights 2000")
+
+# Compare change between 2000 and 2020
+lights_2000 <- linight[["2000-01-01"]]
+lights_2020 <- linight[["2020-01-01"]]
+change <- lights_2020 - lights_2000
+terra::plot(change, main = "Nighttime Lights Change 2000–2020")
+
+# Extract regional time series
+# example_extent <- terra::ext(100, 120, 20, 40) # East Asia
+# region_lights <- terra::crop(linight, example_extent)
+# terra::plot(region_lights[[1]], main = "Regional Nighttime Lights")
+}
+
 }
 \references{
 \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
