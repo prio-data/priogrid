@@ -1,8 +1,8 @@
 #' Read Global Multi-resolution Terrain Elevation Data (GMTED2010)
 #'
-#' Unzips and reads the GMTED2010 spatial metadata as an sf object.
-#' This function locates the local GMTED2010 dataset file, extracts it,
-#' and reads the spatial metadata shapefile for use in elevation calculations.
+#' Reads the GMTED2010 spatial metadata for terrain elevation as an \code{sf} object.
+#' This metadata includes polygon geometries for GMTED2010 tiles and summary
+#' elevation statistics such as minimum, maximum, and mean elevation values.
 #'
 #' @details
 #' The function performs the following steps:
@@ -12,10 +12,7 @@
 #'   \item Reads the spatial metadata shapefile from the extracted data
 #' }
 #'
-#' @return An sf object containing the GMTED2010 spatial metadata with elevation
-#' information including minimum, maximum, and mean elevation values
-#'
-#' @export
+#' @return An \code{sf} object
 #'
 #' @examples
 #' \dontrun{
@@ -28,6 +25,7 @@
 #' \code{\link{ruggedterrain_variable}} for calculating elevation statistics,
 #' \code{\link{get_pgfile}} for the underlying data retrieval function
 #'
+#' @export
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
 read_ruggedterrain <- function() {
@@ -66,7 +64,7 @@ read_ruggedterrain <- function() {
 #' @param variable Character string indicating elevation function.
 #' Must be one of: "elevation_min", "elevation_max", "elevation_mean"
 #'
-#' @return A SpatRaster object containing elevation values for each PRIO-GRID cell
+#' @return A \code{SpatRaster} object
 #' @export
 #'
 #' @examples
@@ -137,7 +135,7 @@ ruggedterrain_variable <- function(variable) {
 #' A convenience wrapper function that calculates mean elevation values for each
 #' PRIO-GRID cell using \code{\link{ruggedterrain_variable}}.
 #'
-#' @return A SpatRaster object with mean elevation values named "elevation_mean"
+#' @return A \code{SpatRaster} object
 #' @export
 #'
 #' @examples
