@@ -2,8 +2,10 @@
 % Please edit documentation in R/data_cshapes.R
 \name{cshapes_cover_share}
 \alias{cshapes_cover_share}
-\title{Share of grid-cell intersecting with the international state system (cShapes 2.0)}
+\title{Calculate Grid Cell Coverage by International State System Boundaries (cShapes 2.0)}
 \usage{
+cshapes_cover_share(measurement_date, cshp = read_cshapes())
+
 cshapes_cover_share(measurement_date, cshp = read_cshapes())
 }
 \arguments{
@@ -12,13 +14,58 @@ cshapes_cover_share(measurement_date, cshp = read_cshapes())
 \item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
 }
 \description{
-Takes the cShapes data and returns
-a raster-mask that is true for the grid cells that intersects with country borders
-included in the international state system at the measurement_date
+Computes the proportion of each PRIO-GRID cell that intersects with country
+boundaries from the CShapes 2.0 dataset at a specified date. The function
+performs spatial overlay analysis to determine how much of each grid cell
+falls within internationally recognized state boundaries.
+}
+\details{
+This function uses CShapes 2.0 historical boundary data to calculate the
+proportion of each PRIO-GRID cell covered by countries that were part of
+the international state system at the measurement date. The function:
+\itemize{
+\item Filters CShapes data to boundaries valid at the measurement date
+\item Performs exact area-weighted extraction using the exactextractr package
+\item Returns proportional coverage values (0-1) for each grid cell
+\item Masks out non-land areas from the final result
+}
+
+The coverage values represent the fraction of each PRIO-GRID cell area that
+falls within internationally recognized state boundaries.
 }
 \examples{
+\dontrun{
+# Calculate state system coverage for 2010
+coverage_2010 <- cshapes_cover_share(as.Date("2010-01-01"))
+
+# View the result
+print(coverage_2010)
+
+# Plot the coverage
+terra::plot(coverage_2010,
+            main = "cShapes coverage 2010",
+            col = terrain.colors(100))
+
+# Calculate coverage for different time periods
+coverage_1950 <- cshapes_cover_share(as.Date("1950-01-01"))
+coverage_2000 <- cshapes_cover_share(as.Date("2000-01-01"))
+
+# Compare coverage over time
+coverage_change <- coverage_2000 - coverage_1950
+terra::plot(coverage_change,
+            main = "Change in cShapes coverage 1950-2000")
+
+}
+
 # cshapes_cover_share_one_cross_section <- cshapes_cover_share(as.Date("2010-01-01"))
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+
+\insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}
+\seealso{
+\code{\link{read_cshapes}} for loading CShapes boundary data,
+\code{\link{prio_blank_grid}} for PRIO-GRID structure,
+\code{\link[exactextractr]{exact_extract}} for area-weighted extraction
 }

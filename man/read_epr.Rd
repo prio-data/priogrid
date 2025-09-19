@@ -7,11 +7,83 @@
 read_epr()
 }
 \value{
-an object of class tibble
+A \code{tibble} object
 }
 \description{
-Reads the EPR Core 2023 data
+Downloads and processes EPR Core (Ethnic Power Relations) data, which provides
+information on politically relevant ethnic groups and their access to state
+power worldwide. The function formats temporal variables and adds utility
+columns for temporal analysis compatible with PRIO-GRID.
+}
+\details{
+EPR Core tracks the political status of ethnic groups that are politically
+relevant in each country-year. This function:
+\itemize{
+\item Downloads the EPR Core dataset from the ETH ICR data repository
+\item Converts temporal variables (from, to) to proper Date objects (gwsdate, gwedate)
+\item Adds a date_interval utility column for temporal operations
+\item Returns data in tibble format for analysis
+}
+
+The dataset categorizes ethnic groups based on their access to executive power,
+ranging from monopoly and dominance to discrimination and exclusion. Groups
+are considered politically relevant if they are either represented in government,
+engage in political competition, or face systematic discrimination.
+
+Political status categories typically include:
+\itemize{
+\item Monopoly: Group holds exclusive power
+\item Dominance: Group holds dominant power position
+\item Senior/Junior Partner: Group shares power in coalition
+\item Powerless: Group lacks political influence
+\item Discriminated: Group faces systematic discrimination
+\item Self-exclusion: Group voluntarily excludes itself from politics
+}
+}
+\examples{
+\dontrun{
+# Read EPR Core data
+epr_data <- read_epr()
+
+# Examine the structure
+print(epr_data)
+str(epr_data)
+
+# Check available columns
+names(epr_data)
+
+# View temporal coverage
+range(epr_data$gwsdate, na.rm = TRUE)
+range(epr_data$gwedate, na.rm = TRUE)
+
+# Examine unique countries
+unique_countries <- unique(epr_data$country)
+head(sort(unique_countries), 10)
+
+# Filter to specific country
+usa_groups <- epr_data[epr_data$gwid == 2, ]  # USA
+print(usa_groups)
+
+# Analyze power status distribution
+if("status" \%in\% names(epr_data)) {
+  table(epr_data$status)
+}
+
+# Filter groups active in specific year
+target_date <- as.Date("2010-01-01")
+active_2010 <- epr_data[target_date \%within\% epr_data$date_interval, ]
+nrow(active_2010)
+
+# Analyze temporal changes for specific group
+# example_group <- epr_data[epr_data$group == "African Americans", ]
+# View(example_group)
+}
+
 }
 \references{
 \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
+}
+\seealso{
+\code{\link{read_geoepr}} for spatial ethnic group data,
+\code{\link{pg_dates}} for PRIO-GRID temporal coverage
 }

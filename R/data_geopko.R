@@ -25,7 +25,7 @@
 #' @return A \code{sf} object
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Read Geo-PKO data
 #' geopko_data <- read_geopko()
 #'
@@ -100,7 +100,7 @@ read_geopko <- function(){
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Generate peacekeeping operations count data
 #' pko_counts <- gen_geopko_operations_count()
 #'
@@ -186,7 +186,7 @@ gen_geopko_operations_count <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Generate peacekeeping troop deployment data
 #' pko_troops <- gen_geopko_troops_count()
 #'

@@ -2,28 +2,36 @@
 % Please edit documentation in R/data_cshapes.R
 \name{gen_bdist2}
 \alias{gen_bdist2}
-\title{Generate bdist2 variable}
+\title{Generate multi-temporal distance to international borders data (bdist2)}
 \usage{
 gen_bdist2(cshp = read_cshapes())
 }
 \arguments{
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
+temporal information. Defaults to \code{\link{read_cshapes}()} if not provided.}
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-bdist2 gives the spherical distance (in kilometer) from the cell centroid to
-the border of the nearest neighboring country, regardless of whether the nearest
-country is located across international waters. Based on cShapes dataset.`
+Creates a multi-layer raster containing distances to nearest international
+borders for all PRIO-GRID temporal slices. The function generates time series
+data showing how proximity to international boundaries changes over time due
+to territorial changes, state formation, and dissolution events.
 }
 \details{
-The variable can be generated with up to daily temporal resolution. It does
-take quite a long time to estimate, but uses a past result if there are
-no changes in borders.
+The function automatically uses past results from previous time slices to
+dramatically reduce computation time when country boundaries remain unchanged
+between consecutive periods. This makes temporal sequence generation much
+more efficient than calculating each period independently.
 }
-\examples{
-# bdist2 <- gen_bdist2()
+\note{
+\itemize{
+\item This function is computationally intensive and may take hours to complete
+\item Progress indicators are printed during processing (time slice numbers)
+\item The optimization using past results significantly reduces total computation time
+\item Consider running in segments for very long time series to manage memory usage
+}
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}

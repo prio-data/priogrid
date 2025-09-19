@@ -2,32 +2,44 @@
 % Please edit documentation in R/data_cshapes.R
 \name{bdist2}
 \alias{bdist2}
-\title{Calculates bdist2 variable for a single time slice.}
+\title{Calculate distance to nearest international border (bdist2)}
 \usage{
 bdist2(measurement_date, cshp = read_cshapes(), past_result = NULL)
 }
 \arguments{
-\item{measurement_date}{A single date as Date object}
+\item{measurement_date}{A single \code{Date} object specifying the date for
+boundary analysis. Must be within CShapes temporal coverage.}
 
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.
+Defaults to \code{\link{read_cshapes}()} if not provided.}
 
-\item{past_result}{A past result of bdist2.}
+\item{past_result}{A list object from a previous \code{bdist2} calculation.
+If boundaries haven't changed, the function returns this result directly,
+avoiding recomputation. Default is NULL.}
 }
 \value{
-list with SpatRast with bdist2, and Sf objects with country boundaries and shared_borders.
+A list containing three elements:
+\itemize{
+\item \code{bdist2}: A \code{SpatRaster} with distances (km) from cell centroids
+to nearest international borders, masked to state system coverage
+\item \code{boundaries}: An \code{sf} object with country boundary line geometries
+\item \code{shared_borders}: An \code{sf} object with shared border segments
+between neighboring countries
+}
 }
 \description{
-bdist2 gives the spherical distance (in kilometer) from the cell centroid to
-the border of the nearest neighboring country, regardless of whether the nearest
-country is located across international waters. Based on cShapes dataset.`
+Computes the spherical distance (in kilometers) from each PRIO-GRID cell
+centroid to the nearest international border using CShapes 2.0 boundary data.
+The function calculates distances to shared borders between countries,
+regardless of whether countries are separated by international waters.
 }
 \details{
-The variable can be generated with up to daily temporal resolution. It does
-take quite a long time to estimate, but can use a past result if there are
-no changes in borders.
-}
-\examples{
-# bdist2 <- bdist2(as.Date("2010-01-01"))
+The function includes optimization logic that reuses previous calculations
+if country boundaries haven't changed since the last computation, significantly
+reducing processing time for temporal sequences.
+
+Distance calculations use spherical geometry (S2) for accurate measurements
+across the globe, particularly important for high-latitude regions.
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
