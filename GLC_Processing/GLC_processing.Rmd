@@ -1,0 +1,329 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(jsonlite)
+
+```
+
+
+```{r}
+
+# Load library
+library(terra)
+
+# --- Step 1: Read a raster from file ---
+# Replace with your actual file path
+fp <- "/Users/gbenz/Documents/priogrid/GLC_FCS30/v1/0313d990-b4f8-42ad-9553-6d25d23ae01a/GLC_FCS30D_19852022maps_E140-E145/GLC_FCS30D_20002022_E140N70_Annual.tif"
+r <- rast(fp)
+
+# --- Step 2: Quick visualization ---
+plot(r, main = "Preview of raster data")
+
+```
+
+```{r}
+```
+
+
+```{r}
+# --- Step 3: Print metadata ---
+print(r)            # basic info: dimensions, resolution, CRS, number of bands
+nlyr(r)             # number of layers (bands)
+names(r)            # band names (if available in file metadata)
+
+# --- Step 4: Check attributes / categories ---
+# If categorical (land cover classes), attributes are stored here:
+cats <- levels(r)
+print(cats)
+
+# If continuous, you can inspect summary stats
+summary(r)
+```
+
+
+```{r}
+```
+
+
+### Check for Mosaic (option) **are we beta testing one (or two) tif files or running a larger operation on the complete (or many files) to adhere to global coverage?**
+
+```{r}
+# install (if not already)
+remotes::install_github("frbcesab/zenodor")
+library(zenodor)
+```
+
+
+
+```{r}
+
+zen_filelist <- function(record_id) {
+  url <- paste0("https://zenodo.org/api/records/", record_id, "?size=1000")
+  meta <- jsonlite::fromJSON(url)
+  files <- meta$files
+  
+  return(data.frame(
+    filename = files$key,
+    url      = files$links$self,   # this is the actual download link
+    size_mb  = round(files$size / 1024^2, 2),
+    stringsAsFactors = FALSE
+  ))
+}
+
+```
+
+
+
+
+```{r}
+split_by_extension <- function(df, keep_ext = c(".zip")) {
+  # extract file extensions
+  ext <- tools::file_ext(df$filename)
+  ext <- paste0(".", ext)   # add dot to match keep_ext style
+  
+  # rows we want to keep
+  keep_idx <- ext %in% keep_ext
+  
+  # split into two dfs
+  main_df  <- df[keep_idx, , drop = FALSE]
+  other_features_df <- df[!keep_idx, , drop = FALSE]
+  
+  return(list(main_df = main_df,
+              other_features_df = other_features_df))
+}
+
+```
+
+## Execute functions
+
+```{r}
+z_files <- zen_filelist(15063683)
+
+split_result <- split_by_extension(z_files, keep_ext = c(".zip"))
+
+z_files_main <- split_result$main_df
+other_features_df <- split_result$other_features_df
+
+# Preview
+head(z_files_main$filename)
+head(other_features_df$filename)
+
+```
+
+
+```{r}
+zen_download <- function(record_id, index = "all", outdir = "downloads") {
+  # make sure outdir exists
+  if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+  
+  # get file list
+  files_df <- zen_filelist(record_id)
+  
+  # subset
+  if (!identical(index, "all")) {
+    if (any(index > nrow(files_df))) stop("Index out of range.")
+    files_df <- files_df[index, , drop = FALSE]
+  }
+  
+  # download with resume
+  for (i in seq_len(nrow(files_df))) {
+    dest <- file.path(outdir, files_df$filename[i])
+    url  <- files_df$url[i]
+    
+    message("Downloading: ", files_df$filename[i])
+    
+    # if file already exists, resume from where it left off
+    if (file.exists(dest)) {
+      existing_size <- file.size(dest)
+      message(" → Resuming from ", round(existing_size / 1e6, 1), " MB")
+      
+      h <- curl::new_handle()
+      curl::handle_setopt(h,
+                          noprogress      = FALSE,
+                          low_speed_time  = 1800,  # tolerate 30 min stalls
+                          low_speed_limit = 1,
+                          range           = paste0(existing_size, "-"))
+      
+      curl::curl_download(url, destfile = dest, mode = "ab", quiet = FALSE, handle = h)
+      
+    } else {
+      # fresh download
+      h <- curl::new_handle()
+      curl::handle_setopt(h,
+                          noprogress      = FALSE,
+                          low_speed_time  = 1800,
+                          low_speed_limit = 1)
+      
+      curl::curl_download(url, destfile = dest, mode = "wb", quiet = FALSE, handle = h)
+    }
+  }
+  
+  return(invisible(files_df))
+}
+
+```
+
+```{r}
+zen_download(15063683, index = 21, outdir = "downloads")
+```
+
+## Mapping the BETA Tiles to PG
+
+```{r}
+  # Generate PRIO-GRID raster and convert to vector
+  pg_grid <- prio_blank_grid()
+  pg_grid[] <- as.integer(round(pg_grid[]))
+  names(pg_grid) <- "pg_id"
+  pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+  names(pg_vect) <- "pg_id"
+```
+
+#### Map the PG Vector
+
+```{r}
+plot(pg_vect["pg_id"], main = "PRIO-GRID Polygons", reset = FALSE)
+
+```
+
+```{r}
+library(terra)
+library(sf)
+
+# --- Step 1: Pick a year (say the first band = 2000) ---
+r2000 <- r[[1]]   # or use the band index for the year you want
+names(r2000) <- "landcover_2000"
+
+# --- Step 2: Get PRIO-GRID polygons ---
+pg_grid <- prio_blank_grid()
+pg_grid[] <- as.integer(round(pg_grid[]))
+names(pg_grid) <- "pg_id"
+pg_vect <- as.polygons(pg_grid, na.rm = TRUE)
+pg_sf <- st_as_sf(pg_vect)
+
+# --- Step 3: Plot raster + overlay grid ---
+plot(r2000, main = "Landcover 2000 with PRIO-GRID overlay")
+plot(pg_vect, add = TRUE, border = "red", lwd = 0.2)  # thin red grid lines
+
+```
+
+
+
+### Structure of the GLC_FCS30D Raw Data
+
+The **GLC_FCS30D dataset** is distributed as **36 large tiles**, each provided as a compressed ZIP archive ranging in size from **1–8 GB**.  
+
+- **Large tile coverage**: each ZIP archive spans a **5° × 5° longitude–latitude block** (e.g., `E140–E145`).  
+- **Sub-tiles inside each ZIP**: within each archive are **34 smaller GeoTIFF tiles**, each representing a **5° × 5° subregion** partitioned across latitude and longitude (e.g., `E140N0` through `E145S40`). Together, these sub-tiles fill the full spatial extent of the larger ZIP’s geographic coverage.  
+- **Temporal structure**: each sub-tile is a **multi-band GeoTIFF**, where each band corresponds to one year of land cover data spanning **2000–2022**. This results in **23 annual layers** per sub-tile.  
+
+In summary, the dataset provides consistent global land cover coverage at 30 m resolution, organized hierarchically by **large geographic blocks → sub-tiles → annual layers**.
+
+### Challenges from Raw Data Structure
+
+The challenge lies in translating the **GLC_FCS30D raw data structure** into an efficient, programmatic process that can scale globally.  
+
+While similar coding has been successfully implemented for the **HILDE+ dataset**—a land cover dataset at a coarser **1 km resolution**—the preliminary functions used for HILDE+ (those preceding the computation of proportionality of land cover classifications within individual PRIO-GRID cells) do not translate directly to GLC.  
+
+The reason is structural:  
+- **HILDE+**: Each year is already separated into its own GeoTIFF, and each file represents a single global tile. This makes direct yearly processing straightforward.  
+- **GLC_FCS30D**: Data are nested in a more complex hierarchy. A primary ZIP file contains ~35 sub-tiles, and each sub-tile is a multi-band GeoTIFF with 23 annual layers. This requires two levels of unpacking and relational mapping before analysis can begin.  
+
+This represents a **two-order deficit in translation** between the two methods—making it infeasible to immediately apply prefabricated HILDE+ functions to GLC without significant restructuring.  
+
+#### ***Referencing HILDE+ Functions***
+
+The HILDE+ workflow provides a useful conceptual template but cannot be applied wholesale. Adapting it requires acknowledging both the finer resolution of GLC (30 m vs. 1 km) and its more intricate raw data structure.
+
+### Fidelity of PRIO-GRID Overlay
+
+The **PRIO-GRID (PG)** framework provides a standardized spatial unit with a resolution of approximately **55 km × 55 km** at the equator.  
+
+When overlaid onto a **GLC_FCS30D sub-tile** (5° × 5° extent, roughly 550 km per side), the correspondence is close to a **10 × 10 matrix of PRIO-GRID cells** per sub-tile.  
+
+This relationship highlights that each sub-tile contains about **100 PRIO-GRID cells**, allowing for systematic aggregation of the 30 m land cover information into coarser, globally consistent grid cells. 
+
+### Comparability of Tiling: Referenced from HILDE+
+
+#### Summary:
+
+The **HILDE+ workflow** applies batch processing through the function `generate_tiles_checked` to reduce memory usage and computation time when generating a global SpatRaster output. This tiling strategy allows global coverage to be processed in manageable chunks rather than as a single, monolithic raster.  
+
+In the **GLC_FCS30D dataset**, a comparable tiling logic is **natively embedded** in the raw data structure. Each large ZIP file is already partitioned into multiple sub-tiles, which naturally constrain spatial extent and size. Although the number of tiles in GLC exceeds those constructed for HILDE+, the underlying principle is the same: divide global coverage into smaller spatial units to ensure tractable processing.  
+
+This built-in tiling obviates the need to construct a global mosaic for each year—an operation that would be prohibitively **memory-intensive and computationally expensive** within the R environment. Instead, processing can proceed directly at the sub-tile level, leveraging the dataset’s inherent spatial partitioning to maintain efficiency.
+
+
+#### What is consistent between the current logic and the GLC case?
+
+**Spatial tiling as a strategy**  
+In the current function (`generate_tiles_checked` + `process_landcover_in_tiles_proportional`), the workflow avoids handling a global raster at once by splitting into tiles and looping tile-by-tile.  
+
+In the **GLC data**, this strategy is effectively pre-packaged: the dataset is already delivered as large ZIP files (primary tiles), which themselves are subdivided into smaller sub-tiles (GeoTIFFs). Conceptually, this aligns with the existing approach: process manageable units sequentially and then aggregate.  
+
+**Aggregation up to PRIO-GRID**  
+The current process extracts raster values within each PRIO-GRID polygon, calculates areas, and returns proportional landcover shares. This logic still works with GLC: whether the raster tile comes from HILDE+ (1 km global tiles) or GLC (30 m subtile TIFFs), the proportional aggregation logic per `pg_id` remains the same.  
+
+**Hierarchical processing and consolidation**  
+The pipeline already produces per-tile results → combines to an annual result → checks coverage. GLC requires the same nesting, but at two levels:  
+- Sub-tile (TIF, 23 bands)  
+- Parent ZIP extent (collection of sub-tiles)  
+- Global consolidation (36 ZIPs)  
+
+This is essentially the same scaffolding, with an added level of looping.  
+
+---
+
+#### What is different (and requires careful design)?
+
+**Temporal dimension**  
+- *HILDE+*: One TIFF per year (straightforward).  
+- *GLC*: One multi-band TIFF with 23 years inside.  
+  - This requires an inner loop over raster layers (bands) for each year, or a strategy to split them once and reuse.  
+
+**Two-order tiling**  
+- Current code assumes one tiling system created programmatically (HILDE+ global raster → artificial tiles).  
+- GLC uses native, nested tiling: ZIP → sub-tiles. The hierarchy must be respected; `generate_tiles_checked()` cannot simply be reused.  
+
+**Data volume**  
+- A single sub-tile is ~34 TIFFs × 23 bands → heavy but tractable.  
+- All 36 ZIPs = >1,000 multi-band files → far heavier than HILDE+.  
+- Efficient reading (band-wise streaming, disk-based iteration) will matter much more.  
+
+---
+
+#### Is the logic sound for scaling up?
+
+Yes, the skeleton logic is sound:  
+- Sub-tile → PG extraction → proportional area → aggregate upward.  
+- This matches both the HILDE+ approach and the way GLC is delivered.  
+
+But scaling will stress-test three factors:  
+1. **Disk and memory management**: Avoid loading all 34 sub-tiles × 23 layers at once. Process one sub-tile × one year at a time.  
+2. **Book-keeping of hierarchy**: Results must carry metadata for sub-tile ID, parent ZIP extent, and year. Without this, later aggregation will get messy.  
+3. **Performance**: With >1,000 files, batching and possibly parallelization will be needed for realistic execution beyond a single “beta test” folder.  
+
+---
+
+#### Recommendation
+
+The logic of the process applied to GLC is correct and consistent, but it requires **structural adaptation**:  
+
+- Treat each sub-tile GeoTIFF as the basic processing unit (not arbitrary tiles you generate).  
+- Add a loop over years (bands) inside the subtile processing function.  
+- Aggregate results from sub-tiles → ZIP extent → global.  
+- Design the data frame so each row has:  
+
+pg_id | landcover_type | year | zip_extent_id | subtile_id | p_area | area_km2
+
+
+- With this structure, final consolidation is straightforward: `bind_rows()` across all sub-tile outputs.  
+
+
+
+
+
+

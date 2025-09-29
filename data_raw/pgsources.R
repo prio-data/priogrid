@@ -4,4 +4,4 @@ if(length(pgsources$id) != length(unique(pgsources$id))){
   stop("Non-unique IDs. Double check sources.csv")
 }
 
-usethis::use_data(pgsources, overwrite = TRUE)
+usethis::use_data(pgsources, overwrite = FALSE)
