@@ -1,0 +1,156 @@
+# Beta Testing
+
+To validate and refine the processing workflow for the **GLC_FCS30D dataset**, we begin with a **single beta-test folder**. Each folder represents one large extent (e.g., `GLCFC30D_19852022maps_E140-E145`) and contains approximately **34 sub-tiles**. Each sub-tile is a multi-band GeoTIFF with **23 annual layers** spanning **2000–2022**.  
+
+The goal of this beta test is to design and validate the pipeline steps on a constrained subset of the data before scaling to all 36 global extents.
+
+---
+
+## General Considerations:
+
+#### Structure of the GLC_FCS30D Raw Data
+
+The **GLC_FCS30D dataset** is distributed as **36 large tiles**, each provided as a compressed ZIP archive ranging in size from **1–8 GB**.  
+
+- **Large tile coverage**: each ZIP archive spans a **5° × 5° longitude–latitude block** (e.g., `E140–E145`).  
+- **Sub-tiles inside each ZIP**: within each archive are **34 smaller GeoTIFF tiles**, each representing a **5° × 5° subregion** partitioned across latitude and longitude (e.g., `E140N0` through `E145S40`). Together, these sub-tiles fill the full spatial extent of the larger ZIP’s geographic coverage.  
+- **Temporal structure**: each sub-tile is a **multi-band GeoTIFF**, where each band corresponds to one year of land cover data spanning **2000–2022**. This results in **23 annual layers** per sub-tile.  
+
+In summary, the dataset provides consistent global land cover coverage at 30 m resolution, organized hierarchically by **large geographic blocks → sub-tiles → annual layers**.
+
+---
+
+#### Challenges from Raw Data Structure
+
+The challenge lies in translating the **GLC_FCS30D raw data structure** into an efficient, programmatic process that can scale globally.  
+
+While similar coding has been successfully implemented for the **HILDE+ dataset**—a land cover dataset at a coarser **1 km resolution**—the preliminary functions used for HILDE+ (those preceding the computation of proportionality of land cover classifications within individual PRIO-GRID cells) do not translate directly to GLC.  
+
+The reason is structural:  
+- **HILDE+**: Each year is already separated into its own GeoTIFF, and each file represents a single global tile. This makes direct yearly processing straightforward.  
+- **GLC_FCS30D**: Data are nested in a more complex hierarchy. A primary ZIP file contains ~35 sub-tiles, and each sub-tile is a multi-band GeoTIFF with 23 annual layers. This requires two levels of unpacking and relational mapping before analysis can begin.  
+
+This represents a **two-order deficit in translation** between the two methods—making it infeasible to immediately apply prefabricated HILDE+ functions to GLC without significant restructuring.  
+
+---
+
+#### PRIO-GRID overlay assumptions
+- Each sub-tile is expected to map approximately to a **10 × 10 grid of PRIO-GRID (PG) cells**, still with 23 year layers.
+- This defines the spatial resolution bridge between the 30 m landcover data and the ~55 km PG grid.
+
+---
+
+#### Filtering year range
+- The user specifies a date range via **`pgoptions`**.  
+- For the beta test, we simplify to **2015–2020**.  
+
+**Action step**:  
+- Implement a function (possibly adapted from HILDE or CRU code) to **rename raster layers by year** (2000–2022).  
+- Then, filter from the `annual` field in `pgoptions` to retain only the desired subset of years.  
+- Result: a 6-year stack (2015–2020) per sub-tile.
+
+---
+
+#### Reclassify landcover categories
+- Each sub-tile contains multiple landcover classes.  
+- To simplify, we will use a **classification dictionary** to merge many classes into fewer categories.  
+
+**Action step**:  
+- Develop a default **landcover dictionary** (e.g., forest, cropland, urban, water).  
+- Keep the dictionary as a **parameter** so alternative mappings can be tested flexibly.
+
+---
+
+#### Proportional extraction by PRIO-GRID cell
+For each selected year in the sub-tile, apply a function to calculate:  
+
+1. **PRIO-GRID ID**: assign `pg_id` for each cell intersecting the sub-tile.  
+2. **Proportion of PG cell covered**:  
+   - Each PG cell may overlap partially with the sub-tile extent.  
+   - Compute the percentage coverage per PG cell, expressed as a **confidence field**.  
+   - Anticipated coverage: typically >95%, but lower values possible along boundaries.  
+3. **Proportional landcover share**: the fraction of each PG cell occupied by each landcover type.  
+4. **Parent file reference**: derive from the sub-tile filename (e.g., `GLC_FC30D_20002022_E140N0_Annual.tif` → `parent_file = "E140N0"`).  
+5. **Grandparent folder reference**: derive from the enclosing ZIP/folder name (e.g., `GLCFC30D_19852022maps_E140-E145` → `grandparent_folder = "E140-E145"`).
+
+---
+
+#### Dataframe output
+The resulting dataframe represents **one year of one landcover type from one sub-tile**. It includes:  
+
+- `pg_id` — PRIO-GRID cell ID  
+- `year` — year of data (filtered to 2015–2020 in this test)  
+- `landcover_type` — class after dictionary reclassification  
+- `p_lc_area` — proportional area share of the PG cell covered by the landcover type  
+- `confidence` — coverage proportion of PG cell relative to the sub-tile  
+- `parent_file` — sub-tile code (e.g., `E140N0`)  
+- `grandparent_folder` — parent folder extent (e.g., `E140-E145`)  
+
+---
+
+## Operational Tasks 
+
+
+### Hierarchy of Loops
+
+The workflow for processing **GLC_FCS30D** landcover data is structured in **four stages** and **three looping levels**:  
+
+- **Stage One: Data download**  
+  Functions used: `zen_filelist`, `split_by_extension`, and `zen_download`.  
+  > *Note: this may present unique chokepoints for the standard **ingestion and documentation** process but reflects agreed-upon tasking from @andreas in a meeting Friday (26 Sept). This documentation presents transparency to @Jonas in approving the *non-standardised* procedure, implemented to conserve download time and maintain efficiency in beta testing these GLC landcover variables for PSI.*  
+
+- **First Level:**  
+  Following the download to disk, a zipped folder contains 1 of 36 subglobal extents. The first level of looping operations concentrates on the sub-tile extent of an individual file contained within the zipped folder — what we define as the *primary extent*.  
+
+- **Second Level:**  
+  Operations that consolidate a data feature to the *primary extent*, this level of analysis.
+
+- **Third Level (Global extent):**  
+  Operations for levels 1 and 2 are repeated across all folders (primary extents) that are available or retrieved from the Stage One download operation, reaching the global extent of PRIO-GRID.  
+
+---
+
+### Tasks Performed Within Looping Heirarchy
+
+**First Level Tasks**
+
+#### Step 1. Process all years of interest
+- Input: one sub-tile with 23 layers (2000–2022).  
+- Filter to `pgoptions` annual range (e.g., 2015–2020).  
+- Rename bands to match years.  
+- Output: stack of selected annual layers.  
+
+#### Step 2. Reclassify landcover
+- Apply dictionary mapping 30+ native classes → reduced set (e.g., 6 categories).  
+- Keep dictionary flexible (parameter).  
+- Output: reclassified raster stack.  
+
+#### Step 3. Overlay PRIO-GRID
+- Intersect sub-tile extent with PG polygons (~10×10 cells).  
+- For each PG cell and each year:  
+  - calculate proportional coverage (→ `confidence`)  
+  - calculate proportional area per landcover type (→ `p_lc_area`).  
+
+#### Step 4. Add metadata
+- Attach `pg_id`, `year`, `landcover_type`, `parent_file`, `grandparent_folder`.  
+- Output: tidy dataframe (long format).  
+
+#### Step 5. Write incrementally
+- Append dataframe to disk in **Parquet** or **Feather** format.  
+- Use `arrow::write_dataset()` or `arrow::write_parquet()` for efficient appending.  
+- After writing, clear memory.  
+
+#### Step 6. Repeat across sub-tiles
+- Move to next sub-tile.  
+- Run Steps 1–5.  
+- Append results into the same dataset file.  
+
+#### Step 7. Complete folder extent
+- After 34 sub-tiles are processed, the result is a **single dataset covering the folder extent** (e.g., `E140–E145`).  
+- Dataset is tidy long format: all years × all landcover classes × all PG cells for that extent.  
+
+#### Step 8. Scale to global
+- Repeat Steps 1–7 for all 36 global ZIP folders.  
+- Final output: unified dataset (Parquet/Feather) covering all extents.  
+- Supports efficient queries by `pg_id`, `year`, or `landcover_type`.  
+
