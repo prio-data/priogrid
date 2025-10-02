@@ -38,6 +38,10 @@ This represents a **two-order deficit in translation** between the two methods�
 - Each sub-tile is expected to map approximately to a **10 × 10 grid of PRIO-GRID (PG) cells**, still with 23 year layers.
 - This defines the spatial resolution bridge between the 30 m landcover data and the ~55 km PG grid.
 
+- `robust_transformation` utility: Resamples to PRIO-GRID resolution → ensures the output aligns to whole-degree increments (1°, 0.5°, 0.25°, 0.2°, etc.), which makes aggregation mathematically consistent across all tiles.
+
+  - *res <- robust_transformation(res, agg_fun = "mean")*
+
 ---
 
 #### Filtering year range
