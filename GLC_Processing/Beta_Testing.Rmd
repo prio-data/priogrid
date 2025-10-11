@@ -116,6 +116,9 @@ The workflow for processing **GLC_FCS30D** landcover data is structured in **fou
 
 ### Tasks Performed Within Looping Heirarchy
 
+**Ingestion Level Preprocessing Tasks**
+#### A: Construct `read` function
+
 **First Level Tasks**
 
 #### Step 1. Process all years of interest
@@ -157,4 +160,202 @@ The workflow for processing **GLC_FCS30D** landcover data is structured in **fou
 - Repeat Steps 1–7 for all 36 global ZIP folders.  
 - Final output: unified dataset (Parquet/Feather) covering all extents.  
 - Supports efficient queries by `pg_id`, `year`, or `landcover_type`.  
+
+```{r}
+
+#' Reads the GLC v2 dataset
+#'
+#'
+#'
+#' @return an object of class sf
+#' @export
+#'
+#' @references
+#' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
+read_glc_v2 <- function(beta_test = FALSE) {
+  # Base dataset directory
+  f <- file.path(
+    "/Volumes/T7/PRIOGRID",
+    "GLC_FCS30",
+    "v2",
+    "7f03a296-4329-4458-8b62-83c3d27530af"
+  )
+  
+  # ---- Identify zip files ----
+  zips <- list.files(f, pattern = "\\.zip$", full.names = TRUE)
+  
+  # Optional beta test: only process first 2 zips
+  if (beta_test) {
+    message("Running in beta test mode: limiting to first two zip files.")
+    zips <- head(zips, 2)
+  }
+  
+  # ---- Unzip only if not already unzipped ----
+  unzipped_dirs <- vapply(zips, function(z) {
+    target_dir <- sub("\\.zip$", "", z)
+    if (!dir.exists(target_dir)) {
+      message("Unzipping ", basename(z))
+      unzip(z, exdir = target_dir)
+    } else {
+      message("Skipping (already unzipped): ", basename(z))
+    }
+    return(target_dir)
+  }, FUN.VALUE = character(1))
+  
+  # ---- Gather all annual (not 5-year) TIFFs ----
+  tif_files <- list.files(
+    unzipped_dirs,
+    pattern = "\\.tif$",
+    full.names = TRUE,
+    recursive = TRUE
+  )
+  tif_files <- tif_files[!grepl("5years", basename(tif_files), ignore.case = TRUE)]
+  
+  return(tif_files)
+  
+  # ---- Stack lazily ----
+  # r <- terra::rast(tif_files)
+}
+
+
+```
+
+
+```{r}
+tif_files = read_glc_v2(beta_test = TRUE)
+```
+
+Next incorporate:
+```{r}
+library(terra)
+
+```
+
+```{r}
+tif_files
+```
+```{r}
+
+```
+
+
+```{r}
+# Create a list to hold renamed rasters
+ras_list <- vector("list", length(tif_files))
+
+for (i in seq_along(tif_files)) {
+  # Load one tif lazily
+  r_i <- rast(tif_files[i])
+  fname <- basename(tif_files[i])
+  
+  # Parse start and end years from filename
+  start_year <- as.numeric(sub(".*_(\\d{4})\\d{4}.*", "\\1", fname))
+  end_year   <- as.numeric(sub(".*_(\\d{8}).*", "\\1", fname))
+  end_year   <- as.numeric(substr(end_year, 5, 8))
+  
+  # Build the sequence of years
+  years <- seq(start_year, end_year)
+  
+  # Rename layers safely
+  names(r_i) <- years[seq_len(min(length(years), nlyr(r_i)))]
+  
+  # Store renamed raster in list
+  ras_list[[i]] <- r_i
+}
+
+# Inspect one example
+names(ras_list[[30]])[1:10]
+
+```
+
+```{r}
+years_to_keep <- lubridate::year(pg_dates()) |> unique()
+
+# Filter each raster in ras_list
+ras_list_filtered <- lapply(ras_list, function(r) {
+  layer_years <- as.numeric(names(r))     # extract layer years
+  keep_layers <- layer_years %in% years_to_keep
+  
+  if (any(keep_layers)) {
+    r <- r[[keep_layers]]                 # subset to matching years
+  } else {
+    warning("No matching years found for raster: ", sources(r))
+    r <- NULL
+  }
+  
+  return(r)
+})
+```
+
+```{r}
+ras_list_filtered <- Filter(Negate(is.null), ras_list_filtered)
+
+month_to_use <- pg_dates() |> lubridate::month() |> max()
+day_to_use   <- pg_dates() |> lubridate::day()   |> max()
+
+for (i in seq_along(ras_list_filtered)) {
+  yrs <- as.numeric(names(ras_list_filtered[[i]]))
+  names(ras_list_filtered[[i]]) <- as.Date(
+    paste(yrs, month_to_use, day_to_use, sep = "-")
+  )
+}
+
+
+```
+
+```{r}
+# Check the first raster
+names(ras_list_filtered[[1]])[1:10]
+
+```
+
+
+```{r}
+library(terra)
+
+# Path to your example tif
+f <- "/Volumes/T7/PRIOGRID/GLC_FCS30/v2/7f03a296-4329-4458-8b62-83c3d27530af/GLC_FCS30D_19852022maps_E0-E5/GLC_FCS30D_20002022_E0N50_Annual_V1.1.tif"
+
+# Load the file lazily
+r <- rast(f)
+
+# Check metadata
+r
+
+# Extract start/end years from filename
+fname <- basename(f)
+start_year <- as.numeric(sub(".*_(\\d{4})\\d{4}.*", "\\1", fname))
+end_year   <- as.numeric(sub(".*_(\\d{8}).*", "\\1", fname))
+end_year   <- as.numeric(substr(end_year, 5, 8))  # just last 4 digits
+
+# Build sequence of years
+years <- seq(start_year, end_year)
+
+# Assign layer names as actual years
+names(r) <- years
+
+# Check first few
+names(r)[1:23]
+
+```
+
+```{r}
+f <- "/Volumes/T7/PRIOGRID/GLC_FCS30/v2/7f03a296-4329-4458-8b62-83c3d27530af/GLC_FCS30D_19852022maps_E0-E5/GLC_FCS30D_20002022_E0N50_Annual_V1.1.tif"
+r <- rast(f)
+
+# Extract start/end years from filename
+fname <- basename(f)
+start_year <- as.numeric(sub(".*_(\\d{4})\\d{4}.*", "\\1", fname))
+end_year   <- as.numeric(sub(".*_(\\d{8}).*", "\\1", fname))
+end_year   <- as.numeric(substr(end_year, 5, 8))  # just last 4 digits
+
+# Build sequence of years
+years <- seq(start_year, end_year)
+
+# Assign layer names as actual years
+names(r) <- years
+
+# Check first few
+names(r)[1:10]
+```
 
