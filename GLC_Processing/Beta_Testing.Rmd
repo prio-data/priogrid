@@ -323,6 +323,88 @@ range(names(ras_list_filtered[[1]]))
 # 5️⃣ Optional — quick visual preview of one raster layer
 plot(ras_list_filtered[[1]][[1]], main = names(ras_list_filtered[[1]])[1])
 ```
+```{r}
+glc_landcover <- function(landcovertype, beta_test = FALSE) {
+  memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
+  terra::terraOptions(memfrac = 0.8)
+  
+  # Read and prepare rasters directly
+  tif_files <- read_glc_v2(beta_test = beta_test)
+  ras_list_filtered <- prepare_glc_layers(tif_files)
+  
+  # Notify about coverage
+  message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
+  message("Missing or empty tiles will be skipped automatically.")
+  
+  res <- robust_transformation(ras_list_filtered, function(x) mean(x == landcovertype))
+  
+  terra::terraOptions(memfrac = memfrac_option)
+  return(res)
+}
+```
+
+
+```{r}
+# --- Cropland ---
+gen_glc_cropland <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = c(10, 11, 12, 20),
+    beta_test = beta_test
+  )
+}
+
+# --- Forest ---
+gen_glc_forest <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = c(51, 52, 61, 62, 71, 72, 81, 82, 91, 92),
+    beta_test = beta_test
+  )
+}
+
+# --- Shrubland ---
+gen_glc_shrubland <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = c(120, 121, 122, 150, 152),
+    beta_test = beta_test
+  )
+}
+
+# --- Grassland ---
+gen_glc_grassland <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = c(130, 153),
+    beta_test = beta_test
+  )
+}
+
+# --- Wetland ---
+gen_glc_wetland <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = c(181, 182, 183, 184, 185, 186, 187),
+    beta_test = beta_test
+  )
+}
+
+# --- Built-up / Urban ---
+gen_glc_builtup <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = 190,
+    beta_test = beta_test
+  )
+  
+# --- Water Body ---
+gen_glc_water <- function(beta_test = FALSE) {
+  glc_landcover(
+    landcovertype = 210,
+    beta_test = beta_test
+  )
+}
+
+```
+
+
+
+
 
 ### Sandbox:
 
