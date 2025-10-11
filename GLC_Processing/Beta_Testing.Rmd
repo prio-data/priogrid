@@ -235,9 +235,96 @@ library(terra)
 tif_files
 ```
 ```{r}
+prepare_glc_layers <- function(tif_files) {
+  library(terra)
+  library(lubridate)
+
+  # ---- Step 1: Load and rename rasters by year range ----
+  ras_list <- vector("list", length(tif_files))
+  
+  for (i in seq_along(tif_files)) {
+    r_i <- rast(tif_files[i])
+    fname <- basename(tif_files[i])
+    
+    # Parse start and end years from filename
+    start_year <- as.numeric(sub(".*_(\\d{4})\\d{4}.*", "\\1", fname))
+    end_year   <- as.numeric(sub(".*_(\\d{8}).*", "\\1", fname))
+    end_year   <- as.numeric(substr(end_year, 5, 8))
+    
+    # Build the sequence of years
+    years <- seq(start_year, end_year)
+    
+    # Rename layers safely
+    names(r_i) <- years[seq_len(min(length(years), nlyr(r_i)))]
+    
+    ras_list[[i]] <- r_i
+  }
+
+  # ---- Step 2: Filter layers by PRIO-GRID years ----
+  years_to_keep <- year(pg_dates()) |> unique()
+  
+  ras_list_filtered <- lapply(ras_list, function(r) {
+    raw_names <- names(r)
+    layer_years <- suppressWarnings(as.numeric(gsub("\\D", "", raw_names)))
+    keep_layers <- layer_years %in% years_to_keep
+    
+    if (any(keep_layers)) {
+      r <- r[[keep_layers]]
+      names(r) <- layer_years[keep_layers]
+    } else {
+      warning("No matching years found for raster: ", sources(r))
+      r <- NULL
+    }
+    return(r)
+  })
+  
+  # Remove NULL rasters
+  ras_list_filtered <- Filter(Negate(is.null), ras_list_filtered)
+  
+  # ---- Step 3: Rename to full YYYY-MM-DD format ----
+  month_to_use <- pg_dates() |> month() |> max()
+  day_to_use   <- pg_dates() |> day()   |> max()
+  
+  ras_list_filtered <- lapply(ras_list_filtered, function(r) {
+    yrs <- as.numeric(names(r))
+    names(r) <- as.Date(paste(yrs, month_to_use, day_to_use, sep = "-"))
+    return(r)
+  })
+  
+  # ---- Return processed rasters ----
+  message("✅ Layer preparation complete. Returning filtered raster list.")
+  return(ras_list_filtered)
+}
 
 ```
 
+
+```{r}
+ras_list_filtered <- prepare_glc_layers(tif_files)
+```
+
+
+```{r}
+# Step 3: Verify results
+# --------------------------------------
+
+# 1️⃣ Check how many raster tiles were returned
+length(ras_list_filtered)
+
+# 2️⃣ Check the number of layers per raster (should match pg_dates() years)
+sapply(ras_list_filtered, nlyr)
+
+# 3️⃣ Inspect the first raster's layer names
+head(names(ras_list_filtered[[1]]))
+
+# 4️⃣ Inspect the full date range for the first raster
+range(names(ras_list_filtered[[1]]))
+
+# 5️⃣ Optional — quick visual preview of one raster layer
+plot(ras_list_filtered[[1]][[1]], main = names(ras_list_filtered[[1]])[1])
+```
+
+### Sandbox:
 
 ```{r}
 # Create a list to hold renamed rasters
@@ -267,17 +354,22 @@ for (i in seq_along(tif_files)) {
 names(ras_list[[30]])[1:10]
 
 ```
-
+## Step 2
 ```{r}
+# Replace your previous filter step with this improved one
 years_to_keep <- lubridate::year(pg_dates()) |> unique()
 
-# Filter each raster in ras_list
 ras_list_filtered <- lapply(ras_list, function(r) {
-  layer_years <- as.numeric(names(r))     # extract layer years
+  # Clean up names BEFORE filtering
+  raw_names <- names(r)
+  layer_years <- suppressWarnings(as.numeric(gsub("\\D", "", raw_names)))
+  
+  # Now filter
   keep_layers <- layer_years %in% years_to_keep
   
   if (any(keep_layers)) {
-    r <- r[[keep_layers]]                 # subset to matching years
+    r <- r[[keep_layers]]
+    names(r) <- layer_years[keep_layers]  # overwrite with clean numeric years
   } else {
     warning("No matching years found for raster: ", sources(r))
     r <- NULL
@@ -287,25 +379,26 @@ ras_list_filtered <- lapply(ras_list, function(r) {
 })
 ```
 
+## Step 3
 ```{r}
+# Continue with downstream steps (unchanged)
 ras_list_filtered <- Filter(Negate(is.null), ras_list_filtered)
 
 month_to_use <- pg_dates() |> lubridate::month() |> max()
 day_to_use   <- pg_dates() |> lubridate::day()   |> max()
 
-for (i in seq_along(ras_list_filtered)) {
-  yrs <- as.numeric(names(ras_list_filtered[[i]]))
-  names(ras_list_filtered[[i]]) <- as.Date(
-    paste(yrs, month_to_use, day_to_use, sep = "-")
-  )
-}
-
+# Rename to full date labels (safe)
+ras_list_filtered <- lapply(ras_list_filtered, function(r) {
+  yrs <- as.numeric(names(r))
+  names(r) <- as.Date(paste(yrs, month_to_use, day_to_use, sep = "-"))
+  return(r)
+})
 
 ```
 
 ```{r}
-# Check the first raster
-names(ras_list_filtered[[1]])[1:10]
+# Inspect the layer names from the first raster
+head(names(ras_list_filtered[[1]]))
 
 ```
 
