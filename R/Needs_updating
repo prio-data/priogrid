@@ -1,0 +1,11 @@
+Checking pgvariables and references
+This needs updating!
+
+geoepr_reg_excluded  FALSE  287bfdf7-2f4f-402a-88df-5fe1f8b7046b, 3900b527-a728-4c26-b0ab-f4441d3ee2e8
+
+Reference for priogrid (which all variables and functions refer to) is absent from the bibliography.
+
+References for gen functions for hilda are absent in the documentation. Fixed in kh_documentation branch.
+
+naturalearthLand10mPhysical2024 and naturalearthAdmin0Breakaway2024 have limited information in the bibliography (only title, author, and name).
+Might need updating to meet reference standards like the access URL.
