@@ -34,16 +34,29 @@ get_temporal_hash <- function() {
 #' The path varies depending on your [pgoptions]:
 #'  rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
 #'
+#' @param version Default NULL, will pull version using `packageVersion("priogrid")`. Alternative a character string to specify a PRIO-GRID version.
+#' @param type Default NULL, will build temporal and spatial hash based on pgoptions. Alternative "05deg_yearly" to access the published version.
+#'
 #' @returns File path
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   pgout_path()
+#'   pgout_path() # to get path for when you develop data yourself
 #'   list.files(pgout_path())
+#'   pgout_path(version = "3.0.0", type = "05deg_yearly") # published version
 #' }
-pgout_path <- function(){
-  file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), get_spatial_hash(), get_temporal_hash())
+pgout_path <- function(version = NULL, type = NULL){
+  if(length(c(is.null(version), is.null(type))) == 1){
+    stop("Please specify both PRIOGRID version and type, or let both be NULL to infer from pgoptions")
+  }
+
+  if(is.null(version) & is.null(type)){
+    fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), get_spatial_hash(), get_temporal_hash())
+  } else{
+    fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", version, type)
+  }
+  return(fpath)
 }
 
 #' Calculates all PRIO-GRID variables
@@ -53,6 +66,8 @@ pgout_path <- function(){
 #' calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/{options_hash}/variable_name.rds".
 #'
 #' @param varnames Vector with names of variables in PRIOGRID. See [pgvariables]. If NULL, then all variables are used.
+#' @param type PRIOGRID type to [pgout_path]. Use "hash" to make folder based on pgoptions.
+#' @param version PRIOGRID version to [pgout_path]. Defaults to `packageVersion("priogrid")`
 #' @param overwrite Boolean, if false, will ignore updating variables that already exist in the result folder
 #'
 #' @export
@@ -63,7 +78,7 @@ pgout_path <- function(){
 #'   r <- load_pgvariable()
 #' }
 #'
-calc_pg <- function(varnames = NULL, overwrite = FALSE){
+calc_pg <- function(varnames = NULL, type, version = packageVersion("priogrid"), overwrite = FALSE){
   if(is.null(varnames)){
     varnames <- pgvariables$name
   }
@@ -78,11 +93,11 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE){
     stop("No valid varnames supplied. Use names in `pgvariables`")
   }
 
-  if(!dir.exists(pgout_path())){
-    dir.create(pgout_path(), recursive = T)
+  if(!dir.exists(pgout_path(version, type))){
+    dir.create(pgout_path(version, type), recursive = T)
   }
 
-  existing_files <- list.files(pgout_path()) |> tools::file_path_sans_ext()
+  existing_files <- list.files(pgout_path(version, type)) |> tools::file_path_sans_ext()
 
   if(!overwrite){
     valid_varnames <- valid_varnames[!valid_varnames %in% existing_files]
@@ -90,9 +105,9 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE){
 
   # Calculate variable
   message(paste("Variables to calculate:", paste(valid_varnames, collapse = ", ")))
-  message(paste("Saving to:", pgout_path()))
+  message(paste("Saving to:", pgout_path(version, type)))
   for(varname in valid_varnames){
-    message(paste("Calculating", varname, "and saving to", pgout_path()))
+    message(paste("Calculating", varname, "and saving to", pgout_path(version, type)))
     r <- get(paste0("gen_", varname))()
     save_pgvariable(r, varname)
   }
@@ -108,14 +123,16 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE){
 #'
 #' @param rast Terra SpatRast from a gen_ function
 #' @param varname Character string with the variable name
+#' @param type PRIOGRID type to [pgout_path]. Use "hash" to make folder based on pgoptions.
+#' @param version PRIOGRID version to [pgout_path]. Defaults to `packageVersion("priogrid")`
 #' @export
-save_pgvariable <- function(rast, varname) {
+save_pgvariable <- function(rast, varname, type, version = packageVersion("priogrid")) {
 
   if(!varname %in% pgvariables$name){
     stop("varname not found in pgvariables.")
   }
 
-  filepath <- file.path(pgout_path(), paste0(varname, ".rds"))
+  filepath <- file.path(pgout_path(version = version, type = type), paste0(varname, ".rds"))
 
   if(class(rast) != "PackedSpatVector"){
     rast <- terra::wrap(rast)
@@ -131,10 +148,12 @@ save_pgvariable <- function(rast, varname) {
 #'
 #'
 #' @param varname Character string with the variable name
+#' @param version PRIOGRID version to [pgout_path]. Default (NULL) targets the latest PRIOGRID version.
+#' @param type PRIOGRID type to [pgout_path]. Default (NULL) targets the yearly 0.5x0.5 degree spatio-temporal resolution.
 #' @return A SpatRaster object
 #' @export
-load_pgvariable <- function(varname) {
-  filepath <- file.path(pgout_path(), paste0(varname, ".rds"))
+load_pgvariable <- function(varname, version = NULL, type = NULL) {
+  filepath <- file.path(pgout_path(version = version, type = type), paste0(varname, ".rds"))
 
   if (!file.exists(filepath)) {
     return(NA)
@@ -144,13 +163,12 @@ load_pgvariable <- function(varname) {
   terra::unwrap(r_wrapped)
 }
 
-<<<<<<< HEAD
-static_pg <- function(as_raster = FALSE, test = FALSE){
-=======
 #' Collects and returns static (non-timevarying) PRIO-GRID data
 #'
 #' See [pgvariables] for an overview of variables.
 #'
+#' @param version PRIOGRID version to [pgout_path]. Default (NULL) targets the latest PRIOGRID version.
+#' @param type PRIOGRID type to [pgout_path]. Default (NULL) targets the yearly 0.5x0.5 degree spatio-temporal resolution.
 #' @param as_raster Boolean (default FALSE). Set to TRUE to return a list of rasters. Defaults to returning a data.table.
 #' @param test Boolean. Prints coverage summary (percentage cells with data) for each variable.
 #' @param overwrite Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
@@ -164,15 +182,13 @@ static_pg <- function(as_raster = FALSE, test = FALSE){
 #'   pg_dt <- read_pg_static(test = TRUE) # prints coverage summary for each variable
 #'   pg_rast <- read_pg_static(as_raster = TRUE)
 #' }
-read_pg_static <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
-  fname <- file.path(pgout_path(), "pg_static.parquet")
+read_pg_static <- function(version = NULL, type = NULL, as_raster = FALSE, test = FALSE, overwrite = FALSE){
+  fname <- file.path(pgout_path(version, type), "pg_static.parquet")
   if(as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite){
     return(arrow::read_parquet(fname))
   }
-
->>>>>>> 8f6f3af (Updated build step.)
   static <- pgvariables |> dplyr::filter(static)
-  rasters <- lapply(static$name, load_pgvariable)
+  rasters <- lapply(static$name, load_pgvariable, version = version, pgtype = pgtype)
   names(rasters) <- static$name
   rasters <- rasters[!is.na(rasters)]
 
@@ -208,6 +224,8 @@ read_pg_static <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
 #'
 #' See [pgvariables] for an overview of variables.
 #'
+#' @param version PRIOGRID version to [pgout_path]. Default (NULL) targets the latest PRIOGRID version.
+#' @param type PRIOGRID type to [pgout_path]. Default (NULL) targets the yearly 0.5x0.5 degree spatio-temporal resolution.
 #' @param as_raster Boolean. Set to TRUE to return a list of rasters. Defaults to FALSE (returns data.table).
 #' @param test Boolean. Returns only coverage summary (percentage cells with data) for each variable for each date.
 #' @param overwrite Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
@@ -222,15 +240,16 @@ read_pg_static <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
 #'   coverage_test <- read_pg_timevarying(test = TRUE) # coverage test data frame
 #'   pg_rast <- read_pg_timevarying(as_raster = TRUE) # list of rasters
 #' }
-read_pg_timevarying <- function(as_raster = FALSE, test = FALSE, overwrite = FALSE){
-  fname <- file.path(pgout_path(), "pg_timevarying.parquet")
+read_pg_timevarying <- function(version = NULL, type = NULL,
+                                as_raster = FALSE, test = FALSE, overwrite = FALSE){
+  fname <- file.path(pgout_path(version, type), "pg_timevarying.parquet")
   if(as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite){
     return(arrow::read_parquet(fname))
   }
 
   timevarying <- pgvariables |> dplyr::filter(!static)
 
-  rasters <- lapply(timevarying$name, load_pgvariable)
+  rasters <- lapply(timevarying$name, load_pgvariable, version = version, pgtype = pgtype)
   names(rasters) <- timevarying$name
   rasters <- rasters[!is.na(rasters)]
 
@@ -282,18 +301,47 @@ build_priogrid_05deg_yearly <- function(){
   pgoptions$set_start_date(as.Date("1850-12-31"))
   pgoptions$set_end_date(as.Date("2025-08-26"))
 
+  version <- "3.0.0"
+  sanitized_version <- stringr::str_replace_all(version, "\\.", "_")
+  type <- "05deg_yearly"
+
   calc_pg(overwrite = TRUE)
 
   pg_t <- timevarying_pg(overwrite = TRUE)
   pg_s <- static_pg(overwrite = TRUE)
 
-  persistent_path <- file.path(pgoptions$get_rawfolder(), "priogrid", packageVersion("priogrid"), "05deg_yearly")
+  persistent_path <- file.path(pgoptions$get_rawfolder(), "priogrid", version, type)
   dir.create(persistent_path)
-  file.copy(from = list.files(pgout_path(), full = TRUE), to = persistent_path, copy.mode = TRUE, copy.date = FALSE)
+  file.copy(from = list.files(pgout_path(version, type), full = TRUE), to = persistent_path, copy.mode = TRUE, copy.date = FALSE)
+
 
   oldwd <- getwd()
   setwd(file.path(pgoptions$get_rawfolder(), "priogrid"))
-  zip(paste("priogrid", packageVersion("priogrid"), "05deg_yearly.zip", sep = "_"),
-      files = file.path(packageVersion("priogrid"), "05deg_yearly"), flags = "-r")
+  zip(paste0(paste("priogrid", sanitized_version, type, sep = "_"), ".zip"),
+      files = file.path(version, type), flags = "-r")
   setwd(oldwd)
+}
+
+initialize_priogrid <- function(version = "3.0.0", type = "05deg_yearly", overwrite = FALSE){
+  pgdf <- tibble::tibble_row(
+    version = "3.0.0",
+    pgtype = "05deg_yearly",
+    url = "https://cdn.cloud.prio.org/files/379b7254-b47c-48f3-a650-783348d0ff7e",
+    fname = "priogrid_3_0_0_05deg_yearly.zip"
+  )
+
+  current <- pgdf |> dplyr::filter(version == (!!version), pgtype == (!!pgtype))
+
+  fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", current$fname)
+
+  if(!file.exists(fpath) | overwrite){
+    curl::multi_download(current$url,
+                         destfiles = fpath,
+                         resume = TRUE)
+  }
+
+  pgfiles <- unzip(fpath, list = TRUE)
+  if(!all(file.exists(file.path(pgoptions$get_rawfolder(), "priogrid", pgfiles$Name)))){
+    unzip(fpath, exdir = file.path(pgoptions$get_rawfolder(), "priogrid"))
+  }
 }
