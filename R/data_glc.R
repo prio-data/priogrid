@@ -54,9 +54,14 @@ read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
 # FUNCTION 2:
 #------------------------------------------------------------------------------
 
-prepare_glc_layers <- function(tif_files) {
+prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL) {
   library(terra)
   library(lubridate)
+
+  # ---- Step 1: Read TIFF files from GLC folders ----
+  tif_files <- read_glc_v2(beta_test = beta_test, foldersize = foldersize)
+
+  message("Found ", length(tif_files), " TIFF files to process.\n")
 
   # ---- Step 1: Load and rename rasters by year range ----
   ras_list <- vector("list", length(tif_files))
@@ -111,7 +116,7 @@ prepare_glc_layers <- function(tif_files) {
   })
 
   # ---- Return processed rasters ----
-  message("✅ Layer preparation complete. Returning filtered raster list.")
+  message("Layer preparation complete. Returning filtered raster list.")
   return(ras_list_filtered)
 }
 
@@ -119,70 +124,54 @@ prepare_glc_layers <- function(tif_files) {
 # FUNCTION 3:
 #------------------------------------------------------------------------------
 
-glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL) {
+robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL) {
   memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
   terra::terraOptions(memfrac = 0.8)
 
-  #Read and prepare tiles
-  tif_files <- read_glc_v2(beta_test = beta_test, foldersize = foldersize)
-  ras_list_filtered <- prepare_glc_layers(tif_files)
+  # Read and prepare all tiles
+  ras_list_filtered <- prepare_glc_layers(beta_test = beta_test, foldersize = foldersize)
+
 
   message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
-  message("Each tile will be processed per layer to preserve temporal information.\n")
+  message("Each tile will be processed via robust_transformation.\n")
 
-  # Ensure CRS consistency
-  ras_list_filtered <- lapply(ras_list_filtered, function(r) {
-    if (is.na(terra::crs(r))) {
-      terra::crs(r) <- "EPSG:4326"
-    }
-    r
+  # Apply robust transformation to each tile
+  transformed_tiles <- lapply(seq_along(ras_list_filtered), function(i) {
+    tile <- ras_list_filtered[[i]]
+    tile_name <- names(ras_list_filtered)[i] %||% paste0("Tile_", i)
+
+    message(i, "/", length(ras_list_filtered), "] Processing ", tile_name)
+
+    tryCatch({
+      res_tile <- robust_transformation(
+        tile,
+        function(x) mean(x %in% landcovertype, na.rm = TRUE)
+      )
+      gc()
+      res_tile
+    }, error = function(e) {
+      message("Skipping problematic tile: ", tile_name, " — ", e$message)
+      NULL
+    })
   })
 
-  # Define helper for one tile
-  process_tile <- function(tile, landcovertype) {
-    layer_results <- lapply(1:terra::nlyr(tile), function(k) {
-      lyr <- tile[[k]]
-      terra::aggregate(
-        lyr,
-        fact = 1830, # 30 m → ~55 km
-        fun = function(x) mean(x %in% landcovertype, na.rm = TRUE)
-      )
-    })
-    names(layer_results) <- names(tile)
-    terra::rast(layer_results)
-  }
+  # Drop NULLs
+  transformed_tiles <- Filter(Negate(is.null), transformed_tiles)
 
-  # Process tiles safely
-  tile_results <- vector("list", length(ras_list_filtered))
-  for (i in seq_along(ras_list_filtered)) {
-    tile_name <- basename(sources(ras_list_filtered[[i]]))
-    message("⏳ [", i, "/", length(ras_list_filtered), "] Processing tile: ", tile_name)
-
-    tile_results[[i]] <- tryCatch(
-      process_tile(ras_list_filtered[[i]], landcovertype),
-      error = function(e) {
-        message("    ⚠️ Skipping problematic tile: ", tile_name, " — ", e$message)
-        NULL
-      }
-    )
-
-    gc()
-  }
-
-  # Drop NULLs and merge tiles spatially
-  tile_results <- Filter(Negate(is.null), tile_results)
-
-  if (length(tile_results) > 1) {
-    message("\n🧩 Merging ", length(tile_results), " aggregated tiles into a single spatial raster...")
-    res <- do.call(terra::merge, tile_results)
+  # Merge results
+  if (length(transformed_tiles) > 1) {
+    message("\n Merging ", length(transformed_tiles), " aggregated tiles...")
+    res <- do.call(terra::merge, transformed_tiles)
   } else {
-    res <- tile_results[[1]]
+    res <- transformed_tiles[[1]]
   }
 
-  message("✅ Landcover computation complete.")
+  message("Landcover computation complete.")
   terra::terraOptions(memfrac = memfrac_option)
   return(res)
 }
+
+
 
 # --- Cropland ---
 gen_glc_cropland <- function(beta_test = FALSE, foldersize = NULL) {
