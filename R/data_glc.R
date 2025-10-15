@@ -4,12 +4,7 @@
 # FUNCTION 1:
 #------------------------------------------------------------------------------
 
-read_glc_v2 <- function(beta_test = FALSE) {
-
-  #f <- get_pgfile(source_name = "HILDA+",
-  #              source_version = "v1.0",
-  #               id = "82bc4c6f-9904-484f-aa9a-77771d076690")
-
+read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
   # Base dataset directory
   f <- file.path(
     "/Volumes/T7/PRIOGRID",
@@ -21,10 +16,13 @@ read_glc_v2 <- function(beta_test = FALSE) {
   # ---- Identify zip files ----
   zips <- list.files(f, pattern = "\\.zip$", full.names = TRUE)
 
-  # Optional beta test: only process first 2 zips
+  # Default foldersize = all zip files
+  if (is.null(foldersize)) foldersize <- length(zips)
+
+  # Optional beta test subset
   if (beta_test) {
-    message("Running in beta test mode: limiting to first two zip files.")
-    zips <- head(zips, 2)
+    message("Running in beta test mode: limiting to first ", foldersize, " zip file(s).")
+    zips <- head(zips, foldersize)
   }
 
   # ---- Unzip only if not already unzipped ----
@@ -121,12 +119,12 @@ prepare_glc_layers <- function(tif_files) {
 # FUNCTION 3:
 #------------------------------------------------------------------------------
 
-glc_landcover <- function(landcovertype, beta_test = FALSE) {
+glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL) {
   memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
   terra::terraOptions(memfrac = 0.8)
 
-  # Read and prepare tiles
-  tif_files <- read_glc_v2(beta_test = beta_test)
+  #Read and prepare tiles
+  tif_files <- read_glc_v2(beta_test = beta_test, foldersize = foldersize)
   ras_list_filtered <- prepare_glc_layers(tif_files)
 
   message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
@@ -187,10 +185,11 @@ glc_landcover <- function(landcovertype, beta_test = FALSE) {
 }
 
 # --- Cropland ---
-gen_glc_cropland <- function(beta_test = FALSE) {
+gen_glc_cropland <- function(beta_test = FALSE, foldersize = NULL) {
   glc_landcover(
     landcovertype = c(10, 11, 12, 20),
-    beta_test = beta_test
+    beta_test = beta_test,
+    foldersize = foldersize
   )
 }
 
@@ -203,10 +202,11 @@ gen_glc_forest <- function(beta_test = FALSE) {
 }
 
 # --- Shrubland ---
-gen_glc_shrubland <- function(beta_test = FALSE) {
+gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL) {
   glc_landcover(
     landcovertype = c(120, 121, 122, 150, 152),
-    beta_test = beta_test
+    beta_test = beta_test,
+    foldersize = foldersize
   )
 }
 

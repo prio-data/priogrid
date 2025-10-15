@@ -363,7 +363,7 @@ inspect_glc_tiles <- function(beta_test = TRUE, sample_n = NULL) {
   stats_list <- lapply(seq_along(ras_list_filtered), function(i) {
     r <- ras_list_filtered[[i]]
     fname <- basename(sources(r))
-    message("  • Checking tile ", i, "/", length(ras_list_filtered), ": ", fname)
+    message("Checking tile ", i, "/", length(ras_list_filtered), ": ", fname)
 
     # Get unique values across all layers (quick sample if huge)
     values_sample <- tryCatch({
@@ -391,7 +391,7 @@ inspect_glc_tiles <- function(beta_test = TRUE, sample_n = NULL) {
   # Combine results
   stats_df <- do.call(rbind, Filter(Negate(is.null), stats_list))
 
-  message("✅ Inspection complete.")
+  message("Inspection complete.")
   return(stats_df)
 }
 
