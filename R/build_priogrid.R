@@ -50,18 +50,10 @@ get_temporal_hash <- function() {
 #' Returns the file path where PRIOGRID data is stored. The path structure depends
 #' on whether you're working with custom data or official releases.
 #'
-#' @param mode Character string, either "custom" (default) or "release".
-#'   - "custom": Uses hashed folder names based on pgoptions configuration
-#'   - "release": Uses explicit version and type folder names
-#' @param version Character string specifying PRIOGRID version.
-#'   - For mode="custom": defaults to current package version
-#'   - For mode="release": required parameter
-#' @param type Character string specifying release type (e.g., "05deg_yearly").
-#'   Only used when mode="release" (required).
-#' @param spatial_hash Character string with 6-character spatial hash.
-#'   Only used when mode="custom". If NULL, computed from current pgoptions.
-#' @param temporal_hash Character string with 6-character temporal hash.
-#'   Only used when mode="custom". If NULL, computed from current pgoptions.
+#' @param version Character string specifying PRIOGRID version. Use for official releases.
+#' @param type Character string specifying release type (e.g., "05deg_yearly"). Use for official releases.
+#' @param spatial_hash Character string with 6-character spatial hash. If NULL, computed from current pgoptions.
+#' @param temporal_hash Character string with 6-character temporal hash. If NULL, computed from current pgoptions.
 #'
 #' @return Character string with file path
 #' @export
@@ -75,32 +67,30 @@ get_temporal_hash <- function() {
 #'   pgout_path(spatial_hash = "a3f2e1", temporal_hash = "9c8b7a")
 #'
 #'   # Official release
-#'   pgout_path(mode = "release", version = "3.0.0", type = "05deg_yearly")
+#'   pgout_path(version = "3.0.0", type = "05deg_yearly")
 #' }
-pgout_path <- function(mode = "custom",
-                       version = NULL,
+pgout_path <- function(version = NULL,
                        type = NULL,
                        spatial_hash = NULL,
                        temporal_hash = NULL) {
   base_path <- file.path(pgoptions$get_rawfolder(), "priogrid")
 
-  if (mode == "custom") {
-    pkg_version <- version %||% packageVersion("priogrid")
-    s_hash <- spatial_hash %||% get_spatial_hash()
-    t_hash <- temporal_hash %||% get_temporal_hash()
-
-    file.path(base_path, "custom", pkg_version, s_hash, t_hash)
-
-  } else if (mode == "release") {
-    if (is.null(version) || is.null(type)) {
-      stop("mode='release' requires both version and type parameters")
+  if (!is.null(type)) {
+    # Release mode
+    if (is.null(version)) {
+      stop("Release mode requires both 'version' and 'type' parameters")
     }
-    file.path(base_path, "releases", version, type)
-
-  } else {
-    stop("mode must be either 'custom' or 'release'")
+    return(file.path(base_path, "releases", version, type))
   }
+
+  # Custom mode
+  pkg_version <- version %||% packageVersion("priogrid")
+  s_hash <- spatial_hash %||% get_spatial_hash()
+  t_hash <- temporal_hash %||% get_temporal_hash()
+
+  file.path(base_path, "custom", pkg_version, s_hash, t_hash)
 }
+
 
 #' Calculate PRIO-GRID variables
 #'
@@ -142,7 +132,7 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
     stop("No valid varnames supplied. Use names in `pgvariables`")
   }
 
-  save_to <- pgout_path(mode = "custom")
+  save_to <- pgout_path()
 
   if (!dir.exists(save_to)) {
     dir.create(save_to, recursive = TRUE)
@@ -189,7 +179,7 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
 #'   r <- gen_ne_disputed_area_share()
 #'   save_pgvariable(r, "ne_disputed_area_share")
 #' }
-save_pgvariable <- function(rast, varname, save_to = pgout_path(mode = "custom")) {
+save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   if (!varname %in% pgvariables$name) {
     stop("varname '", varname, "' not found in pgvariables.")
   }
@@ -215,17 +205,10 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path(mode = "custom")
 #' official releases.
 #'
 #' @param varname Character string with the variable name
-#' @param from_release Logical. If TRUE, loads from official release (requires
-#'   version and type). If FALSE (default), loads from custom data.
-#' @param version Character string specifying PRIOGRID version.
-#'   - For from_release=FALSE: defaults to current package version
-#'   - For from_release=TRUE: required parameter
+#' @param version Character string specifying PRIOGRID version. Relevant for loading official releases.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
-#'   Required when from_release=TRUE.
-#' @param spatial_hash Character string with 6-character spatial hash.
-#'   Only used when from_release=FALSE. If NULL, uses current pgoptions.
-#' @param temporal_hash Character string with 6-character temporal hash.
-#'   Only used when from_release=FALSE. If NULL, uses current pgoptions.
+#' @param spatial_hash Character string with 6-character spatial hash. If NULL, uses current pgoptions.
+#' @param temporal_hash Character string with 6-character temporal hash. If NULL, uses current pgoptions.
 #'
 #' @return Terra SpatRaster object
 #' @export
@@ -242,31 +225,22 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path(mode = "custom")
 #'
 #'   # Load from official release
 #'   r <- load_pgvariable("ne_disputed_area_share",
-#'                        from_release = TRUE,
 #'                        version = "3.0.0",
 #'                        type = "05deg_yearly")
 #' }
 load_pgvariable <- function(varname,
-                            from_release = FALSE,
                             version = NULL,
                             type = NULL,
                             spatial_hash = NULL,
                             temporal_hash = NULL) {
 
-  if (from_release) {
-    filepath <- file.path(
-      pgout_path(mode = "release", version = version, type = type),
-      paste0(varname, ".rds")
-    )
-  } else {
-    filepath <- file.path(
-      pgout_path(mode = "custom",
-                 version = version,
-                 spatial_hash = spatial_hash,
-                 temporal_hash = temporal_hash),
-      paste0(varname, ".rds")
-    )
-  }
+  filepath <- file.path(
+    pgout_path(version = version,
+               type = type,
+               spatial_hash = spatial_hash,
+               temporal_hash = temporal_hash),
+    paste0(varname, ".rds")
+  )
 
   if (!file.exists(filepath)) {
     stop("Variable '", varname, "' not found at: ", filepath)
@@ -280,8 +254,6 @@ load_pgvariable <- function(varname,
 #' Loads all static variables and returns them either as a data.table or as
 #' a list of rasters. See [pgvariables] for available variables.
 #'
-#' @param from_release Logical. If TRUE, loads from official release. If FALSE
-#'   (default), loads from custom data based on current pgoptions.
 #' @param version Character string specifying PRIOGRID version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
 #' @param spatial_hash Character string with 6-character spatial hash (custom only).
@@ -308,12 +280,10 @@ load_pgvariable <- function(varname,
 #'   pg_rast <- read_pg_static(as_raster = TRUE)
 #'
 #'   # Load official release
-#'   pg_dt <- read_pg_static(from_release = TRUE,
-#'                           version = "3.0.0",
+#'   pg_dt <- read_pg_static(version = "3.0.0",
 #'                           type = "05deg_yearly")
 #' }
-read_pg_static <- function(from_release = FALSE,
-                           version = NULL,
+read_pg_static <- function(version = NULL,
                            type = NULL,
                            spatial_hash = NULL,
                            temporal_hash = NULL,
@@ -321,15 +291,10 @@ read_pg_static <- function(from_release = FALSE,
                            test = FALSE,
                            overwrite = FALSE) {
 
-  # Determine path
-  if (from_release) {
-    base_path <- pgout_path(mode = "release", version = version, type = type)
-  } else {
-    base_path <- pgout_path(mode = "custom",
-                            version = version,
-                            spatial_hash = spatial_hash,
-                            temporal_hash = temporal_hash)
-  }
+  base_path <- pgout_path(version = version,
+                          type = type,
+                          spatial_hash = spatial_hash,
+                          temporal_hash = temporal_hash)
 
   fname <- file.path(base_path, "pg_static.parquet")
 
@@ -341,7 +306,6 @@ read_pg_static <- function(from_release = FALSE,
   # Load individual variables
   static <- pgvariables |> dplyr::filter(static)
   rasters <- lapply(static$name, load_pgvariable,
-                    from_release = from_release,
                     version = version,
                     type = type,
                     spatial_hash = spatial_hash,
@@ -372,8 +336,6 @@ read_pg_static <- function(from_release = FALSE,
   df <- rast_to_df(terra::rast(rasters), static = TRUE)
 
   # Save to cache
-  data.table::fwrite(df, paste0(tools::file_path_sans_ext(fname), ".csv.gz"),
-                     compress = "gzip")
   arrow::write_parquet(df, fname)
 
   return(df)
@@ -385,8 +347,6 @@ read_pg_static <- function(from_release = FALSE,
 #' Loads all time-varying variables and returns them either as a data.table or as
 #' a list of rasters. See [pgvariables] for available variables.
 #'
-#' @param from_release Logical. If TRUE, loads from official release. If FALSE
-#'   (default), loads from custom data based on current pgoptions.
 #' @param version Character string specifying PRIOGRID version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
 #' @param spatial_hash Character string with 6-character spatial hash (custom only).
@@ -413,12 +373,10 @@ read_pg_static <- function(from_release = FALSE,
 #'   pg_rast <- read_pg_timevarying(as_raster = TRUE)
 #'
 #'   # Load official release
-#'   pg_dt <- read_pg_timevarying(from_release = TRUE,
-#'                                version = "3.0.0",
+#'   pg_dt <- read_pg_timevarying(version = "3.0.0",
 #'                                type = "05deg_yearly")
 #' }
-read_pg_timevarying <- function(from_release = FALSE,
-                                version = NULL,
+read_pg_timevarying <- function(version = NULL,
                                 type = NULL,
                                 spatial_hash = NULL,
                                 temporal_hash = NULL,
@@ -427,14 +385,10 @@ read_pg_timevarying <- function(from_release = FALSE,
                                 overwrite = FALSE) {
 
   # Determine path
-  if (from_release) {
-    base_path <- pgout_path(mode = "release", version = version, type = type)
-  } else {
-    base_path <- pgout_path(mode = "custom",
-                            version = version,
-                            spatial_hash = spatial_hash,
-                            temporal_hash = temporal_hash)
-  }
+  base_path <- pgout_path(version = version,
+                          type = type,
+                          spatial_hash = spatial_hash,
+                          temporal_hash = temporal_hash)
 
   fname <- file.path(base_path, "pg_timevarying.parquet")
 
@@ -446,7 +400,6 @@ read_pg_timevarying <- function(from_release = FALSE,
   # Load individual variables
   timevarying <- pgvariables |> dplyr::filter(!static)
   rasters <- lapply(timevarying$name, load_pgvariable,
-                    from_release = from_release,
                     version = version,
                     type = type,
                     spatial_hash = spatial_hash,
@@ -508,14 +461,13 @@ read_pg_timevarying <- function(from_release = FALSE,
 #'
 #' @param version Character string with release version (e.g., "3.0.0")
 #' @param type Character string with release type (e.g., "05deg_yearly")
-#' @param config Named list with pgoptions configuration:
-#'   - nrow: number of rows
-#'   - ncol: number of columns
-#'   - crs: coordinate reference system
-#'   - extent: named vector with xmin, xmax, ymin, ymax
-#'   - temporal_resolution: temporal resolution string
-#'   - start_date: start date (Date object)
-#'   - end_date: end date (Date object)
+#' @param nrow Number of rows
+#' @param ncol Number of columns
+#' @param crs Coordinate reference system
+#' @param extent Named vector with xmin, xmax, ymin, ymax
+#' @param temporal_resolution Temporal resolution string
+#' @param start_date Start date (Date object)
+#' @param end_date End date (Date object)
 #'
 #' @return NULL (invisibly). Called for side effects (creating release).
 #' @export
@@ -525,67 +477,46 @@ read_pg_timevarying <- function(from_release = FALSE,
 #'   build_release(
 #'     version = "3.0.0",
 #'     type = "05deg_yearly",
-#'     config = list(
-#'       nrow = 360, ncol = 720,
-#'       crs = "epsg:4326",
-#'       extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
-#'       temporal_resolution = "1 year",
-#'       start_date = as.Date("1850-12-31"),
-#'       end_date = as.Date("2025-08-26")
-#'     )
-#'   )
+#'     nrow = 360,
+#'     ncol = 720,
+#'     crs = "epsg:4326",
+#'     extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
+#'     temporal_resolution = "1 year",
+#'     start_date = as.Date("1850-12-31"),
+#'     end_date = as.Date("2025-08-26")
+#'  )
 #' }
-build_release <- function(version, type, config) {
-  # 1. Set pgoptions for this release
-  pgoptions$set_nrow(config$nrow)
-  pgoptions$set_ncol(config$ncol)
-  pgoptions$set_crs(config$crs)
-  pgoptions$set_extent(config$extent)
-  pgoptions$set_temporal_resolution(config$temporal_resolution)
-  pgoptions$set_start_date(config$start_date)
-  pgoptions$set_end_date(config$end_date)
+build_release <- function(version, type,
+                          nrow = 360, ncol = 720,
+                          crs = "epsg:4326",
+                          extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
+                          temporal_resolution = "1 year",
+                          start_date = as.Date("1850-12-31"),
+                          end_date = as.Date("2025-08-26")) {
 
-  message("Building release ", version, " (", type, ")")
-  message("Configuration:")
-  message("  Spatial: ", config$nrow, "x", config$ncol, " grid")
-  message("  Temporal: ", config$temporal_resolution,
-          " from ", config$start_date, " to ", config$end_date)
+  # Set pgoptions
+  pgoptions$set_nrow(nrow)
+  pgoptions$set_ncol(ncol)
+  pgoptions$set_crs(crs)
+  pgoptions$set_extent(extent)
+  pgoptions$set_temporal_resolution(temporal_resolution)
+  pgoptions$set_start_date(start_date)
+  pgoptions$set_end_date(end_date)
 
-  # 2. Calculate to CUSTOM location first (so it's hashed)
+  # Calculate
   calc_pg(overwrite = TRUE)
-
-  # 3. Build aggregated data files
-  message("Building static data...")
   read_pg_static(overwrite = TRUE)
-
-  message("Building time-varying data...")
   read_pg_timevarying(overwrite = TRUE)
 
-  # 4. Copy/promote to official release location
-  from_path <- pgout_path(mode = "custom")
-  to_path <- pgout_path(mode = "release", version = version, type = type)
+  # Promote to release
+  from_path <- pgout_path()
+  to_path <- pgout_path(version = version, type = type)
 
-  if (!dir.exists(dirname(to_path))) {
-    dir.create(dirname(to_path), recursive = TRUE)
-  }
+  dir.create(dirname(to_path), recursive = TRUE, showWarnings = FALSE)
+  file.copy(from_path, dirname(to_path), recursive = TRUE)
+  file.rename(file.path(dirname(to_path), basename(from_path)), to_path)
 
-  message("Copying from: ", from_path)
-  message("Copying to: ", to_path)
-
-  file.copy(
-    from = from_path,
-    to = dirname(to_path),
-    recursive = TRUE,
-    overwrite = TRUE
-  )
-
-  # Rename to final location
-  file.rename(
-    file.path(dirname(to_path), basename(from_path)),
-    to_path
-  )
-
-  message("Release built successfully at: ", to_path)
+  message("Release built at: ", to_path)
   invisible(NULL)
 }
 
@@ -613,42 +544,23 @@ build_release <- function(version, type, config) {
 initialize_priogrid <- function(version = "3.0.0",
                                 type = "05deg_yearly",
                                 overwrite = FALSE) {
-  # Registry of available releases
-  pgdf <- tibble::tibble_row(
-    version = "3.0.0",
-    pgtype = "05deg_yearly",
-    url = "https://cdn.cloud.prio.org/files/379b7254-b47c-48f3-a650-783348d0ff7e",
-    fname = "priogrid_3_0_0_05deg_yearly.zip"
+
+  releases <- list(
+    "3.0.0_05deg_yearly" = "https://cdn.cloud.prio.org/files/379b7254-b47c-48f3-a650-783348d0ff7e"
   )
 
-  current <- pgdf |> dplyr::filter(version == (!!version), pgtype == (!!type))
-
-  if (nrow(current) == 0) {
-    stop("Release version='", version, "' type='", type, "' not found in registry")
+  key <- paste(version, type, sep = "_")
+  if (!key %in% names(releases)) {
+    stop("Unknown release: ", version, " (", type, ")")
   }
 
-  fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", current$fname)
+  fname <- paste0("priogrid_", gsub("\\.", "_", version), "_", type, ".zip")
+  fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", fname)
 
-  # Download if needed
-  if (!file.exists(fpath) | overwrite) {
-    message("Downloading PRIOGRID ", version, " (", type, ") from PRIO CDN...")
-    dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
-    curl::multi_download(current$url,
-                         destfiles = fpath,
-                         resume = TRUE)
+  if (!file.exists(fpath) || overwrite) {
+    curl::multi_download(releases[[key]], destfiles = fpath, resume = TRUE)
   }
 
-  # Extract if needed
-  pgfiles <- unzip(fpath, list = TRUE)
-  target_dir <- file.path(pgoptions$get_rawfolder(), "priogrid")
-
-  if (!all(file.exists(file.path(target_dir, pgfiles$Name)))) {
-    message("Extracting PRIOGRID data...")
-    unzip(fpath, exdir = target_dir)
-  }
-
-  message("PRIOGRID ", version, " (", type, ") ready at: ",
-          pgout_path(mode = "release", version = version, type = type))
-
+  unzip(fpath, exdir = file.path(pgoptions$get_rawfolder(), "priogrid"))
   invisible(NULL)
 }
