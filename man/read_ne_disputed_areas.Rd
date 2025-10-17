@@ -2,22 +2,47 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{read_ne_disputed_areas}
 \alias{read_ne_disputed_areas}
-\title{Read Natural Earth Disputed Areas dataset}
+\title{Reads the Natural Earth Disputed Areas Dataset}
 \usage{
 read_ne_disputed_areas()
 }
 \value{
-sf data.frame
+An \code{sf} object
 }
 \description{
-Reads the Admin 0 – Breakaway, Disputed Areas dataset from Natural Earth.
-This dataset shows de facto boundaries based on control versus de jure.
-The data entries are not dated.
+Downloads and imports the Natural Earth 1:10m scale Admin 0 Breakaway and
+Disputed Areas dataset. This dataset depicts disputed and de facto political
+boundaries, including areas with contested sovereignty or breakaway regions.
+}
+\details{
+The dataset shows boundaries based on \strong{control (de facto)} rather than
+\strong{international recognition (de jure)}. It is intended for visualization
+and cartographic purposes. The dataset does not include temporal attributes,
+so no specific time validity is provided.
+}
+\note{
+\itemize{
+\item Boundaries represent political disputes as mapped by Natural Earth;
+they may not reflect all perspectives or claims
+\item Dataset is not dated and does not provide historical change tracking
+\item Intended for cartographic and analytical use, not for legal boundary
+definitions
+}
 }
 \examples{
-# Load disputed areas dataset
-disputed_areas <- read_disputed_areas()
-plot(sf::st_geometry(disputed_areas), main = "Disputed Areas")
+\dontrun{
+# Read disputed areas polygons
+disputed_areas <- read_ne_disputed_areas()
+
+# Inspect structure
+print(disputed_areas)
+
+# Plot disputed areas
+plot(sf::st_geometry(disputed_areas),
+     col = "red", border = "darkred",
+     main = "Natural Earth Disputed Areas")
+}
+
 }
 \references{
 \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}

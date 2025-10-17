@@ -7,16 +7,54 @@
 gen_linight_mean()
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-This aggregates the high-resolution Li Nighttime Light to PRIO-GRID level across all years (1992-2021).
+Aggregates the high-resolution Li et al. harmonized global nighttime lights
+dataset to PRIO-GRID resolution for all available years (1992–2021).
+This produces PRIO-GRID cell-level averages of nighttime light intensity,
+harmonized with PRIO-GRID’s spatial and temporal structure.
 }
 \details{
-A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.This is done in \code{\link[=read_linight]{read_linight()}}.
+The function:
+\itemize{
+\item Reads annual nighttime lights rasters via \code{\link{read_linight}}
+\item Aggregates 1 km nighttime light intensity values into PRIO-GRID
+cells using mean values
+\item Retains global temporal coverage (1992–2021) as a multi-layer
+\code{SpatRaster}
+\item Aligns precisely to PRIO-GRID spatial extent (resampling handled
+in \code{\link{read_linight}})
+}
+}
+\note{
+\itemize{
+\item Aggregation uses mean values to represent typical nighttime light
+intensity per PRIO-GRID cell
+\item For sum-based aggregation (e.g., total light output per cell),
+see \code{\link{robust_transformation}} with \code{agg_fun = "sum"}
+\item Large rasters may take time and memory to process
+}
 }
 \examples{
-# r <- gen_linight_mean()
+\dontrun{
+# Generate PRIO-GRID level Li Nighttime Lights data
+linight_pg <- gen_linight_mean()
+
+# Inspect structure
+print(linight_pg)
+
+# Plot mean nighttime lights for 2000
+terra::plot(linight_pg[["2000-01-01"]],
+            main = "PRIO-GRID Nighttime Lights (Mean, 2000)")
+
+# Compare mean intensity change between 2000 and 2020
+lights_2000 <- linight_pg[["2000-01-01"]]
+lights_2020 <- linight_pg[["2020-01-01"]]
+change <- lights_2020 - lights_2000
+terra::plot(change, main = "Change in Mean Nighttime Lights 2000–2020")
+}
+
 }
 \references{
 \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}

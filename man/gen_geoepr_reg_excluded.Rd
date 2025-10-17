@@ -2,25 +2,78 @@
 % Please edit documentation in R/data_geoEPR.R
 \name{gen_geoepr_reg_excluded}
 \alias{gen_geoepr_reg_excluded}
-\title{PRIO-GRID cells with any regionally based politically excluded groups}
+\title{Generate Multi-Temporal Regionally Excluded Ethnic Groups Coverage}
 \usage{
 gen_geoepr_reg_excluded(
   excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")
 )
 }
 \arguments{
-\item{excluded}{A character vector with the EPR status codes to include in the "excluded" group.
-The status codes in EPR is "MONOPOLY", "DISCRIMINATED", "POWERLESS", "DOMINANT", "SENIOR PARTNER",
-"JUNIOR PARTNER", "IRRELEVANT", "SELF-EXCLUSION", and "STATE COLLAPSE"}
+\item{excluded}{A character vector specifying EPR status codes to classify as
+"excluded". Valid EPR status codes include:
+\itemize{
+\item "DISCRIMINATED": Groups facing systematic discrimination
+\item "POWERLESS": Groups lacking political influence
+\item "SELF-EXCLUSION": Groups voluntarily excluding themselves from politics
+\item "MONOPOLY": Groups holding exclusive power
+\item "DOMINANT": Groups in dominant power positions
+\item "SENIOR PARTNER": Senior coalition partners
+\item "JUNIOR PARTNER": Junior coalition partners
+\item "IRRELEVANT": Groups without political relevance
+\item "STATE COLLAPSE": Groups during state collapse periods
+}
+Default is \code{c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")}.}
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-PRIO-GRID cells with any regionally based politically excluded groups
+Creates a multi-layer raster indicating PRIO-GRID cells that contain settlement
+areas of regionally based ethnic groups experiencing political exclusion. The
+function combines GeoEPR spatial data with EPR Core political status information
+to map areas where excluded ethnic groups are present over time.
+}
+\details{
+The function focuses on "regionally based" ethnic groups, which have identifiable
+settlement patterns that can be meaningfully mapped, as opposed to groups that
+are dispersed throughout a country. Political exclusion is defined by EPR
+status codes indicating systematic discrimination, powerlessness, or voluntary
+self-exclusion from political processes.
 }
 \examples{
-# r <- gen_geoepr_reg_excluded()
+\dontrun{
+# Generate excluded groups coverage with default exclusion categories
+excluded_coverage <- gen_geoepr_reg_excluded()
+
+# Examine the structure
+print(excluded_coverage)
+
+# View available time periods
+time_periods <- names(excluded_coverage)
+head(time_periods)
+
+# Plot coverage for specific period
+terra::plot(excluded_coverage[[1]],
+            main = "Excluded Ethnic Groups Coverage")
+
+# Use custom exclusion definition (include only discriminated groups)
+discriminated_only <- gen_geoepr_reg_excluded(excluded = "DISCRIMINATED")
+
+# Compare different exclusion definitions
+powerless_only <- gen_geoepr_reg_excluded(excluded = "POWERLESS")
+combined_exclusion <- gen_geoepr_reg_excluded(excluded = c("DISCRIMINATED", "POWERLESS"))
+
+# Analyze temporal changes in exclusion
+first_period <- excluded_coverage[[1]]
+last_period <- excluded_coverage[[nlyr(excluded_coverage)]]
+exclusion_change <- last_period - first_period
+terra::plot(exclusion_change, main = "Change in Excluded Group Presence")
+
+# Calculate total excluded area over time
+total_excluded_cells <- terra::global(excluded_coverage > 0, "sum", na.rm = TRUE)
+plot(total_excluded_cells$sum, type = "l",
+     main = "Number of Cells with Excluded Groups Over Time")
+}
 
 }
 \references{

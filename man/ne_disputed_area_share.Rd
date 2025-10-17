@@ -2,27 +2,35 @@
 % Please edit documentation in R/data_naturalearth.R
 \name{ne_disputed_area_share}
 \alias{ne_disputed_area_share}
-\title{Generate raster for disputed areas by type of dispute}
+\title{Generate Raster for Disputed Areas by Type}
 \usage{
 ne_disputed_area_share(type)
 }
 \arguments{
-\item{type}{Character string indicating the disputed area type (e.g., "Disputed").}
+\item{type}{Character string specifying the type of disputed area to include.
+Valid options are: "all", "breakaway", "disputed", "geo subunit", "geo unit",
+"indeterminate", "lease", or "overlay".}
 
-\item{disputed_areas}{sf object of disputed areas, default is from \code{read_disputed_areas()}.}
+\item{disputed_areas}{Optional \code{sf} object of disputed areas. Defaults
+to the result of \code{\link{read_ne_disputed_areas}}().}
 }
 \value{
-terra SpatRaster
+A single-layer \code{SpatRaster} object
 }
 \description{
-Creates a raster in PRIO-GRID resolution for a specified type of disputed area.
-The options include: "all", "breakaway", "disputed", "geo subunit","geo unit", "indeterminate", "lease" and "overlay"
+Computes a PRIO-GRID raster representing the fraction of each cell covered
+by disputed areas of a specified type, based on the Natural Earth Admin 0
+Breakaway and Disputed Areas dataset.
 }
 \examples{
 \dontrun{
-  # Generate raster for "Disputed" type
-  disputed_raster <- ne_disputed_area_share("Disputed")
-  terra::plot(disputed_raster, main = "Disputed Areas: Disputed")
+# Generate raster for "disputed" areas
+disputed_raster <- ne_disputed_area_share("disputed")
+terra::plot(disputed_raster, main = "PRIO-GRID Coverage: Disputed Areas")
+
+# Generate raster combining all types
+disputed_all <- ne_disputed_area_share("all")
+terra::plot(disputed_all, main = "PRIO-GRID Coverage: All Disputed Areas")
 }
 
 }

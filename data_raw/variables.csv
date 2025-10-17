@@ -3,6 +3,7 @@ cru_tmp	FALSE	9bba83b0-eca9-4f05-b1df-6aeaed55a9fa
 cshapes_cover_share	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
 cshapes_gwcode	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
 geoepr_reg_excluded	FALSE	287bfdf7-2f4f-402a-88df-5fe1f8b7046b, 3900b527-a728-4c26-b0ab-f4441d3ee2e8
+bdist2	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
 ghsl_population_grid	FALSE	ae6a7612-4bef-452f-acd6-d2212cf9a7c5
 hilda_cropland	FALSE	82bc4c6f-9904-484f-aa9a-77771d076690
 hilda_forest	FALSE	82bc4c6f-9904-484f-aa9a-77771d076690
@@ -21,4 +22,3 @@ traveltime_min	TRUE	9aa052f6-4d04-4ed1-9eed-e47e08828d38
 geopko_troops_count	FALSE	7dcbfbfb-9667-4684-af34-85f69fa8d0a0
 geopko_operations_count	FALSE	7dcbfbfb-9667-4684-af34-85f69fa8d0a0
 ne_disputed_area_share	TRUE	920663ad-d7e7-4528-b36d-4b7266def2b1
-bdist2	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b

@@ -11,7 +11,7 @@ ruggedterrain_variable(variable)
 Must be one of: "elevation_min", "elevation_max", "elevation_mean"}
 }
 \value{
-A SpatRaster object containing elevation values for each PRIO-GRID cell
+A \code{SpatRaster} object
 }
 \description{
 Estimates either the min, max, or mean of elevation in each PRIO-GRID cell
