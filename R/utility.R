@@ -236,8 +236,13 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #' \code{\link[terra]{aggregate}}, \code{\link[terra]{disagg}}, \code{\link[terra]{resample}}
 #'
 #' @export
-robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
+robust_transformation <- function(r, agg_fun, disagg_method = "near", tiled = FALSE, ...){
   pg <- prio_blank_grid()
+
+  if(tiled){
+    pg <- terra::crop(pg, r)
+  }
+
   temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
 
