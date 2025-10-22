@@ -6,15 +6,26 @@
 
 read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
   # Base dataset directory
-  f <- file.path(
-    "/Volumes/T7/PRIOGRID",
-    "GLC_FCS30",
-    "v2",
-    "7f03a296-4329-4458-8b62-83c3d27530af"
-  )
+  #f <- file.path(
+  #  "/Volumes/T7/PRIOGRID",
+  #  "GLC_FCS30",
+  #  "v2",
+  #  "7f03a296-4329-4458-8b62-83c3d27530af"
+  #)
+
+
+
+  f <- get_pgfile(source_name = "GLC_FCS30",
+                    source_version = "v2",
+                    id = "7f03a296-4329-4458-8b62-83c3d27530af")
+
+  dir <- dirname(Reduce(function(x, y) {
+    while (!startsWith(y, x)) x <- dirname(x)
+    x
+  }, f))
 
   # ---- Identify zip files ----
-  zips <- list.files(f, pattern = "\\.zip$", full.names = TRUE)
+  zips <- list.files(dir, pattern = "\\.zip$", full.names = TRUE)
 
   # Default foldersize = all zip files
   if (is.null(foldersize)) foldersize <- length(zips)
@@ -54,7 +65,7 @@ read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
 # FUNCTION 2:
 #------------------------------------------------------------------------------
 
-prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL) {
+prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   library(terra)
   library(lubridate)
 
@@ -63,7 +74,17 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL) {
 
   message("Found ", length(tif_files), " TIFF files to process.\n")
 
-  # ---- Step 1: Load and rename rasters by year range ----
+  # ---- Optional Step: Limit to first N TIFFs ----
+  if (!is.null(n_tifs)) {
+    if (n_tifs < length(tif_files)) {
+      message("Limiting to first ", n_tifs, " TIFF files for testing.")
+      tif_files <- head(tif_files, n_tifs)
+    } else {
+      message("Requested n_tifs (", n_tifs, ") >= total available TIFFs; using all files.")
+    }
+  }
+
+  # ---- Load and rename rasters by year range ----
   ras_list <- vector("list", length(tif_files))
 
   for (i in seq_along(tif_files)) {
@@ -124,51 +145,110 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL) {
 # FUNCTION 3:
 #------------------------------------------------------------------------------
 
-robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL) {
-  memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
-  terra::terraOptions(memfrac = 0.8)
+#' Robust Landcover Aggregation Function
+#'
+#' Aggregates high-resolution Global Landcover (GLC) tiles into PRIO-GRID scale rasters.
+#' Each 5×5° tile is processed independently, layer-by-layer, using a robust and memory-safe
+#' transformation that automatically aligns PRIO-GRID extents with the tile extent.
+#'
+#' This function is optimized for distributed or parallel workflows and is resilient
+#' to small tile extent inconsistencies due to the `tiled = TRUE` flag in robust_transformation().
+#'
+#' @param landcovertype Integer or vector of integer GLC codes representing the landcover
+#'   classes of interest (e.g., cropland = c(10, 11, 12)).
+#' @param beta_test Logical; if TRUE, runs in test mode (typically loads a limited number of tiles).
+#' @param foldersize Optional integer controlling how many tiles to process in one batch.
+#' @param n_tifs Optional integer limiting the number of raster files to process (for testing).
+#' @return A SpatRaster of PRIO-GRID aggregated landcover fractions (0–1) per cell.
+#' @export
+#'
+#' @examples
+#' # Example: Compute shrubland coverage
+#' # shrubland <- robust_glc_landcover(c(120, 121, 122, 150, 152))
+#'
+robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
 
-  # Read and prepare all tiles
-  ras_list_filtered <- prepare_glc_layers(beta_test = beta_test, foldersize = foldersize)
+  # -------------------------------------------------------------------------
+  # STEP 1: Prepare and load GLC raster tiles
+  # -------------------------------------------------------------------------
+  # Each tile typically covers a 5×5° geographic area.
+  # The prepare_glc_layers() function returns a list of SpatRaster objects,
+  # where each tile contains multiple time layers (e.g., annual composites).
+  # -------------------------------------------------------------------------
+  ras_list_filtered <- prepare_glc_layers(beta_test, foldersize, n_tifs)
 
 
-  message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
-  message("Each tile will be processed via robust_transformation.\n")
+  # -------------------------------------------------------------------------
+  # STEP 2: Define block-level aggregation function
+  # -------------------------------------------------------------------------
+  # The block_fun determines how the fine-resolution pixels (30m)
+  # are summarized into a single PRIO-GRID cell (~55km).
+  #
+  # - Each "block" corresponds to one PRIO cell footprint.
+  # - The function calculates the proportion of pixels that match
+  #   the target landcover type(s) defined in `landcovertype`.
+  #
+  # The result for each PRIO cell will be a number between 0 and 1.
+  # -------------------------------------------------------------------------
+  block_fun <- function(x) {
+    if (length(x) == 0 || all(is.na(x))) return(NA_real_)
+    mean(x %in% landcovertype, na.rm = TRUE)
+  }
 
-  # Apply robust transformation to each tile
-  transformed_tiles <- lapply(seq_along(ras_list_filtered), function(i) {
+
+  # -------------------------------------------------------------------------
+  # STEP 3: Process each raster tile independently
+  # -------------------------------------------------------------------------
+  # Each tile is processed layer-by-layer (typically one layer per year).
+  # The function robust_transformation() handles the heavy lifting:
+  # it performs aggregation to PRIO-GRID scale and ensures numerical stability.
+  #
+  # The key improvement here is `tiled = TRUE`, which instructs
+  # robust_transformation() to crop PRIO-GRID to match the tile extent.
+  # This avoids global resampling and prevents extent/alignment errors.
+  # -------------------------------------------------------------------------
+  results <- lapply(seq_along(ras_list_filtered), function(i) {
     tile <- ras_list_filtered[[i]]
     tile_name <- names(ras_list_filtered)[i] %||% paste0("Tile_", i)
 
-    message(i, "/", length(ras_list_filtered), "] Processing ", tile_name)
+    message("\n🧩 Processing ", tile_name)
 
-    tryCatch({
-      res_tile <- robust_transformation(
-        tile,
-        function(x) mean(x %in% landcovertype, na.rm = TRUE)
-      )
-      gc()
-      res_tile
-    }, error = function(e) {
-      message("Skipping problematic tile: ", tile_name, " — ", e$message)
-      NULL
+    # ---------------------------------------------------------------------
+    # STEP 3a: Process each time layer within the current tile
+    # ---------------------------------------------------------------------
+    per_year <- lapply(seq_len(terra::nlyr(tile)), function(k) {
+      lyr <- tile[[k]]
+      message("   ├─ Layer ", k, ": ", names(tile)[k])
+
+      # Perform robust aggregation to PRIO scale
+      # Note: tiled = TRUE ensures localized cropping of PRIO-GRID
+      robust_transformation(lyr, block_fun, tiled = TRUE)
     })
+
+    # ---------------------------------------------------------------------
+    # STEP 3b: Stack valid layers back into a multi-layer raster
+    # ---------------------------------------------------------------------
+    # Layers that failed to process (NULL) are removed before stacking.
+    # ---------------------------------------------------------------------
+    per_year <- Filter(Negate(is.null), per_year)
+    if (length(per_year) > 0) terra::rast(per_year) else NULL
   })
 
-  # Drop NULLs
-  transformed_tiles <- Filter(Negate(is.null), transformed_tiles)
 
-  # Merge results
-  if (length(transformed_tiles) > 1) {
-    message("\n Merging ", length(transformed_tiles), " aggregated tiles...")
-    res <- do.call(terra::merge, transformed_tiles)
+  # -------------------------------------------------------------------------
+  # STEP 4: Merge processed tiles into a single raster
+  # -------------------------------------------------------------------------
+  # After all tiles have been processed independently, they are merged
+  # spatially into a single continuous PRIO-aligned SpatRaster.
+  # If only one tile exists, that raster is returned directly.
+  # -------------------------------------------------------------------------
+  results <- Filter(Negate(is.null), results)
+  if (length(results) > 1) {
+    message("\n🌍 Merging ", length(results), " aggregated tiles into final raster...")
+    do.call(terra::merge, results)
   } else {
-    res <- transformed_tiles[[1]]
+    results[[1]]
   }
-
-  message("Landcover computation complete.")
-  terra::terraOptions(memfrac = memfrac_option)
-  return(res)
 }
 
 
@@ -191,11 +271,12 @@ gen_glc_forest <- function(beta_test = FALSE) {
 }
 
 # --- Shrubland ---
-gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL) {
-  glc_landcover(
+gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
+  robust_glc_landcover(
     landcovertype = c(120, 121, 122, 150, 152),
     beta_test = beta_test,
-    foldersize = foldersize
+    foldersize = foldersize,
+    n_tifs = n_tifs
   )
 }
 

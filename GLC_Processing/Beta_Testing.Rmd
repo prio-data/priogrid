@@ -163,6 +163,7 @@ The workflow for processing **GLC_FCS30D** landcover data is structured in **fou
 
 ```{r}
 
+
 #' Reads the GLC v2 dataset
 #'
 #'
@@ -292,7 +293,7 @@ prepare_glc_layers <- function(tif_files) {
   })
   
   # ---- Return processed rasters ----
-  message("✅ Layer preparation complete. Returning filtered raster list.")
+  message("Layer preparation complete. Returning filtered raster list.")
   return(ras_list_filtered)
 }
 
@@ -303,6 +304,9 @@ prepare_glc_layers <- function(tif_files) {
 ras_list_filtered <- prepare_glc_layers(tif_files)
 ```
 
+```{r}
+ras_list_filtered
+```
 
 ```{r}
 # Step 3: Verify results
@@ -402,6 +406,55 @@ glc_summary <- inspect_glc_tiles(beta_test = TRUE, sample_n = 5)
 head(glc_summary)
 
 ```
+```{r}
+robust_glc_landcover <- function(landcovertype, beta_test = FALSE) {
+  memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
+  terra::terraOptions(memfrac = 0.8)
+
+  # Read and prepare tiles
+  tif_files <- read_glc_v2(beta_test = beta_test)
+  ras_list_filtered <- prepare_glc_layers(tif_files)
+
+  message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
+  message("Each tile will be processed via robust_transformation.\n")
+
+  # Apply robust transformation to each tile
+  transformed_tiles <- lapply(seq_along(ras_list_filtered), function(i) {
+    tile <- ras_list_filtered[[i]]
+    tile_name <- names(ras_list_filtered)[i] %||% paste0("Tile_", i)
+
+    message(i, "/", length(ras_list_filtered), "] Processing ", tile_name)
+
+    tryCatch({
+      res_tile <- robust_transformation(
+        tile,
+        function(x) mean(x %in% landcovertype, na.rm = TRUE)
+      )
+      gc()
+      res_tile
+    }, error = function(e) {
+      message("Skipping problematic tile: ", tile_name, " — ", e$message)
+      NULL
+    })
+  })
+
+  # Drop NULLs
+  transformed_tiles <- Filter(Negate(is.null), transformed_tiles)
+
+  # Merge results
+  if (length(transformed_tiles) > 1) {
+    message("\n Merging ", length(transformed_tiles), " aggregated tiles...")
+    res <- do.call(terra::merge, transformed_tiles)
+  } else {
+    res <- transformed_tiles[[1]]
+  }
+
+  message("Landcover computation complete.")
+  terra::terraOptions(memfrac = memfrac_option)
+  return(res)
+}
+
+```
 
 
 ```{r}
@@ -416,13 +469,13 @@ glc_landcover <- function(landcovertype, beta_test = FALSE) {
   message("Running landcover computation on ", length(ras_list_filtered), " tiles.")
   message("Each tile will be processed per layer to preserve temporal information.\n")
 
-  # 2️⃣ Ensure CRS consistency
-  ras_list_filtered <- lapply(ras_list_filtered, function(r) {
-    if (is.na(terra::crs(r))) {
-      terra::crs(r) <- "EPSG:4326"
-    }
-    r
-  })
+  # Ensure CRS consistency
+  #ras_list_filtered <- lapply(ras_list_filtered, function(r) {
+  #  if (is.na(terra::crs(r))) {
+  #    terra::crs(r) <- "EPSG:4326"
+  #  }
+  #  r
+  #}
 
   # 3️⃣ Define helper for one tile
   process_tile <- function(tile, landcovertype) {
@@ -695,5 +748,26 @@ names(r) <- years
 
 # Check first few
 names(r)[1:10]
+```
+
+
+```{r}
+ras_list_filtered <- prepare_glc_layers(beta_test = TRUE,foldersize = 1, n_tifs = 2)
+
+```
+
+```{r}
+ras_list_filtered
+```
+
+
+```{r}
+# 1. Load the raster normally
+lyr <- tile[[1]]
+
+# 2. Check alignment between raster and PRIO-GRID
+pg <- pg_raster()  # or whatever your PRIO reference raster is
+terra::compareGeom(lyr, pg)
+
 ```
 
