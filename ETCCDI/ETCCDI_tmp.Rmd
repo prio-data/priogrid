@@ -1,0 +1,527 @@
+---
+title: "ETCCDI_tmp"
+output: html_document
+---
+
+
+Create PG reference:
+```{r}
+pg <- prio_blank_grid()
+```
+
+
+## Setup and Input Validation
+
+#### Function A)
+
+```{r}
+generate_and_validate_request <- function(variable, product_type, experiment, temporal_aggregation) {
+  
+  # --------------------------------------------------------------------------
+  # Define allowed values (mirrors Python structure)
+  # --------------------------------------------------------------------------
+  allowed_values <- list(
+    product_type = list(
+      base_period_1961_1990 = c("cold_days", "cold_nights", "warm_days", "warm_nights"),
+      base_independent = list(
+        options = c(
+          "consecutive_dry_days", "consecutive_wet_days", "diurnal_temperature_range",
+          "frost_days", "growing_season_length", "heavy_precipitation_days", "ice_days",
+          "maximum_1_day_precipitation", "maximum_5_day_precipitation",
+          "maximum_value_of_daily_maximum_temperature", "minimum_value_of_daily_maximum_temperature",
+          "maximum_value_of_daily_minimum_temperature", "minimum_value_of_daily_minimum_temperature",
+          "number_of_wet_days", "simple_daily_intensity_index", "summer_days",
+          "total_wet_day_precipitation", "tropical_nights", "very_heavy_precipitation_days"
+        ),
+        yearly_only = c(
+          "summer_days", "frost_days", "consecutive_dry_days", "very_heavy_precipitation_days",
+          "simple_daily_intensity_index", "ice_days", "tropical_nights", "number_of_wet_days",
+          "heavy_precipitation_days", "total_wet_day_precipitation", "growing_season_length",
+          "consecutive_wet_days"
+        )
+      )
+    ),
+    experiment = c("historical", "ssp1_2_6", "ssp2_4_5", "ssp5_8_5"),
+    temporal_aggregation = list(
+      monthly = list(
+        historical = "185001_201412",
+        ssp1_2_6 = "201501_210012",
+        ssp2_4_5 = "201501_210012",
+        ssp5_8_5 = "201501_210012"
+      ),
+      yearly = list(
+        historical = "1850_2014",
+        ssp1_2_6 = "2015_2100",
+        ssp2_4_5 = "2015_2100",
+        ssp5_8_5 = "2015_2100"
+      )
+    ),
+    data_format = "netcdf"
+  )
+  
+  # --------------------------------------------------------------------------
+  # Generate period based on temporal aggregation and experiment
+  # --------------------------------------------------------------------------
+  if (temporal_aggregation == "monthly" && experiment == "historical") {
+    period <- "185001_201412"
+  } else if (temporal_aggregation == "monthly" && experiment != "historical") {
+    period <- "201501_210012"
+  } else if (temporal_aggregation == "yearly" && experiment == "historical") {
+    period <- "1850_2014"
+  } else if (temporal_aggregation == "yearly" && experiment != "historical") {
+    period <- "2015_2100"
+  }
+  
+  # --------------------------------------------------------------------------
+  # Build request list (equivalent to Python dict)
+  # --------------------------------------------------------------------------
+  request <- list(
+    variable = variable,
+    product_type = product_type,
+    model = "hadgem3_gc31_ll",
+    ensemble_member = "r1i1p1f3",
+    experiment = experiment,
+    temporal_aggregation = temporal_aggregation,
+    period = period,
+    version = "2_0",
+    data_format = "netcdf"
+  )
+  
+  # --------------------------------------------------------------------------
+  # Validation checks
+  # --------------------------------------------------------------------------
+  # Check product_type validity
+  if (!product_type %in% names(allowed_values$product_type)) {
+    stop("Invalid product_type. Must be 'base_period_1961_1990' or 'base_independent'.")
+  }
+  
+  # Validate variable by product_type
+  if (product_type == "base_period_1961_1990") {
+    if (!variable %in% allowed_values$product_type$base_period_1961_1990) {
+      stop("Invalid variable for product_type 'base_period_1961_1990'. Must be one of ['cold_days', 'cold_nights', 'warm_days', 'warm_nights'].")
+    }
+  } else if (product_type == "base_independent") {
+    if (!variable %in% allowed_values$product_type$base_independent$options) {
+      stop("Invalid variable for product_type 'base_independent'. Must be one of 'summer_days', 'frost_days', 'consecutive_dry_days', 'very_heavy_precipitation_days', 'simple_daily_intensity_index', 'ice_days', 'tropical_nights', 'number_of_wet_days', 'heavy_precipitation_days', 'total_wet_day_precipitation', 'growing_season_length', 'consecutive_wet_days'.")
+    }
+    
+    # Prevent invalid monthly requests for yearly-only variables
+    if (variable %in% allowed_values$product_type$base_independent$yearly_only &&
+        temporal_aggregation == "monthly") {
+      stop(paste0("Variable '", variable, "' cannot be computed with monthly temporal aggregation."))
+    }
+  }
+  
+  # Validate experiment
+  if (!experiment %in% allowed_values$experiment) {
+    stop("Invalid experiment. Must be one of 'historical', 'ssp1_2_6', 'ssp2_4_5', or 'ssp5_8_5'.")
+  }
+  
+  # Validate temporal aggregation
+  if (!temporal_aggregation %in% names(allowed_values$temporal_aggregation)) {
+    stop("Invalid temporal_aggregation. Must be 'monthly' or 'yearly'.")
+  }
+  
+  # Validate period
+  valid_periods <- allowed_values$temporal_aggregation[[temporal_aggregation]][[experiment]]
+  
+  if (is.null(valid_periods)) {
+    stop(paste0("No valid periods for ", temporal_aggregation, " aggregation and experiment '", experiment, "'."))
+  }
+  
+  if (!(period %in% valid_periods)) {
+    stop(paste0("Invalid period for ", temporal_aggregation, " aggregation with experiment '", experiment, "'. Must be one of ", paste(valid_periods, collapse = ", "), "."))
+  }
+  
+  # --------------------------------------------------------------------------
+  # Output
+  # --------------------------------------------------------------------------
+  message("Request is valid.")
+  return(request)
+}
+
+
+```
+
+
+#### Function B)
+
+```{r}
+pull_from_cds_api <- function(request) {
+  
+  # --------------------------------------------------------------------------
+  # Define project root and output path
+  # --------------------------------------------------------------------------
+  project_root <- pgoptions$get_rawfolder()
+  
+  raw_data <- file.path(project_root, "data", "raw_external", "cds_zip")
+  
+  if (!dir.exists(raw_data)) {
+    dir.create(raw_data, recursive = TRUE)
+  }
+  
+  # --------------------------------------------------------------------------
+  # Define dataset and request parameters
+  # --------------------------------------------------------------------------
+  dataset <- "sis-extreme-indices-cmip6"
+  
+  variable <- request$variable
+  temporal_aggregation <- request$temporal_aggregation
+  period <- request$period
+  
+  # Construct file name and path
+  zip_file_name <- paste0(variable, "_", temporal_aggregation, "_", period, ".zip")
+  zip_file_path <- file.path(raw_data, zip_file_name)
+  
+  # --------------------------------------------------------------------------
+  # Retrieve data from CDS API
+  # --------------------------------------------------------------------------
+  # Option 1: Use Python cdsapi via reticulate (recommended for parity)
+  if (requireNamespace("reticulate", quietly = TRUE)) {
+    cdsapi <- reticulate::import("cdsapi", delay_load = TRUE)
+    client <- cdsapi$Client()
+    client$retrieve(dataset, request, target = zip_file_path)
+    
+  } else {
+    stop("Package 'reticulate' not installed. Please install it to use the CDS API client from R.")
+  }
+  
+  # --------------------------------------------------------------------------
+  # Return the file name
+  # --------------------------------------------------------------------------
+  return(zip_file_name)
+}
+```
+
+
+## II. File Handling and Data Preparation
+
+#### Function A)
+- Unzips the CDS archive and identifies the NetCDF file(s).
+- Returns the path to the NetCDF and the ETCCDI variable name.
+
+```{r}
+unzip_etccdi_package()
+```
+
+#### Function B)
+- Adjusts longitude range (e.g., from 0–360 to −180–180).
+- Ensures CRS consistency for later PRIO-GRID alignment.
+
+```{r}
+transform_longitudinal_values()
+```
+
+#### Function C)
+- Extracts and prints descriptive metadata (variable name, units, temporal coverage, etc.).
+
+```{r}
+give_metadata()
+```
+
+
+## Reference Frame and Temporal Alignment
+
+#### Function A)
+
+```{r}
+provide_reference_frame()
+```
+
+#### Function B)
+
+```{r}
+translate_index_to_daterange()
+```
+
+## Data Integration
+
+#### Function A)
+
+```{r}
+generate_etccdi_temporal_tables__centroid()
+```
+
+#### Function B)
+
+```{r}
+generate_etccdi_temporal_tables()
+```
+
+
+## Clickable opetation for main function
+
+```{r}
+# -------------------------------------------------------------------
+# Simple base-R prompt replacement for cli_menu
+# -------------------------------------------------------------------
+prompt_select <- function(options, title) {
+  cat("\n", title, "\n")
+  choice <- menu(options, title = "")
+  if (choice == 0) stop("No selection made. Exiting.")
+  options[choice]
+}
+# -------------------------------------------------------------------
+# Load libraries
+# -------------------------------------------------------------------
+library(cli)
+library(dplyr)
+
+
+# -------------------------------------------------------------------
+# EXPERIMENT_YEAR_RANGES and DATA_API definitions
+# -------------------------------------------------------------------
+EXPERIMENT_YEAR_RANGES <- list(
+  historical = c(1850, 2014),
+  ssp1_2_6 = c(2015, 2100),
+  ssp2_4_5 = c(2015, 2100),
+  ssp5_8_5 = c(2015, 2100)
+)
+
+DATA_API <- data.frame(
+  product_type = c(
+    rep("base_independent", 19),
+    rep("base_period_1961_1990", 4)
+  ),
+  variable = c(
+    "consecutive_dry_days", "consecutive_wet_days", "diurnal_temperature_range", "frost_days",
+    "growing_season_length", "heavy_precipitation_days", "ice_days", "maximum_1_day_precipitation",
+    "maximum_5_day_precipitation", "maximum_value_of_daily_maximum_temperature",
+    "minimum_value_of_daily_maximum_temperature", "maximum_value_of_daily_minimum_temperature",
+    "minimum_value_of_daily_minimum_temperature", "number_of_wet_days", "simple_daily_intensity_index",
+    "summer_days", "total_wet_day_precipitation", "tropical_nights", "very_heavy_precipitation_days",
+    "cold_days", "cold_nights", "warm_days", "warm_nights"
+  ),
+  temporal_aggregation = c(
+    "annual", "annual", "monthly or annual", "annual", "annual", "annual", "annual", "monthly or annual",
+    "monthly or annual", "monthly or annual", "monthly or annual", "monthly or annual", "monthly or annual",
+    "annual", "annual", "annual", "annual", "annual", "annual", "monthly or annual", "monthly or annual",
+    "monthly or annual", "monthly or annual"
+  ),
+  stringsAsFactors = FALSE
+)
+
+# -------------------------------------------------------------------
+# Helper functions (interactive + validation)
+# -------------------------------------------------------------------
+
+get_variable_list <- function(temporal_aggregation, df_api) {
+  if (temporal_aggregation == "monthly") {
+    df_api %>% filter(grepl("monthly or annual", temporal_aggregation)) %>% pull(variable)
+  } else {
+    df_api$variable
+  }
+}
+
+validate_temporal_aggregation <- function(value) {
+  valid <- c("yearly", "monthly")
+  if (!(value %in% valid)) stop("Please choose 'yearly' or 'monthly'.")
+  value
+}
+
+validate_variable <- function(temporal_aggregation, variable) {
+  valid_vars <- get_variable_list(temporal_aggregation, DATA_API)
+  if (!(variable %in% valid_vars)) {
+    stop(paste0("'", variable, "' is not available for ", temporal_aggregation, " aggregation."))
+  }
+  variable
+}
+
+validate_experiment <- function(value) {
+  valid_experiments <- names(EXPERIMENT_YEAR_RANGES)
+  if (!(value %in% valid_experiments)) {
+    stop(paste0("Invalid experiment. Choose from: ", paste(valid_experiments, collapse = ", "), "."))
+  }
+  value
+}
+
+validate_years <- function(experiment, start, end) {
+  range <- EXPERIMENT_YEAR_RANGES[[experiment]]
+  start_int <- as.integer(start)
+  end_int <- as.integer(end)
+  
+  if (is.null(range)) stop("Invalid experiment provided.")
+  if (!(range[1] <= start_int && start_int <= range[2])) {
+    stop(paste0("Start year must be between ", range[1], " and ", range[2], " for ", experiment, "."))
+  }
+  if (!(range[1] <= end_int && end_int <= range[2])) {
+    stop(paste0("End year must be between ", range[1], " and ", range[2], " for ", experiment, "."))
+  }
+  if (start_int >= end_int) stop("Start year must be less than end year.")
+  list(start = start_int, end = end_int)
+}
+
+validate_months <- function(temporal_aggregation, start_month, end_month) {
+  if (temporal_aggregation == "monthly") {
+    if (is.null(start_month) || is.null(end_month)) stop("Both start and end months must be specified.")
+    start_int <- as.integer(start_month)
+    end_int <- as.integer(end_month)
+    if (!(1 <= start_int && start_int <= 12)) stop("Start month must be between 01 and 12.")
+    if (!(1 <= end_int && end_int <= 12)) stop("End month must be between 01 and 12.")
+    if (start_int > end_int) stop("Start month must be less than or equal to end month.")
+  }
+  list(start_month = start_month, end_month = end_month)
+}
+
+validate_method <- function(value) {
+  valid <- c("raster_query", "resample")
+  if (!(value %in% valid)) stop("Invalid method. Choose from 'raster_query' or 'resample'.")
+  value
+}
+
+validate_save_raster <- function(value) {
+  valid <- c("yes", "no")
+  if (!(value %in% valid)) stop("Invalid save-raster option. Choose from 'yes' or 'no'.")
+  value
+}
+
+# -------------------------------------------------------------------
+# Interactive CLI Prompt System (equivalent to Python click)
+# -------------------------------------------------------------------
+
+interactive_cli <- function() {
+  
+  cli_h1("ETCCDI → PRIO-GRID Integration CLI")
+  cli_alert_info("Provide inputs for the CDS ETCCDI request.")
+  
+  temporal_aggregation <- prompt_select(
+    c("yearly", "monthly"),
+    "Select temporal aggregation:"
+  )
+  validate_temporal_aggregation(temporal_aggregation)
+  
+  variable_list <- get_variable_list(temporal_aggregation, DATA_API)
+  variable <- prompt_select(
+    variable_list,
+    paste0("Select variable for ", temporal_aggregation, " aggregation:")
+  )
+  validate_variable(temporal_aggregation, variable)
+  
+  experiment <- prompt_select(
+    names(EXPERIMENT_YEAR_RANGES),
+    "Select experiment:"
+  )
+  validate_experiment(experiment)
+  
+  cli_h2("Specify year range")
+  start_year <- readline(prompt = "Enter start year: ")
+  end_year <- readline(prompt = "Enter end year: ")
+  validate_years(experiment, start_year, end_year)
+  
+  if (temporal_aggregation == "monthly") {
+    cli_h2("Specify month range (01–12)")
+    start_month <- readline(prompt = "Enter start month: ")
+    end_month <- readline(prompt = "Enter end month: ")
+    validate_months(temporal_aggregation, start_month, end_month)
+  } else {
+    start_month <- end_month <- NULL
+  }
+  
+  method <- prompt_select(
+    c("raster_query", "resample"),
+    "Select processing method:"
+  )
+  validate_method(method)
+  
+  save_raster <- prompt_select(
+    c("yes", "no"),
+    "Save raster files?"
+  )
+  validate_save_raster(save_raster)
+  
+  # ----------------------------------------------------------
+  # Run main() with user-selected arguments
+  # ----------------------------------------------------------
+  main(
+    temporal_aggregation = temporal_aggregation,
+    variable = variable,
+    experiment = experiment,
+    start_year = start_year,
+    end_year = end_year,
+    start_month = start_month,
+    end_month = end_month,
+    method = method,
+    save_raster = save_raster
+  )
+}
+
+```
+
+
+```{r}
+# -------------------------------------------------------------------
+# MAIN FUNCTION — replicates Python main() logic up to print(request)
+# -------------------------------------------------------------------
+
+main <- function(temporal_aggregation,
+                 variable,
+                 experiment,
+                 start_year,
+                 end_year,
+                 start_month = NULL,
+                 end_month = NULL,
+                 method,
+                 save_raster) {
+  
+  # ------------------------------------------
+  # Validate inputs
+  # ------------------------------------------
+  validate_variable(temporal_aggregation, variable)
+  validate_years(experiment, start_year, end_year)
+  validate_months(temporal_aggregation, start_month, end_month)
+  
+  # ------------------------------------------
+  # Display chosen parameters
+  # ------------------------------------------
+  cli_h1("Selected Configuration")
+  cli_text("Temporal aggregation: {temporal_aggregation}")
+  cli_text("Variable: {variable}")
+  cli_text("Experiment: {experiment}")
+  cli_text("Start year: {start_year}")
+  cli_text("End year: {end_year}")
+  cli_text("Start month: {start_month}")
+  cli_text("End month: {end_month}")
+  cli_text("Method: {method}")
+  cli_text("Save raster: {save_raster}")
+  cli_rule()
+  
+  # ------------------------------------------
+  # Prepare DataFrame and extract product_type
+  # ------------------------------------------
+  df_api <- DATA_API
+  
+  if (!(variable %in% df_api$variable)) {
+    stop(paste("Variable", variable, "not found in DATA_API."))
+  }
+  
+  product_type <- df_api[df_api$variable == variable, "product_type"][1]
+  
+  # ------------------------------------------
+  # Call generate_and_validate_request()
+  # ------------------------------------------
+  request <- generate_and_validate_request(
+    variable = variable,
+    product_type = product_type,
+    experiment = experiment,
+    temporal_aggregation = temporal_aggregation
+  )
+  
+  # ------------------------------------------
+  # Print request object (for now, stop here)
+  # ------------------------------------------
+  cli_h2("Validated Request Object")
+  print(request)
+  cli_alert_success("Request is valid. Stopping here (downstream steps not yet implemented).")
+  
+  # ------------------------------------------
+  # Zip file name
+  # ------------------------------------------
+  
+  zip_file_name = pull_from_cds_api(request)
+
+  #return(invisible(request))
+  return(zip_file_name)
+}
+
+```
+
