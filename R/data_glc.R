@@ -53,7 +53,6 @@
 #' # tif_files <- read_glc_v2(beta_test = TRUE, foldersize = 2)
 #'
 #' @export
-#'
 read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
 
   # Base dataset directory
@@ -133,17 +132,29 @@ read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
 #' are passed to \code{glc_landcover()} or \code{robust_glc_landcover()}. It is designed
 #' to minimize memory use and provide clear diagnostics on mismatched years.
 #'
-#' @param beta_test Logical; if TRUE, runs in test mode and may load a reduced number of tiles.
-#' @param foldersize Optional integer specifying the batch size for reading tiles
-#'   (used to control memory usage during large-scale operations).
-#' @param n_tifs Optional integer limiting how many TIFF files are processed, typically
-#'   for debugging or lightweight validation.
+#' @param beta_test Logical; if TRUE, enables a lightweight test mode that restricts
+#'   processing to a filtered subset of GLC folders. This option is useful for quick
+#'   diagnostics or verifying code functionality without loading the full dataset.
+#'
+#' @param foldersize Optional integer specifying the number of GLC folders (each
+#'   corresponding to a subglobal 5×5° tile group) to include in a batch. This
+#'   parameter controls how many folder-level batches are processed and can be
+#'   adjusted to balance performance and memory constraints during large-scale runs.
+#'
+#' @param n_tifs Optional integer specifying the total number of individual TIFF
+#'   files (subtiles) to process across all selected folders. While \code{beta_test}
+#'   limits the number of folders processed and \code{foldersize} controls the batch
+#'   size of those folders, \code{n_tifs} restricts the number of individual TIFFs
+#'   loaded within them. This enables granular testing on smaller subsets of the full
+#'   GLC catalog—comprising 36 folders with 32 TIFFs per folder—where each TIFF
+#'   contains over 30 years of landcover layers. Setting this parameter can
+#'   substantially reduce memory use and speed up development or validation runs.
 #'
 #' @return A named list of filtered \code{SpatRaster} objects. Each raster contains
 #' annual layers with standardized names corresponding to valid PRIO-GRID years.
 #'
 #' @seealso
-#' \code{\link{read_glc_v2}} for loading raw GLC files,
+#' \code{\link{read_glc_v2}} for retrieving raw GLC files,
 #' \code{\link{glc_landcover}} and \code{\link{robust_glc_landcover}} for aggregation.
 #'
 #' @examples
@@ -154,10 +165,7 @@ read_glc_v2 <- function(beta_test = FALSE, foldersize = NULL) {
 #' # names(rasters[[1]])
 #'
 #' @export
-
 prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
-  library(terra)
-  library(lubridate)
 
   # ---- Step 1: Read TIFF files from GLC folders ----
   tif_files <- read_glc_v2(beta_test = beta_test, foldersize = foldersize)
@@ -178,7 +186,7 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
   ras_list <- vector("list", length(tif_files))
 
   for (i in seq_along(tif_files)) {
-    r_i <- rast(tif_files[i])
+    r_i <- terra::rast(tif_files[i])
     fname <- basename(tif_files[i])
 
     # Parse start and end years from filename
@@ -190,13 +198,13 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
     years <- seq(start_year, end_year)
 
     # Rename layers safely
-    names(r_i) <- years[seq_len(min(length(years), nlyr(r_i)))]
+    names(r_i) <- years[seq_len(min(length(years), terra::nlyr(r_i)))]
 
     ras_list[[i]] <- r_i
   }
 
   # ---- Step 2: Filter layers by PRIO-GRID years ----
-  years_to_keep <- year(pg_dates()) |> unique()
+  years_to_keep <- lubridate::year(pg_dates()) |> unique()
 
   ras_list_filtered <- lapply(ras_list, function(r) {
     raw_names <- names(r)
@@ -207,7 +215,7 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
       r <- r[[keep_layers]]
       names(r) <- layer_years[keep_layers]
     } else {
-      warning("No matching years found for raster: ", sources(r))
+      warning("No matching years found for raster: ", terra::sources(r))
       r <- NULL
     }
     return(r)
@@ -217,8 +225,8 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
   ras_list_filtered <- Filter(Negate(is.null), ras_list_filtered)
 
   # ---- Step 3: Rename to full YYYY-MM-DD format ----
-  month_to_use <- pg_dates() |> month() |> max()
-  day_to_use   <- pg_dates() |> day()   |> max()
+  month_to_use <- lubridate::month(pg_dates()) |> max()
+  day_to_use   <- lubridate::day(pg_dates())   |> max()
 
   ras_list_filtered <- lapply(ras_list_filtered, function(r) {
     yrs <- as.numeric(names(r))
@@ -230,11 +238,9 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
   message("Layer preparation complete. Returning filtered raster list.")
   return(ras_list_filtered)
 }
-
 #------------------------------------------------------------------------------
 # FUNCTION 3:
 #------------------------------------------------------------------------------
-
 #' Robust Landcover Aggregation Function
 #'
 #' GLC land cover class codes (for stable categories):
@@ -276,11 +282,10 @@ prepare_glc_layers <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NU
 #' @export
 #'
 #' @examples
-#' # Example: Compute shrubland coverage
-#' # shrubland <- robust_glc_landcover(c(120, 121, 122, 150, 152))
+#' Example: Compute shrubland coverage
+#' shrubland <- robust_glc_landcover(c(120, 121, 122, 150, 152))
 #'
 robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
-
   # -------------------------------------------------------------------------
   # STEP 1: Prepare and load GLC raster tiles
   # -------------------------------------------------------------------------
@@ -289,8 +294,6 @@ robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = 
   # where each tile contains multiple time layers (e.g., annual composites).
   # -------------------------------------------------------------------------
   ras_list_filtered <- prepare_glc_layers(beta_test, foldersize, n_tifs)
-
-
   # -------------------------------------------------------------------------
   # STEP 2: Define block-level aggregation function
   # -------------------------------------------------------------------------
@@ -307,8 +310,6 @@ robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = 
     if (length(x) == 0 || all(is.na(x))) return(NA_real_)
     mean(x %in% landcovertype, na.rm = TRUE)
   }
-
-
   # -------------------------------------------------------------------------
   # STEP 3: Process each raster tile independently
   # -------------------------------------------------------------------------
@@ -363,7 +364,6 @@ robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = 
     results[[1]]
   }
 }
-
 #' Generate Cropland Raster Layers
 #'
 #' Aggregates rainfed, herbaceous, tree/orchard, and irrigated croplands (LC ids 10, 11, 12, 20)
@@ -372,6 +372,7 @@ robust_glc_landcover <- function(landcovertype, beta_test = FALSE, foldersize = 
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated cropland raster.
+#' @export
 gen_glc_cropland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = c(10, 11, 12, 20),
@@ -380,7 +381,6 @@ gen_glc_cropland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL
     n_tifs = n_tifs
   )
 }
-
 #' Generate Forest Raster Layers
 #'
 #' Aggregates all broadleaved, needle-leaved, and mixed-leaf forests (LC ids 51–92),
@@ -390,6 +390,7 @@ gen_glc_cropland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated forest raster.
+#' @export
 gen_glc_forest <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = c(51, 52, 61, 62, 71, 72, 81, 82, 91, 92),
@@ -398,7 +399,6 @@ gen_glc_forest <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) 
     n_tifs = n_tifs
   )
 }
-
 #' Generate Shrubland Raster Layers
 #'
 #' Combines evergreen, deciduous, and sparse shrublands (LC ids 120, 121, 122, 150, 152)
@@ -408,6 +408,7 @@ gen_glc_forest <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) 
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated shrubland raster.
+#' @export
 gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   robust_glc_landcover(
     landcovertype = c(120, 121, 122, 150, 152),
@@ -416,7 +417,6 @@ gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NUL
     n_tifs = n_tifs
   )
 }
-
 #' Generate Grassland Raster Layers
 #'
 #' Merges open herbaceous and sparse grass-dominated areas (LC ids 130, 153)
@@ -426,6 +426,7 @@ gen_glc_shrubland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NUL
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated grassland raster.
+#' @export
 gen_glc_grassland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = c(130, 153),
@@ -434,7 +435,6 @@ gen_glc_grassland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NUL
     n_tifs = n_tifs
   )
 }
-
 #' Generate Wetland Raster Layers
 #'
 #' Groups swamp, marsh, flooded, saline, mangrove, and tidal flats (LC ids 181–187)
@@ -444,6 +444,7 @@ gen_glc_grassland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NUL
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated wetland raster.
+#' @export
 gen_glc_wetland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = c(181, 182, 183, 184, 185, 186, 187),
@@ -452,7 +453,6 @@ gen_glc_wetland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL)
     n_tifs = n_tifs
   )
 }
-
 #' Generate Built-up / Urban Raster Layers
 #'
 #' Captures impervious or constructed surfaces (LC id 190) corresponding to built-up or
@@ -461,13 +461,13 @@ gen_glc_wetland <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL)
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated built-up raster.
+#' @export
 gen_glc_builtup <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = 190,
     beta_test = beta_test
   )
 }
-
 #' Generate Water Body Raster Layers
 #'
 #' Represents inland and coastal water bodies (LC id 210), including lakes, reservoirs,
@@ -476,6 +476,7 @@ gen_glc_builtup <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL)
 #'
 #' @inheritParams prepare_glc_layers
 #' @return Aggregated water body raster.
+#' @export
 gen_glc_water <- function(beta_test = FALSE, foldersize = NULL, n_tifs = NULL) {
   glc_landcover(
     landcovertype = 210,
