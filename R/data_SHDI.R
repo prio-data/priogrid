@@ -52,6 +52,29 @@ read_shdi_shapefile <- function() {
   shp_path <- file.path(tmpdir, shp_entry)
 
   shp <- sf::st_read(shp_path, quiet = TRUE)
+  unlink(tmpdir)
 
   return(shp)
+}
+
+
+gen_shdi <- function(shdi = read_shdi(), shp = read_shdi_shapefile(), variable = "shdi", fun = "mean") {
+  no_subnat <- shdi |>
+    dplyr::group_by(country) |>
+    dplyr::summarize(n_unique = length(unique(gdlcode))) |>
+    dplyr::filter(n_unique == 1)
+
+  shdi_national <- shdi |>
+    dplyr::filter(level == "National", country %in% no_subnat$country) |>
+    dplyr::select(year, gdlcode, !!variable)
+
+  shdi <- shdi |>
+    dplyr::filter(level == "Subnat") |>
+    dplyr::select(year, gdlcode, !!variable)
+
+  shdi <- dplyr::bind_rows(shdi_national, shdi)
+  shdi <- dplyr::left_join(shdi, shp, by = "gdlcode") |> sf::st_as_sf()
+
+  pg <- prio_blank_grid()
+
 }
