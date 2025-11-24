@@ -47,7 +47,7 @@
 #'
 #' # Plot ethnic group settlement areas
 #' plot(sf::st_geometry(geoepr_data), main = "Ethnic Group Settlement Areas")
-#'
+#' }
 #' @return A \code{sf} object
 #' @export
 #'
