@@ -1,0 +1,42 @@
+---
+title: "PRIO-GRID Ide replication"
+format: html
+editor: visual
+---
+
+## Geo Data for Human Wellbeing
+
+### Introducing PRIO-GRID version 3
+
+Aimed at the Nature Scientific Data, special issue on Geo Data for Human Wellbeing.
+
+### Replication of Ide et al. (2014)
+
+#### Setting up PRIO-GRID
+
+```{r}
+
+library(priogrid)
+
+```
+
+```{r}
+
+# pgoptions$set_rawfolder("/filepath/to/rawfolder")
+
+pgoptions$set_extent(c(xmin = 30, xmax = 42, ymin = -5, ymax = 5))
+
+pgoptions$set_start_date("1990-01-01")
+
+pgoptions$set_end_date("2025-01-01")
+
+```
+
+#### Load data from PRIO-GRID
+
+```{r}
+
+pre <- read_cru_()
+
+
+```
