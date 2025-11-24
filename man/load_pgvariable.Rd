@@ -15,7 +15,7 @@ load_pgvariable(
 \arguments{
 \item{varname}{Character string with the variable name}
 
-\item{version}{Character string specifying PRIOGRID version. Relevant for loading official releases.}
+\item{version}{Character string specifying PRIOGRID version. Set to "custom" if you want use current pgoptions.}
 
 \item{type}{Character string specifying release type (e.g., "05deg_yearly").}
 

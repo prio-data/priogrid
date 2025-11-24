@@ -207,7 +207,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #' yearly 0.5x0.5 degree WGS84 data from the current official version of PRIOGRID.
 #'
 #' @param varname Character string with the variable name
-#' @param version Character string specifying PRIOGRID version. Relevant for loading official releases.
+#' @param version Character string specifying PRIOGRID version. Set to "custom" if you want use current pgoptions.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
 #' @param spatial_hash Character string with 6-character spatial hash. If NULL, uses current pgoptions.
 #' @param temporal_hash Character string with 6-character temporal hash. If NULL, uses current pgoptions.
