@@ -293,6 +293,7 @@ load_pgvariable <- function(varname,
       message("Loading official PRIOGRID version ", version, " (", type, ")")
     }
 
+    download_priogrid(version = version, type = type)
     filepath <- file.path(
       pgout_path(version = version, type = type),
       paste0(varname, ".rds")
