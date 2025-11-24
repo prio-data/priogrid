@@ -19,6 +19,15 @@ for all PRIO-GRID temporal slices. The function generates time series data
 showing how grid cell coverage by international state boundaries changes
 over time using CShapes 2.0 boundary data.
 }
+\examples{
+\dontrun{
+# Generate full temporal coverage data
+temporal_coverage <- gen_cshapes_cover_share()
+
+# Examine the structure
+print(temporal_coverage)
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

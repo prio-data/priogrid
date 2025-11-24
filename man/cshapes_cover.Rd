@@ -30,6 +30,15 @@ classification of grid cells. It:
 \item Returns a binary mask where non-NA values indicate state system intersection
 }
 }
+\examples{
+\dontrun{
+# Binary mask for any state system intersection in 2010
+state_mask_2010 <- cshapes_cover(as.Date("2010-01-01"))
+
+# Require at least 25\% coverage
+substantial_state <- cshapes_cover(as.Date("2010-01-01"), min_cover = 0.25)
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

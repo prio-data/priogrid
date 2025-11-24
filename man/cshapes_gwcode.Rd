@@ -29,6 +29,14 @@ coverage is assigned, with ties broken by selecting the lowest country code.
 \item Future versions may include provisions for minority country representation
 }
 }
+\examples{
+\dontrun{
+# Assign country codes for 2010
+country_codes_2010 <- cshapes_gwcode(as.Date("2010-01-01"))
+
+print(country_codes_2010)
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

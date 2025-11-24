@@ -17,6 +17,7 @@ PGOptionsManager <- R6::R6Class(
     #' @description Initialize options
     initialize = function() {
       private$load_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Reset options to defaults.
@@ -44,6 +45,7 @@ PGOptionsManager <- R6::R6Class(
     set_nrow = function(value) {
       private$options$nrow <- as.integer(value)
       private$save_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Set number of cols in output raster
@@ -51,6 +53,7 @@ PGOptionsManager <- R6::R6Class(
     set_ncol = function(value) {
       private$options$ncol <- as.integer(value)
       private$save_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Set the folder where raw-data should be downloaded (possibly very large files), defaults to temporary folder
@@ -74,11 +77,19 @@ PGOptionsManager <- R6::R6Class(
       private$save_options()
     },
 
+    #' @description Set to true if data downloads should be done automatically.
+    #' @param value Boolean If TRUE, PRIOGRID will attempt to download files that are needed when trying to read specific sources.
+    set_automatic_download = function(value){
+      private$options$automatic_download <- value
+      private$save_options()
+    },
+
     #' @description Set temporal resolution
     #' @param value String increment of temporal sequence. See [base::seq.Date] for more information.
     set_temporal_resolution = function(value){
       private$options$temporal_resolution <- value
       private$save_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Set start date
@@ -87,6 +98,7 @@ PGOptionsManager <- R6::R6Class(
     set_start_date = function(value){
       private$options$start_date <- as.character(value)
       private$save_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Set end date
@@ -94,6 +106,7 @@ PGOptionsManager <- R6::R6Class(
     set_end_date = function(value){
       private$options$end_date <- as.character(value)
       private$save_options()
+      private$update_terra_memory_settings()
     },
 
     #' @description Get crs option
@@ -115,6 +128,8 @@ PGOptionsManager <- R6::R6Class(
     },
     #' @description Get verbose option
     get_verbose = function() private$options$verbose,
+    #' @description Get download prompt option
+    get_automatic_download = function() private$options$automatic_download,
     #' @description Get temporal resolution option
     get_temporal_resolution = function() private$options$temporal_resolution,
     #' @description Get start date option
@@ -137,6 +152,7 @@ PGOptionsManager <- R6::R6Class(
       cat("  extent:", as.vector(private$options$extent), "\n")
       cat("  rawfolder:", private$options$rawfolder, "\n")
       cat("  verbose:", private$options$verbose, "\n")
+      cat("  automatic download:", private$options$automatic_download, "\n")
       cat("  temporal resolution:", private$options$temporal_resolution, "\n")
       cat("  start date:", private$options$start_date, "\n")
       cat("  end date:", private$options$end_date, "\n")
@@ -152,10 +168,57 @@ PGOptionsManager <- R6::R6Class(
       extent = c("xmin" = -180, "xmax" =  180, "ymin" = -90, "ymax" = 90),
       rawfolder = NA,
       verbose = TRUE,
+      automatic_download = TRUE,
       temporal_resolution = "1 year",
       start_date = "1850-12-31",
       end_date = "2025-08-26"
     ),
+
+    update_terra_memory_settings = function() {
+      # Don't run during initialization if options aren't ready
+      if (is.null(private$options$nrow)) return()
+
+      grid_cells <- private$options$nrow * private$options$ncol
+
+      n_layers <- length(pg_dates(as.Date(private$options$start_date),
+                                  as.Date(private$options$end_date),
+                                  private$options$temporal_resolution))
+
+      estimated_gb <- (grid_cells * n_layers * 8) / 1e9
+
+      if (estimated_gb > 4) {  # Simple 4GB threshold
+        terra::terraOptions(todisk = TRUE)
+
+        if (!is.na(private$options$rawfolder)) {
+          temp_dir <- file.path(private$options$rawfolder, "tmp")
+          if (!dir.exists(temp_dir)) {
+            dir.create(temp_dir, recursive = TRUE, showWarnings = FALSE)
+          }
+          terra::terraOptions(tempdir = temp_dir)
+        } else{
+          stop("Please set pgoptions$set_rawfolder(path).")
+        }
+
+        if (private$options$verbose) {
+          message(sprintf(
+            "%s cells × %d layers ≈ %.1f GB. Enabled disk-based processing in terra::terraOptions. To override, set terra::terraOptions(todisk = FALSE)",
+            format(grid_cells, big.mark = ","),
+            n_layers,
+            estimated_gb
+          ))
+        }
+      } else {
+        terra::terraOptions(todisk = FALSE)
+        if (private$options$verbose) {
+          message(sprintf(
+            "%s cells × %d layers ≈ %.1f GB. Disabled disk-based processing in terra::terraOptions. To override, set terra::terraOptions(todisk = TRUE)",
+            format(grid_cells, big.mark = ","),
+            n_layers,
+            estimated_gb
+          ))
+        }
+      }
+    },
 
     options = list(),
 
