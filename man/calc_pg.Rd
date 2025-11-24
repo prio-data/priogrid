@@ -2,24 +2,35 @@
 % Please edit documentation in R/build_priogrid.R
 \name{calc_pg}
 \alias{calc_pg}
-\title{Calculates all PRIO-GRID variables}
+\title{Calculate PRIO-GRID variables}
 \usage{
 calc_pg(varnames = NULL, overwrite = FALSE)
 }
 \arguments{
-\item{varnames}{Vector with names of variables in PRIOGRID. See \link{pgvariables}. If NULL, then all variables are used.}
+\item{varnames}{Character vector with variable names from \link{pgvariables}.
+If NULL (default), calculates all available variables.}
 
-\item{overwrite}{Boolean, if false, will ignore updating variables that already exist in the result folder}
+\item{overwrite}{Logical. If FALSE (default), skips variables that already
+exist in the output folder. If TRUE, recalculates all specified variables.}
+}
+\value{
+NULL (invisibly). Called for side effects (saving files).
 }
 \description{
-In PRIO-GRID, all functions that are named "gen_something()" are functions that
-return final variables as a SpatRaster (or a stack of these). This function
-calculates all variables and store them in "path/to/your/rawfolder/priogrid/version/{options_hash}/variable_name.rds".
+Calculates PRIO-GRID variables based on current pgoptions and saves them
+to disk. Each variable is computed by calling its corresponding gen_*() function
+and saved as an .rds file in the custom data folder.
 }
 \examples{
 \dontrun{
+  # Calculate single variable
   calc_pg("ne_disputed_area_share")
-  r <- load_pgvariable()
-}
+  r <- load_pgvariable("ne_disputed_area_share")
 
+  # Calculate all variables
+  calc_pg()
+
+  # Recalculate existing variables
+  calc_pg(overwrite = TRUE)
+}
 }

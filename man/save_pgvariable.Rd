@@ -4,18 +4,26 @@
 \alias{save_pgvariable}
 \title{Save a PRIO-GRID variable}
 \usage{
-save_pgvariable(rast, varname)
+save_pgvariable(rast, varname, save_to = pgout_path())
 }
 \arguments{
-\item{rast}{Terra SpatRast from a gen_ function}
+\item{rast}{Terra SpatRaster object from a gen_*() function}
 
-\item{varname}{Character string with the variable name}
+\item{varname}{Character string with the variable name (must exist in pgvariables)}
+
+\item{save_to}{Character string with folder path. Defaults to current custom
+data location based on pgoptions.}
+}
+\value{
+NULL (invisibly). Called for side effects (saving file).
 }
 \description{
-Save a PRIO-GRID variable to a standard folder depending on your pgoptions:
-rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
+Saves a terra SpatRaster as a wrapped .rds file. The variable must be
+listed in \link{pgvariables}.
 }
-\details{
-Correctly wrap the terra object before writing it, and checks if the variable
-is included in the list of variables in PRIOGRID \link{pgvariables}.
+\examples{
+\dontrun{
+  r <- gen_ne_disputed_area_share()
+  save_pgvariable(r, "ne_disputed_area_share")
+}
 }

@@ -2,28 +2,58 @@
 % Please edit documentation in R/build_priogrid.R
 \name{read_pg_timevarying}
 \alias{read_pg_timevarying}
-\title{Collects and returns timevarying (non-static) PRIO-GRID data}
+\title{Collect time-varying (non-static) PRIO-GRID data}
 \usage{
-read_pg_timevarying(as_raster = FALSE, test = FALSE, overwrite = FALSE)
+read_pg_timevarying(
+  version = NULL,
+  type = NULL,
+  spatial_hash = NULL,
+  temporal_hash = NULL,
+  as_raster = FALSE,
+  test = FALSE,
+  overwrite = FALSE
+)
 }
 \arguments{
-\item{as_raster}{Boolean. Set to TRUE to return a list of rasters. Defaults to FALSE (returns data.table).}
+\item{version}{Character string specifying PRIOGRID version.}
 
-\item{test}{Boolean. Returns only coverage summary (percentage cells with data) for each variable for each date.}
+\item{type}{Character string specifying release type (e.g., "05deg_yearly").}
 
-\item{overwrite}{Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
-If it does, then it returns the data.table. If not, it saves the data.table to disk as .csv.gz and .parquet.}
+\item{spatial_hash}{Character string with 6-character spatial hash (custom only).}
+
+\item{temporal_hash}{Character string with 6-character temporal hash (custom only).}
+
+\item{as_raster}{Logical. If TRUE, returns list of SpatRasters. If FALSE
+(default), returns data.table.}
+
+\item{test}{Logical. If TRUE, returns coverage summary data.frame.}
+
+\item{overwrite}{Logical. If FALSE (default) and cached file exists, returns
+cached data. If TRUE, rebuilds from individual variables.}
 }
 \value{
-a data.table with pgid + measurement_date as rows and variables as columns or a list of terra SpatRasters with each measurement date as layers or coverage test
+data.table with pgid + measurement_date as rows and variables as columns,
+or list of terra SpatRasters if as_raster=TRUE, or coverage test data.frame if test=TRUE
 }
 \description{
-See \link{pgvariables} for an overview of variables.
+Loads all time-varying variables and returns them either as a data.table or as
+a list of rasters. See \link{pgvariables} for available variables. If an official release
+is specified (or version, type and hashes are NULL), then this is downloaded if this
+is not already done.
 }
 \examples{
 \dontrun{
-  pg_dt <- read_pg_timevarying() # data.table
-  coverage_test <- read_pg_timevarying(test = TRUE) # coverage test data frame
-  pg_rast <- read_pg_timevarying(as_raster = TRUE) # list of rasters
+  # Load as data.table
+  pg_dt <- read_pg_timevarying()
+
+  # Test coverage
+  coverage <- read_pg_timevarying(test = TRUE)
+
+  # Load as rasters
+  pg_rast <- read_pg_timevarying(as_raster = TRUE)
+
+  # Load official release
+  pg_dt <- read_pg_timevarying(version = "3.0.0",
+                               type = "05deg_yearly")
 }
 }

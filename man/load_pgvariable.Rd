@@ -4,15 +4,47 @@
 \alias{load_pgvariable}
 \title{Load a PRIO-GRID variable}
 \usage{
-load_pgvariable(varname)
+load_pgvariable(
+  varname,
+  version = NULL,
+  type = NULL,
+  spatial_hash = NULL,
+  temporal_hash = NULL
+)
 }
 \arguments{
 \item{varname}{Character string with the variable name}
+
+\item{version}{Character string specifying PRIOGRID version. Relevant for loading official releases.}
+
+\item{type}{Character string specifying release type (e.g., "05deg_yearly").}
+
+\item{spatial_hash}{Character string with 6-character spatial hash. If NULL, uses current pgoptions.}
+
+\item{temporal_hash}{Character string with 6-character temporal hash. If NULL, uses current pgoptions.}
 }
 \value{
-A SpatRaster object
+Terra SpatRaster object
 }
 \description{
-This points to different folders depending on your pgoptions:
-rawfolder/priogrid/(package version)/(spatial options hash)/(temporal options hash)
+Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.
+Can load from custom data (using pgoptions or specific hashes) or from
+official releases. If all parameters are NULL (default), the function returns
+yearly 0.5x0.5 degree WGS84 data from the current official version of PRIOGRID.
+}
+\examples{
+\dontrun{
+  # Load from current pgoptions
+  r <- load_pgvariable("ne_disputed_area_share")
+
+  # Load from specific custom configuration
+  r <- load_pgvariable("ne_disputed_area_share",
+                       spatial_hash = "a3f2e1",
+                       temporal_hash = "9c8b7a")
+
+  # Load from official release
+  r <- load_pgvariable("ne_disputed_area_share",
+                       version = "3.0.0",
+                       type = "05deg_yearly")
+}
 }

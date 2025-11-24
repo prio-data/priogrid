@@ -2,27 +2,58 @@
 % Please edit documentation in R/build_priogrid.R
 \name{read_pg_static}
 \alias{read_pg_static}
-\title{Collects and returns static (non-timevarying) PRIO-GRID data}
+\title{Collect static (non-time-varying) PRIO-GRID data}
 \usage{
-read_pg_static(as_raster = FALSE, test = FALSE, overwrite = FALSE)
+read_pg_static(
+  version = NULL,
+  type = NULL,
+  spatial_hash = NULL,
+  temporal_hash = NULL,
+  as_raster = FALSE,
+  test = FALSE,
+  overwrite = FALSE
+)
 }
 \arguments{
-\item{as_raster}{Boolean (default FALSE). Set to TRUE to return a list of rasters. Defaults to returning a data.table.}
+\item{version}{Character string specifying PRIOGRID version.}
 
-\item{test}{Boolean. Prints coverage summary (percentage cells with data) for each variable.}
+\item{type}{Character string specifying release type (e.g., "05deg_yearly").}
 
-\item{overwrite}{Boolean (default FALSE). Checks if the data.table exists as a file if as_raster = FALSE.
-If it does, then it returns the data.table. If not, it saves the data.table to disk as .csv.gz and .parquet.}
+\item{spatial_hash}{Character string with 6-character spatial hash (custom only).}
+
+\item{temporal_hash}{Character string with 6-character temporal hash (custom only).}
+
+\item{as_raster}{Logical. If TRUE, returns list of SpatRasters. If FALSE
+(default), returns data.table.}
+
+\item{test}{Logical. If TRUE, prints coverage summary for each variable.}
+
+\item{overwrite}{Logical. If FALSE (default) and cached file exists, returns
+cached data. If TRUE, rebuilds from individual variables.}
 }
 \value{
-a data.table with pgid as rows and variables as columns or a list of terra SpatRasters
+data.table with pgid as rows and variables as columns, or list of
+terra SpatRasters if as_raster=TRUE
 }
 \description{
-See \link{pgvariables} for an overview of variables.
+Loads all static variables and returns them either as a data.table or as
+a list of rasters. See \link{pgvariables} for available variables. If an official release
+is specified (or version, type and hashes are NULL), then this is downloaded if this
+is not already done.
 }
 \examples{
 \dontrun{
-  pg_dt <- read_pg_static(test = TRUE) # prints coverage summary for each variable
+  # Load as data.table
+  pg_dt <- read_pg_static()
+
+  # Test coverage
+  pg_dt <- read_pg_static(test = TRUE)
+
+  # Load as rasters
   pg_rast <- read_pg_static(as_raster = TRUE)
+
+  # Load official release
+  pg_dt <- read_pg_static(version = "3.0.0",
+                          type = "05deg_yearly")
 }
 }

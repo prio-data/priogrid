@@ -110,6 +110,7 @@ pgout_path <- function(version = NULL,
 #' \dontrun{
 #'   # Calculate single variable
 #'   calc_pg("ne_disputed_area_share")
+#'   r <- load_pgvariable("ne_disputed_area_share")
 #'
 #'   # Calculate all variables
 #'   calc_pg()
@@ -202,7 +203,8 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'
 #' Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.
 #' Can load from custom data (using pgoptions or specific hashes) or from
-#' official releases.
+#' official releases. If all parameters are NULL (default), the function returns
+#' yearly 0.5x0.5 degree WGS84 data from the current official version of PRIOGRID.
 #'
 #' @param varname Character string with the variable name
 #' @param version Character string specifying PRIOGRID version. Relevant for loading official releases.
@@ -234,6 +236,15 @@ load_pgvariable <- function(varname,
                             spatial_hash = NULL,
                             temporal_hash = NULL) {
 
+  if(all(c(is.null(version), is.null(type), is.null(spatial_hash), is.null(temporal_hash)))){
+    version <- packageVersion("priogrid")
+    type <- "05deg_yearly"
+  }
+
+  if(all(c(!is.null(version), !is.null(type)))){
+    download_priogrid(version = version, type = type)
+  }
+
   filepath <- file.path(
     pgout_path(version = version,
                type = type,
@@ -241,6 +252,15 @@ load_pgvariable <- function(varname,
                temporal_hash = temporal_hash),
     paste0(varname, ".rds")
   )
+
+  if(pgoptions$get_verbose()){
+    if(is.null(version) & is.null(type)){
+      message("Pulling data based on spatio-temporal choices in pgoptions.")
+    } else{
+      message(paste("Pulling data from PRIOGRID version:", version, type))
+    }
+
+  }
 
   if (!file.exists(filepath)) {
     stop("Variable '", varname, "' not found at: ", filepath)
@@ -252,7 +272,9 @@ load_pgvariable <- function(varname,
 #' Collect static (non-time-varying) PRIO-GRID data
 #'
 #' Loads all static variables and returns them either as a data.table or as
-#' a list of rasters. See [pgvariables] for available variables.
+#' a list of rasters. See [pgvariables] for available variables. If an official release
+#' is specified (or version, type and hashes are NULL), then this is downloaded if this
+#' is not already done.
 #'
 #' @param version Character string specifying PRIOGRID version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
@@ -290,6 +312,15 @@ read_pg_static <- function(version = NULL,
                            as_raster = FALSE,
                            test = FALSE,
                            overwrite = FALSE) {
+
+  if(all(c(is.null(version), is.null(type), is.null(spatial_hash), is.null(temporal_hash)))){
+    version <- packageVersion("priogrid")
+    type <- "05deg_yearly"
+  }
+
+  if(all(c(!is.null(version), !is.null(type)))){
+    download_priogrid(version = version, type = type)
+  }
 
   base_path <- pgout_path(version = version,
                           type = type,
@@ -345,7 +376,9 @@ read_pg_static <- function(version = NULL,
 #' Collect time-varying (non-static) PRIO-GRID data
 #'
 #' Loads all time-varying variables and returns them either as a data.table or as
-#' a list of rasters. See [pgvariables] for available variables.
+#' a list of rasters. See [pgvariables] for available variables. If an official release
+#' is specified (or version, type and hashes are NULL), then this is downloaded if this
+#' is not already done.
 #'
 #' @param version Character string specifying PRIOGRID version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
@@ -383,6 +416,15 @@ read_pg_timevarying <- function(version = NULL,
                                 as_raster = FALSE,
                                 test = FALSE,
                                 overwrite = FALSE) {
+
+  if(all(c(is.null(version), is.null(type), is.null(spatial_hash), is.null(temporal_hash)))){
+    version <- packageVersion("priogrid")
+    type <- "05deg_yearly"
+  }
+
+  if(all(c(!is.null(version), !is.null(type)))){
+    download_priogrid(version = version, type = type)
+  }
 
   # Determine path
   base_path <- pgout_path(version = version,
@@ -514,6 +556,13 @@ build_release <- function(version, type,
   file.copy(from_path, dirname(to_path), recursive = TRUE)
   file.rename(file.path(dirname(to_path), basename(from_path)), to_path)
 
+  current_wd <- getwd()
+  setwd(file.path(pgoptions$get_rawfolder(), "priogrid"))
+  safe_version <- stringr::str_replace_all(version, "\\.", "_")
+  zip(zipfile = paste0(paste("priogrid", safe_version, type, sep = "_"), ".zip"),
+      files = list.files(file.path("releases", version, type), full.names = TRUE))
+  setwd(current_wd)
+
   message("Release built at: ", to_path)
   invisible(NULL)
 }
@@ -533,19 +582,35 @@ build_release <- function(version, type,
 #'
 #' @examples
 #' \dontrun{
-#'   # Download official 3.0.0 release
-#'   initialize_priogrid()
+#'   # Download latest official release
+#'   download_priogrid()
 #'
-#'   # Force re-download
-#'   initialize_priogrid(overwrite = TRUE)
+#'   # Download specific release
+#'   download_priogrid(version = "3.0.0", type = "05deg_yearly")
+#'
+#'   # List releases
+#'   download_priogrid(list_releases = TRUE)
 #' }
-initialize_priogrid <- function(version = "3.0.0",
-                                type = "05deg_yearly",
-                                overwrite = FALSE) {
+download_priogrid <- function(version = NULL,
+                              type = "05deg_yearly",
+                              overwrite = FALSE,
+                              list_releases = FALSE) {
+
+  if(is.null(version)){
+    version <- packageVersion("priogrid")
+  }
 
   releases <- list(
     "3.0.0_05deg_yearly" = "https://cdn.cloud.prio.org/files/379b7254-b47c-48f3-a650-783348d0ff7e"
   )
+
+  if(list_releases == TRUE){
+   df <- stringr::str_split(names(releases), "_", n = 2, simplify = T) |> as.data.frame()
+   df$url <- unlist(releases)
+   names(df) <- c("version", "type", "url")
+   df <- dplyr::tibble(df)
+   return(print(df))
+  }
 
   key <- paste(version, type, sep = "_")
   if (!key %in% names(releases)) {
@@ -555,10 +620,14 @@ initialize_priogrid <- function(version = "3.0.0",
   fname <- paste0("priogrid_", gsub("\\.", "_", version), "_", type, ".zip")
   fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", fname)
 
+
   if (!file.exists(fpath) || overwrite) {
     curl::multi_download(releases[[key]], destfiles = fpath, resume = TRUE)
   }
 
-  unzip(fpath, exdir = file.path(pgoptions$get_rawfolder(), "priogrid"))
+  suppressWarnings(
+    unzip(fpath, exdir = file.path(pgoptions$get_rawfolder(), "priogrid"), overwrite = overwrite)
+  )
+
   invisible(NULL)
 }
