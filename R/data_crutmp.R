@@ -43,7 +43,7 @@
 #' @export
 #' @references
 #' \insertRef{harrisVersion4CRU2020}{priogrid}
-read_cru_tmp <- function() {
+read_cru_tmp <- function(variable = "tmp") {
 
   cru_file <- get_pgfile(
     source_name = "CRU Climate tmp",
@@ -58,6 +58,7 @@ read_cru_tmp <- function() {
   }
 
   r <- terra::rast(nc_file)
+  r <- terra::subset(r, which(grepl(variable, names(r))))
   names(r) <- terra::time(r)
 
   pg_period <- lubridate::interval(
