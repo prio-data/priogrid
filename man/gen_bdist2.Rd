@@ -33,6 +33,15 @@ more efficient than calculating each period independently.
 \item Consider running in segments for very long time series to manage memory usage
 }
 }
+\examples{
+\dontrun{
+# Generate full temporal border distance dataset
+# Warning: This may take several hours to complete
+temporal_bdist2 <- gen_bdist2()
+
+print(temporal_bdist2)
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

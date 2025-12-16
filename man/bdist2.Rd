@@ -41,6 +41,12 @@ reducing processing time for temporal sequences.
 Distance calculations use spherical geometry (S2) for accurate measurements
 across the globe, particularly important for high-latitude regions.
 }
+\examples{
+\dontrun{
+# Calculate border distances for 2010
+border_dist_2010 <- bdist2(as.Date("2010-01-01"))
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

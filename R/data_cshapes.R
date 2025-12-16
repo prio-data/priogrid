@@ -178,7 +178,7 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #'
 #' # Require at least 25% coverage
 #' substantial_state <- cshapes_cover(as.Date("2010-01-01"), min_cover = 0.25)
-#'
+#' }
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
@@ -213,6 +213,7 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
 #'
 #' # Examine the structure
 #' print(temporal_coverage)
+#' }
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 gen_cshapes_cover_share <- function(cshp = read_cshapes()){
@@ -256,7 +257,7 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes()){
 #' country_codes_2010 <- cshapes_gwcode(as.Date("2010-01-01"))
 #'
 #' print(country_codes_2010)
-#'
+#' }
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
@@ -297,7 +298,7 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 #' temporal_gwcodes <- gen_cshapes_gwcode()
 #'
 #' print(temporal_gwcodes)
-#'
+#' }
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
@@ -351,7 +352,7 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes()){
 #' \dontrun{
 #' # Calculate border distances for 2010
 #' border_dist_2010 <- bdist2(as.Date("2010-01-01"))
-#'
+#' }
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
@@ -417,7 +418,7 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 #' temporal_bdist2 <- gen_bdist2()
 #'
 #' print(temporal_bdist2)
-#'
+#' }
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}

@@ -1,6 +1,9 @@
 # PRIOGRID
 
-A comprehensive R package for accessing and transforming spatial-temporal data for conflict research at the PRIO-GRID resolution.
+> [!NOTE]
+> PRIOGRID v.3.0.0 is an unstable Alpha release. We will be releasing a Beta version shortly.
+
+An R-package for collecting and standardizing open spatial data. 
 
 ## Installation
 

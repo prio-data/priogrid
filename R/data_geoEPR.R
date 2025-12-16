@@ -47,7 +47,7 @@
 #'
 #' # Plot ethnic group settlement areas
 #' plot(sf::st_geometry(geoepr_data), main = "Ethnic Group Settlement Areas")
-#'
+#' }
 #' @return A \code{sf} object
 #' @export
 #'
@@ -266,7 +266,7 @@ gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "
   for(i in 2:length(pg_intervals)){
     terra::add(r) <- make_raster(pg_intervals[i], pg, df)
   }
-  names(r) <- as.character(pg_intervals)
+  names(r) <- as.character(lubridate::int_end(pg_intervals))
   return(r)
 }
 

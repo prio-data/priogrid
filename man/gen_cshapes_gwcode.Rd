@@ -20,6 +20,14 @@ all PRIO-GRID temporal slices. The function generates time series data
 showing how country assignments to grid cells change over time due to
 territorial changes, state formation, and dissolution events.
 }
+\examples{
+\dontrun{
+# Generate full temporal country code dataset
+temporal_gwcodes <- gen_cshapes_gwcode()
+
+print(temporal_gwcodes)
+}
+}
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
 }

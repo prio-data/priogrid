@@ -145,9 +145,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
   pg <- prio_blank_grid()
   df <- c(pg, rast) |> as.data.frame()
   df <- df[rowSums(!is.na(df)) > 1,] # remove rows with only missing elements.
-  names(df)
 
   if(static){
+    df <- data.table::setDT(df, key = "pgid")
     return(df)
   } else{
     # Assumes variable names in raster are dates.
@@ -156,6 +156,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
                               names_to = "measurement_date",
                               values_to = varname,
                               names_transform = as.Date)
+    df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
     return(df)
   }
 }
@@ -280,29 +281,6 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
 
   unlink(temporary_directory, recursive = TRUE)
   return(r)
-}
-
-#' Convert a pgraster to tabular format
-#'
-#' @param r An input raster that must have the same projection, resolution, and extent as PRIO-GRID
-#' @return tibble
-#' @examples
-#' pg <- prio_blank_grid()
-#' names(pg) <- "test"
-#' raster_to_pgtibble(pg)
-#' @export
-raster_to_pgtibble <- function(r){
-  require(terra)
-  require(assertthat)
-  require(dplyr)
-
-  pg <- prio_blank_grid()
-  assert_that(all(res(r) == res(pg)))
-  assert_that(ext(r) == ext(pg))
-  assert_that(crs(r) == crs(pg))
-
-  df <- as.data.frame(c(pg, r)) |> as_tibble()
-  return(df)
 }
 
 #' Add source to CSV file

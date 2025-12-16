@@ -6,7 +6,7 @@
 \alias{pgoptions}
 \title{R6 Class to set and get package-wide options for PRIO-GRID.}
 \format{
-An object of class \code{PGOptionsManager} (inherits from \code{R6}) of length 23.
+An object of class \code{PGOptionsManager} (inherits from \code{R6}) of length 25.
 }
 \usage{
 pgoptions
@@ -32,6 +32,7 @@ pgoptions$print()
 \item \href{#method-PGOptionsManager-set_ncol}{\code{PGOptionsManager$set_ncol()}}
 \item \href{#method-PGOptionsManager-set_rawfolder}{\code{PGOptionsManager$set_rawfolder()}}
 \item \href{#method-PGOptionsManager-set_verbose}{\code{PGOptionsManager$set_verbose()}}
+\item \href{#method-PGOptionsManager-set_automatic_download}{\code{PGOptionsManager$set_automatic_download()}}
 \item \href{#method-PGOptionsManager-set_temporal_resolution}{\code{PGOptionsManager$set_temporal_resolution()}}
 \item \href{#method-PGOptionsManager-set_start_date}{\code{PGOptionsManager$set_start_date()}}
 \item \href{#method-PGOptionsManager-set_end_date}{\code{PGOptionsManager$set_end_date()}}
@@ -41,6 +42,7 @@ pgoptions$print()
 \item \href{#method-PGOptionsManager-get_ncol}{\code{PGOptionsManager$get_ncol()}}
 \item \href{#method-PGOptionsManager-get_rawfolder}{\code{PGOptionsManager$get_rawfolder()}}
 \item \href{#method-PGOptionsManager-get_verbose}{\code{PGOptionsManager$get_verbose()}}
+\item \href{#method-PGOptionsManager-get_automatic_download}{\code{PGOptionsManager$get_automatic_download()}}
 \item \href{#method-PGOptionsManager-get_temporal_resolution}{\code{PGOptionsManager$get_temporal_resolution()}}
 \item \href{#method-PGOptionsManager-get_start_date}{\code{PGOptionsManager$get_start_date()}}
 \item \href{#method-PGOptionsManager-get_end_date}{\code{PGOptionsManager$get_end_date()}}
@@ -171,6 +173,23 @@ Set verbose output of functions if true.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-set_automatic_download"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-set_automatic_download}{}}}
+\subsection{Method \code{set_automatic_download()}}{
+Set to true if data downloads should be done automatically.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$set_automatic_download(value)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{value}}{Boolean If TRUE, PRIOGRID will attempt to download files that are needed when trying to read specific sources.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PGOptionsManager-set_temporal_resolution"></a>}}
 \if{latex}{\out{\hypertarget{method-PGOptionsManager-set_temporal_resolution}{}}}
 \subsection{Method \code{set_temporal_resolution()}}{
@@ -228,9 +247,16 @@ Set end date
 \subsection{Method \code{get_crs()}}{
 Get crs option
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_crs()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_crs(unparsed = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{unparsed}}{Boolean, if TRUE, then return the user input string, else parse with \link[terra:crs]{terra::crs}.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PGOptionsManager-get_extent"></a>}}
@@ -279,6 +305,16 @@ Get rawfolder option
 Get verbose option
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_verbose()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-PGOptionsManager-get_automatic_download"></a>}}
+\if{latex}{\out{\hypertarget{method-PGOptionsManager-get_automatic_download}{}}}
+\subsection{Method \code{get_automatic_download()}}{
+Get download prompt option
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PGOptionsManager$get_automatic_download()}\if{html}{\out{</div>}}
 }
 
 }

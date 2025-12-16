@@ -27,6 +27,34 @@ This function:
 \item Returns data in sf format for spatial analysis
 }
 }
+\examples{
+\dontrun{
+# Read GeoEPR data
+geoepr_data <- read_geoepr()
+
+print(geoepr_data)
+
+# Check available columns
+names(geoepr_data)
+
+# View temporal coverage
+summary(geoepr_data$gwsdate)
+summary(geoepr_data$gwedate)
+
+# Filter to specific time period
+modern_groups <- geoepr_data[geoepr_data$gwsdate >= as.Date("2000-01-01"), ]
+
+# Examine unique ethnic groups
+unique_groups <- unique(geoepr_data$group)
+head(unique_groups, 10)
+
+# Filter to specific country (example: using country code)
+# country_groups <- geoepr_data[geoepr_data$gwid == 2, ]  # Example for USA
+
+# Plot ethnic group settlement areas
+plot(sf::st_geometry(geoepr_data), main = "Ethnic Group Settlement Areas")
+}
+}
 \references{
 \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
 \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
