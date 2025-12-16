@@ -1,5 +1,7 @@
 name	static	source_ids
-cru_tmp	FALSE	9bba83b0-eca9-4f05-b1df-6aeaed55a9fa
+cru_tmp	FALSE	ac037134-3567-49d9-a3ba-64f37c1ee698
+cru_pre	FALSE	00575260-ad1c-4e87-a575-3922bc151f50
+cru_pet	FALSE	95399c70-7db4-47f0-95e5-2e279b6b2054
 cshapes_cover_share	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
 cshapes_gwcode	FALSE	ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
 geoepr_reg_excluded	FALSE	287bfdf7-2f4f-402a-88df-5fe1f8b7046b, 3900b527-a728-4c26-b0ab-f4441d3ee2e8
