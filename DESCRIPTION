@@ -30,7 +30,11 @@ Suggests:
     testthat (>= 3.0.0),
     assertthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    snowfall,
+    Hmisc,
+    SPEI,
+    ncdf4
 Config/testthat/edition: 3
 Imports:
     tidyverse,
