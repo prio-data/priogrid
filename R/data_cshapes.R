@@ -316,6 +316,135 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes()){
   r
 }
 
+#' Calculate distance to nearest land-contiguous border (bdist1)
+#'
+#' Computes the spherical distance (in kilometers) from each PRIO-GRID cell centroid
+#' to the border of the nearest land-contiguous neighboring country using CShapes 2.0
+#' boundary data. This implies that cells in e.g. Northern Denmark are measured to the
+#' border to Germany even if the straight-line distance to Norway (across international waters)
+#' is shorter. Cells belonging to island states with no contiguous neighboring country
+#' (e.g., New Zealand) are coded as missing. Islands within states are still measured.
+#'
+#' The function includes optimization logic that reuses previous calculations
+#' if country boundaries haven't changed since the last computation, significantly
+#' reducing processing time for temporal sequences.
+#'
+#' Distance calculations use spherical geometry (S2) for accurate measurements
+#' across the globe, particularly important for high-latitude regions.
+#'
+#' @param measurement_date A single \code{Date} object specifying the date for
+#'   boundary analysis. Must be within CShapes temporal coverage.
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data.
+#'   Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param past_result A list object from a previous \code{bdist1} calculation.
+#'   If boundaries haven't changed, the function returns this result directly,
+#'   avoiding recomputation. Default is NULL.
+#'
+#' @return A list containing three elements:
+#'   \itemize{
+#'     \item \code{bdist1}: A \code{SpatRaster} with distances (km) from cell centroids
+#'       to nearest international borders, masked to state system coverage
+#'     \item \code{boundaries}: An \code{sf} object with country boundary line geometries
+#'   }
+#'
+#' @examples
+#' \dontrun{
+#' # Calculate border distances for 2010
+#' border_dist_2010 <- bdist1(as.Date("2010-01-01"))
+#' }
+#' @export
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
+  pg <- prio_blank_grid()
+
+  features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+  boundaries <- sf::st_boundary(features)
+  boundaries <- sf::st_cast(boundaries, "MULTILINESTRING")
+
+  if(!is.null(past_result)){
+    no_changes <- sf::st_equals(boundaries |> sf::st_combine(), past_result$boundaries |> sf::st_combine(), sparse = FALSE)
+    if(no_changes){
+      return(past_result)
+    }
+  }
+
+  sf::sf_use_s2(TRUE)
+  shared_borders <- list()
+  for(i in 1:nrow(boundaries)){
+    shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
+  }
+
+  gwcodes <- cshapes_gwcode(measurement_date)
+  bdist1 <- list()
+  for(i in 1:length(shared_borders)){
+    if(nrow(shared_borders[[i]]) > 0){
+      gwcode <- shared_borders[[i]]$gwcode |> unique()
+      gwrast <- ifel(gwcodes == gwcode, 1, NA)
+      tmp  <- terra::distance(gwcodes, shared_borders[[i]] |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
+      bdist1[[as.character(gwcode)]] <- tmp * gwrast
+    }
+  }
+  bdist1 <- terra::mosaic(terra::sprc(bdist1))
+
+  return(list("bdist1" = bdist1, "boundaries" = boundaries))
+}
+
+#' Generate distance to nearest land-contiguous border over time (bdist1)
+#'
+#' Creates a multi-layer raster containing distances
+#' to the border of the nearest land-contiguous neighboring country using CShapes 2.0
+#' boundary data for temporal time slices as defined in PRIOGRID.
+#' This implies that cells in e.g. Northern Denmark are measured to the
+#' border to Germany even if the straight-line distance to Norway (across international waters)
+#' is shorter. Cells belonging to island states with no contiguous neighboring country
+#' (e.g., New Zealand) are coded as missing. Islands within states are still measured.
+#'
+#' The function automatically uses past results from previous time slices to
+#' reduce computation time when country boundaries remain unchanged
+#' between consecutive periods.
+#'
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
+#'   temporal information. Defaults to \code{\link{read_cshapes}()} if not provided.
+#'
+#' @return A \code{SpatRaster} object
+#'
+#' @note
+#' \itemize{
+#'   \item This function is computationally intensive and may take hours to complete
+#'   \item Progress indicators are printed during processing (time slice numbers)
+#'   \item The optimization using past results significantly reduces total computation time
+#'   \item Consider running in segments for very long time series to manage memory usage
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Generate full temporal border distance dataset
+#' # Warning: This may take several hours to complete
+#' temporal_bdist1 <- gen_bdist1()
+#'
+#' print(temporal_bdist1)
+#' }
+#' @export
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+gen_bdist1 <- function(cshp = read_cshapes()){
+  temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
+  time_slices <- pg_dates()
+  time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  res <- bdist1(time_slices[1], cshp = cshp)
+  r <- res$bdist1
+  for(i in 2:length(time_slices)){
+    print(i)
+    t <- time_slices[i]
+    res <- bdist1(t, cshp = cshp, past_result = res)
+    terra::add(r) <- res$bdist1
+  }
+  names(r) <- as.character(time_slices)
+  r
+}
+
 
 #' Calculate distance to nearest international border (bdist2)
 #'
@@ -434,6 +563,134 @@ gen_bdist2 <- function(cshp = read_cshapes()){
     t <- time_slices[i]
     res <- bdist2(t, cshp = cshp, past_result = res)
     terra::add(r) <- res$bdist2
+  }
+  names(r) <- as.character(time_slices)
+  r
+}
+
+#' Calculate nearest distance to a country's own borders (bdist3)
+#'
+#' Computes the spherical distance (in kilometers) from each PRIO-GRID cell centroid
+#' to the territorial outline of the country the cell belongs to using CShapes 2.0
+#' boundary data.
+#'
+#' The function includes optimization logic that reuses previous calculations
+#' if country boundaries haven't changed since the last computation, significantly
+#' reducing processing time for temporal sequences.
+#'
+#' Distance calculations use spherical geometry (S2) for accurate measurements
+#' across the globe, particularly important for high-latitude regions.
+#'
+#' @param measurement_date A single \code{Date} object specifying the date for
+#'   boundary analysis. Must be within CShapes temporal coverage.
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data.
+#'   Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param past_result A list object from a previous \code{bdist3} calculation.
+#'   If boundaries haven't changed, the function returns this result directly,
+#'   avoiding recomputation. Default is NULL.
+#'
+#' @return A list containing three elements:
+#'   \itemize{
+#'     \item \code{bdist3}: A \code{SpatRaster} with distances (km) from cell centroids
+#'       to the border of the country.
+#'     \item \code{boundaries}: An \code{sf} object with country boundary line geometries
+#'   }
+#'
+#' @examples
+#' \dontrun{
+#' # Calculate border distances for 2010
+#' border_dist_2010 <- bdist3(as.Date("2010-01-01"))
+#' }
+#' @export
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
+  pg <- prio_blank_grid()
+
+  features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+  boundaries <- sf::st_boundary(features)
+  boundaries <- sf::st_cast(boundaries, "MULTILINESTRING")
+
+  if(!is.null(past_result)){
+    no_changes <- sf::st_equals(boundaries |> sf::st_combine(), past_result$boundaries |> sf::st_combine(), sparse = FALSE)
+    if(no_changes){
+      return(past_result)
+    }
+  }
+
+  gwcodes <- cshapes_gwcode(measurement_date)
+  sf::sf_use_s2(TRUE)
+  bdist3 <- list()
+  for(i in 1:nrow(boundaries)){
+    gwcode <- boundaries[i,]$gwcode
+    gwrast <- ifel(gwcodes == gwcode, 1, NA)
+
+    boundary_vect <- boundaries[i,] |> sf::st_combine() |> terra::vect()
+
+    # Get extent and add a buffer (e.g., 5 degrees on each side)
+    country_ext <- terra::ext(boundary_vect)
+    buffered_ext <- terra::extend(country_ext, 5)  # 5 degrees buffer
+
+    # Crop to country extent first - this is the key speedup
+    country_rast <- terra::crop(gwcodes, buffered_ext)
+    country_rast <- ifel(country_rast == gwcode, 1, NA)
+
+    # Now distance() only computes for cells in the cropped raster
+    tmp <- terra::distance(country_rast, boundary_vect, rasterize = TRUE)
+    bdist3[[as.character(gwcode)]] <- tmp * country_rast
+  }
+  bdist3 <- terra::mosaic(terra::sprc(bdist3))
+
+  return(list("bdist3" = bdist3, "boundaries" = boundaries))
+}
+
+
+#' Generate distance to a country's own borders (bdist3)
+#'
+#' Creates a multi-layer raster containing the spherical distance (in kilometers) from each PRIO-GRID cell centroid
+#' to the territorial outline of the country the cell belongs to using CShapes 2.0
+#' boundary data for temporal time slices as defined in PRIOGRID.
+#'
+#' The function automatically uses past results from previous time slices to
+#' reduce computation time when country boundaries remain unchanged
+#' between consecutive periods.
+#'
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
+#'   temporal information. Defaults to \code{\link{read_cshapes}()} if not provided.
+#'
+#' @return A \code{SpatRaster} object
+#'
+#' @note
+#' \itemize{
+#'   \item This function is computationally intensive and may take hours to complete
+#'   \item Progress indicators are printed during processing (time slice numbers)
+#'   \item The optimization using past results significantly reduces total computation time
+#'   \item Consider running in segments for very long time series to manage memory usage
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Generate full temporal border distance dataset
+#' # Warning: This may take several hours to complete
+#' temporal_bdist3 <- gen_bdist3()
+#'
+#' print(temporal_bdist3)
+#' }
+#' @export
+#' @references
+#' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+gen_bdist3 <- function(cshp = read_cshapes()){
+  temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
+  time_slices <- pg_dates()
+  time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  res <- bdist3(time_slices[1], cshp = cshp)
+  r <- res$bdist3
+  for(i in 2:length(time_slices)){
+    print(i)
+    t <- time_slices[i]
+    res <- bdist3(t, cshp = cshp, past_result = res)
+    terra::add(r) <- res$bdist3
   }
   names(r) <- as.character(time_slices)
   r
