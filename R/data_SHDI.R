@@ -21,6 +21,32 @@ read_shdi <- function() {
   return(df)
 }
 
+#' Read the GeoBoundaries data
+#'
+#'
+#' @return A .shp file with geoBoundaries data.
+#' @export
+#'
+#' @references
+#' \insertRef{runfolaGeoBoundariesGlobalDatabase2020}{priogrid}
+read_geoboundaries <- function() {
+  f <- get_pgfile(source_name = "geoBoundaries",
+                  source_version = "5.0.0",
+                  id = "a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51")
+
+  out_dir <- tempfile("gb_")
+  dir.create(out_dir)
+  unzip(f, exdir = out_dir)
+
+  shp_files <- list.files(out_dir, pattern = "\\.shp$", full.names = TRUE, recursive = TRUE)
+
+  shp_path <- shp_files[1]
+
+  gb <- sf::st_read(shp_path)
+
+  return(gb)
+}
+
 #' Read the GDL SHDI shapefile data
 #'
 #' Reads the downloaded SHDI dataset from GlobalDataLab.
