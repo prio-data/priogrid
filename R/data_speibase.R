@@ -13,9 +13,8 @@
 #' @return Computes the SPEI time series and stores it in outFile following
 #' the same data structure of inPre.
 #'
-#' @section References
-#' Code from:
-#' Beguería S. (2017) SPEIbase: R code used in generating the SPEI global database, doi:10.5281/zenodo.834462.
+#' @section References:
+#' Code from Beguería S. (2017) SPEIbase: R code used in generating the SPEI global database, doi:10.5281/zenodo.834462.
 spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
                     version=NA, inMask=NA, block=18, tlapse=NA) {
   require(SPEI)

@@ -44,3 +44,8 @@ the same data structure of inPre.
 \description{
 Compute SPEI from very large arrayed data sets in netCDF format.
 }
+\section{References}{
+
+Code from Beguería S. (2017) SPEIbase: R code used in generating the SPEI global database, doi:10.5281/zenodo.834462.
+}
+
