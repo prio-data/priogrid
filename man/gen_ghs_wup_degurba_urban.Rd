@@ -77,7 +77,7 @@ plot(years, urban_stats$mean,
 
 \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 
-\insertRef{crisioniPopulationDegreeUrbanization2025}{priogrid}
+\insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
 }
 \seealso{
 \code{\link{ghs_wup_degurba}} for custom urban definitions

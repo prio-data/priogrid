@@ -188,6 +188,7 @@ ghs_wup_degurba <- function(urban_definition){
 
   r <- terra::classify(r, cl_mat, filename = tmp1)
   res <- robust_transformation(r, agg_fun = "mean")
+  res
 }
 
 #' Generate GHS-WUP-DEGURBA urban proportion grid

@@ -76,5 +76,5 @@ urban_custom <- ghs_wup_degurba(urban_definition = c(22, 23, 30))
 
 \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 
-\insertRef{crisioniPopulationDegreeUrbanization2025}{priogrid}
+\insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
 }
