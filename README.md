@@ -24,6 +24,29 @@ PRIOGRID depends on several spatial libraries (`terra`, `sf`, and `exactextractr
 
 If you continue to experience issues after following these guides, please [file an issue](https://github.com/prio-data/priogrid/issues).
 
+#### SSL Certificate Issues
+
+If you encounter SSL certificate errors when downloading data, try:
+
+1. **Install system certificates:**
+
+**Mac (Homebrew users):**
+```bash
+   brew update
+   brew install ca-certificates
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+   sudo apt-get update
+   sudo apt-get install ca-certificates
+```
+
+2. **Install CURL R-package from source**
+```r
+   install.packages("curl", type = "source")
+```
+
 ## Initial Setup
 
 PRIOGRID stores settings locally that persist across R sessions. Before using the package, configure where PRIOGRID will store downloaded raw data and transformed datasets:
