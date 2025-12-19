@@ -77,7 +77,7 @@
 #'
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
-#' \insertRef{crisioniPopulationDegreeUrbanization2025}{priogrid}
+#' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
 read_ghs_wup_degurba <- function(){
   zip_files <- get_pgfile(source_name = "GHS-WUP-DEGURBA",
                           source_version = "R2025A",
@@ -175,7 +175,7 @@ read_ghs_wup_degurba <- function(){
 #'
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
-#' \insertRef{crisioniPopulationDegreeUrbanization2025}{priogrid}
+#' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
 ghs_wup_degurba <- function(urban_definition){
   cl_mat <- cbind(c(10, 11, 12, 13, 21, 22, 23, 30),
                   rep(0, 8))
@@ -264,7 +264,7 @@ ghs_wup_degurba <- function(urban_definition){
 #'
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
-#' \insertRef{crisioniPopulationDegreeUrbanization2025}{priogrid}
+#' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
 gen_ghs_wup_degurba_urban <- function(){
   ghs_wup_degurba(urban_definition = c(21, 22, 23, 30))
 }
