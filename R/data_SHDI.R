@@ -270,20 +270,26 @@ shdi <- function(shdi = read_shdi(),
   out <- dplyr::bind_rows(shdi_nonempty, shdi_missing_filled)
   out <- dplyr::arrange(out, gdlcode, year)
   out <- dplyr::select(out, -empty)
-  shdi <- out
 
 
   pg <- prio_blank_grid()
 
-  coversh <- exactextractr::exact_extract(pg, shdi, include_cols = variable)
+  coversh <- exactextractr::exact_extract(pg, out, include_cols = variable)
 
   cmat <- dplyr::bind_rows(coversh)
 
   cmat <- cmat |>
     dplyr::group_by(value) |>
-    dplyr::summarise("{variable}" := stats::weighted.mean(shdi, coverage_fraction))
+    dplyr::summarise("{variable}" := {vals <- .data[[variable]]
+        if (all(is.na(vals))) {
+          NA_real_
+        } else {
+          stats::weighted.mean(vals, coverage_fraction, na.rm = TRUE)
+        }
+      },
+      .groups = "drop")
 
-  ra <- exactextractr::rasterize_polygons(shdi, pg)
+  ra <- exactextractr::rasterize_polygons(out, pg)
   ra <- terra::ifel(!is.na(ra), 1, NA)
   pg <- pg*ra # Remove non-shdi
   res <- terra::classify(pg, cmat)
@@ -409,4 +415,3 @@ gen_gnic <- function() {
   shdi <- shdi(variable = "gnic")
   return(shdi)
 }
-
