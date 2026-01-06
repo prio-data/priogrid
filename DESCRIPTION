@@ -1,6 +1,6 @@
 Package: priogrid
 Title: PRIOGRID
-Version: 3.0.0
+Version: 3.0.1
 Authors@R: c(person("Jonas", "Vestby", email = "jonves@prio.org", role = c("aut", "cre"), 
                   comment = c(ORCID = "0000-0002-3054-977X")),
              person("Andreas", "Forø Tollefsen", email = "andreas@prio.org", role = "aut", 
