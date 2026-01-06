@@ -65,7 +65,7 @@ Events without sub-national spatial precision (where_prec >= 6) are excluded
 from the final rasterization, which may result in undercounting in some regions.
 }
 \note{
-\itemize
+\itemize{
 \item The function requires the data.table package for efficient processing
 \item Processing time scales with the number of events and time intervals
 \item A warning is issued if fatality distribution validation fails

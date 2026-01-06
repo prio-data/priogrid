@@ -187,7 +187,7 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable){
 #'   counts) for each grid cell and time period.
 #'
 #' @note
-#' \itemize
+#' \itemize{
 #'   \item The function requires the data.table package for efficient processing
 #'   \item Processing time scales with the number of events and time intervals
 #'   \item A warning is issued if fatality distribution validation fails
