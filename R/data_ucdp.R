@@ -410,7 +410,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 #' \insertRef{sundbergIntroducingUCDPGeoreferenced2013}{priogrid}
 #'
 #' \insertRef{daviesOrganizedViolence198920242025}{priogrid}
-ged_ucdp_ged <- function(){
+gen_ucdp_ged <- function(){
   ucdp_ged(ged = read_ucdp_ged(), violence_types = c(1, 2, 3), fatality_variable = "best")
 }
 
