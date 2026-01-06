@@ -639,7 +639,11 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
     tmp <- terra::distance(country_rast, boundary_vect, rasterize = TRUE)
     bdist3[[as.character(gwcode)]] <- tmp * country_rast
   }
+
   bdist3 <- terra::mosaic(terra::sprc(bdist3))
+  bdist3 <- terra::extend(bdist3, terra::ext(c(-180, 180, -90, 90)))
+
+  bdist3 <- robust_transformation(bdist3)
 
   return(list("bdist3" = bdist3, "boundaries" = boundaries))
 }
