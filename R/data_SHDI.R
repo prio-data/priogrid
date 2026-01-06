@@ -1,5 +1,7 @@
 #' Read GlobalDataLab Subnational Human Development Index (SHDI) Data
 #'
+#' Downloads from a PRIO hosted mirror.
+#'
 #' This function reads the GlobalDataLab Subnational Human Development Index (SHDI)
 #' dataset (version 7.0) from local storage using PRIO-GRID file management.
 #' The dataset is returned as a cleaned tabular object with standardized
@@ -75,6 +77,8 @@ read_geoboundaries <- function() {
 
 #' Read GlobalDataLab SHDI Shapefile Data
 #'
+#' Downloads from a PRIO hosted mirror.
+#'
 #' This function reads the GlobalDataLab Subnational Human Development Index (SHDI)
 #' shapefile dataset (version 7.0) from local storage. The shapefile is extracted
 #' from a compressed archive and returned as an \code{sf} object with subnational
@@ -122,32 +126,44 @@ read_shdi_shapefile <- function() {
   return(shp)
 }
 
-#' Generate PRIO-GRID Compatible SHDI Data
+#' Generate PRIO-GRID Compatible SHDI Variables
 #'
 #' This function processes GlobalDataLab Subnational Human Development Index (SHDI)
-#' data and generates a PRIO-GRID–compatible raster representation. The function
-#' harmonizes national and subnational SHDI observations, resolves missing or empty
-#' geometries using geoBoundaries crosswalks, and spatially rasterizes the resulting
-#' data to the PRIO-GRID.
+#' data and produces a PRIO-GRID–aligned raster for a selected SHDI-related variable.
+#' It harmonizes national and subnational observations, resolves missing or empty
+#' geometries using geoBoundaries crosswalks, and rasterizes polygon-level values
+#' onto the PRIO-GRID using area-weighted aggregation.
 #'
-#' The function may take some time to run.
+#' The function may take some time to run due to spatial operations.
 #'
 #' @param shdi A data frame containing SHDI data as returned by
 #'   \code{\link{read_shdi}}.
 #' @param shp An \code{sf} object containing SHDI geometries as returned by
 #'   \code{\link{read_shdi_shapefile}}.
-#' @param geoboundaries An \code{sf} object containing administrative boundaries
-#'   from \code{\link{read_geoboundaries}}.
-#' @param variable A character string specifying the SHDI variable to extract.
-#'   Options are "msch", "esch", "lifexp", "gnic", "shdi"
+#' @param geoboundaries An \code{sf} object containing administrative boundary
+#'   geometries as returned by \code{\link{read_geoboundaries}}.
+#' @param variable A character string specifying which SHDI-related variable to
+#'   generate. Supported values include:
+#'   \itemize{
+#'     \item \code{"shdi"} – Subnational Human Development Index
+#'     \item \code{"msch"} – Mean years of schooling
+#'     \item \code{"esch"} – Expected years of schooling
+#'     \item \code{"lifexp"} – Life expectancy at birth
+#'     \item \code{"gnic"} – Gross national income per capita
+#'   }
 #'   Default is \code{"shdi"}.
 #'
-#' @return An object containing PRIO-GRID–aligned SHDI data, including
-#'   spatially harmonized geometries and rasterized values.
+#' @return A \code{SpatRaster} object (from the \pkg{terra} package) aligned to the
+#'   PRIO-GRID, containing the selected SHDI variable aggregated to grid cells using
+#'   area-weighted means.
 #'
 #' @examples
 #' \dontrun{
-#' shdi_pg <- gen_shdi()
+#' # Generate PRIO-GRID SHDI
+#' shdi_pg <- shdi()
+#'
+#' # Generate PRIO-GRID life expectancy
+#' lifexp_pg <- shdi(variable = "lifexp")
 #' }
 #'
 #' @seealso
@@ -159,10 +175,10 @@ read_shdi_shapefile <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_shdi <- function(shdi = read_shdi(),
-                     shp  = read_shdi_shapefile(),
-                     geoboundaries = read_geoboundaries(),
-                     variable = "shdi") {
+shdi <- function(shdi = read_shdi(),
+                 shp  = read_shdi_shapefile(),
+                 geoboundaries = read_geoboundaries(),
+                 variable = "shdi") {
 
   no_subnat <- dplyr::group_by(shdi, country)
   no_subnat <- dplyr::summarize(no_subnat, n_unique = base::length(base::unique(gdlcode)))
@@ -260,13 +276,137 @@ gen_shdi <- function(shdi = read_shdi(),
   pg <- prio_blank_grid()
 
   coversh <- exactextractr::exact_extract(pg, shdi, include_cols = variable)
-  ra <- exactextractr::rasterize_polygons(shdi, pg)
-  pg <- pg*ra # Remove non-land cells
-  res <- terra::classify(pg, coversh[[1]])
 
-  names(res) <- "SHDI"
+  cmat <- dplyr::bind_rows(coversh)
+
+  cmat <- cmat |>
+    dplyr::group_by(value) |>
+    dplyr::summarise("{variable}" := stats::weighted.mean(shdi, coverage_fraction))
+
+  ra <- exactextractr::rasterize_polygons(shdi, pg)
+  ra <- terra::ifel(!is.na(ra), 1, NA)
+  pg <- pg*ra # Remove non-shdi
+  res <- terra::classify(pg, cmat)
+
+  names(res) <- variable
 
   return(res)
 
+}
+
+
+#' Generate PRIO-GRID SHDI
+#'
+#' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
+#' raster of the Subnational Human Development Index (SHDI).
+#'
+#' @return A \code{SpatRaster} object containing PRIO-GRID SHDI values.
+#'
+#' @examples
+#' \dontrun{
+#' shdi_pg <- gen_shdi()
+#' }
+#'
+#' @seealso
+#' \code{\link{shdi}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+gen_shdi <- function() {
+  shdi <- shdi(variable = "shdi")
+  return(shdi)
+}
+
+#' Generate PRIO-GRID Mean Years of Schooling
+#'
+#' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
+#' raster of mean years of schooling.
+#'
+#' @return A \code{SpatRaster} object containing PRIO-GRID mean years of schooling.
+#'
+#' @examples
+#' \dontrun{
+#' msch_pg <- gen_msch()
+#' }
+#'
+#' @seealso
+#' \code{\link{shdi}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+gen_msch <- function() {
+  shdi <- shdi(variable = "msch")
+  return(shdi)
+}
+
+#' Generate PRIO-GRID Expected Years of Schooling
+#'
+#' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
+#' raster of expected years of schooling.
+#'
+#' @return A \code{SpatRaster} object containing PRIO-GRID expected years of schooling.
+#'
+#' @examples
+#' \dontrun{
+#' esch_pg <- gen_esch()
+#' }
+#'
+#' @seealso
+#' \code{\link{shdi}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+gen_esch <- function() {
+  shdi <- shdi(variable = "esch")
+  return(shdi)
+}
+
+#' Generate PRIO-GRID Life Expectancy
+#'
+#' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
+#' raster of life expectancy at birth.
+#'
+#' @return A \code{SpatRaster} object containing PRIO-GRID life expectancy values.
+#'
+#' @examples
+#' \dontrun{
+#' lifexp_pg <- gen_lifexp()
+#' }
+#'
+#' @seealso
+#' \code{\link{shdi}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+gen_lifexp <- function() {
+  shdi <- shdi(variable = "lifexp")
+  return(shdi)
+}
+
+#' Generate PRIO-GRID Gross National Income per Capita
+#'
+#' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
+#' raster of gross national income per capita.
+#'
+#' @return A \code{SpatRaster} object containing PRIO-GRID GNI per capita values.
+#'
+#' @examples
+#' \dontrun{
+#' gnic_pg <- gen_gnic()
+#' }
+#'
+#' @seealso
+#' \code{\link{shdi}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+gen_gnic <- function() {
+  shdi <- shdi(variable = "gnic")
+  return(shdi)
 }
 
