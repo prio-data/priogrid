@@ -307,6 +307,98 @@ load_pgvariable <- function(varname,
   terra::unwrap(readRDS(filepath))
 }
 
+#' Resolve PRIO-GRID data mode and paths
+#'
+#' Determines whether to use release or custom mode based on provided parameters,
+#' and returns resolved settings. Does not perform any file operations or downloads.
+#'
+#' @param version Character string specifying PRIOGRID version.
+#' @param type Character string specifying release type.
+#' @param spatial_hash Character string with 6-character spatial hash.
+#' @param temporal_hash Character string with 6-character temporal hash.
+#' @param overwrite Logical. Whether to overwrite existing files.
+#'
+#' @return A list with:
+#'   \item{mode}{"release" or "custom"}
+#'   \item{base_path}{Resolved file path}
+#'   \item{version}{Resolved version (NULL if custom)}
+#'   \item{type}{Resolved type (NULL if custom)}
+#'   \item{spatial_hash}{Resolved spatial hash (NULL if release)}
+#'   \item{temporal_hash}{Resolved temporal hash (NULL if release)}
+#'   \item{overwrite}{Possibly modified overwrite flag}
+#'   \item{warning}{Warning message if any, otherwise NULL}
+#'
+#' @keywords internal
+resolve_pg_mode <- function(version = NULL,
+                            type = NULL,
+                            spatial_hash = NULL,
+                            temporal_hash = NULL,
+                            overwrite = FALSE) {
+
+
+
+  result <- list(
+    mode = NULL,
+    base_path = NULL,
+    version = NULL,
+    type = NULL,
+    spatial_hash = NULL,
+    temporal_hash = NULL,
+    overwrite = overwrite,
+    warning = NULL
+  )
+
+  has_release_params <- !is.null(version) || !is.null(type)
+  has_custom_params <- !is.null(spatial_hash) || !is.null(temporal_hash)
+
+  # Validate: can't mix release and custom params
+  if (has_release_params && has_custom_params) {
+    stop("Cannot mix release parameters (version/type) with custom parameters (spatial_hash/temporal_hash)")
+  }
+
+  # Validate: both hashes required if either provided
+  if (has_custom_params && (is.null(spatial_hash) || is.null(temporal_hash))) {
+    stop("Both spatial_hash and temporal_hash must be provided together")
+  }
+
+  if (has_custom_params) {
+    # Custom mode with explicit hashes
+    result$mode <- "custom"
+    result$spatial_hash <- spatial_hash
+    result$temporal_hash <- temporal_hash
+    result$base_path <- pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash)
+
+  } else if (has_release_params) {
+    # Explicit release mode
+    result$mode <- "release"
+    result$version <- version %||% as.character(packageVersion("priogrid"))
+    result$type <- type %||% "05deg_yearly"
+    result$base_path <- pgout_path(version = result$version, type = result$type)
+
+    if (overwrite) {
+      result$warning <- paste0(
+        "overwrite = TRUE is ignored for official releases. ",
+        "Use build_release() to create releases."
+      )
+      result$overwrite <- FALSE
+    }
+
+  } else if (overwrite) {
+    # No params but overwrite = TRUE → custom mode with current pgoptions
+    result$mode <- "custom"
+    result$base_path <- pgout_path()
+
+  } else {
+    # No params, no overwrite → default to official release
+    result$mode <- "release"
+    result$version <- as.character(packageVersion("priogrid"))
+    result$type <- "05deg_yearly"
+    result$base_path <- pgout_path(version = result$version, type = result$type)
+  }
+
+  result
+}
+
 #' Collect static (non-time-varying) PRIO-GRID data
 #'
 #' Loads all static variables and returns them either as a data.table or as
@@ -351,34 +443,36 @@ read_pg_static <- function(version = NULL,
                            test = FALSE,
                            overwrite = FALSE) {
 
-  if(all(c(is.null(version), is.null(type), is.null(spatial_hash), is.null(temporal_hash)))){
-    version <- packageVersion("priogrid")
-    type <- "05deg_yearly"
+  cfg <- resolve_pg_mode(version, type, spatial_hash, temporal_hash, overwrite)
+
+  if (!is.null(cfg$warning)) {
+    warning(cfg$warning)
   }
 
-  if(all(c(!is.null(version), !is.null(type)))){
-    download_priogrid(version = version, type = type)
+  if (cfg$mode == "release") {
+    download_priogrid(version = cfg$version, type = cfg$type)
   }
 
-  base_path <- pgout_path(version = version,
-                          type = type,
-                          spatial_hash = spatial_hash,
-                          temporal_hash = temporal_hash)
-
-  fname <- file.path(base_path, "pg_static.parquet")
+  fname <- file.path(cfg$base_path, "pg_static.parquet")
 
   # Return cached if available
-  if (as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite) {
+  if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
     return(arrow::read_parquet(fname))
   }
 
   # Load individual variables
   static <- pgvariables |> dplyr::filter(static)
-  rasters <- lapply(static$name, load_pgvariable,
-                    version = version,
-                    type = type,
-                    spatial_hash = spatial_hash,
-                    temporal_hash = temporal_hash)
+
+  if (cfg$mode == "release") {
+    rasters <- lapply(static$name, load_pgvariable,
+                      version = cfg$version, type = cfg$type)
+  } else {
+    rasters <- lapply(static$name, load_pgvariable,
+                      custom = TRUE,
+                      spatial_hash = cfg$spatial_hash,
+                      temporal_hash = cfg$temporal_hash)
+  }
+
   names(rasters) <- static$name
   rasters <- rasters[!is.na(rasters)]
 
@@ -455,35 +549,36 @@ read_pg_timevarying <- function(version = NULL,
                                 test = FALSE,
                                 overwrite = FALSE) {
 
-  if(all(c(is.null(version), is.null(type), is.null(spatial_hash), is.null(temporal_hash)))){
-    version <- packageVersion("priogrid")
-    type <- "05deg_yearly"
+  cfg <- resolve_pg_mode(version, type, spatial_hash, temporal_hash, overwrite)
+
+  if (!is.null(cfg$warning)) {
+    warning(cfg$warning)
   }
 
-  if(all(c(!is.null(version), !is.null(type)))){
-    download_priogrid(version = version, type = type)
+  if (cfg$mode == "release") {
+    download_priogrid(version = cfg$version, type = cfg$type)
   }
 
-  # Determine path
-  base_path <- pgout_path(version = version,
-                          type = type,
-                          spatial_hash = spatial_hash,
-                          temporal_hash = temporal_hash)
-
-  fname <- file.path(base_path, "pg_timevarying.parquet")
+  fname <- file.path(cfg$base_path, "pg_timevarying.parquet")
 
   # Return cached if available
-  if (as_raster == FALSE & test == FALSE & file.exists(fname) & !overwrite) {
+  if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
     return(arrow::read_parquet(fname))
   }
 
   # Load individual variables
   timevarying <- pgvariables |> dplyr::filter(!static)
-  rasters <- lapply(timevarying$name, load_pgvariable,
-                    version = version,
-                    type = type,
-                    spatial_hash = spatial_hash,
-                    temporal_hash = temporal_hash)
+
+  if (cfg$mode == "release") {
+    rasters <- lapply(timevarying$name, load_pgvariable,
+                      version = cfg$version, type = cfg$type)
+  } else {
+    rasters <- lapply(timevarying$name, load_pgvariable,
+                      custom = TRUE,
+                      spatial_hash = cfg$spatial_hash,
+                      temporal_hash = cfg$temporal_hash)
+  }
+
   names(rasters) <- timevarying$name
   rasters <- rasters[!is.na(rasters)]
 
