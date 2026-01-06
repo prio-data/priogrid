@@ -85,10 +85,18 @@ The simplest workflow involves downloading the complete PRIOGRID dataset and rea
 download_priogrid()
 
 # Read the dataset into memory
-df <- read_priogrid()
+pg_static <- read_pg_static()
+pg_timevarying <- read_pg_timevarying()
 
 # Explore the data
-View(df)
+View(pg_static)
+
+# Load a single variable as raster
+ucdp <- load_pgvariable("ucdp_ged")
+terra::plot(log1p(ucdp[["2024-12-31"]]))
+
+# View list of available variables
+View(pgvariables)
 ```
 
 ### Citing Data Sources
@@ -98,7 +106,7 @@ View(df)
 When using PRIOGRID data with original variable names, retrieve all necessary citations with:
 
 ```r
-pgcitations(names(df))
+pgcitations(names(pg_timevarying))
 ```
 
 ## Advanced Usage
@@ -127,9 +135,13 @@ Each data source has dedicated functions for reading and transformation. Large f
 ```r
 # Read population data
 r <- read_ghsl_population_grid()
+print(r)
+ghsl_pg <- load_pgvariable("ghsl_population_grid")
+terra::plot(log1p(ghsl_pg[["2025-12-31"]]))
 
 # Calculate travel time with custom aggregation
 ttime_max <- calc_traveltime(aggregation_function = "max")
+terra::plot(log1p(ttime_max))
 ```
 
 Source-specific transformation functions are documented in the corresponding `R/data_[source].R` files.
@@ -145,10 +157,12 @@ PRIOGRID supports flexible spatial and temporal configurations:
 pgoptions$set_start_date(as.Date("2022-12-31"))
 pgoptions$set_temporal_resolution("1 month")
 r_monthly <- gen_cru_tmp()
+print(r_monthly)
 
 # Quarterly data
 pgoptions$set_temporal_resolution("1 quarter")
 r_quarterly <- gen_cru_tmp()
+print(r_quarterly)
 ```
 
 #### Spatial Resolution Examples
@@ -159,17 +173,25 @@ pgoptions$set_ncol(36)
 pgoptions$set_nrow(18)
 pgoptions$set_extent(c("xmin" = 0, "xmax" = 180, "ymin" =  0, "ymax" = 90))
 r_low_res <- gen_cru_tmp()
-plot(r_low_res)
+terra::plot(r_low_res)
 
 # Compare different resolutions
-pgoptions$set_ncol(360)
-pgoptions$set_nrow(180)
 pgoptions$set_extent(c("xmin" = -180, "xmax" = 180, "ymin" =  -90, "ymax" = 90))
-plot(prio_blank_grid())  # High resolution
-
 pgoptions$set_ncol(36)
 pgoptions$set_nrow(18)
 plot(prio_blank_grid())  # Low resolution
+
+pgoptions$set_ncol(360)
+pgoptions$set_nrow(180)
+plot(prio_blank_grid())  # Higher resolution
+
+# Default options in PRIO-GRID v.3.0.1
+pgoptions$set_nrow(360)
+pgoptions$set_ncol(720)
+pgoptions$set_crs("epsg:4326")
+pgoptions$set_extent(c(xmin = -180, xmax = 180, ymin = -90, ymax = 90))
+pgoptions$set_start_date(as.Date("1850-12-31"))
+pgoptions$set_end_date(as.Date("2025-08-26"))
 ```
 
 > **Important:** When changing spatial resolution, extent, or projection, PRIOGRID IDs will differ from the default configuration. These custom IDs should only be used within datasets sharing the same spatial configuration.
