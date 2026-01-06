@@ -39,7 +39,7 @@
 #' \code{\link{ged_ucdp_ged}} for generating the standard UCDP GED variable
 #'
 #' @examples
-#' \dontrun
+#' \dontrun{
 #' # Read UCDP GED data
 #' ged_data <- read_ucdp_ged()
 #'

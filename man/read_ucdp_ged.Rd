@@ -42,6 +42,30 @@ The dataset includes three types of organized violence:
 \item Type 3: One-sided violence
 }
 }
+\examples{
+\dontrun{
+# Read UCDP GED data
+ged_data <- read_ucdp_ged()
+
+# Examine the structure
+print(ged_data)
+
+# Check available columns
+names(ged_data)
+
+# Filter to state-based conflict only
+state_conflict <- ged_data[ged_data$type_of_violence == 1, ]
+
+# Plot event locations
+plot(sf::st_geometry(ged_data), pch = ".",
+     main = "UCDP GED Event Locations")
+
+# Filter to specific time period
+library(lubridate)
+events_2020 <- ged_data[year(ged_data$date_start) == 2020, ]
+}
+
+}
 \references{
 \insertRef{sundbergIntroducingUCDPGeoreferenced2013}{priogrid}
 
