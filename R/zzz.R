@@ -12,3 +12,4 @@ pgoptions <- NULL
     memfrac = 0.8
   )
 }
+.datatable.aware = TRUE

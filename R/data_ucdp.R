@@ -125,8 +125,7 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable){
   ged <- ged |>
     sf::st_transform(crs = sf::st_crs(pg)) |>
     dplyr::filter(lubridate::int_overlaps(date_interval, pg_interval)) |>
-    dplyr::filter(where_prec < 6) |> # Remove where_prec >= 6 (i.e. not sub-national precision)
-    dplyr::filter(type_of_violence %in% violence_types)
+    dplyr::filter(where_prec < 6) # Remove where_prec >= 6 (i.e. not sub-national precision)
   if(fatality_variable == "event_count"){
     r <- terra::rasterize(ged, pg,  fun = "sum") # count events
   } else{
@@ -241,11 +240,10 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
     agg_intervals <- pg_date_intervals()
     agg_dt <- data.table(
       interval_id = seq_along(agg_intervals),
-      agg_start = int_start(agg_intervals),
-      agg_end = int_end(agg_intervals)
+      agg_start = lubridate::int_start(agg_intervals),
+      agg_end = lubridate::int_end(agg_intervals)
     )
 
-    # >>> FIX: Preserve original event dates before the join <
     ged_dt[, `:=`(
       event_start = date_start,
       event_end = date_end
@@ -262,7 +260,6 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 
     result <- merge(result, agg_dt, by = "interval_id")
 
-    # >>> FIX: Use preserved event_start/event_end <
     result[, `:=`(
       overlap_start = pmax(event_start, agg_start),
       overlap_end = pmin(event_end, agg_end)
