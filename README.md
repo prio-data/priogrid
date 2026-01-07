@@ -114,7 +114,7 @@ pgcitations(names(pg_timevarying))
 
 ### Working with Original Data Sources
 
-For users who need to transform data to custom specifications or work with original source data:
+For users who need to transform data to custom specifications or work with original source data. The steps below are also automatically done when running the read_() functions. 
 
 ```r
 # View available data sources
@@ -137,6 +137,7 @@ Each data source has dedicated functions for reading and transformation. Large f
 # Read population data
 r <- read_ghsl_population_grid()
 print(r)
+# terra::plot(log1p(r[["2025-12-31"]])) # This would take some time and require a lot of RAM as the raster would need to be in memory.
 ghsl_pg <- load_pgvariable("ghsl_population_grid")
 terra::plot(log1p(ghsl_pg[["2025-12-31"]]))
 
