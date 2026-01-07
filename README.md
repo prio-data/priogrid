@@ -52,6 +52,7 @@ If you encounter SSL certificate errors when downloading data, try:
 PRIOGRID stores settings locally that persist across R sessions. Before using the package, configure where PRIOGRID will store downloaded raw data and transformed datasets:
 
 ```r
+library(priogrid)
 # Set the folder for PRIOGRID data storage
 pgoptions$set_rawfolder("/path/to/your/data/folder")
 
