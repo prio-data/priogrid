@@ -196,6 +196,34 @@ pgoptions$set_end_date(as.Date("2025-08-26"))
 
 > **Important:** When changing spatial resolution, extent, or projection, PRIOGRID IDs will differ from the default configuration. These custom IDs should only be used within datasets sharing the same spatial configuration.
 
+## Data Storage
+
+PRIOGRID uses a single base folder for all data, set via `pgoptions$set_rawfolder()`.
+
+### Directory Structure
+
+```
+{rawfolder}/
+├── {source_name}/{version}/{id}/   # Raw source files
+├── priogrid/
+│   ├── releases/{version}/{type}/  # Official releases
+│   └── custom/{pkg_version}/{spatial_hash}/{temporal_hash}/  # Custom builds
+└── tmp/                            # Temporary processing files
+```
+
+### Storage Modes
+
+| Mode | Path | Use Case |
+|------|------|----------|
+| **Release** | `releases/3.0.1/05deg_yearly/` | Official PRIOGRID data (default) |
+| **Custom** | `custom/{version}/{spatial_hash}/{temporal_hash}/` | User-defined spatial/temporal settings |
+
+Custom builds use 6-character MD5 hashes to identify unique spatial configurations (resolution, extent, CRS) and temporal configurations (resolution, date range).
+
+### Temporary Files
+
+Large raster operations use `{rawfolder}/tmp/` for intermediate files. These are automatically cleaned up after processing. When estimated memory usage exceeds 4GB, `terra` switches to disk-based processing automatically.
+
 ## Contributing
 
 We welcome contributions. Report issues or suggest new data sources or variable ideas using our [Issue Tracker](https://github.com/prio-data/priogrid/issues/new/choose).
