@@ -53,7 +53,7 @@ is not already done.
   pg_rast <- read_pg_timevarying(as_raster = TRUE)
 
   # Load official release
-  pg_dt <- read_pg_timevarying(version = "3.0.0",
+  pg_dt <- read_pg_timevarying(version = "3.0.1",
                                type = "05deg_yearly")
 }
 }

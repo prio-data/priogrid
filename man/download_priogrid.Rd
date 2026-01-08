@@ -12,7 +12,7 @@ download_priogrid(
 )
 }
 \arguments{
-\item{version}{Character string with release version (default: "3.0.0")}
+\item{version}{Character string with release version}
 
 \item{type}{Character string with release type (default: "05deg_yearly")}
 
@@ -32,7 +32,7 @@ or if overwrite=TRUE.
   download_priogrid()
 
   # Download specific release
-  download_priogrid(version = "3.0.0", type = "05deg_yearly")
+  download_priogrid(version = "3.0.1", type = "05deg_yearly")
 
   # List releases
   download_priogrid(list_releases = TRUE)

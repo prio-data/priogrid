@@ -17,7 +17,7 @@ build_release(
 )
 }
 \arguments{
-\item{version}{Character string with release version (e.g., "3.0.0")}
+\item{version}{Character string with release version (e.g., "3.0.1")}
 
 \item{type}{Character string with release type (e.g., "05deg_yearly")}
 
@@ -46,7 +46,7 @@ consistency between custom and release workflows.
 \examples{
 \dontrun{
   build_release(
-    version = "3.0.0",
+    version = "3.0.1",
     type = "05deg_yearly",
     nrow = 360,
     ncol = 720,
