@@ -36,8 +36,17 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
   if(ncol%%1 != 0 & ncol > 0) stop("ncol must be positive integer")
   if(nrow%%1 != 0 & nrow > 0) stop("nrow must be positive integer")
 
-  pg <- rast(ext(extent), crs = crs_string, ncol = ncol, nrow = nrow)
-  values(pg) <- create_pg_indices(ncol, nrow)
+  pg_lonlat <- rast(ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
+  values(pg_lonlat) <- create_pg_indices(ncol, nrow)
+  pg_lonlat <- terra::project(pg_lonlat, crs_string)
+  nan_pattern <- values(pg_lonlat)
+
+  pg <- terra::deepcopy(pg_lonlat)
+  values(pg) <- create_pg_indices(ncol(pg), nrow(pg))
+  pg <- terra::ifel(is.nan(pg_lonlat), NaN, pg)
+
+
+
   names(pg) <- "pgid"
   return(pg)
 }
