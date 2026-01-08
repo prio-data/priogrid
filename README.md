@@ -167,7 +167,7 @@ r_quarterly <- gen_cru_tmp()
 print(r_quarterly)
 ```
 
-#### Spatial Resolution Examples
+#### Spatial Resolution and Projection Examples
 
 ```r
 # Lower resolution with custom extent
@@ -177,21 +177,18 @@ pgoptions$set_extent(c("xmin" = 0, "xmax" = 180, "ymin" =  0, "ymax" = 90))
 r_low_res <- gen_cru_tmp()
 terra::plot(r_low_res)
 
-# Compare different resolutions
-pgoptions$set_extent(c("xmin" = -180, "xmax" = 180, "ymin" =  -90, "ymax" = 90))
-pgoptions$set_ncol(36)
-pgoptions$set_nrow(18)
-plot(prio_blank_grid())  # Low resolution
+# And different projection
+pgoptions$set_crs("+proj=laea +lon_0=106.875 +lat_0=58.5295629 +datum=WGS84 +units=m +no_defs")
+r_low_res_lambert_azimuthal <- gen_cru_tmp()
+terra::plot(r_low_res_lambert_azimuthal)
 
-pgoptions$set_ncol(360)
-pgoptions$set_nrow(180)
-plot(prio_blank_grid())  # Higher resolution
 
 # Default options in PRIO-GRID v.3.0.1
 pgoptions$set_nrow(360)
 pgoptions$set_ncol(720)
 pgoptions$set_crs("epsg:4326")
 pgoptions$set_extent(c(xmin = -180, xmax = 180, ymin = -90, ymax = 90))
+pgoptions$set_temporal_resolution("1 year")
 pgoptions$set_start_date(as.Date("1850-12-31"))
 pgoptions$set_end_date(as.Date("2025-08-26"))
 ```
