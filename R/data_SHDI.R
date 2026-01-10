@@ -343,7 +343,7 @@ gen_shdi <- function() {
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 gen_msch <- function() {
-  shdi <- shdi(variable = "msch")
+  msch <- shdi(variable = "msch")
   return(shdi)
 }
 
@@ -366,7 +366,7 @@ gen_msch <- function() {
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 gen_esch <- function() {
-  shdi <- shdi(variable = "esch")
+  esch <- shdi(variable = "esch")
   return(shdi)
 }
 
@@ -389,7 +389,7 @@ gen_esch <- function() {
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 gen_lifexp <- function() {
-  shdi <- shdi(variable = "lifexp")
+  lifexp <- shdi(variable = "lifexp")
   return(shdi)
 }
 
@@ -412,6 +412,6 @@ gen_lifexp <- function() {
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 gen_gnic <- function() {
-  shdi <- shdi(variable = "gnic")
+  gnic <- shdi(variable = "gnic")
   return(shdi)
 }
