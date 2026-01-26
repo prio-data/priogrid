@@ -412,6 +412,7 @@ gen_ucdp_ged <- function(){
 }
 
 
+#' @export
 ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes()){
   cshp <- cshp |> dplyr::filter(measurement_date %within% date_interval)
 
