@@ -19,7 +19,22 @@ cell-specific information on political, economic, demographic,
 environmental, and conflict variables organized in a consistent gridded
 framework.
 
-### Quick overview of the contributing process
+## Table of Contents
+
+1.  [What is PRIO-GRID?](#what-is-prio-grid)
+2.  [Prerequisites: Git, GitHub, and R Setup](#prerequisites)
+3.  [Development Environment Setup](#development-setup)
+4.  [Contribution Workflow Overview](#contribution-workflow)
+5.  [Ways to Contribute](#ways-to-contribute)
+6.  [Adding Data Sources](#adding-data-sources)
+7.  [Code contribution guidelines](#code-contributions-guidelines)
+8.  [Coding Standards](#coding-standards)
+9.  [Testing Your Changes](#testing-your-changes)
+10. [Submitting a Pull Request](#submitting-a-pull-request)
+11. [FAQ](#faq)
+12. [Resources](#resources)
+
+## Quick overview of the contributing process
 
 1.  **Fork** the [PRIO-GRID
     repository](https://github.com/prio-data/priogrid)
@@ -28,7 +43,7 @@ framework.
 4.  **Make** your changes following our guidelines
 5.  **Submit** a pull request
 
-### What is PRIO-GRID? 
+## What is PRIO-GRID? {#what-is-prio-grid}
 
 PRIO-GRID is an R package that provides:
 
@@ -63,9 +78,159 @@ PRIO-GRID is an R package that provides:
 
     -   Create new functions for variables or data sources
 
-### Ways to contribute 
+## Prerequisites: Git, GitHub, and R Setup {#prerequisites}
 
-#### Suggest new data sources or variables 
+Before you can contribute, you need to set up Git and GitHub integration
+with RStudio.
+
+### Install Git
+
+Git is version control software that tracks changes to your code.
+
+-   **Windows**: Download and install [Git for
+    Windows](https://git-scm.com/download/win). This includes Git Bash,
+    which provides a Unix-like command line interface.
+-   **macOS**: Git is usually pre-installed. Open Terminal and type
+    `git --version`. If not installed, you will be prompted to install
+    it.
+-   **Linux**: Use your package manager.
+
+### Create a GitHub Account
+
+If you don't have one, sign up at [github.com](https://github.com).
+
+### Configure Git with RStudio
+
+1.  Open RStudio
+2.  Go to **Tools \> Global Options \> Git/SVN**
+3.  **Git executable**: Click **Browse** and locate your Git executable:
+    -   Windows: `C:\Program Files\Git\bin\git.exe`
+    -   macOS: `/usr/bin/git` or `/usr/local/bin/git`
+    -   Linux: `/usr/bin/git`
+4.  Click **OK**
+
+### Configure Git Identity
+
+In the RStudio Console, run:
+
+``` r
+system('git config --global user.name "Your Name"')
+system('git config --global user.email "your.email@example.com"')
+```
+
+### Generate SSH Key
+
+SSH keys allow secure communication between your computer and GitHub
+without entering your password every time.
+
+In RStudio:
+
+1.  Go to **Tools \> Global Options \> Git/SVN**
+2.  Click **Create RSA Key** (accept defaults)
+3.  Click **View public key** and copy the entire key
+4.  Go to GitHub.com \> **Settings \> SSH and GPG keys \> New SSH key**
+5.  Paste your key and save
+
+### Install devtools
+
+Important: You must install devtools before using any development
+functions:
+
+``` r
+install.packages("devtools")
+```
+
+### Required system libraries
+
+**R package dependencies:** The spatial R packages requires careful
+setup. You will need working installations of the packages `terra`,
+`sf`, `exactextractr`, which depend on system libraries like `GDAL`,
+`GEOS`, `PROJ`
+
+## Development setup {#development-setup}
+
+### Prerequisites
+
+-   R (version 4.0 or higher is recommended)
+
+-   Git and GitHub account for version control
+
+-   Sufficient disk space
+
+-   Required system libraries for spatial packages
+
+### Fork the Repository on GitHub
+
+Go to github.com/prio-data/priogrid Click the Fork button (top-right
+corner) This creates your personal copy of the repository under your
+GitHub account
+
+### Clone Your Fork to Your Computer
+
+In RStudio:
+
+Go to File \> New Project \> Version Control \> Git Repository URL:
+Paste the URL of your fork (e.g.,
+<https://github.com/YOUR_USERNAME/priogrid.git>) Project directory name:
+priogrid (or your preference) Create project as subdirectory of: Choose
+where to save the project Click Create Project
+
+Alternatively, via command line:
+
+``` r
+system('git clone https://github.com/YOUR_USERNAME/priogrid.git')
+```
+
+### Install R Package Dependencies
+
+``` r
+# Install the package 
+install.packages("renv")
+renv::install("prio-data/priogrid")
+
+# Set data directory 
+library(priogrid)
+pgoptions$set_rawfolder("/path/to/data/directory")
+```
+
+#### Troubleshooting installation
+
+-   Missing packages: Use `renv::install("package_name")`
+
+-   System path issues: Add paths to `~/.Renviron` or use `Sys.setenv()`
+
+-   macOS/Homebrew issues: See installation guides for `sf` and `terra`
+    packages
+
+### Set Up Your Data Directory
+
+``` r
+library(priogrid)
+pgoptions$set_rawfolder("/path/to/data/directory")  # Where source data will be stored
+```
+
+### Verify Setup
+
+``` r
+install.packages("devtools")
+devtools::load_all()        # Load the package in development mode
+?priogrid         # Check basic documentation
+```
+
+## Contribution Workflow Overview {#contribution-workflow}
+
+The standard contribution process:
+
+-   Create a branch for your feature (don't work directly on main)
+-   Make your changes following this guide
+-   Test your changes thoroughly
+-   Commit your changes with clear messages
+-   Push your branch to your fork on GitHub
+-   Submit a Pull Request from your fork to the main repository
+
+## Ways to contribute {#ways-to-contribute}
+
+#### Suggest new data sources or variables
 
 The easiest way to contribute is by identifying valuable data sources or
 suggesting new variables that would benefit the users of PRIO-GRID.
@@ -78,14 +243,14 @@ Use our [issue form](https://github.com/prio-data/priogrid/issues) to:
 
 -   Report bugs or issues
 
-#### Add data sources 
+#### Add data sources
 
 1.  Add citations to `inst/REFERENCES.bib`
 2.  Add source metadata to `data_raw/sources.csv`
 3.  Run `data_raw/pgsources.R` to update `data/pgsources.rds`
 4.  Create `R/data_yoursource.R` with a `read_yoursource()` function
 
-#### Create new variables 
+#### Create new variables
 
 Write `gen_variablename()` functions that:
 
@@ -95,45 +260,12 @@ Write `gen_variablename()` functions that:
 
 -   Follow our naming conventions
 
-### Development setup 
+## Adding Data Sources {#adding-data-sources}
 
-#### Prerequisites 
+Before adding any data, verify the license is compatible (see License
+Compatibility below).
 
--   R (version 4.0 or higher is recommended)
-
--   Git and GitHub account for version control
-
--   Sufficient disk space
-
--   Required system libraries for spatial packages
-
-**R package dependencies:** The spatial R packages requires careful
-setup. You will need working installations of the packages `terra`,
-`sf`, `exactextractr`, which depend on system libraries like `GDAL`,
-`GEOS`, `PROJ`
-
-#### Installation process
-
-``` R
-# Install the package 
-install.packages("renv")
-renv::install("prio-data/priogrid")
-
-# Set data directory 
-library(priogrid)
-pgoptions$set_rawfolder("/path/to/data/directory")
-```
-
-#### Troubleshooting installation 
-
--   Missing packages: Use `renv::install("package_name")`
-
--   System path issues: Add paths to `~/.Renviron` or use `Sys.setenv()`
-
--   macOS/Homebrew issues: See installation guides for `sf` and `terra`
-    packages
-
-### Data sources and licensing 
+### Data sources and licensing
 
 Licensing determines how we can integrate and distribute the data in
 PRIO-GRID
@@ -155,7 +287,7 @@ building functions that access APIs rather than storing static copies.
 These will not appear in our final database, but provide dynamic access
 to current information.
 
-#### License compatibility 
+#### License compatibility
 
 | License type | Status | Notes |
 |------------------------|------------------------|------------------------|
@@ -166,7 +298,7 @@ to current information.
 | Copyleft (CC-BY-SA 4.0, GPL 3.0) | 🟨 Metadata only | Functions to access data, but no direct inclusion |
 | All rights reserved | 🟨 Functions only | Download and read functions only, no redistribution |
 
-### Code contribution guidelines 
+## Code contribution guidelines {#code-contributions-guidelines}
 
 Our coding standards ensure that contributions work well together and
 remain maintainable over time.
@@ -197,7 +329,7 @@ source.
 
 `read_` functions:
 
-``` R
+``` r
 read_yoursource <- function() {
     # Use get_pgfile(source_name = "source",
     #                source_version = "version",
@@ -209,7 +341,7 @@ read_yoursource <- function() {
 
 `gen_` functions:
 
-``` R
+``` r
 gen_variablename <- function() {
     # Must work without arguments (sensible defaults)
     # Return terra SpatRaster
@@ -218,7 +350,7 @@ gen_variablename <- function() {
 }
 ```
 
-### Coding standards 
+## Coding standards {#coding-standards}
 
 -   Namespace everything: Use `package::function()` format (except for
     priogrid functions)
@@ -232,7 +364,7 @@ gen_variablename <- function() {
 
 -   Documentation: Use `roxygen2` format
 
-### Variable registration 
+### Variable registration
 
 When adding `gen_` functions:
 
@@ -252,25 +384,9 @@ When adding `gen_` functions:
 
 -   Include both data source citations and usage references
 
-### Pull request process
+## Testing your changes {#testing-your-changes}
 
-1.  Fork the repository and create a feature branch
-2.  Install dependencies: Run `renv::install()` in your fork
-3.  Make changes following our guidelines
-4.  Test thoroughly:
-    -   Restart R and run devtools::load_all()
-
-    -   Test your functions
-
-    -   Run `devtools::document()` to update documentation
-
-    -   Run existing tests with `devtools::test()`
-5.  Stay updated: Merge upstream/master regularly
-6.  Create pull request with clear description
-
-#### Testing your changes 
-
-``` R
+``` r
 # Restart your R session 
 devtools::load_all()
 
@@ -287,7 +403,7 @@ devtools::test()
 ?your_function 
 ```
 
-### Package dependencies 
+### Package dependencies
 
 We use these key packages:
 
@@ -305,7 +421,82 @@ We use these key packages:
 *We try to minimize new dependencies. Discuss additions in your pull
 request.*
 
-### FAQ
+## Submitting a Pull Request {#submitting-a-pull-request}
+
+### Create a Feature Branch
+
+Never work directly on `main`.
+
+In RStudio Terminal or Git Bash:
+
+```         
+git checkout -b feature/your-feature-name
+```
+
+Or use RStudio:
+
+1.  Click the Git tab (top-right panel)
+
+2.  Click "New Branch"
+
+3.  Name it descriptively (e.g., `add-modis-data`, `fix-gpw-function`)
+
+### Commit Your Changes
+
+Commit early and often with clear messages:
+
+```         
+git add R/data_newsource.R
+git commit -m "Add read function for Global Power Plant Database"
+```
+
+### Stay Updated
+
+Before submitting, merge any changes from the main repository:
+
+```         
+# Add the main repo as upstream (only first time)
+git remote add upstream https://github.com/prio-data/priogrid.git
+
+# Fetch updates
+git fetch upstream
+
+# Merge into your branch
+git merge upstream/main
+```
+
+Or in RStudio:
+
+1.  Click the "Pull" button with "upstream" selected.
+
+### Push to Your Fork
+
+```         
+git push origin feature/your-feature-name
+```
+
+Or RStudio: Click the "Push" button.
+
+### Create Pull Request on GitHub
+
+1.  Go to your fork on GitHub
+
+2.  Click "Compare & pull request"
+
+3.  Select the base repository: `prio-data/priogrid` and base branch:
+    `main`
+
+4.  Write a clear description:
+
+    -   What changes you made
+
+    -   Why you made them
+
+    -   Any issues they address (use "Fixes #123" to auto-close issues)
+
+5.  Submit the pull request
+
+### FAQ {#faq}
 
 #### Q: Can I use PRIO-GRID at different spatial/temporal resolutions?
 
@@ -314,19 +505,19 @@ resolution, temporal resolution, and scope. Our server provides 0.5x0.5
 yearly resolution globally (1850-present). We are planning to provide
 monthly resolution from 1990.
 
-#### Q: My data source is already in PRIO-GRID but needs updates 
+#### Q: My data source is already in PRIO-GRID but needs updates
 
 **A:** We welcome input from data providers. Please open an issue or
 contact us directly to discuss corrections or updates to ensure proper
 representation.
 
-#### Q: How do I handle large datasets or frequent updates? 
+#### Q: How do I handle large datasets or frequent updates?
 
 **A:** For frequently updates data, consider creating functions that
 access APIs rather than including static downloads. We can include these
 in our metadata while providing dynamic access methods.
 
-#### Q: What if my data has complex licensing requirements? 
+#### Q: What if my data has complex licensing requirements?
 
 **A:** Contact us to discuss specific licensing situations. We'll work
 with you to find an appropriate way to include your data while
@@ -351,4 +542,4 @@ existing documentation and examples.
 
 -   [Creative
     Commons](https://creativecomms.org/share-your-work/cclicenses/): CC
-    license details \
+    license details\
