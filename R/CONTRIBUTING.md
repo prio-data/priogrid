@@ -1,14 +1,6 @@
----
-title: "Contributing to PRIO-GRID v3"
-output: 
-  github_document:
-    toc: true
-    toc_depth: 3
-    html_preview: false
-editor_options: 
-  markdown: 
-    wrap: 72
----
+Contributing to PRIO-GRID v3
+================
+
 
 Thank you for showing interest in contributing to PRIO-GRID! This guide
 will help you get started with contributing to our open-source
@@ -35,61 +27,66 @@ framework.
 12. [Resources](#resources)
 
 ## Quick overview of the contributing process
+
 7.  [Creating New Variables](#creating-new-variables)
+
 8.  [Coding Standards](#coding-standards)
+
 9.  [Testing Your Changes](#testing-your-changes)
+
 10. [Documentation and Citations](#documentation-and-citations)
+
 11. [Submitting a Pull Request](#submitting-a-pull-request)
+
 12. [FAQ](#faq)
+
 13. [Resources](#resources)
 
-### Quick overview of the contributing process
-
-1.  **Fork** the [PRIO-GRID
+14. **Fork** the [PRIO-GRID
     repository](https://github.com/prio-data/priogrid)
-2.  **Install** the package `renv::install("prio-data/priogrid")`
-3.  **Set up** your development environment (see Development Setup)
-4.  **Make** your changes following our guidelines
-5.  **Submit** a pull request
 
+15. **Install** the package `renv::install("prio-data/priogrid")`
 
-## What is PRIO-GRID? {#what-is-prio-grid}
+16. **Set up** your development environment (see Development Setup)
+
+17. **Make** your changes following our guidelines
+
+18. **Submit** a pull request
+
+## What is PRIO-GRID?
 
 PRIO-GRID is an R package that provides:
 
--   Easy data access:
+- Easy data access:
 
-    -   Download processed data through our R package
+  - Download processed data through our R package
 
-    -   Get data that is already harmonized across sources and time
-        periods
+  - Get data that is already harmonized across sources and time periods
 
--   Raw data management:
+- Raw data management:
 
-    -   Download and work with original source data through our package
-        functions
+  - Download and work with original source data through our package
+    functions
 
-    -   Maintain full transparency about data transformation
+  - Maintain full transparency about data transformation
 
--   Automated citations:
+- Automated citations:
 
-    -   Generate proper citations for the data sources you use
+  - Generate proper citations for the data sources you use
 
-    -   Get both required citation and suggested methodological
-        references
+  - Get both required citation and suggested methodological references
 
--   Customizable calculations through `pgoptions`:
+- Customizable calculations through `pgoptions`:
 
-    -   Configure spatial and temporal resolution, extent, and scope
+  - Configure spatial and temporal resolution, extent, and scope
 
--   Extensible functions:
+- Extensible functions:
 
-    -   Modify existing functions
+  - Modify existing functions
 
-    -   Create new functions for variables or data sources
+  - Create new functions for variables or data sources
 
-
-## Prerequisites: Git, GitHub, and R Setup {#prerequisites}
+## Prerequisites: Git, GitHub, and R Setup
 
 Before you can contribute, you need to set up Git and GitHub integration
 with RStudio.
@@ -98,26 +95,25 @@ with RStudio.
 
 Git is version control software that tracks changes to your code.
 
--   **Windows**: Download and install [Git for
-    Windows](https://git-scm.com/download/win). This includes Git Bash,
-    which provides a Unix-like command line interface.
--   **macOS**: Git is usually pre-installed. Open Terminal and type
-    `git --version`. If not installed, you will be prompted to install
-    it.
--   **Linux**: Use your package manager.
+- **Windows**: Download and install [Git for
+  Windows](https://git-scm.com/download/win). This includes Git Bash,
+  which provides a Unix-like command line interface.
+- **macOS**: Git is usually pre-installed. Open Terminal and type
+  `git --version`. If not installed, you will be prompted to install it.
+- **Linux**: Use your package manager.
 
 ### Create a GitHub Account
 
-If you don't have one, sign up at [github.com](https://github.com).
+If you don’t have one, sign up at [github.com](https://github.com).
 
 ### Configure Git with RStudio
 
 1.  Open RStudio
 2.  Go to **Tools \> Global Options \> Git/SVN**
 3.  **Git executable**: Click **Browse** and locate your Git executable:
-    -   Windows: `C:\Program Files\Git\bin\git.exe`
-    -   macOS: `/usr/bin/git` or `/usr/local/bin/git`
-    -   Linux: `/usr/bin/git`
+    - Windows: `C:\Program Files\Git\bin\git.exe`
+    - macOS: `/usr/bin/git` or `/usr/local/bin/git`
+    - Linux: `/usr/bin/git`
 4.  Click **OK**
 
 ### Configure Git Identity
@@ -158,18 +154,17 @@ setup. You will need working installations of the packages `terra`,
 `sf`, `exactextractr`, which depend on system libraries like `GDAL`,
 `GEOS`, `PROJ`
 
-## Development setup {#development-setup}
+## Development setup
 
-### Prerequisites {#prerequisites}
+### Prerequisites
 
+- R (version 4.0 or higher is recommended)
 
--   R (version 4.0 or higher is recommended)
+- Git and GitHub account for version control
 
--   Git and GitHub account for version control
+- Sufficient disk space
 
--   Sufficient disk space
-
--   Required system libraries for spatial packages
+- Required system libraries for spatial packages
 
 ### Fork the Repository on GitHub
 
@@ -207,12 +202,12 @@ pgoptions$set_rawfolder("/path/to/data/directory")
 
 #### Troubleshooting installation
 
--   Missing packages: Use `renv::install("package_name")`
+- Missing packages: Use `renv::install("package_name")`
 
--   System path issues: Add paths to `~/.Renviron` or use `Sys.setenv()`
+- System path issues: Add paths to `~/.Renviron` or use `Sys.setenv()`
 
--   macOS/Homebrew issues: See installation guides for `sf` and `terra`
-    packages
+- macOS/Homebrew issues: See installation guides for `sf` and `terra`
+  packages
 
 ### Set Up Your Data Directory
 
@@ -229,18 +224,18 @@ devtools::load_all()        # Load the package in development mode
 ?priogrid         # Check basic documentation
 ```
 
-## Contribution Workflow Overview {#contribution-workflow}
+## Contribution Workflow Overview
 
 The standard contribution process:
 
--   Create a branch for your feature (don't work directly on main)
--   Make your changes following this guide
--   Test your changes thoroughly
--   Commit your changes with clear messages
--   Push your branch to your fork on GitHub
--   Submit a Pull Request from your fork to the main repository
+- Create a branch for your feature (don’t work directly on main)
+- Make your changes following this guide
+- Test your changes thoroughly
+- Commit your changes with clear messages
+- Push your branch to your fork on GitHub
+- Submit a Pull Request from your fork to the main repository
 
-## Ways to contribute {#ways-to-contribute}
+## Ways to contribute
 
 #### Suggest new data sources or variables
 
@@ -249,11 +244,11 @@ suggesting new variables that would benefit the users of PRIO-GRID.
 
 Use our [issue form](https://github.com/prio-data/priogrid/issues) to:
 
--   Propose new data sources
+- Propose new data sources
 
--   Request new variables
+- Request new variables
 
--   Report bugs or issues
+- Report bugs or issues
 
 #### Add data sources
 
@@ -266,13 +261,13 @@ Use our [issue form](https://github.com/prio-data/priogrid/issues) to:
 
 Write `gen_variablename()` functions that:
 
--   Can run without arguments (use sensible defaults)
+- Can run without arguments (use sensible defaults)
 
--   Return a `terra::SpatRaster` object
+- Return a `terra::SpatRaster` object
 
--   Follow our naming conventions
+- Follow our naming conventions
 
-## Adding Data Sources {#adding-data-sources}
+## Adding Data Sources
 
 Before adding any data, verify the license is compatible (see License
 Compatibility below).
@@ -284,15 +279,15 @@ PRIO-GRID
 
 We accept data sources that are:
 
--   Open access (not behind paywalls)
+- Open access (not behind paywalls)
 
--   Sub-national (spatial resolution below country-level)
+- Sub-national (spatial resolution below country-level)
 
--   Covering more than one country
+- Covering more than one country
 
--   Relevant to conflict research and political science
+- Relevant to conflict research and political science
 
--   From 1850 onwards (focus on contemporary data)
+- From 1850 onwards (focus on contemporary data)
 
 **API sources:** For frequently updated data, we are interested in
 building functions that access APIs rather than storing static copies.
@@ -302,7 +297,7 @@ to current information.
 #### License compatibility
 
 | License type | Status | Notes |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Permissive (MIT, Unlicense) | 🟩 Supported | Full distribution and modification allowed |
 | Attribution (CC-BY 4.0) | 🟩 Supported | Citations required (we provide these) |
 | Non-commercial (CC-BY-NC 4.0) | 🟩 Supported | Commercial use restrictions noted |
@@ -310,8 +305,7 @@ to current information.
 | Copyleft (CC-BY-SA 4.0, GPL 3.0) | 🟨 Metadata only | Functions to access data, but no direct inclusion |
 | All rights reserved | 🟨 Functions only | Download and read functions only, no redistribution |
 
-
-## Code contribution guidelines {#code-contributions-guidelines}
+## Code contribution guidelines
 
 Our coding standards ensure that contributions work well together and
 remain maintainable over time.
@@ -323,20 +317,20 @@ source.
 
 #### Function naming conventions
 
--   Read functions: `read_sourcename()`
+- Read functions: `read_sourcename()`
 
-    -   Every data source must have a read function that handles the
-        basic task of loading raw data into R
+  - Every data source must have a read function that handles the basic
+    task of loading raw data into R
 
--   Variable functions: `gen_variablename()`
+- Variable functions: `gen_variablename()`
 
-    -   Functions to create research variables that appear in the
-        PRIO-GRID database
+  - Functions to create research variables that appear in the PRIO-GRID
+    database
 
--   Utility functions: `sourcename_utilityfunction()`
+- Utility functions: `sourcename_utilityfunction()`
 
-    -   Helper function that support data processing but don't create
-        final variables
+  - Helper function that support data processing but don’t create final
+    variables
 
 #### Function requirements
 
@@ -363,20 +357,19 @@ gen_variablename <- function() {
 }
 ```
 
+## Coding standards
 
-## Coding standards {#coding-standards}
+- Namespace everything: Use `package::function()` format (except for
+  priogrid functions)
 
--   Namespace everything: Use `package::function()` format (except for
-    priogrid functions)
+- Use renv: Install packages with `renv::install()`, update with
+  `renv::status()`
 
--   Use renv: Install packages with `renv::install()`, update with
-    `renv::status()`
+- Global options: Access via `pgoptions$get_youroption()`
 
--   Global options: Access via `pgoptions$get_youroption()`
+- Testing: Write unit tests using `testthat`
 
--   Testing: Write unit tests using `testthat`
-
--   Documentation: Use `roxygen2` format
+- Documentation: Use `roxygen2` format
 
 ### Variable registration
 
@@ -388,18 +381,17 @@ When adding `gen_` functions:
 
 ### Citations and references
 
--   Use [Zotero](https://zotero.org) with [Better
-    Bibtext](https://retorque.re/zotero-better-bibtex/) addon
+- Use [Zotero](https://zotero.org) with [Better
+  Bibtext](https://retorque.re/zotero-better-bibtex/) addon
 
--   Citation key format: `"auth.lower + shorttitle(3,3) + year"`
+- Citation key format: `"auth.lower + shorttitle(3,3) + year"`
 
--   Add to function documentation:
-    `#' @references \insertRef{bibkey}{priogrid}`
+- Add to function documentation:
+  `#' @references \insertRef{bibkey}{priogrid}`
 
--   Include both data source citations and usage references
+- Include both data source citations and usage references
 
-
-## Testing your changes {#testing-your-changes}
+## Testing your changes
 
 ``` r
 # Restart your R session 
@@ -422,22 +414,21 @@ devtools::test()
 
 We use these key packages:
 
--   Spatial: `sf` (vector), `terra` (raster), `exactextractr` (accurate
-    raster-vector conversion)
+- Spatial: `sf` (vector), `terra` (raster), `exactextractr` (accurate
+  raster-vector conversion)
 
--   Data: `tidyverse` (including `lubridate` for dates)
+- Data: `tidyverse` (including `lubridate` for dates)
 
--   Development: `devtools`, `usethis`, `testthat`, `assertthat`
+- Development: `devtools`, `usethis`, `testthat`, `assertthat`
 
--   Performance: `memoise` (for caching expensive functions)
+- Performance: `memoise` (for caching expensive functions)
 
--   Citations: `RefManageR`, `Rdpack`
+- Citations: `RefManageR`, `Rdpack`
 
 *We try to minimize new dependencies. Discuss additions in your pull
 request.*
 
-
-## Submitting a Pull Request {#submitting-a-pull-request}
+## Submitting a Pull Request
 
 ### Create a Feature Branch
 
@@ -445,15 +436,13 @@ Never work directly on `main`.
 
 In RStudio Terminal or Git Bash:
 
-```         
-git checkout -b feature/your-feature-name
-```
+    git checkout -b feature/your-feature-name
 
 Or use RStudio:
 
 1.  Click the Git tab (top-right panel)
 
-2.  Click "New Branch"
+2.  Click “New Branch”
 
 3.  Name it descriptively (e.g., `add-modis-data`, `fix-gpw-function`)
 
@@ -461,58 +450,52 @@ Or use RStudio:
 
 Commit early and often with clear messages:
 
-```         
-git add R/data_newsource.R
-git commit -m "Add read function for Global Power Plant Database"
-```
+    git add R/data_newsource.R
+    git commit -m "Add read function for Global Power Plant Database"
 
 ### Stay Updated
 
 Before submitting, merge any changes from the main repository:
 
-```         
-# Add the main repo as upstream (only first time)
-git remote add upstream https://github.com/prio-data/priogrid.git
+    # Add the main repo as upstream (only first time)
+    git remote add upstream https://github.com/prio-data/priogrid.git
 
-# Fetch updates
-git fetch upstream
+    # Fetch updates
+    git fetch upstream
 
-# Merge into your branch
-git merge upstream/main
-```
+    # Merge into your branch
+    git merge upstream/main
 
 Or in RStudio:
 
-1.  Click the "Pull" button with "upstream" selected.
+1.  Click the “Pull” button with “upstream” selected.
 
 ### Push to Your Fork
 
-```         
-git push origin feature/your-feature-name
-```
+    git push origin feature/your-feature-name
 
-Or RStudio: Click the "Push" button.
+Or RStudio: Click the “Push” button.
 
 ### Create Pull Request on GitHub
 
 1.  Go to your fork on GitHub
 
-2.  Click "Compare & pull request"
+2.  Click “Compare & pull request”
 
 3.  Select the base repository: `prio-data/priogrid` and base branch:
     `main`
 
 4.  Write a clear description:
 
-    -   What changes you made
+    - What changes you made
 
-    -   Why you made them
+    - Why you made them
 
-    -   Any issues they address (use "Fixes #123" to auto-close issues)
+    - Any issues they address (use “Fixes \#123” to auto-close issues)
 
 5.  Submit the pull request
 
-### FAQ {#faq}
+### FAQ
 
 #### Q: Can I use PRIO-GRID at different spatial/temporal resolutions?
 
@@ -535,7 +518,7 @@ in our metadata while providing dynamic access methods.
 
 #### Q: What if my data has complex licensing requirements?
 
-**A:** Contact us to discuss specific licensing situations. We'll work
+**A:** Contact us to discuss specific licensing situations. We’ll work
 with you to find an appropriate way to include your data while
 respecting license terms.
 
@@ -547,15 +530,15 @@ existing documentation and examples.
 
 **Resources:**
 
--   [Happy Git with R](https://happygitwithr.com): Git and GitHub guide
-    for R users
+- [Happy Git with R](https://happygitwithr.com): Git and GitHub guide
+  for R users
 
--   [R Packages book](https://r-pkgs.org): Comprehensive guide to R
-    package development
+- [R Packages book](https://r-pkgs.org): Comprehensive guide to R
+  package development
 
--   [Choose a License](https://choosealicense.com): License comparison
-    tool
+- [Choose a License](https://choosealicense.com): License comparison
+  tool
 
--   [Creative
-    Commons](https://creativecomms.org/share-your-work/cclicenses/): CC
-    license details\
+- [Creative
+  Commons](https://creativecomms.org/share-your-work/cclicenses/): CC
+  license details  
