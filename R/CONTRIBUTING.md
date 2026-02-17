@@ -27,6 +27,7 @@ framework.
 4.  [Contribution Workflow Overview](#contribution-workflow)
 5.  [Ways to Contribute](#ways-to-contribute)
 6.  [Adding Data Sources](#adding-data-sources)
+<<<<<<< HEAD
 7.  [Code contribution guidelines](#code-contributions-guidelines)
 8.  [Coding Standards](#coding-standards)
 9.  [Testing Your Changes](#testing-your-changes)
@@ -35,6 +36,17 @@ framework.
 12. [Resources](#resources)
 
 ## Quick overview of the contributing process
+=======
+7.  [Creating New Variables](#creating-new-variables)
+8.  [Coding Standards](#coding-standards)
+9.  [Testing Your Changes](#testing-your-changes)
+10. [Documentation and Citations](#documentation-and-citations)
+11. [Submitting a Pull Request](#submitting-a-pull-request)
+12. [FAQ](#faq)
+13. [Resources](#resources)
+
+### Quick overview of the contributing process
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 1.  **Fork** the [PRIO-GRID
     repository](https://github.com/prio-data/priogrid)
@@ -43,7 +55,11 @@ framework.
 4.  **Make** your changes following our guidelines
 5.  **Submit** a pull request
 
+<<<<<<< HEAD
 ## What is PRIO-GRID? {#what-is-prio-grid}
+=======
+### What is PRIO-GRID? {#what-is-prio-grid}
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 PRIO-GRID is an R package that provides:
 
@@ -78,7 +94,11 @@ PRIO-GRID is an R package that provides:
 
     -   Create new functions for variables or data sources
 
+<<<<<<< HEAD
 ## Prerequisites: Git, GitHub, and R Setup {#prerequisites}
+=======
+## Prerequisites: Git, GitHub, and R Setup
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 Before you can contribute, you need to set up Git and GitHub integration
 with RStudio.
@@ -149,7 +169,11 @@ setup. You will need working installations of the packages `terra`,
 
 ## Development setup {#development-setup}
 
+<<<<<<< HEAD
 ### Prerequisites
+=======
+### Prerequisites {#prerequisites}
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 -   R (version 4.0 or higher is recommended)
 
@@ -217,7 +241,11 @@ devtools::load_all()        # Load the package in development mode
 ?priogrid         # Check basic documentation
 ```
 
+<<<<<<< HEAD
 ## Contribution Workflow Overview {#contribution-workflow}
+=======
+### Contribution Workflow Overview
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 The standard contribution process:
 
@@ -228,7 +256,11 @@ The standard contribution process:
 -   Push your branch to your fork on GitHub
 -   Submit a Pull Request from your fork to the main repository
 
+<<<<<<< HEAD
 ## Ways to contribute {#ways-to-contribute}
+=======
+### Ways to contribute {#ways-to-contribute}
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 #### Suggest new data sources or variables
 
@@ -298,7 +330,11 @@ to current information.
 | Copyleft (CC-BY-SA 4.0, GPL 3.0) | 🟨 Metadata only | Functions to access data, but no direct inclusion |
 | All rights reserved | 🟨 Functions only | Download and read functions only, no redistribution |
 
+<<<<<<< HEAD
 ## Code contribution guidelines {#code-contributions-guidelines}
+=======
+### Code contribution guidelines
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 Our coding standards ensure that contributions work well together and
 remain maintainable over time.
@@ -350,7 +386,11 @@ gen_variablename <- function() {
 }
 ```
 
+<<<<<<< HEAD
 ## Coding standards {#coding-standards}
+=======
+### Coding standards {#coding-standards}
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 -   Namespace everything: Use `package::function()` format (except for
     priogrid functions)
@@ -384,7 +424,11 @@ When adding `gen_` functions:
 
 -   Include both data source citations and usage references
 
+<<<<<<< HEAD
 ## Testing your changes {#testing-your-changes}
+=======
+#### Testing your changes {#testing-your-changes}
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 ``` r
 # Restart your R session 
@@ -421,7 +465,11 @@ We use these key packages:
 *We try to minimize new dependencies. Discuss additions in your pull
 request.*
 
+<<<<<<< HEAD
 ## Submitting a Pull Request {#submitting-a-pull-request}
+=======
+## Submitting a Pull Request
+>>>>>>> 4eeb2e30190535198bcd544702a3ed9035fb7d5b
 
 ### Create a Feature Branch
 
