@@ -35,6 +35,15 @@ framework.
 12. [Resources](#resources)
 
 ## Quick overview of the contributing process
+7.  [Creating New Variables](#creating-new-variables)
+8.  [Coding Standards](#coding-standards)
+9.  [Testing Your Changes](#testing-your-changes)
+10. [Documentation and Citations](#documentation-and-citations)
+11. [Submitting a Pull Request](#submitting-a-pull-request)
+12. [FAQ](#faq)
+13. [Resources](#resources)
+
+### Quick overview of the contributing process
 
 1.  **Fork** the [PRIO-GRID
     repository](https://github.com/prio-data/priogrid)
@@ -42,6 +51,7 @@ framework.
 3.  **Set up** your development environment (see Development Setup)
 4.  **Make** your changes following our guidelines
 5.  **Submit** a pull request
+
 
 ## What is PRIO-GRID? {#what-is-prio-grid}
 
@@ -77,6 +87,7 @@ PRIO-GRID is an R package that provides:
     -   Modify existing functions
 
     -   Create new functions for variables or data sources
+
 
 ## Prerequisites: Git, GitHub, and R Setup {#prerequisites}
 
@@ -149,7 +160,8 @@ setup. You will need working installations of the packages `terra`,
 
 ## Development setup {#development-setup}
 
-### Prerequisites
+### Prerequisites {#prerequisites}
+
 
 -   R (version 4.0 or higher is recommended)
 
@@ -298,6 +310,7 @@ to current information.
 | Copyleft (CC-BY-SA 4.0, GPL 3.0) | 🟨 Metadata only | Functions to access data, but no direct inclusion |
 | All rights reserved | 🟨 Functions only | Download and read functions only, no redistribution |
 
+
 ## Code contribution guidelines {#code-contributions-guidelines}
 
 Our coding standards ensure that contributions work well together and
@@ -350,6 +363,7 @@ gen_variablename <- function() {
 }
 ```
 
+
 ## Coding standards {#coding-standards}
 
 -   Namespace everything: Use `package::function()` format (except for
@@ -383,6 +397,7 @@ When adding `gen_` functions:
     `#' @references \insertRef{bibkey}{priogrid}`
 
 -   Include both data source citations and usage references
+
 
 ## Testing your changes {#testing-your-changes}
 
@@ -420,6 +435,7 @@ We use these key packages:
 
 *We try to minimize new dependencies. Discuss additions in your pull
 request.*
+
 
 ## Submitting a Pull Request {#submitting-a-pull-request}
 
