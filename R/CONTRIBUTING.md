@@ -6,18 +6,18 @@ PRIO-GRID is a unified spatial data structure that provides cell-specific inform
 
 ## Table of Contents
 
-1.  [What is PRIO-GRID?](#what-is-prio-grid)
-2.  [Prerequisites: Git, GitHub, and R Setup](#prerequisites)
-3.  [Development Environment Setup](#development-setup)
-4.  [Contribution Workflow Overview](#contribution-workflow)
-5.  [Ways to Contribute](#ways-to-contribute)
-6.  [Adding Data Sources](#adding-data-sources)
-7.  [Code contribution guidelines](#code-contributions-guidelines)
-8.  [Coding Standards](#coding-standards)
-9.  [Testing Your Changes](#testing-your-changes)
-10. [Submitting a Pull Request](#submitting-a-pull-request)
-11. [FAQ](#faq)
-12. [Resources](#resources)
+1.  [What is PRIO-GRID?]
+2.  [Prerequisites: Git, GitHub, and R Setup]
+3.  [Development setup]
+4.  [Contribution Workflow Overview]
+5.  [Ways to Contribute]
+6.  [Adding Data Sources]
+7.  [Code contribution guidelines]
+8.  [Coding Standards]
+9.  [Testing Your Changes]
+10. [Submitting a Pull Request]
+11. [FAQ]
+12. [Resources:]
 
 ## Quick overview of the contributing process
 
@@ -466,7 +466,7 @@ Or RStudio: Click the “Push” button.
 
 **Need help?** Open an issue on our [GitHub repository](https://github.com/prio-data/priogrid/issues) or review our existing documentation and examples.
 
-**Resources:**
+## **Resources:**
 
 -   [Happy Git with R](https://happygitwithr.com): Git and GitHub guide for R users
 
