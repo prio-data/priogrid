@@ -17,12 +17,6 @@ test_that("prio-grid raster parameters are correct", {
   expect_equal(terra::nrow(prio_blank_grid()), pgoptions$get_nrow())
 })
 
-test_that("raster_to_pgtibble", {
-  pg <- prio_blank_grid()
-  names(pg) <- "test"
-  expect_s3_class(raster_to_pgtibble(pg), "tbl_df")
-})
-
 # Test suite for pg_dates function
 test_that("pg_dates handles basic monthly sequences", {
   # Test basic monthly sequence

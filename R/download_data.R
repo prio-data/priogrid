@@ -126,11 +126,11 @@ check_pgsourcefiles <- function(){
 #' @examples
 #' get_pgfile(source_name = "ETH ICR cShapes", source_version = "2.0", id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 get_pgfile <- function(source_name, source_version, id){
-  f <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
+  file_info <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
                                       source_version == !!rlang::enquo(source_version),
-                                      id == !!rlang::enquo(id)) |> dplyr::pull(filename)
+                                      id == !!rlang::enquo(id))
   destfolder <- pgoptions$get_rawfolder()
-  if(length(f) == 0){
+  if(length(file_info$filename) == 0){
     return(message("No files in metadata with that name and version."))
   }
 
@@ -138,11 +138,17 @@ get_pgfile <- function(source_name, source_version, id){
     stop(paste(destfolder, "does not exist. Please pgoptions$set_rawfolder()."))
   }
 
-  full_file_path <- file.path(destfolder, f)
+  full_file_path <- file.path(destfolder, file_info$filename)
+
+  file_found <- file.exists(full_file_path)
+  if(!all(file_found) & pgoptions$get_automatic_download()){
+    missing_files <- full_file_path[!file.exists(full_file_path)]
+    download_pg_rawdata(file_info = file_info)
+  }
 
   file_found <- file.exists(full_file_path)
   if(!all(file_found)){
-    stop(paste("Some files were not found in", destfolder, ":\n", f[!file_found], "\n"))
+    stop(paste("Some files were not found in", destfolder, ":\n", file_info$filename[!file_found], "\n See ?download_pg_rawfiles"))
   }
 
   return(full_file_path)
@@ -234,30 +240,5 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size 
     if(nrow(unfinished_files) == 0){
       return()
     }
-  }
-}
-
-#' Prints data.frame with unfinished downloads
-#'
-#' [download_pg_rawdata()] stores unfinished downloads if it is interrupted by
-#' the user or the server. Use this function to see which files that failed
-#' to completely download. This information is also used internally by [download_pg_rawdata()]
-#' to resume file downloads.
-#'
-#' @return data.frame
-#' @export
-#'
-#' @examples
-#' unfinished_downloads()
-unfinished_downloads <- function(){
-  f <- file.path(pgoptions$get_rawfolder(), "tmp", "unfinished_downloads.rds")
-  if(file.exists(f)){
-    did_not_finish <- readRDS(f)
-    file_info <- pg_rawfiles()
-
-    file_info |>
-      dplyr::filter(file.path(pgoptions$get_rawfolder(), filename) %in% did_not_finish)
-  } else{
-    message("No unfinished downloads found.")
   }
 }

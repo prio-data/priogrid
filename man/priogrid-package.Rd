@@ -4,9 +4,9 @@
 \name{priogrid-package}
 \alias{priogrid}
 \alias{priogrid-package}
-\title{priogrid: PRIO-GRID Replication Code}
+\title{priogrid: PRIOGRID}
 \description{
-Codebase for building PRIO-GRID from a diverse set of raw data.
+An R-package for collecting and standardizing open spatial data.
 }
 \seealso{
 Useful links:

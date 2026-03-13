@@ -7,12 +7,59 @@
 read_geoepr()
 }
 \value{
-an object of class sf
+A \code{sf} object
 }
 \description{
-Formats gwsdate and gwedate as date objects, and adds a utility column date_interval
+Downloads and processes GeoEPR (Geo-referencing Ethnic Power Relations) data,
+which provides spatial information on politically relevant ethnic groups and
+their settlement areas worldwide. The function formats temporal variables and
+adds utility columns for temporal analysis compatible with PRIO-GRID.
+}
+\details{
+GeoEPR combines the Ethnic Power Relations (EPR) dataset with geographic
+information to map politically relevant ethnic groups' settlement patterns.
+This function:
+\itemize{
+\item Downloads the GeoEPR dataset from the ETH ICR data repository
+\item Converts temporal variables (from, to) to proper Date objects (gwsdate, gwedate)
+\item Adds a date_interval utility column for temporal operations
+\item Filters out geometries with empty spatial information
+\item Returns data in sf format for spatial analysis
+}
+}
+\examples{
+\dontrun{
+# Read GeoEPR data
+geoepr_data <- read_geoepr()
+
+print(geoepr_data)
+
+# Check available columns
+names(geoepr_data)
+
+# View temporal coverage
+summary(geoepr_data$gwsdate)
+summary(geoepr_data$gwedate)
+
+# Filter to specific time period
+modern_groups <- geoepr_data[geoepr_data$gwsdate >= as.Date("2000-01-01"), ]
+
+# Examine unique ethnic groups
+unique_groups <- unique(geoepr_data$group)
+head(unique_groups, 10)
+
+# Filter to specific country (example: using country code)
+# country_groups <- geoepr_data[geoepr_data$gwid == 2, ]  # Example for USA
+
+# Plot ethnic group settlement areas
+plot(sf::st_geometry(geoepr_data), main = "Ethnic Group Settlement Areas")
+}
 }
 \references{
 \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
 \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
+}
+\seealso{
+\code{\link{pg_dates}} for PRIO-GRID temporal coverage,
+\code{\link[sf]{st_sf}} for sf object details
 }

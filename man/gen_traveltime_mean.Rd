@@ -2,19 +2,34 @@
 % Please edit documentation in R/data_traveltime.R
 \name{gen_traveltime_mean}
 \alias{gen_traveltime_mean}
-\title{Generate the average (mean) travel time to nearest major city}
+\title{Generate the mean travel time to nearest major city}
 \usage{
 gen_traveltime_mean()
 }
 \value{
-SpatRast
+A single-layer \code{SpatRaster} object
 }
 \description{
-Generate the average (mean) travel time to nearest major city
+Aggregates the high-resolution travel time raster to PRIO-GRID cells and
+computes the \strong{mean} travel time within each cell. This is useful for
+identifying the average travel access to major cities within a PRIO-GRID cell.
+}
+\details{
+This function is a convenience wrapper around \code{\link{calc_traveltime}}
+using \code{aggregation_function = "mean"}. It reads the global travel time
+raster and summarizes each PRIO-GRID cell to the mean travel time value.
 }
 \examples{
-# r <- gen_traveltime_mean()
+\dontrun{
+# Generate mean travel time raster
+r <- gen_traveltime_mean()
+terra::plot(r, main = "Mean Travel Time to Nearest Major City")
 
+# Extract values for a specific region (e.g., West Africa)
+africa_extent <- terra::ext(-20, 20, 0, 20)
+r_africa <- terra::crop(r, africa_extent)
+terra::plot(r_africa, main = "Mean Travel Time in West Africa")
+}
 
 }
 \references{

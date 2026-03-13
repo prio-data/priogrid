@@ -36,8 +36,17 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
   if(ncol%%1 != 0 & ncol > 0) stop("ncol must be positive integer")
   if(nrow%%1 != 0 & nrow > 0) stop("nrow must be positive integer")
 
-  pg <- rast(ext(extent), crs = crs_string, ncol = ncol, nrow = nrow)
-  values(pg) <- create_pg_indices(ncol, nrow)
+  pg_lonlat <- rast(ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
+  values(pg_lonlat) <- create_pg_indices(ncol, nrow)
+  pg_lonlat <- terra::project(pg_lonlat, crs_string)
+  nan_pattern <- values(pg_lonlat)
+
+  pg <- terra::deepcopy(pg_lonlat)
+  values(pg) <- create_pg_indices(ncol(pg), nrow(pg))
+  pg <- terra::ifel(is.nan(pg_lonlat), NaN, pg)
+
+
+
   names(pg) <- "pgid"
   return(pg)
 }
@@ -145,9 +154,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
   pg <- prio_blank_grid()
   df <- c(pg, rast) |> as.data.frame()
   df <- df[rowSums(!is.na(df)) > 1,] # remove rows with only missing elements.
-  names(df)
 
   if(static){
+    df <- data.table::setDT(df, key = "pgid")
     return(df)
   } else{
     # Assumes variable names in raster are dates.
@@ -156,6 +165,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
                               names_to = "measurement_date",
                               values_to = varname,
                               names_transform = as.Date)
+    df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
     return(df)
   }
 }
@@ -285,29 +295,6 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", tiled = FA
 
   unlink(temporary_directory, recursive = TRUE)
   return(r)
-}
-
-#' Convert a pgraster to tabular format
-#'
-#' @param r An input raster that must have the same projection, resolution, and extent as PRIO-GRID
-#' @return tibble
-#' @examples
-#' pg <- prio_blank_grid()
-#' names(pg) <- "test"
-#' raster_to_pgtibble(pg)
-#' @export
-raster_to_pgtibble <- function(r){
-  require(terra)
-  require(assertthat)
-  require(dplyr)
-
-  pg <- prio_blank_grid()
-  assert_that(all(res(r) == res(pg)))
-  assert_that(ext(r) == ext(pg))
-  assert_that(crs(r) == crs(pg))
-
-  df <- as.data.frame(c(pg, r)) |> as_tibble()
-  return(df)
 }
 
 #' Add source to CSV file

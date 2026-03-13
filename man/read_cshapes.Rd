@@ -7,11 +7,55 @@
 read_cshapes()
 }
 \value{
-an object of class sf
+A \code{sf} object containing historical country boundaries with:
+\itemize{
+\item Geometry: Polygon/multipolygon country boundaries
+\item gwsdate, gwedate: Properly formatted Date objects for country periods
+\item date_interval: Utility column for temporal analysis
+\item Coordinate reference system: WGS84 (EPSG:4326)
+}
 }
 \description{
-It correctly formats gwsdate and gwedate as date objects, and adds a utility column date_interval.
+Downloads and processes CShapes 2.0 historical country boundaries data.
+The function formats date columns and adds utility columns for temporal
+analysis compatible with PRIO-GRID.
+}
+\details{
+CShapes 2.0 provides historical country boundary data from 1886 onwards
+at high spatial resolution. This function:
+\itemize{
+\item Downloads the CShapes 2.0 dataset if not already cached
+\item Converts gwsdate and gwedate columns to proper Date objects
+\item Adds a date_interval utility column for temporal operations
+\item Returns data in sf format for spatial operations
+}
+}
+\examples{
+\dontrun{
+# Read CShapes 2.0 data
+cshapes_data <- read_cshapes()
+
+# Examine the structure
+print(cshapes_data)
+
+# Check date formatting
+head(cshapes_data$gwsdate)
+head(cshapes_data$gwedate)
+
+# View available columns
+names(cshapes_data)
+
+# Filter to specific time period
+modern_boundaries <- cshapes_data[cshapes_data$gwsdate >= as.Date("2000-01-01"), ]
+
+# Plot boundaries for a specific period
+plot(sf::st_geometry(modern_boundaries), main = "Country Boundaries (2000+)")
+}
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
+}
+\seealso{
+\code{\link{pg_dates}} for PRIO-GRID temporal coverage,
+\code{\link[sf]{st_sf}} for sf object details
 }

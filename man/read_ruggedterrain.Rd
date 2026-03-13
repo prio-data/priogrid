@@ -7,13 +7,12 @@
 read_ruggedterrain()
 }
 \value{
-An sf object containing the GMTED2010 spatial metadata with elevation
-information including minimum, maximum, and mean elevation values
+An \code{sf} object
 }
 \description{
-Unzips and reads the GMTED2010 spatial metadata as an sf object.
-This function locates the local GMTED2010 dataset file, extracts it,
-and reads the spatial metadata shapefile for use in elevation calculations.
+Reads the GMTED2010 spatial metadata for terrain elevation as an \code{sf} object.
+This metadata includes polygon geometries for GMTED2010 tiles and summary
+elevation statistics such as minimum, maximum, and mean elevation values.
 }
 \details{
 The function performs the following steps:

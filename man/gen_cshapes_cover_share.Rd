@@ -7,16 +7,26 @@
 gen_cshapes_cover_share(cshp = read_cshapes())
 }
 \arguments{
-\item{cshp}{The CShapes dataset, for instance as given by \code{\link[=read_cshapes]{read_cshapes()}}}
+\item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.
+Defaults to \code{\link{read_cshapes}()} if not provided.}
 }
 \value{
-SpatRast
+A \code{SpatRaster} object
 }
 \description{
-The variable can be generated with up to daily temporal resolution.
+Creates a multi-layer raster containing state system coverage proportions
+for all PRIO-GRID temporal slices. The function generates time series data
+showing how grid cell coverage by international state boundaries changes
+over time using CShapes 2.0 boundary data.
 }
 \examples{
-# cshapes_cover_share <- gen_cshapes_cover_share()
+\dontrun{
+# Generate full temporal coverage data
+temporal_coverage <- gen_cshapes_cover_share()
+
+# Examine the structure
+print(temporal_coverage)
+}
 }
 \references{
 \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
