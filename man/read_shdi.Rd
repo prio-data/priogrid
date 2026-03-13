@@ -42,7 +42,7 @@ shdi <- read_shdi()
 \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 }
 \seealso{
-\code{\link{read_shdi}},
+\code{\link{read_shdi_csv}},
 \code{\link{read_shdi_shapefile}},
 \code{\link{read_geoboundaries}},
 \code{\link{prio_blank_grid}}

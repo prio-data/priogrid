@@ -149,7 +149,7 @@ read_shdi_shapefile <- function() {
 #' }
 #'
 #' @seealso
-#' \code{\link{read_shdi}},
+#' \code{\link{read_shdi_csv}},
 #' \code{\link{read_shdi_shapefile}},
 #' \code{\link{read_geoboundaries}},
 #' \code{\link{prio_blank_grid}}
@@ -291,9 +291,7 @@ read_shdi <- function(shdi_csv = read_shdi_csv(),
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
 shdi <- function(variable = "shdi") {
 
-  df <- read_shdi(shdi = read_shdi(),
-                  shp  = read_shdi_shapefile(),
-                  geoboundaries = read_geoboundaries())
+  df <- read_shdi()
 
   pg_years <- lubridate::year(pg_dates())
   shdi_years <- pg_years[pg_years %in% unique(df$year)]
@@ -328,8 +326,10 @@ shdi <- function(variable = "shdi") {
     }
   }
 
+  pgday <- pgoptions$get_start_date() |> lubridate::day()
+  pgmonth <- pgoptions$get_start_date() |> lubridate::month()
 
-  names(r) <- shdi_years
+  names(r) <- as.Date(paste(shdi_years, pgmonth, pgday, sep = "-"))
   return(r)
 
 }
