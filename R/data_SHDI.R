@@ -13,7 +13,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' shdi <- read_shdi()
+#' shdi_csv <- read_shdi_csv()
 #' }
 #'
 #' @seealso
@@ -22,7 +22,7 @@
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-read_shdi <- function() {
+read_shdi_csv <- function() {
   f <- get_pgfile(source_name = "GlobalDataLab Subnational Human Development (SHDI)",
                   source_version = "v.7.0",
                   id = "8aaf6b27-6372-43da-87a9-d4235095bb2c")
@@ -126,44 +126,26 @@ read_shdi_shapefile <- function() {
   return(shp)
 }
 
-#' Generate PRIO-GRID Compatible SHDI Variables
+#' Reads in SHDI data and fixes empty SHDI geometries
 #'
 #' This function processes GlobalDataLab Subnational Human Development Index (SHDI)
-#' data and produces a PRIO-GRID–aligned raster for a selected SHDI-related variable.
-#' It harmonizes national and subnational observations, resolves missing or empty
-#' geometries using geoBoundaries crosswalks, and rasterizes polygon-level values
-#' onto the PRIO-GRID using area-weighted aggregation.
+#' data, resolving missing or empty geometries using geoBoundaries crosswalks, and
+#' returns a sf data.frame
 #'
-#' The function may take some time to run due to spatial operations.
-#'
-#' @param shdi A data frame containing SHDI data as returned by
-#'   \code{\link{read_shdi}}.
+#' @param shdi_csv A data frame containing SHDI data as returned by
+#'   \code{\link{read_shdi_csv}}.
 #' @param shp An \code{sf} object containing SHDI geometries as returned by
 #'   \code{\link{read_shdi_shapefile}}.
 #' @param geoboundaries An \code{sf} object containing administrative boundary
 #'   geometries as returned by \code{\link{read_geoboundaries}}.
-#' @param variable A character string specifying which SHDI-related variable to
-#'   generate. Supported values include:
-#'   \itemize{
-#'     \item \code{"shdi"} – Subnational Human Development Index
-#'     \item \code{"msch"} – Mean years of schooling
-#'     \item \code{"esch"} – Expected years of schooling
-#'     \item \code{"lifexp"} – Life expectancy at birth
-#'     \item \code{"gnic"} – Gross national income per capita
-#'   }
-#'   Default is \code{"shdi"}.
+#' @param fix_empty A boolean whether or not to fix SHDI empty geometries. Defaults to TRUE.
 #'
-#' @return A \code{SpatRaster} object (from the \pkg{terra} package) aligned to the
-#'   PRIO-GRID, containing the selected SHDI variable aggregated to grid cells using
-#'   area-weighted means.
+#' @return An \code{sf} object containing SHDI data and geometries.
 #'
 #' @examples
 #' \dontrun{
 #' # Generate PRIO-GRID SHDI
-#' shdi_pg <- shdi()
-#'
-#' # Generate PRIO-GRID life expectancy
-#' lifexp_pg <- shdi(variable = "lifexp")
+#' shdi <- read_shdi()
 #' }
 #'
 #' @seealso
@@ -175,30 +157,23 @@ read_shdi_shapefile <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-shdi <- function(shdi = read_shdi(),
+read_shdi <- function(shdi_csv = read_shdi_csv(),
                  shp  = read_shdi_shapefile(),
                  geoboundaries = read_geoboundaries(),
-                 variable = "shdi") {
+                 fix_empty = TRUE) {
 
-  no_subnat <- dplyr::group_by(shdi, country)
-  no_subnat <- dplyr::summarize(no_subnat, n_unique = base::length(base::unique(gdlcode)))
-  no_subnat <- dplyr::filter(no_subnat, n_unique == 1)
 
-  shdi_national <- dplyr::filter(shdi, level == "National", country %in% no_subnat$country)
-  shdi_national <- dplyr::select(shdi_national, year, gdlcode, !!variable)
+  shdi <- dplyr::left_join(shdi_csv, shp |> dplyr::select(-continent, -iso_code), by = "gdlcode") |>
+    sf::st_as_sf(crs = sf::st_crs(shp))
 
-  shdi_subnat <- dplyr::filter(shdi, level == "Subnat")
-  shdi_subnat <- dplyr::select(shdi_subnat, year, gdlcode, !!variable)
+  if(!fix_empty) return(shdi)
 
-  shdi_both <- dplyr::bind_rows(shdi_national, shdi_subnat)
-  shdi_both <- dplyr::left_join(shdi_both, shp, by = "gdlcode")
-  shdi_both <- sf::st_as_sf(shdi_both)
-  shdi_both$empty <- sf::st_is_empty(shdi_both)
+  shdi$empty <- sf::st_is_empty(shdi)
+  shdi_empty <- dplyr::filter(shdi, empty)
 
-  shdi_empty    <- dplyr::filter(shdi_both, empty)
-  shdi_nonempty <- dplyr::filter(shdi_both, !empty)
+  if (nrow(shdi_empty) == 0) return(dplyr::select(shdi, -empty))
 
-  if (nrow(shdi_empty) == 0) return(dplyr::select(shdi_both, -empty))
+  shdi <- shdi |> dplyr::filter(!empty) |> dplyr::select(-empty)
 
   crosswalk <- tibble::tibble(
     gdlcode = c(
@@ -241,10 +216,10 @@ shdi <- function(shdi = read_shdi(),
     )
   )
 
-  needed <- base::sort(base::unique(shdi_empty$gdlcode))
+  needed <- sort(unique(shdi_empty$gdlcode))
   xwalk_needed <- dplyr::filter(crosswalk, gdlcode %in% needed)
 
-  repl_list <- base::lapply(seq_len(nrow(xwalk_needed)), function(i) {
+  repl_list <- lapply(seq_len(nrow(xwalk_needed)), function(i) {
     row <- xwalk_needed[i, ]
     gb_sub <- dplyr::filter(geoboundaries,
                             .data$shapeGroup == row$iso,
@@ -257,46 +232,105 @@ shdi <- function(shdi = read_shdi(),
   })
 
   replacements <- dplyr::bind_rows(repl_list)
-  replacements <- sf::st_cast(replacements, "MULTIPOLYGON")
-  replacements <- sf::st_make_valid(replacements)
 
   shdi_missing_filled <- dplyr::inner_join(
     sf::st_drop_geometry(shdi_empty),
     replacements,
     by = "gdlcode"
   )
-  shdi_missing_filled <- sf::st_as_sf(shdi_missing_filled)
+  shdi_missing_filled <- sf::st_as_sf(shdi_missing_filled, crs = sf::st_crs(geoboundaries))
 
-  out <- dplyr::bind_rows(shdi_nonempty, shdi_missing_filled)
-  out <- dplyr::arrange(out, gdlcode, year)
-  out <- dplyr::select(out, -empty)
+  shdi <- dplyr::bind_rows(shdi, shdi_missing_filled) |>
+    dplyr::arrange(gdlcode, year)
 
+  return(shdi)
+}
 
-  pg <- prio_blank_grid()
+#' Generate PRIO-GRID Compatible SHDI Variables
+#'
+#' This function processes GlobalDataLab Subnational Human Development Index (SHDI)
+#' data and produces a PRIO-GRID–aligned raster for a selected SHDI-related variable.
+#' It harmonizes national and subnational observations, resolves missing or empty
+#' geometries using geoBoundaries crosswalks, and rasterizes polygon-level values
+#' onto the PRIO-GRID using area-weighted aggregation.
+#'
+#' The function may take some time to run due to spatial operations.
+#'
+#' @param variable A character string specifying which SHDI-related variable to
+#'   generate. Supported values include:
+#'   \itemize{
+#'     \item \code{"shdi"} – Subnational Human Development Index
+#'     \item \code{"msch"} – Mean years of schooling
+#'     \item \code{"esch"} – Expected years of schooling
+#'     \item \code{"lifexp"} – Life expectancy at birth
+#'     \item \code{"gnic"} – Gross national income per capita
+#'   }
+#'   Default is \code{"shdi"}.
+#'
+#' @return A \code{SpatRaster} object (from the \pkg{terra} package) aligned to the
+#'   PRIO-GRID, containing the selected SHDI variable aggregated to grid cells using
+#'   area-weighted means.
+#'
+#' @examples
+#' \dontrun{
+#' # Generate PRIO-GRID SHDI
+#' shdi_pg <- shdi()
+#'
+#' # Generate PRIO-GRID life expectancy
+#' lifexp_pg <- shdi(variable = "lifexp")
+#' }
+#'
+#' @seealso
+#' \code{\link{read_shdi}},
+#' \code{\link{read_shdi_shapefile}},
+#' \code{\link{read_geoboundaries}},
+#' \code{\link{prio_blank_grid}}
+#'
+#' @export
+#' @references
+#' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
+shdi <- function(variable = "shdi") {
 
-  coversh <- exactextractr::exact_extract(pg, out, include_cols = variable)
+  df <- read_shdi(shdi = read_shdi(),
+                  shp  = read_shdi_shapefile(),
+                  geoboundaries = read_geoboundaries())
 
-  cmat <- dplyr::bind_rows(coversh)
+  pg_years <- lubridate::year(pg_dates())
+  shdi_years <- pg_years[pg_years %in% unique(df$year)]
 
-  cmat <- cmat |>
-    dplyr::group_by(value) |>
-    dplyr::summarise("{variable}" := {vals <- .data[[variable]]
-        if (all(is.na(vals))) {
-          NA_real_
-        } else {
-          stats::weighted.mean(vals, coverage_fraction, na.rm = TRUE)
-        }
+  for(t in 1:length(shdi_years)){
+    out <- df |> dplyr::filter(year == shdi_years[t])
+    pg <- prio_blank_grid()
+
+    coversh <- exactextractr::exact_extract(pg, out, include_cols = variable)
+
+    cmat <- dplyr::bind_rows(coversh)
+
+    cmat <- cmat |>
+      dplyr::group_by(value) |>
+      dplyr::summarise("{variable}" := {vals <- .data[[variable]]
+      if (all(is.na(vals))) {
+        NA_real_
+      } else {
+        stats::weighted.mean(vals, coverage_fraction, na.rm = TRUE)
+      }
       },
       .groups = "drop")
 
-  ra <- exactextractr::rasterize_polygons(out, pg)
-  ra <- terra::ifel(!is.na(ra), 1, NA)
-  pg <- pg*ra # Remove non-shdi
-  res <- terra::classify(pg, cmat)
+    ra <- exactextractr::rasterize_polygons(out, pg)
+    ra <- terra::ifel(!is.na(ra), 1, NA)
+    pg <- pg*ra # Remove non-shdi
 
-  names(res) <- variable
+    if(t == 1){
+      r <- terra::classify(pg, cmat)
+    } else{
+      terra::add(r) <- terra::classify(pg, cmat)
+    }
+  }
 
-  return(res)
+
+  names(r) <- shdi_years
+  return(r)
 
 }
 
