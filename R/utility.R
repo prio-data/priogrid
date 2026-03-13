@@ -248,7 +248,6 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #' @export
 robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
   pg <- prio_blank_grid()
-
   temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
 
