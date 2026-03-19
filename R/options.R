@@ -180,9 +180,9 @@ PGOptionsManager <- R6::R6Class(
 
       grid_cells <- private$options$nrow * private$options$ncol
 
-      n_layers <- length(pg_dates(as.Date(private$options$start_date),
-                                  as.Date(private$options$end_date),
-                                  private$options$temporal_resolution))
+      start_date <- as.Date(private$options$start_date)
+      end_date <- if (private$options$end_date == "today") Sys.Date() else as.Date(private$options$end_date)
+      n_layers <- length(pg_dates(start_date, end_date, private$options$temporal_resolution))
 
       estimated_gb <- (grid_cells * n_layers * 8) / 1e9
 
