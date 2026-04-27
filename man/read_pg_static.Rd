@@ -11,7 +11,8 @@ read_pg_static(
   temporal_hash = NULL,
   as_raster = FALSE,
   test = FALSE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  config = pg_current_config()
 )
 }
 \arguments{

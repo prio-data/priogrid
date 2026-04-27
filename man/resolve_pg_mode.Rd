@@ -9,7 +9,8 @@ resolve_pg_mode(
   type = NULL,
   spatial_hash = NULL,
   temporal_hash = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  config = pg_current_config()
 )
 }
 \arguments{

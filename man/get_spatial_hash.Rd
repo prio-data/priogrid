@@ -4,12 +4,12 @@
 \alias{get_spatial_hash}
 \title{Get spatial configuration hash}
 \usage{
-get_spatial_hash()
+get_spatial_hash(config = pg_current_config())
 }
 \value{
 Character string with 6-character hash
 }
 \description{
-Creates a 6-character MD5 hash of the current spatial options from pgoptions.
+Creates a 6-character MD5 hash of the current spatial options from config.
 }
 \keyword{internal}

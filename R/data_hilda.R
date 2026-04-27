@@ -94,7 +94,7 @@ read_hilda <- function() {
 #' Calculates the proportion of each PRIO-GRID cell covered by a specific land
 #' cover type using HILDA+ global land use/land cover data. The function performs
 #' spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
-#' cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
+#' cells (see [pg_config()]), accounting for partial coverage using area-weighted averaging.
 #'
 #' @param landcovertype Numeric. The land cover class identifier to extract from
 #'   HILDA+ data. Must be a valid land cover code according to the HILDA+

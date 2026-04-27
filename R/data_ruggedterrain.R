@@ -124,7 +124,7 @@ ruggedterrain_variable <- function(variable) {
     dplyr::mutate(!!variable := as.numeric(!!rlang::sym(variable))) |>
     dplyr::summarize(!!variable := fun_map[[myfun]](!!rlang::sym(variable), coverage_fraction))
 
-  values(pg)[!values(pg) %in% matching_table$value] <- NA
+  terra::values(pg)[!terra::values(pg) %in% matching_table$value] <- NA
   res <- terra::classify(pg, matching_table)
 
   return(res)

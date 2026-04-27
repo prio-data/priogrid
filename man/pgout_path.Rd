@@ -8,7 +8,8 @@ pgout_path(
   version = NULL,
   type = NULL,
   spatial_hash = NULL,
-  temporal_hash = NULL
+  temporal_hash = NULL,
+  config = pg_current_config()
 )
 }
 \arguments{
@@ -16,9 +17,9 @@ pgout_path(
 
 \item{type}{Character string specifying release type (e.g., "05deg_yearly"). Use for official releases.}
 
-\item{spatial_hash}{Character string with 6-character spatial hash. If NULL, computed from current pgoptions.}
+\item{spatial_hash}{Character string with 6-character spatial hash. If NULL, computed from current config.}
 
-\item{temporal_hash}{Character string with 6-character temporal hash. If NULL, computed from current pgoptions.}
+\item{temporal_hash}{Character string with 6-character temporal hash. If NULL, computed from current config.}
 }
 \value{
 Character string with file path
@@ -29,7 +30,7 @@ on whether you're working with custom data or official releases.
 }
 \examples{
 \dontrun{
-  # Custom data with current pgoptions
+  # Custom data with current config
   pgout_path()
 
   # Custom data with specific hashes

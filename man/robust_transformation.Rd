@@ -4,7 +4,13 @@
 \alias{robust_transformation}
 \title{Robustly transform any raster to PRIO-GRID format}
 \usage{
-robust_transformation(r, agg_fun, disagg_method = "near", ...)
+robust_transformation(
+  r,
+  agg_fun,
+  disagg_method = "near",
+  config = pg_current_config(),
+  ...
+)
 }
 \arguments{
 \item{r}{SpatRaster object to transform. Can have any projection, extent, or resolution.}
@@ -16,6 +22,8 @@ See \code{\link[terra]{aggregate}} for all options.}
 \item{disagg_method}{Character string specifying disaggregation method for
 low-resolution data. Options are "near" (nearest neighbor, default),
 "bilinear", or "cubic". See \code{\link[terra]{disagg}} for details.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 
 \item{...}{Additional arguments passed to \code{\link[terra]{aggregate}}.
 Useful for controlling aggregation behavior (e.g., na.rm = TRUE).}
@@ -65,21 +73,8 @@ For large datasets, consider:
 }
 }
 
-\section{Global Options}{
-
-This function uses global PRIO-GRID options set via PGOptionsManager:
-\itemize{
-\item \code{pgoptions$get_rawfolder()}: Location for temporary file storage
-\item \code{pgoptions$get_ncol()}, \code{pgoptions$get_nrow()}: Output grid dimensions
-\item \code{pgoptions$get_extent()}: Output spatial extent
-\item \code{pgoptions$get_crs()}: Output coordinate reference system
-}
-}
-
 \examples{
 \dontrun{
-# Downloads and transfomrs GHSL to PRIO-GRID resolution
-download_pg_rawdata(pg_rawfiles() |> dplyr::filter(id == "ae6a7612-4bef-452f-acd6-d2212cf9a7c5"))
 r <- read_ghsl_population_grid()
 res <- robust_transformation(r, agg_fun = "sum")
 }
@@ -87,6 +82,5 @@ res <- robust_transformation(r, agg_fun = "sum")
 }
 \seealso{
 \code{\link{prio_blank_grid}} for creating empty PRIO-GRID templates,
-\code{\link{PGOptionsManager}} for setting global options,
 \code{\link[terra]{aggregate}}, \code{\link[terra]{disagg}}, \code{\link[terra]{resample}}
 }

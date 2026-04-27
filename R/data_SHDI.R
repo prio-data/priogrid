@@ -326,8 +326,8 @@ shdi <- function(variable = "shdi") {
     }
   }
 
-  pgday <- pgoptions$get_start_date() |> lubridate::day()
-  pgmonth <- pgoptions$get_start_date() |> lubridate::month()
+  pgday <- pg_current_config()$start_date |> lubridate::day()
+  pgmonth <- pg_current_config()$start_date |> lubridate::month()
 
   names(r) <- as.Date(paste(shdi_years, pgmonth, pgday, sep = "-"))
   return(r)

@@ -1,5 +1,3 @@
-cshapes_cache <- cachem::cache_disk(dir = rappdirs::user_config_dir("R-priogrid", "prio"))
-
 #' Reads the CShapes 2.0 raw data
 #'
 #' Downloads and processes CShapes 2.0 historical country boundaries data.
@@ -380,7 +378,7 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
   for(i in 1:length(shared_borders)){
     if(nrow(shared_borders[[i]]) > 0){
       gwcode <- shared_borders[[i]]$gwcode |> unique()
-      gwrast <- ifel(gwcodes == gwcode, 1, NA)
+      gwrast <- terra::ifel(gwcodes == gwcode, 1, NA)
       tmp  <- terra::distance(gwcodes, shared_borders[[i]] |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
       bdist1[[as.character(gwcode)]] <- tmp * gwrast
     }
@@ -623,7 +621,7 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
   bdist3 <- list()
   for(i in 1:nrow(boundaries)){
     gwcode <- boundaries[i,]$gwcode
-    gwrast <- ifel(gwcodes == gwcode, 1, NA)
+    gwrast <- terra::ifel(gwcodes == gwcode, 1, NA)
 
     boundary_vect <- boundaries[i,] |> sf::st_combine() |> terra::vect()
 
@@ -633,7 +631,7 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 
     # Crop to country extent first - this is the key speedup
     country_rast <- terra::crop(gwcodes, buffered_ext)
-    country_rast <- ifel(country_rast == gwcode, 1, NA)
+    country_rast <- terra::ifel(country_rast == gwcode, 1, NA)
 
     # Now distance() only computes for cells in the cropped raster
     tmp <- terra::distance(country_rast, boundary_vect, rasterize = TRUE)

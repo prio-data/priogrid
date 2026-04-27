@@ -1,19 +1,18 @@
 test_that("resolve_pg_mode defaults to release mode", {
-
-  cfg <- resolve_pg_mode()
+  cfg <- resolve_pg_mode(config = pg_config())
   expect_equal(cfg$mode, "release")
   expect_equal(cfg$type, "05deg_yearly")
   expect_false(cfg$overwrite)
 })
 
 test_that("resolve_pg_mode with overwrite=TRUE defaults to custom mode", {
-  cfg <- resolve_pg_mode(overwrite = TRUE)
+  cfg <- resolve_pg_mode(overwrite = TRUE, config = pg_config())
   expect_equal(cfg$mode, "custom")
   expect_true(cfg$overwrite)
 })
 
 test_that("resolve_pg_mode warns and ignores overwrite for releases", {
-  cfg <- resolve_pg_mode(version = "3.0.0", overwrite = TRUE)
+  cfg <- resolve_pg_mode(version = "3.0.0", overwrite = TRUE, config = pg_config())
   expect_equal(cfg$mode, "release")
   expect_false(cfg$overwrite)
   expect_false(is.null(cfg$warning))
@@ -21,14 +20,14 @@ test_that("resolve_pg_mode warns and ignores overwrite for releases", {
 
 test_that("resolve_pg_mode errors on mixed params", {
   expect_error(
-    resolve_pg_mode(version = "3.0.0", spatial_hash = "abc123"),
+    resolve_pg_mode(version = "3.0.0", spatial_hash = "abc123", config = pg_config()),
     "Cannot mix"
   )
 })
 
 test_that("resolve_pg_mode errors on partial hash params", {
   expect_error(
-    resolve_pg_mode(spatial_hash = "abc123"),
+    resolve_pg_mode(spatial_hash = "abc123", config = pg_config()),
     "Both spatial_hash and temporal_hash"
   )
 })

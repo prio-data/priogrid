@@ -55,6 +55,9 @@ Source <- R6::R6Class("Source",
                           reference_keys = NA_character_,
                           bib_path = "inst/REFERENCES.bib") {
 
+      rlang::check_installed(c("checkmate", "uuid", "RCurl"),
+                             reason = "to register data sources (dev-only)")
+
       if(base::missing(source_name)) stop("`source_name´ is required")
       if(base::missing(source_version)) stop("`source_version´ is required")
       if(base::missing(license)) stop("`license´ is required")

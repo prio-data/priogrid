@@ -231,7 +231,6 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable){
 #'
 #' \insertRef{daviesOrganizedViolence198920242025}{priogrid}
 ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_variable = "best"){
-  require(data.table)
   distribute_fatalities <- function(ged_dt, value_var = "best") {
     if(!"event_id" %in% names(ged_dt)) {
       ged_dt[, event_id := .I]
@@ -428,17 +427,17 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
   gwcodes <- unique(cshp$gwcode)
 
   cover <- cshapes_cover(measurement_date, cshp = cshp)
-  values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
+  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
 
   result <- pg
-  result[values(result)] <- 0
+  result[terra::values(result)] <- 0
   result <- result*cover
   suppressMessages(sf::sf_use_s2(FALSE)) # Only use sf here to subset data.
   distances <- list()
   for(gwcode in gwcodes){
     tmp <- rgw
-    tmp[values(tmp) != gwcode] <- NA
-    tmp[!is.na(values(tmp))] <- 1
+    tmp[terra::values(tmp) != gwcode] <- NA
+    tmp[!is.na(terra::values(tmp))] <- 1
 
     suppressMessages(
       ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
@@ -451,9 +450,9 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
       result <- result + dist
     } else{
       # If no GED events in country, then set the distance to missing (to separate from being 0 m from events)
-      tmp[is.na(values(tmp))] <- 0
-      tmp[values(tmp) == 1] <- NA
-      tmp[values(tmp) == 0] <- 1
+      tmp[is.na(terra::values(tmp))] <- 0
+      tmp[terra::values(tmp) == 1] <- NA
+      tmp[terra::values(tmp) == 0] <- 1
       result <- result * tmp
     }
   }

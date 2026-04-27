@@ -24,9 +24,7 @@ LazyData: true
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 RdMacros: Rdpack
-LinkingTo: 
-    Rcpp
-Suggests: 
+Suggests:
     testthat (>= 3.0.0),
     assertthat,
     knitr,
@@ -34,20 +32,33 @@ Suggests:
     snowfall,
     Hmisc,
     SPEI,
-    ncdf4
+    ncdf4,
+    checkmate,
+    uuid,
+    RCurl,
+    terra,
+    sf,
+    exactextractr,
+    arrow
 Config/testthat/edition: 3
 Imports:
-    tidyverse,
+    dplyr,
+    tidyr,
+    stringr,
+    readr,
     lubridate,
-    sf,
-    terra,
-    memoise,
-    exactextractr,
     httr2,
     curl,
     R.utils,
     Rdpack,
-    data.table
+    data.table,
+    cachem,
+    rappdirs,
+    R6,
+    digest,
+    rlang,
+    RefManageR,
+    nanoparquet
 Depends: 
     R (>= 3.5)
 URL: http://prio-data.github.io/priogrid/

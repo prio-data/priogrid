@@ -250,7 +250,7 @@ ne_disputed_area_share <- function(type) {
     df <- disputed_areas |> dplyr::filter(TYPE == type)
   }
 
-  pgcrs <- sf::st_crs(pgoptions$get_crs())
+  pgcrs <- sf::st_crs(pg_current_config()$crs)
   if (sf::st_crs(df) != pgcrs) {
     df <- sf::st_transform(df, crs = pgcrs)
   }

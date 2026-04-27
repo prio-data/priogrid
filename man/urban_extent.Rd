@@ -33,7 +33,7 @@ for connected urban patches and improves computational efficiency.}
 \value{
 An \code{sf} polygon object representing the contiguous urban extent
 containing the input location. The polygon is returned in the coordinate
-reference system specified by \code{pgoptions$get_crs()}. If the input
+reference system specified by the current config CRS. If the input
 location is not classified as urban, the function may return an empty
 polygon or fail.
 }

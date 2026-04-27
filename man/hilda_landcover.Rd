@@ -38,7 +38,7 @@ by the specified land cover type. The raster contains:
 Calculates the proportion of each PRIO-GRID cell covered by a specific land
 cover type using HILDA+ global land use/land cover data. The function performs
 spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
-cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
+cells (see \code{\link[=pg_config]{pg_config()}}), accounting for partial coverage using area-weighted averaging.
 }
 \note{
 \itemize{

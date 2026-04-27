@@ -89,7 +89,7 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 #' @examples
 #' res <- check_pgsourcefiles()
 check_pgsourcefiles <- function(){
-  destfolder <- pgoptions$get_rawfolder()
+  destfolder <- pg_rawfolder()
   file_info <- pg_rawfiles()
 
   lacking_pgchecksum <- dplyr::anti_join(file_info, pgchecksum, by = c("source_name", "source_version", "id", "filename"))
@@ -129,19 +129,19 @@ get_pgfile <- function(source_name, source_version, id){
   file_info <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
                                       source_version == !!rlang::enquo(source_version),
                                       id == !!rlang::enquo(id))
-  destfolder <- pgoptions$get_rawfolder()
+  destfolder <- pg_rawfolder()
   if(length(file_info$filename) == 0){
     return(message("No files in metadata with that name and version."))
   }
 
   if(!dir.exists(destfolder)){
-    stop(paste(destfolder, "does not exist. Please pgoptions$set_rawfolder()."))
+    stop(paste(destfolder, "does not exist. Please use pg_set_rawfolder()."))
   }
 
   full_file_path <- file.path(destfolder, file_info$filename)
 
   file_found <- file.exists(full_file_path)
-  if(!all(file_found) & pgoptions$get_automatic_download()){
+  if(!all(file_found) & pg_current_config()$automatic_download){
     missing_files <- full_file_path[!file.exists(full_file_path)]
     download_pg_rawdata(file_info = file_info)
   }
@@ -156,7 +156,7 @@ get_pgfile <- function(source_name, source_version, id){
 
 #' Download the raw-data for PRIO-GRID
 #'
-#' Before running this, you need to set the folder using pgoptions$set_rawfolder("path/to/folder")
+#' Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")
 #'
 #' @param overwrite Whether or not to download and overwrite files already in local folder.
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
@@ -170,7 +170,7 @@ get_pgfile <- function(source_name, source_version, id){
 #' files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
 #' # download_pg_rawdata(overwrite = TRUE, file_info = files_to_download)
 download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size = 20, max_retry = 10){
-  destfolder <- pgoptions$get_rawfolder()
+  destfolder <- pg_rawfolder()
 
   if(!dir.exists(destfolder)){
     accept <- readline(paste("Destination folder", destfolder, "does not exist. Do you want to create? (Y)es: "))

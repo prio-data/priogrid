@@ -182,7 +182,7 @@ ghs_wup_degurba <- function(urban_definition){
   cl_mat[,2] <- ifelse(cl_mat[,1] %in% urban_definition, 1, 0)
   r <- read_ghs_wup_degurba()
 
-  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
   tmp1 <- tempfile(pattern = "urban_classification", fileext = ".tif", tmpdir = temporary_directory)
 
@@ -320,7 +320,7 @@ gen_ghs_wup_degurba_urban <- function(){
 #'
 #' @return An \code{sf} polygon object representing the contiguous urban extent
 #'   containing the input location. The polygon is returned in the coordinate
-#'   reference system specified by \code{pgoptions$get_crs()}. If the input
+#'   reference system specified by the current config CRS. If the input
 #'   location is not classified as urban, the function may return an empty
 #'   polygon or fail.
 #'
@@ -452,6 +452,6 @@ urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22
   urban_extent_raster <- terra::ifel(urban_patches == center_patch_id, 1, NA)
   urban_extent_raster <- terra::trim(urban_extent_raster)
   res <- terra::as.polygons(urban_extent_raster, dissolve = TRUE) |> sf::st_as_sf()
-  res <- sf::st_transform(res, pgoptions$get_crs())
+  res <- sf::st_transform(res, pg_current_config()$crs)
   res
 }

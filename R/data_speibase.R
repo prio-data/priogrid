@@ -17,22 +17,20 @@
 #' Code from Beguería S. (2017) SPEIbase: R code used in generating the SPEI global database, doi:10.5281/zenodo.834462.
 spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
                     version=NA, inMask=NA, block=18, tlapse=NA) {
-  require(SPEI)
-  require(snowfall)
-  require(ncdf4)
-  require(Hmisc)
+  rlang::check_installed(c("SPEI", "snowfall", "ncdf4", "Hmisc"),
+                         reason = "to compute SPEI from CRU data")
 
   # Read data
-  pre.nc <- nc_open(inPre) # nc_open does not work with file connections
+  pre.nc <- ncdf4::nc_open(inPre) # ncdf4::nc_open does not work with file connections
   if (!is.na(inEtp)) { # there is ETP input data, so compute the SPEI
-    etp.nc <- nc_open(inEtp)
+    etp.nc <- ncdf4::nc_open(inEtp)
     isSPEI <- TRUE
   } else {
     isSPEI <- FALSE
   }
 
   if (!is.na(inMask)) { # there is a mask
-    mask.nc <- nc_open(inMask)
+    mask.nc <- ncdf4::nc_open(inMask)
     isMask <- TRUE
   } else {
     isMask <- FALSE
@@ -40,10 +38,10 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
 
   # Create variable and output file
   if (!is.na(tlapse[1])) {
-    spi.dim.tme <- ncdim_def(pre.nc$dim$time$name, pre.nc$dim$time$units,
+    spi.dim.tme <- ncdf4::ncdim_def(pre.nc$dim$time$name, pre.nc$dim$time$units,
                              pre.nc$dim$time$vals[tlapse[1]:tlapse[2]], unlim=TRUE, calendar= "gregorian")
   } else {
-    spi.dim.tme <- ncdim_def(pre.nc$dim$time$name, pre.nc$dim$time$units,
+    spi.dim.tme <- ncdf4::ncdim_def(pre.nc$dim$time$name, pre.nc$dim$time$units,
                              pre.nc$dim$time$vals, unlim=TRUE, calendar= "gregorian")
   }
   if (isSPEI) {
@@ -55,7 +53,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
   }
 
   # Create SPEI/SPI variable
-  out.nc.var <- ncvar_def(
+  out.nc.var <- ncdf4::ncvar_def(
     name=nam,
     units='1', # units value 1 is used for dimensionless variables
     dim=list(pre.nc$dim$lon, pre.nc$dim$lat, spi.dim.tme),
@@ -66,7 +64,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
   )
 
   # Create the CRS variable
-  crs_def <- ncvar_def(
+  crs_def <- ncdf4::ncvar_def(
     name = "crs",
     units = "",
     dim = list(),
@@ -74,49 +72,49 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
     prec = "integer"
   )
 
-  out.nc <- nc_create(outFile, vars = list(out.nc.var, crs_def))
+  out.nc <- ncdf4::nc_create(outFile, vars = list(out.nc.var, crs_def))
 
   # Link the spei/spi variable to the crs variable
-  ncatt_put(out.nc, nam, "grid_mapping", "crs")
+  ncdf4::ncatt_put(out.nc, nam, "grid_mapping", "crs")
 
   # Add attributes to the CRS variable to specify the CRS parameters
   # crs_wkt definition is supplementary (optional) to the grid_mapping attributes and it is recommended to be a single line in Well-known-Text version 2
-  ncatt_put(out.nc, "crs", "grid_mapping_name", "latitude_longitude")
-  ncatt_put(out.nc, "crs", "semi_major_axis", 6378137.0)
-  ncatt_put(out.nc, "crs", "inverse_flattening", 298.257223563)
-  ncatt_put(out.nc, "crs", "crs_wkt", 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]')
+  ncdf4::ncatt_put(out.nc, "crs", "grid_mapping_name", "latitude_longitude")
+  ncdf4::ncatt_put(out.nc, "crs", "semi_major_axis", 6378137.0)
+  ncdf4::ncatt_put(out.nc, "crs", "inverse_flattening", 298.257223563)
+  ncdf4::ncatt_put(out.nc, "crs", "crs_wkt", 'GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]')
 
   # Add lon attributes
-  ncatt_put(out.nc,'lon','standard_name','longitude')
-  ncatt_put(out.nc,'lon','axis','X')
+  ncdf4::ncatt_put(out.nc,'lon','standard_name','longitude')
+  ncdf4::ncatt_put(out.nc,'lon','axis','X')
 
   # Add lat attributes
-  ncatt_put(out.nc,'lat','standard_name','latitude')
-  ncatt_put(out.nc,'lat','axis','Y')
+  ncdf4::ncatt_put(out.nc,'lat','standard_name','latitude')
+  ncdf4::ncatt_put(out.nc,'lat','axis','Y')
 
   # Add time attributes
-  ncatt_put(out.nc,'time','standard_name','time')
-  ncatt_put(out.nc,'time','axis','T')
+  ncdf4::ncatt_put(out.nc,'time','standard_name','time')
+  ncdf4::ncatt_put(out.nc,'time','axis','T')
 
   # Add Global attributes
-  ncatt_put(out.nc,0,'conventions','CF-1.11')
-  ncatt_put(out.nc,0,'title',title)
-  ncatt_put(out.nc,0,'version',version)
-  ncatt_put(out.nc,0,'id',outFile)
-  ncatt_put(out.nc,0,'summary',paste('Global dataset of the Standardized Precipitation-Evapotranspiration Index (SPEI) at the ', sca,'-month', ifelse(sca==1,'','s'), ' time scale. ', comment, sep=''))
-  ncatt_put(out.nc,0,'keywords','drought, climatology, SPEI, Standardized Precipitation-Evapotranspiration Index')
-  ncatt_put(out.nc,0,'institution','Consejo Superior de Investigaciones Científicas, CSIC')
-  ncatt_put(out.nc,0,'source','http://sac.csic.es/spei')
-  ncatt_put(out.nc,0,'creators','Santiago Beguería <santiago.begueria@csic.es> and Sergio Vicente-Serrano <svicen@ipe.csic.es>')
-  ncatt_put(out.nc,0,'software','Created in R using the SPEI package (https://cran.r-project.org/web/packages/SPEI/;https://github.com/sbegueria/SPEI)')
+  ncdf4::ncatt_put(out.nc,0,'conventions','CF-1.11')
+  ncdf4::ncatt_put(out.nc,0,'title',title)
+  ncdf4::ncatt_put(out.nc,0,'version',version)
+  ncdf4::ncatt_put(out.nc,0,'id',outFile)
+  ncdf4::ncatt_put(out.nc,0,'summary',paste('Global dataset of the Standardized Precipitation-Evapotranspiration Index (SPEI) at the ', sca,'-month', ifelse(sca==1,'','s'), ' time scale. ', comment, sep=''))
+  ncdf4::ncatt_put(out.nc,0,'keywords','drought, climatology, SPEI, Standardized Precipitation-Evapotranspiration Index')
+  ncdf4::ncatt_put(out.nc,0,'institution','Consejo Superior de Investigaciones Científicas, CSIC')
+  ncdf4::ncatt_put(out.nc,0,'source','http://sac.csic.es/spei')
+  ncdf4::ncatt_put(out.nc,0,'creators','Santiago Beguería <santiago.begueria@csic.es> and Sergio Vicente-Serrano <svicen@ipe.csic.es>')
+  ncdf4::ncatt_put(out.nc,0,'software','Created in R using the SPEI package (https://cran.r-project.org/web/packages/SPEI/;https://github.com/sbegueria/SPEI)')
   b <- match.call()
-  ncatt_put(out.nc,0,'call',
+  ncdf4::ncatt_put(out.nc,0,'call',
             paste(b[[1]],'(',names(b)[[2]],'=',b[[2]],', ',names(b)[[3]],'=',b[[3]],
                   ', ',names(b)[[4]],'=',b[[4]],')',sep=''))
-  ncatt_put(out.nc,0,'date',date())
-  ncatt_put(out.nc,0,'reference','Beguería S., Vicente-Serrano S., Reig F., Latorre B. (2014) Standardized precipitation evapotranspiration index (SPEI) revisited: Parameter fitting, evapotranspiration models, tools, datasets and drought monitoring. International Journal of Climatology 34, 3001-3023.')
-  ncatt_put(out.nc,0,'reference2','Vicente-Serrano S.M., Beguería S., López-Moreno J.I. (2010) A Multiscalar Drought Index Sensitive to Global Warming: The Standardized Precipitation Evapotranspiration Index. Journal of Climate 23, 1696–1718.')
-  ncatt_put(out.nc,0,'reference3','Beguería S., Vicente-Serrano S., Angulo-Martínez M. (2010) A multi-scalar global drought data set: the SPEIbase. Bulletin of the American Meteorological Society 91(10), 1351–1356.')
+  ncdf4::ncatt_put(out.nc,0,'date',date())
+  ncdf4::ncatt_put(out.nc,0,'reference','Beguería S., Vicente-Serrano S., Reig F., Latorre B. (2014) Standardized precipitation evapotranspiration index (SPEI) revisited: Parameter fitting, evapotranspiration models, tools, datasets and drought monitoring. International Journal of Climatology 34, 3001-3023.')
+  ncdf4::ncatt_put(out.nc,0,'reference2','Vicente-Serrano S.M., Beguería S., López-Moreno J.I. (2010) A Multiscalar Drought Index Sensitive to Global Warming: The Standardized Precipitation Evapotranspiration Index. Journal of Climate 23, 1696–1718.')
+  ncdf4::ncatt_put(out.nc,0,'reference3','Beguería S., Vicente-Serrano S., Angulo-Martínez M. (2010) A multi-scalar global drought data set: the SPEIbase. Bulletin of the American Meteorological Society 91(10), 1351–1356.')
 
   # Dimensions
   dimlon <- out.nc.var$dim[[1]]$len
@@ -135,14 +133,14 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
     count <- c(dimlon,n,dimtme)
     if (isSPEI) {
       # Read precipitation and ET data and calculate balance
-      x <- ncvar_get(etp.nc, varid=etp.nc$var[[1]]$name, start, count) * ndays
-      x <- ncvar_get(pre.nc, varid=pre.nc$var[[1]]$name, start, count) - x
+      x <- ncdf4::ncvar_get(etp.nc, varid=etp.nc$var[[1]]$name, start, count) * ndays
+      x <- ncdf4::ncvar_get(pre.nc, varid=pre.nc$var[[1]]$name, start, count) - x
     } else {
       # Read precipitation data
-      x <- ncvar_get(pre.nc, varid=pre.nc$var[[1]]$name, start, count)
+      x <- ncdf4::ncvar_get(pre.nc, varid=pre.nc$var[[1]]$name, start, count)
     }
     if (isMask) { # use a mask file
-      msk <- ncvar_get(mask.nc, 'mask', c(1,j), c(dimlon,n))
+      msk <- ncdf4::ncvar_get(mask.nc, 'mask', c(1,j), c(dimlon,n))
     }
     # Convert from matrix to list
     x.list <- vector('list', dimlon*n)
@@ -162,7 +160,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
 
     # Compute series of anomalies
     speii <- function(d,s) {SPEI::spei(d, s, na.rm=TRUE, verbose=FALSE)$fitted}
-    x.list <- sfLapply(x.list, speii, sca)
+    x.list <- snowfall::sfLapply(x.list, speii, sca)
     # Convert back to matrix
     for (i in 1:dimlon) {
       for (h in 1:n-1) {
@@ -173,12 +171,12 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
     }
 
     # Store into output netCDF file
-    ncvar_put(out.nc, nam, x, c(1,j,1), count)
-    nc_sync(out.nc)
+    ncdf4::ncvar_put(out.nc, nam, x, c(1,j,1), count)
+    ncdf4::nc_sync(out.nc)
   } # next j
 
   # close output netCDF file
-  nc_close(out.nc)
+  ncdf4::nc_close(out.nc)
 }
 
 
@@ -206,7 +204,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
 read_speibase <- function(interval = 6) {
 
   spei_interval <- paste0("spei", formatC(interval, width=2, format='d', flag='0'), ".nc")
-  out_path <- file.path(pgoptions$get_rawfolder(),
+  out_path <- file.path(pg_rawfolder(),
                         "Global SPEI database",
                         "2.11",
                         "14839384-623a-4cf7-9241-6166a8ac465b",
@@ -227,9 +225,9 @@ read_speibase <- function(interval = 6) {
     cru_pet <- tools::file_path_sans_ext(cru_pet_gz)
     cru_pre <- tools::file_path_sans_ext(cru_pre_gz)
 
-    require(snowfall)
-    sfInit(parallel=TRUE, cpus=parallel::detectCores()-2)
-    sfExport(list='spei', namespace='SPEI')
+    rlang::check_installed("snowfall", reason = "for parallel SPEI computation")
+    snowfall::sfInit(parallel=TRUE, cpus=parallel::detectCores()-2)
+    snowfall::sfExport(list='spei', namespace='SPEI')
 
     spei.nc(
       sca=interval,
@@ -245,7 +243,7 @@ read_speibase <- function(interval = 6) {
       tlapse=NA
     )
     gc()
-    sfStop()
+    snowfall::sfStop()
   }
 
   r <- terra::rast(out_path)

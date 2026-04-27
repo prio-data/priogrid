@@ -4,18 +4,10 @@
 \alias{pg_date_intervals}
 \title{Get a sequence of date intervals}
 \usage{
-pg_date_intervals(
-  start_date = pgoptions$get_start_date(),
-  end_date = pgoptions$get_end_date(),
-  temporal_resolution = pgoptions$get_temporal_resolution()
-)
+pg_date_intervals(config = pg_current_config())
 }
 \arguments{
-\item{from}{starting date}
-
-\item{to}{end date}
-
-\item{by}{increment of sequence. See details in \link[base:seq.Date]{base::seq.Date}.}
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 Date interval vector
