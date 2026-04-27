@@ -53,7 +53,11 @@ Source <- R6::R6Class("Source",
                           prio_mirror = NA_character_,
                           tags = NA_character_,
                           reference_keys = NA_character_,
-                          bib_path = "inst/REFERENCES.bib") {
+                          bib_path = NULL) {
+
+      if (is.null(bib_path)) {
+        bib_path <- system.file("REFERENCES.bib", package = "priogrid")
+      }
 
       rlang::check_installed(c("checkmate", "uuid", "RCurl"),
                              reason = "to register data sources (dev-only)")
@@ -297,7 +301,8 @@ Source <- R6::R6Class("Source",
 
     handle_download_url = function(url, type) {
       if(!curl::has_internet()){
-        stop("Internet not available. Please rerun with internet connection.")
+        warning("Internet not available. URL validity could not be checked.")
+        return(list(url = NA_character_, urls = NULL, valid = FALSE))
       }
       # Handle NA, NULL, empty cases
       if (is.null(url) || is.na(url) || trimws(url) == "") {
@@ -313,10 +318,12 @@ Source <- R6::R6Class("Source",
         ))
       }
 
+      curl_opts <- list(timeout = 10, connecttimeout = 5)
+
       # Handle urls/ file case
       if (startsWith(url, "urls/")) {
-        file_path <- file.path("inst/extdata", url)
-        if (!file.exists(file_path)) {
+        file_path <- system.file("extdata", sub("^urls/", "", url), package = "priogrid")
+        if (file_path == "" || !file.exists(file_path)) {
           return(list(
             url = NA_character_,
             urls = NULL,
@@ -325,7 +332,7 @@ Source <- R6::R6Class("Source",
         }
         urls <- readLines(file_path)
         urls_valid <- all(sapply(urls, function(u) {
-          tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
+          tryCatch(RCurl::url.exists(u, .opts = curl_opts), error = function(e) FALSE)
         }))
         return(list(url = url, urls = urls, valid = urls_valid))
       }
@@ -334,7 +341,7 @@ Source <- R6::R6Class("Source",
       if (file.exists(url)) {
         urls <- readLines(url)
         urls_valid <- all(sapply(urls, function(u) {
-          tryCatch(RCurl::url.exists(u), error = function(e) FALSE)
+          tryCatch(RCurl::url.exists(u, .opts = curl_opts), error = function(e) FALSE)
         }))
         return(list(
           url = file.path(type, paste0(private$data$id, ".txt")),
@@ -344,7 +351,7 @@ Source <- R6::R6Class("Source",
       }
 
       # Handle direct URL case
-      url_valid <- tryCatch(RCurl::url.exists(url), error = function(e) FALSE)
+      url_valid <- tryCatch(RCurl::url.exists(url, .opts = curl_opts), error = function(e) FALSE)
 
       return(list(
         url = url,
@@ -375,7 +382,7 @@ Source <- R6::R6Class("Source",
 
     validate_website_url = function() {
       private$data$website_url_exists <- tryCatch(
-        RCurl::url.exists(private$data$website_url),
+        RCurl::url.exists(private$data$website_url, .opts = list(timeout = 10, connecttimeout = 5)),
         error = function(e) FALSE
       )
     }

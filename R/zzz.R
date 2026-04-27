@@ -8,25 +8,15 @@
 .onAttach <- function(libname, pkgname) {
   packageStartupMessage("priogrid ", utils::packageVersion("priogrid"))
 
-  # Check for legacy persisted config and notify user
-  legacy_dir <- rappdirs::user_config_dir("R-priogrid", "prio")
-  if (dir.exists(legacy_dir)) {
-    legacy_cache <- cachem::cache_disk(dir = legacy_dir)
-    legacy_config <- legacy_cache$get("config")
-    if (!cachem::is.key_missing(legacy_config)) {
-      packageStartupMessage(
-        "Note: Legacy persisted config detected from previous priogrid versions. ",
-        "Only rawfolder is now persisted (via pg_set_rawfolder()). ",
-        "All other settings are session-scoped (via pg_config() / pg_set_config())."
-      )
-      if (interactive()) {
-        ans <- utils::askYesNo("Delete legacy config entry?")
-        if (isTRUE(ans)) {
-          legacy_cache$remove("config")
-          packageStartupMessage("Legacy config entry deleted.")
-        }
-      }
-    }
+  # Remove legacy persisted config from previous priogrid versions
+  legacy_config_file <- file.path(rappdirs::user_config_dir("R-priogrid", "prio"), "config.rds")
+  if (file.exists(legacy_config_file)) {
+    unlink(legacy_config_file)
+    packageStartupMessage(
+      "Note: Legacy persisted config from previous priogrid versions was removed. ",
+      "Config is now session-scoped (pg_config() / pg_set_config()). ",
+      "Only rawfolder persists (pg_set_rawfolder())."
+    )
   }
 }
 .datatable.aware = TRUE

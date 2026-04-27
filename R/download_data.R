@@ -154,6 +154,38 @@ get_pgfile <- function(source_name, source_version, id){
   return(full_file_path)
 }
 
+#' Check which PRIO-GRID raw data files are available locally
+#'
+#' Returns a summary of which data sources have been downloaded to the raw data
+#' folder. Useful for checking data status before running compute-heavy functions.
+#'
+#' @return A data.frame with columns `source_name`, `source_version`, `n_files`,
+#'   `n_present`, and `all_present`, or NULL if the raw data folder is not set.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' pg_data_availability()
+#' }
+pg_data_availability <- function() {
+  tryCatch({
+    destfolder <- pg_rawfolder()
+    fi <- pg_rawfiles()
+    fi$file_exists <- file.exists(file.path(destfolder, fi$filename))
+    fi |>
+      dplyr::group_by(source_name, source_version) |>
+      dplyr::summarise(
+        n_files = dplyr::n(),
+        n_present = sum(file_exists),
+        all_present = all(file_exists),
+        .groups = "drop"
+      )
+  }, error = function(e) {
+    message("Raw data folder not set. Use pg_set_rawfolder() to configure.")
+    invisible(NULL)
+  })
+}
+
 #' Download the raw-data for PRIO-GRID
 #'
 #' Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")

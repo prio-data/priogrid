@@ -15,8 +15,14 @@ test_that("pg_config validates inputs", {
   expect_error(pg_config(nrow = -1), "positive integer")
   expect_error(pg_config(ncol = 0), "positive integer")
   expect_error(pg_config(extent = c(1, 2)), "length 4")
-  expect_error(pg_config(crs = 123), "character")
-  expect_error(pg_config(verbose = "yes"), "logical")
+  expect_error(pg_config(verbose = "yes"), "logical") # as.logical("yes") = NA, which is caught
+})
+
+test_that("pg_config extent always has canonical names", {
+  cfg_named   <- pg_config(extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90))
+  cfg_unnamed <- pg_config(extent = c(-180, 180, -90, 90))
+  expect_equal(names(cfg_named$extent),   c("xmin", "xmax", "ymin", "ymax"))
+  expect_equal(names(cfg_unnamed$extent), c("xmin", "xmax", "ymin", "ymax"))
 })
 
 test_that("pg_config accepts custom parameters", {

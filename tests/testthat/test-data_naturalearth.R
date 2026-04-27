@@ -1,4 +1,5 @@
 test_that("gen_naturalearth_cover_share returns a raster", {
+  skip_if_no_rawdata()
   skip_if_not_installed("terra")
   skip_if_not_installed("sf")
   res <- gen_naturalearth_cover_share()
@@ -6,6 +7,7 @@ test_that("gen_naturalearth_cover_share returns a raster", {
 })
 
 test_that("gen_naturalearth_cover returns a raster with boolean values", {
+  skip_if_no_rawdata()
   skip_if_not_installed("terra")
   skip_if_not_installed("sf")
   res <- gen_naturalearth_cover()

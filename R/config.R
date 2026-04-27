@@ -37,11 +37,13 @@ pg_config <- function(nrow = 360L,
                       verbose = TRUE,
                       automatic_download = TRUE) {
 
+  if (!is.numeric(extent) || length(extent) != 4) stop("extent must be a numeric vector of length 4")
+
   cfg <- list(
     nrow = as.integer(nrow),
     ncol = as.integer(ncol),
     crs = as.character(crs),
-    extent = as.numeric(extent),
+    extent = setNames(as.numeric(extent), c("xmin", "xmax", "ymin", "ymax")),
     temporal_resolution = as.character(temporal_resolution),
     start_date = as.Date(start_date),
     end_date = if (identical(end_date, "today")) Sys.Date() else as.Date(end_date),
@@ -188,8 +190,8 @@ validate_pg_config <- function(cfg) {
   if (!is.character(cfg$temporal_resolution)) stop("temporal_resolution must be a character string")
   if (!inherits(cfg$start_date, "Date")) stop("start_date must be a Date")
   if (!inherits(cfg$end_date, "Date")) stop("end_date must be a Date")
-  if (!is.logical(cfg$verbose)) stop("verbose must be logical")
-  if (!is.logical(cfg$automatic_download)) stop("automatic_download must be logical")
+  if (!is.logical(cfg$verbose) || is.na(cfg$verbose)) stop("verbose must be logical")
+  if (!is.logical(cfg$automatic_download) || is.na(cfg$automatic_download)) stop("automatic_download must be logical")
   invisible(NULL)
 }
 

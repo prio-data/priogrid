@@ -159,3 +159,41 @@ test_that("pg_date_intervals handles end-of-month dates at quarterly resolution"
 
   expect_equal(result, expected)
 })
+
+test_that("rast_to_df converts static raster to data.table with pgid column", {
+  skip_if_not_installed("terra")
+  cfg <- test_config()
+  r <- prio_blank_grid(cfg)
+  terra::values(r) <- seq_len(terra::ncell(r))
+  names(r) <- "myvar"
+  df <- rast_to_df(r, static = TRUE, config = cfg)
+  expect_true("pgid" %in% names(df))
+  expect_true("myvar" %in% names(df))
+  expect_true(nrow(df) > 0)
+})
+
+test_that("rast_to_df converts time-varying raster with measurement_date column", {
+  skip_if_not_installed("terra")
+  cfg <- test_config()
+  dates <- pg_dates(cfg)
+  r <- prio_blank_grid(cfg)
+  for (i in seq_along(dates)[-1]) terra::add(r) <- prio_blank_grid(cfg)
+  terra::values(r) <- seq_len(terra::ncell(r) * terra::nlyr(r))
+  names(r) <- as.character(dates)
+  df <- rast_to_df(r, static = FALSE, varname = "myvar", config = cfg)
+  expect_true("measurement_date" %in% names(df))
+  expect_true("myvar" %in% names(df))
+  expect_true("pgid" %in% names(df))
+})
+
+test_that("zip_file unzips to _unzipped directory and returns path", {
+  content <- tempfile()
+  writeLines("hello", content)
+  tmp <- tempfile(fileext = ".zip")
+  zip(tmp, content, flags = "-j")
+  out <- zip_file(tmp)
+  expect_true(dir.exists(out))
+  expect_true(endsWith(out, "_unzipped"))
+  expect_gt(length(list.files(out)), 0)
+  unlink(c(tmp, out, content), recursive = TRUE)
+})
