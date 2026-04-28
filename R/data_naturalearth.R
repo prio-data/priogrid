@@ -142,6 +142,12 @@ gen_naturalearth_cover_share <- function(config = pg_current_config()){
   pg <- prio_blank_grid(config)
 
   ne_combined <- ne |> dplyr::summarize(geometry = sf::st_combine(geometry))
+
+  pgcrs <- sf::st_crs(config$crs)
+  if (sf::st_crs(ne_combined) != pgcrs) {
+    ne_combined <- sf::st_transform(ne_combined, sf::st_crs(config$crs))
+  }
+
   coversh <- exactextractr::exact_extract(pg, ne_combined)
 
   ra <- exactextractr::rasterize_polygons(ne_combined, pg)
@@ -233,7 +239,7 @@ ne_disputed_area_share <- function(type, config = pg_current_config()) {
     stop("Invalid type. Please choose from: ", paste(valid_types, collapse = ", "))
   }
 
-  disputed_areas = read_ne_disputed_areas()
+  disputed_areas <- read_ne_disputed_areas()
 
   # Consistent lower-case
   disputed_areas$TYPE <- tolower(disputed_areas$TYPE)
