@@ -1,0 +1,158 @@
+---
+title: "Getting Started with PRIOGRID"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with PRIOGRID}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(priogrid)
+```
+
+PRIOGRID is an R package for collecting and standardizing open spatial data into a common grid format. This tutorial covers the basics: setting up the package, downloading data, and reading it into R as tabular data — no `terra` or `sf` required.
+
+## Initial Setup
+
+PRIOGRID stores raw downloaded data and processed outputs in a single folder on your machine. This path persists across R sessions.
+
+```{r setup-rawfolder, eval=FALSE}
+library(priogrid)
+
+# Set the data folder (run once; persists across sessions)
+pg_set_rawfolder("/path/to/your/data/folder")
+```
+
+Once set, you can retrieve it at any time:
+
+```{r check-rawfolder, eval=FALSE}
+pg_rawfolder()
+```
+
+## Configuration
+
+PRIOGRID has a session-scoped configuration object that controls the spatial and temporal parameters of the grid. The defaults match the official PRIOGRID release:
+
+```{r show-config}
+pg_current_config()
+```
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `nrow` / `ncol` | 360 / 720 | Grid dimensions (0.5° cells) |
+| `crs` | `"epsg:4326"` | WGS84 geographic coordinates |
+| `extent` | global | -180 to 180, -90 to 90 |
+| `temporal_resolution` | `"1 year"` | Annual time steps |
+| `start_date` | `1850-12-31` | First measurement date |
+| `end_date` | today | Last measurement date |
+
+You can inspect individual fields:
+
+```{r inspect-config}
+cfg <- pg_current_config()
+cfg$nrow
+cfg$temporal_resolution
+```
+
+The configuration is only in effect for the current R session. See the [Custom Configurations](custom-config.html) vignette for how to change it.
+
+## Downloading the Official Release
+
+Download the current official PRIOGRID release with a single call. This downloads a zip archive and extracts it to your raw data folder:
+
+```{r download, eval=FALSE}
+download_priogrid()
+```
+
+To see what releases are available:
+
+```{r list-releases, eval=FALSE}
+download_priogrid(list_releases = TRUE)
+```
+
+The download only happens once — subsequent calls are skipped unless you set `overwrite = TRUE`.
+
+## Reading PRIOGRID Data
+
+Once downloaded, load the full dataset as a `data.table`. This requires no spatial libraries.
+
+### Static Variables
+
+Static variables do not change over time (e.g., terrain elevation, country border distances):
+
+```{r read-static, eval=FALSE}
+pg_static <- read_pg_static()
+head(pg_static)
+```
+
+Each row is a PRIOGRID cell identified by `pgid`. Columns are variable names.
+
+### Time-Varying Variables
+
+Time-varying variables have a `measurement_date` column in addition to `pgid`:
+
+```{r read-timevarying, eval=FALSE}
+pg_tv <- read_pg_timevarying()
+head(pg_tv)
+```
+
+These tables can be joined together by `pgid`, or merged with your own data.
+
+### Example: subsetting and merging
+
+```{r subset-example, eval=FALSE}
+library(data.table)
+
+# Subset to a specific year
+pg_2020 <- pg_tv[measurement_date == as.Date("2020-12-31")]
+
+# Join static and time-varying on pgid
+pg_merged <- merge(pg_static, pg_2020, by = "pgid")
+```
+
+## Browsing Available Variables
+
+The `pgvariables` data frame lists all variables in PRIOGRID:
+
+```{r pgvariables}
+pgvariables
+```
+
+The `static` column indicates whether a variable varies over time. Use this to filter:
+
+```{r filter-vars}
+# Static variables
+pgvariables[pgvariables$static == TRUE, "name"]
+
+# Time-varying variables
+pgvariables[pgvariables$static == FALSE, "name"]
+```
+
+## Rawfolder Structure
+
+After downloading, your data folder has this structure:
+
+```
+{rawfolder}/
+├── priogrid/
+│   ├── priogrid_3_0_1_05deg_yearly.zip   # Downloaded archive
+│   └── releases/
+│       └── 3.0.1/
+│           └── 05deg_yearly/
+│               ├── pg_static.parquet        # Static data (cached)
+│               ├── pg_timevarying.parquet   # Time-varying data (cached)
+│               └── {varname}.rds            # Individual variable rasters
+├── {source_name}/{version}/{id}/            # Raw source files
+└── tmp/                                     # Temporary processing files
+```
+
+The `.parquet` files are what `read_pg_static()` and `read_pg_timevarying()` read by default. The `.rds` files contain individual variables as rasters (used by `load_pgvariable()`).
+
+## Next Steps
+
+- [Accessing PRIOGRID as Rasters](working-with-rasters.html) — using `terra` to work with individual variables as spatial rasters
+- [Citations and Bibliography](citation.html) — how to cite data providers
+- [Custom Configurations](custom-config.html) — changing resolution, extent, and time period
+- [Understanding PRIOGRID Metadata](metadata.html) — exploring `pgsources`, `pgvariables`, and `pgsearch()`
