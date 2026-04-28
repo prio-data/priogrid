@@ -4,7 +4,7 @@
 \alias{gen_cshapes_cover_share}
 \title{Generate cshapes_cover_share variable}
 \usage{
-gen_cshapes_cover_share(cshp = read_cshapes())
+gen_cshapes_cover_share(cshp = read_cshapes(), config = pg_current_config())
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.

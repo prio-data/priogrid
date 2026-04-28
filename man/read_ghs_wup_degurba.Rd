@@ -4,7 +4,7 @@
 \alias{read_ghs_wup_degurba}
 \title{Reads the GHS-WUP-DEGURBA data}
 \usage{
-read_ghs_wup_degurba()
+read_ghs_wup_degurba(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object with DEGURBA classification codes

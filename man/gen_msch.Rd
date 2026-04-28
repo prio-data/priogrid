@@ -4,7 +4,7 @@
 \alias{gen_msch}
 \title{Generate PRIO-GRID Mean Years of Schooling}
 \usage{
-gen_msch()
+gen_msch(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object containing PRIO-GRID mean years of schooling.

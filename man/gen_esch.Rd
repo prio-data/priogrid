@@ -4,7 +4,7 @@
 \alias{gen_esch}
 \title{Generate PRIO-GRID Expected Years of Schooling}
 \usage{
-gen_esch()
+gen_esch(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object containing PRIO-GRID expected years of schooling.

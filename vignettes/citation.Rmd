@@ -1,27 +1,125 @@
 ---
-title: "How to cite"
+title: "Citations and Bibliography"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{How to cite}
+  %\VignetteIndexEntry{Citations and Bibliography}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(priogrid)
 ```
 
-## Citing Data Sources
+## Why Attribution Matters
 
-**Always cite the original data providers when using their data.** This is not only required by most data licenses (such as CC-BY), but is also an essential practice in research.
+PRIOGRID aggregates data from many third-party providers. Most sources are licensed under Creative Commons (CC-BY) or similar terms that **require attribution**. Beyond legal compliance, citing data providers gives credit where it is due and helps readers trace the provenance of your results.
 
-The PRIOGRID package makes citation easy. If your dataset includes PRIOGRID variables that haven't been renamed, simply use the `pgcitations()` function to retrieve the appropriate citations for all data sources in your dataset.
+PRIOGRID makes this easy: citation metadata is embedded in the package and linked to each variable.
 
-```{r citation, echo = TRUE, results='markup'}
+## Citing Variables in Your Dataset
+
+If your dataset uses PRIOGRID variables with their original names, `pgcitations()` retrieves all required citations in one call:
+
+```{r citations-vector, echo=TRUE, results='markup'}
 variables <- c("hilda_urban", "cru_tmp")
 pgcitations(variables)
 ```
 
-By maintaining original variable names and using this function, you ensure proper attribution to all data providers whose work contributes to your research.
+You can also pass a data frame directly — `pgcitations()` reads the column names:
 
-You can also just get the biblatex entries using `pgcitations(variables, as_biblatex = T)`.
+```{r citations-dataframe, eval=FALSE}
+pgcitations(pg_static)        # data.frame: uses column names
+pgcitations(pg_timevarying)   # same
+```
+
+### BibLaTeX Export
+
+For LaTeX documents, export as BibLaTeX entries:
+
+```{r biblatex, echo=TRUE, results='markup'}
+pgcitations(c("hilda_urban", "cru_tmp"), as_biblatex = TRUE)
+```
+
+Copy the output into your `.bib` file or paste it directly into an Overleaf project.
+
+## How Citation Lookup Works
+
+The chain from variable to citation is:
+
+```
+pgvariables$name → pgvariables$source_ids → pgsources$citation_keys → REFERENCES.bib
+```
+
+1. `pgvariables` maps variable names to source UUIDs.
+2. `pgsources` maps source UUIDs to BibTeX keys (`citation_keys` column).
+3. `inst/REFERENCES.bib` holds the full bibliography (~200+ entries).
+
+You can inspect this manually:
+
+```{r manual-lookup, echo=TRUE, results='markup'}
+# Find the source IDs for a variable
+pgvariables[pgvariables$name == "cru_tmp", ]
+
+# Look up citation keys in pgsources
+source_id <- pgvariables[pgvariables$name == "cru_tmp", "source_ids"]
+pgsources[pgsources$id == source_id, c("source_name", "citation_keys")]
+```
+
+## Working with Bibliography Entries Directly
+
+### Get a bibliography entry by key
+
+`get_bibliography()` returns a `RefManageR::BibEntry` object for one or more keys:
+
+```{r get-bib, echo=TRUE, results='markup'}
+get_bibliography("harrisCRUTSVersiondataset2020")
+```
+
+Pass `as_biblatex = TRUE` for raw BibLaTeX text:
+
+```{r get-bib-latex, echo=TRUE, results='markup'}
+get_bibliography("harrisCRUTSVersiondataset2020", as_biblatex = TRUE)
+```
+
+### Extract specific fields
+
+`get_bib_element()` pulls out a single field (author, title, journal, or year):
+
+```{r bib-element, echo=TRUE, results='markup'}
+get_bib_element("harrisCRUTSVersiondataset2020", element = "author")
+get_bib_element("harrisCRUTSVersiondataset2020", element = "year")
+get_bib_element("harrisCRUTSVersiondataset2020", element = "title")
+```
+
+### Parse semicolon-separated keys from pgsources
+
+Source entries can have multiple citations separated by `"; "`. `extract_bib_elements()` handles this:
+
+```{r extract-elements, echo=TRUE, results='markup'}
+# Get all citation keys for the first source
+first_source_keys <- pgsources$citation_keys[1]
+first_source_keys
+
+extract_bib_elements(first_source_keys, bib_element = "author")
+```
+
+## Citing the PRIOGRID Package Itself
+
+`pgcitations()` always prints the package citation first. To get it directly:
+
+```{r pkg-citation, echo=TRUE, results='markup'}
+citation("priogrid")
+```
+
+## Summary
+
+| Function | Purpose |
+|---|---|
+| `pgcitations(vars)` | Print all citations for a set of variables |
+| `pgcitations(vars, as_biblatex = TRUE)` | Export as BibLaTeX |
+| `get_bibliography(keys)` | Get BibEntry objects by key |
+| `get_bibliography(keys, as_biblatex = TRUE)` | Get raw BibLaTeX text |
+| `get_bib_element(key, element)` | Extract author / title / year / journal |
+| `extract_bib_elements(keys_str)` | Parse semicolon-separated key strings |

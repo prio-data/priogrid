@@ -11,8 +11,24 @@ template:
 
 navbar:
   structure:
-    left: [reference, citation, articles]
+    left: [reference, articles, citation]
     right: [search, github, lightswitch]
+  components:
+    articles:
+      text: Tutorials
+      menu:
+      - text: Getting Started
+        href: articles/getting-started.html
+      - text: Citations and Bibliography
+        href: articles/citation.html
+      - text: Accessing PRIOGRID as Rasters
+        href: articles/working-with-rasters.html
+      - text: Custom Configurations
+        href: articles/custom-config.html
+      - text: Understanding Metadata
+        href: articles/metadata.html
+      - text: Contributing
+        href: articles/contributing.html
 
 home:
   sidebar:
@@ -21,6 +37,17 @@ home:
       custom_cite:
         title: Citation
         text: '<a href="articles/citation.html">Citing PRIOGRID</a>'
+
+articles:
+- title: Tutorials
+  navbar: ~
+  contents:
+  - getting-started
+  - citation
+  - working-with-rasters
+  - custom-config
+  - metadata
+  - contributing
 
 citation:
   path: "inst/CITATION"

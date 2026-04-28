@@ -4,7 +4,7 @@
 \alias{gen_naturalearth_cover}
 \title{Land Mask for PRIO-GRID Cells (Natural Earth)}
 \usage{
-gen_naturalearth_cover(min_cover = 0)
+gen_naturalearth_cover(min_cover = 0, config = pg_current_config())
 }
 \arguments{
 \item{min_cover}{Numeric, default \code{0}. Minimum fraction of a grid cell

@@ -4,7 +4,12 @@
 \alias{rasterize_ged_crossection}
 \title{Rasterize UCDP GED Events for a Single Time Interval}
 \usage{
-rasterize_ged_crossection(ged, pg_interval, fatality_variable)
+rasterize_ged_crossection(
+  ged,
+  pg_interval,
+  fatality_variable,
+  config = pg_current_config()
+)
 }
 \arguments{
 \item{ged}{An \code{sf} object containing UCDP GED data, typically from

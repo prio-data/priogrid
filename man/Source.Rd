@@ -68,7 +68,7 @@ Create a new Source object
   prio_mirror = NA_character_,
   tags = NA_character_,
   reference_keys = NA_character_,
-  bib_path = "inst/REFERENCES.bib"
+  bib_path = NULL
 )}\if{html}{\out{</div>}}
 }
 

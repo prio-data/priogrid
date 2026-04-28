@@ -4,7 +4,11 @@
 \alias{cshapes_cover_share}
 \title{Calculate Grid Cell Coverage by International State System Boundaries (cShapes 2.0)}
 \usage{
-cshapes_cover_share(measurement_date, cshp = read_cshapes())
+cshapes_cover_share(
+  measurement_date,
+  cshp = read_cshapes(),
+  config = pg_current_config()
+)
 }
 \arguments{
 \item{measurement_date}{A single \code{Date} object specifying the date for

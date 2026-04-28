@@ -4,13 +4,13 @@
 \alias{get_temporal_hash}
 \title{Get temporal configuration hash}
 \usage{
-get_temporal_hash()
+get_temporal_hash(config = pg_current_config())
 }
 \value{
 Character string with 6-character hash
 }
 \description{
-Creates a 6-character MD5 hash of the current temporal options from pgoptions.
+Creates a 6-character MD5 hash of the current temporal options from config.
 Rounds end_date to avoid creating new hashes for small date changes.
 }
 \keyword{internal}

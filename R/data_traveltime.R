@@ -89,9 +89,9 @@ read_traveltime <- function() {
 #' @export
 #' @references
 #' \insertRef{nelsonTravelTimeMajor2008}{priogrid}
-calc_traveltime <- function(aggregation_function) {
+calc_traveltime <- function(aggregation_function, config = pg_current_config()) {
   tt <- read_traveltime()
-  r <- robust_transformation(tt, agg_fun = aggregation_function, na.rm = T)
+  r <- robust_transformation(tt, agg_fun = aggregation_function, na.rm = T, config = config)
   return(r)
 }
 
@@ -123,8 +123,8 @@ calc_traveltime <- function(aggregation_function) {
 #' @export
 #' @references
 #' \insertRef{nelsonTravelTimeMajor2008}{priogrid}
-gen_traveltime_min <- function(){
-  r <- calc_traveltime(aggregation_function = "min")
+gen_traveltime_min <- function(config = pg_current_config()){
+  r <- calc_traveltime(aggregation_function = "min", config = config)
   names(r) <- "traveltime_min"
   r
 }
@@ -157,8 +157,8 @@ gen_traveltime_min <- function(){
 #' @export
 #' @references
 #' \insertRef{nelsonTravelTimeMajor2008}{priogrid}
-gen_traveltime_mean <- function(){
-  r <- calc_traveltime(aggregation_function = "mean")
+gen_traveltime_mean <- function(config = pg_current_config()){
+  r <- calc_traveltime(aggregation_function = "mean", config = config)
   names(r) <- "traveltime_mean"
   r
 }

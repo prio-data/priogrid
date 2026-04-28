@@ -12,7 +12,7 @@ save_pgvariable(rast, varname, save_to = pgout_path())
 \item{varname}{Character string with the variable name (must exist in pgvariables)}
 
 \item{save_to}{Character string with folder path. Defaults to current custom
-data location based on pgoptions.}
+data location based on config.}
 }
 \value{
 NULL (invisibly). Called for side effects (saving file).

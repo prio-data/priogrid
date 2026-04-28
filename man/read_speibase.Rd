@@ -4,7 +4,7 @@
 \alias{read_speibase}
 \title{Read and Process Global SPEI database data}
 \usage{
-read_speibase(interval = 6)
+read_speibase(interval = 6, config = pg_current_config())
 }
 \arguments{
 \item{interval}{Integer. The month interval to calculate SPEI over. E.g., if the interval is

@@ -1,13 +1,13 @@
 #' Create matrix with index numbering conventions as for PRIO-GRID.
 #'
-#' @param ncol The number of columns in the grid.
-#' @param nrow The number of rows in the grid.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #' @return A ncol*nrow matrix with integer indices.
 #' @examples
 #' pg <- create_pg_indices()
 #' @export
-create_pg_indices <- function(ncol = pgoptions$get_ncol(),
-                              nrow = pgoptions$get_nrow()){
+create_pg_indices <- function(config = pg_current_config()){
+  ncol <- config$ncol
+  nrow <- config$nrow
   # To create PRIO-GRID, swap ncol and nrow, load index in reverse order, and
   # rotate 90 degrees once.
   rotate <- function(x) t(apply(x, 2, rev))
@@ -19,30 +19,30 @@ create_pg_indices <- function(ncol = pgoptions$get_ncol(),
 
 #' Create a raster with PRIO-GRID ids.
 #'
-#' @param ncol Number of columns
-#' @param nrow Number of rows
-#' @param extent The extent of the raster as a vector c(xmin, xmax, ymin, ymax)
-#' @param crs_string A CRS-string. Description of the Coordinate Reference System (map projection) in PROJ.4, WKT or authority:code notation.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #' @return SpatRaster
 #' @examples
+#' \dontrun{
 #' pg <- prio_blank_grid()
+#' }
 #' @export
-prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
-                            nrow = pgoptions$get_nrow(),
-                            extent = pgoptions$get_extent(),
-                            crs_string = pgoptions$get_crs()){
-  require(terra)
+prio_blank_grid <- function(config = pg_current_config()){
+  rlang::check_installed("terra", reason = "to construct a PRIO-GRID SpatRaster")
+
+  ncol <- config$ncol
+  nrow <- config$nrow
+  extent <- config$extent
+  crs_string <- config$crs
 
   if(ncol%%1 != 0 & ncol > 0) stop("ncol must be positive integer")
   if(nrow%%1 != 0 & nrow > 0) stop("nrow must be positive integer")
 
-  pg_lonlat <- rast(ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
-  values(pg_lonlat) <- create_pg_indices(ncol, nrow)
+  pg_lonlat <- terra::rast(terra::ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
+  terra::values(pg_lonlat) <- create_pg_indices(config)
   pg_lonlat <- terra::project(pg_lonlat, crs_string)
-  nan_pattern <- values(pg_lonlat)
 
   pg <- terra::deepcopy(pg_lonlat)
-  values(pg) <- create_pg_indices(ncol(pg), nrow(pg))
+  terra::values(pg) <- create_pg_indices(pg_config(ncol = terra::ncol(pg), nrow = terra::nrow(pg)))
   pg <- terra::ifel(is.nan(pg_lonlat), NaN, pg)
 
 
@@ -53,21 +53,19 @@ prio_blank_grid <- function(ncol = pgoptions$get_ncol(),
 
 #' Get a sequence of dates
 #'
-#' This is a wrapper of [base::seq.Date], only with defaults that can be set in the options.
+#' This is a wrapper of [base::seq.Date], only with defaults that can be set in the config.
 #'
-#'
-#' @param from starting date
-#' @param to end date
-#' @param by increment of sequence. See details in [base::seq.Date].
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @return Date vector
 #' @export
 #'
 #' @examples
 #' pg_dates()
-pg_dates <- function(start_date = pgoptions$get_start_date(),
-                     end_date = pgoptions$get_end_date(),
-                     temporal_resolution = pgoptions$get_temporal_resolution()){
+pg_dates <- function(config = pg_current_config()){
+  start_date <- config$start_date
+  end_date <- config$end_date
+  temporal_resolution <- config$temporal_resolution
 
   unit <- dplyr::case_when(
     grepl("month", temporal_resolution) ~ "month",
@@ -96,20 +94,17 @@ pg_dates <- function(start_date = pgoptions$get_start_date(),
 #' first interval goes from 1 January 2010 to 31 January 2010. The intervals are not necessary
 #' equal length.
 #'
-#' @param from starting date
-#' @param to end date
-#' @param by increment of sequence. See details in [base::seq.Date].
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @return Date interval vector
 #' @export
 #'
 #' @examples
 #' pg_date_intervals()
-pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
-                              end_date = pgoptions$get_end_date(),
-                              temporal_resolution = pgoptions$get_temporal_resolution()){
-
-
+pg_date_intervals <- function(config = pg_current_config()){
+  start_date <- config$start_date
+  end_date <- config$end_date
+  temporal_resolution <- config$temporal_resolution
 
   unit <- dplyr::case_when(
     grepl("month", temporal_resolution) ~ "month",
@@ -120,9 +115,8 @@ pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
 
   is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
 
-  base_seq <- pg_dates(start_date, end_date, temporal_resolution)
+  base_seq <- pg_dates(config)
   floor <- lubridate::floor_date(base_seq, unit)
-  #ceil <- lubridate::ceiling_date(base_seq, unit) - lubridate::days(1)
 
   if(is_end_of_month & unit == "month"){
     previous <- seq.Date(lubridate::floor_date(start_date, unit), end_date, temporal_resolution)
@@ -143,15 +137,18 @@ pg_date_intervals <- function(start_date = pgoptions$get_start_date(),
 #' @param rast SpatRaster
 #' @param static True if no temporal dimension, False else.
 #' @param varname The variable name, only required if static is False.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @return data.frame
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' ne <- gen_naturalearth_cover()
 #' rast_to_df(ne)
-rast_to_df <- function(rast, static = TRUE, varname = NULL){
-  pg <- prio_blank_grid()
+#' }
+rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_config()){
+  pg <- prio_blank_grid(config)
   df <- c(pg, rast) |> as.data.frame()
   df <- df[rowSums(!is.na(df)) > 1,] # remove rows with only missing elements.
 
@@ -223,32 +220,24 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL){
 #'   \item Pre-cropping input data to region of interest before transformation
 #' }
 #'
-#' @section Global Options:
-#' This function uses global PRIO-GRID options set via PGOptionsManager:
-#' \itemize{
-#'   \item \code{pgoptions$get_rawfolder()}: Location for temporary file storage
-#'   \item \code{pgoptions$get_ncol()}, \code{pgoptions$get_nrow()}: Output grid dimensions
-#'   \item \code{pgoptions$get_extent()}: Output spatial extent
-#'   \item \code{pgoptions$get_crs()}: Output coordinate reference system
-#' }
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @examples
 #' \dontrun{
-#' # Downloads and transfomrs GHSL to PRIO-GRID resolution
-#' download_pg_rawdata(pg_rawfiles() |> dplyr::filter(id == "ae6a7612-4bef-452f-acd6-d2212cf9a7c5"))
 #' r <- read_ghsl_population_grid()
 #' res <- robust_transformation(r, agg_fun = "sum")
 #' }
 #'
 #' @seealso
 #' \code{\link{prio_blank_grid}} for creating empty PRIO-GRID templates,
-#' \code{\link{PGOptionsManager}} for setting global options,
 #' \code{\link[terra]{aggregate}}, \code{\link[terra]{disagg}}, \code{\link[terra]{resample}}
 #'
 #' @export
-robust_transformation <- function(r, agg_fun, disagg_method = "near", ...){
-  pg <- prio_blank_grid()
-  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+robust_transformation <- function(r, agg_fun, disagg_method = "near", config = pg_current_config(), ...){
+  rlang::check_installed("terra")
+  pg_configure_terra_memory(config)
+  pg <- prio_blank_grid(config)
+  temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
 
   equal_projection <- terra::crs(r) == terra::crs(pg)
@@ -318,60 +307,6 @@ add_source <- function(source, csv_file = "data_raw/sources.csv") {
   }
 
   invisible(NULL)
-}
-
-
-#' Unzip a File to a Structured Directory (with Safety Check)
-#'
-#' Extracts the contents of a `.zip` file into a uniquely named subdirectory
-#' in the same location as the original file. The output folder is named after
-#' the zip file with a `_unzipped` suffix.
-#'
-#' If the target directory already exists and contains files or subdirectories,
-#' the function skips unzipping and returns the existing directory path.
-#'
-#' @param f Character. Full path to the `.zip` file to be extracted.
-#'
-#' @return A character string indicating the full path to the directory
-#' where the contents were (or would have been) unzipped.
-#'
-#' @examples
-#' \dontrun{
-#' zip_path <- "/path/to/hildap_vGLOB-1.0_geotiff.zip"
-#' unzipped_dir <- zip_file(zip_path)
-#' list.files(unzipped_dir)
-#' }
-#'
-#' @importFrom tools file_path_sans_ext
-#' @export
-zip_file <- function(f) {
-  library(tools)
-
-  if (!file.exists(f)) {
-    stop("File not found: ", f)
-  }
-
-  zip_name <- basename(f)
-  base_name <- file_path_sans_ext(zip_name)
-  target_dir <- file.path(dirname(f), paste0(base_name, "_unzipped"))
-
-  # Check if target_dir exists and is non-empty
-  if (dir.exists(target_dir)) {
-    contents <- list.files(target_dir, all.files = TRUE, no.. = TRUE)
-    if (length(contents) > 0) {
-      #Target directory already exists and is not empty
-      return(target_dir)
-    }
-  } else {
-    dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
-    message("Created target directory: ", target_dir)
-  }
-
-  # Unzip contents
-  message("Unzipping to: ", target_dir)
-  unzip(f, exdir = target_dir)
-
-  return(target_dir)
 }
 
 

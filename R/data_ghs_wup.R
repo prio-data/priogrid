@@ -78,7 +78,7 @@
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
 #' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
-read_ghs_wup_degurba <- function(){
+read_ghs_wup_degurba <- function(config = pg_current_config()){
   zip_files <- get_pgfile(source_name = "GHS-WUP-DEGURBA",
                           source_version = "R2025A",
                           id = "7f1f60a3-6664-4427-b086-b5359ebf45b7")
@@ -97,8 +97,8 @@ read_ghs_wup_degurba <- function(){
     terra::add(r) <- terra::rast(file.path(dirname(zip_files[i]), tif_files[i]))
   }
 
-  pgmonth <- pg_dates()[1] |> lubridate::month()
-  pgday <- pg_dates()[1] |> lubridate::day()
+  pgmonth <- pg_dates(config)[1] |> lubridate::month()
+  pgday <- pg_dates(config)[1] |> lubridate::day()
   tif_dates <- stringr::str_extract(tif_files, seq(1975, 2030, by = 5) |> paste(collapse = "|"))
   tif_dates <- lubridate::ymd(paste(tif_dates, pgmonth, pgday, sep = "-")) |> as.character()
 
@@ -176,18 +176,18 @@ read_ghs_wup_degurba <- function(){
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
 #' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
-ghs_wup_degurba <- function(urban_definition){
+ghs_wup_degurba <- function(urban_definition, config = pg_current_config()){
   cl_mat <- cbind(c(10, 11, 12, 13, 21, 22, 23, 30),
                   rep(0, 8))
   cl_mat[,2] <- ifelse(cl_mat[,1] %in% urban_definition, 1, 0)
-  r <- read_ghs_wup_degurba()
+  r <- read_ghs_wup_degurba(config = config)
 
-  temporary_directory <- file.path(pgoptions$get_rawfolder(), "tmp", tempdir() |> basename())
+  temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
   dir.create(temporary_directory)
   tmp1 <- tempfile(pattern = "urban_classification", fileext = ".tif", tmpdir = temporary_directory)
 
   r <- terra::classify(r, cl_mat, filename = tmp1)
-  res <- robust_transformation(r, agg_fun = "mean")
+  res <- robust_transformation(r, agg_fun = "mean", config = config)
   res
 }
 
@@ -266,8 +266,8 @@ ghs_wup_degurba <- function(urban_definition){
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
 #'
 #' \insertRef{jacobs-crisioniPopulationDegreeUrbanization2025}{priogrid}
-gen_ghs_wup_degurba_urban <- function(){
-  ghs_wup_degurba(urban_definition = c(21, 22, 23, 30))
+gen_ghs_wup_degurba_urban <- function(config = pg_current_config()){
+  ghs_wup_degurba(urban_definition = c(21, 22, 23, 30), config = config)
 }
 
 
@@ -320,7 +320,7 @@ gen_ghs_wup_degurba_urban <- function(){
 #'
 #' @return An \code{sf} polygon object representing the contiguous urban extent
 #'   containing the input location. The polygon is returned in the coordinate
-#'   reference system specified by \code{pgoptions$get_crs()}. If the input
+#'   reference system specified by the current config CRS. If the input
 #'   location is not classified as urban, the function may return an empty
 #'   polygon or fail.
 #'
@@ -452,6 +452,6 @@ urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22
   urban_extent_raster <- terra::ifel(urban_patches == center_patch_id, 1, NA)
   urban_extent_raster <- terra::trim(urban_extent_raster)
   res <- terra::as.polygons(urban_extent_raster, dissolve = TRUE) |> sf::st_as_sf()
-  res <- sf::st_transform(res, pgoptions$get_crs())
+  res <- sf::st_transform(res, pg_current_config()$crs)
   res
 }

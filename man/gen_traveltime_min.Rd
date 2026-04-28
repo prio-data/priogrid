@@ -4,7 +4,7 @@
 \alias{gen_traveltime_min}
 \title{Generate the minimum travel time to nearest major city}
 \usage{
-gen_traveltime_min()
+gen_traveltime_min(config = pg_current_config())
 }
 \value{
 A single-layer \code{SpatRaster} object

@@ -3,16 +3,16 @@
 
 #' Get spatial configuration hash
 #'
-#' Creates a 6-character MD5 hash of the current spatial options from pgoptions.
+#' Creates a 6-character MD5 hash of the current spatial options from config.
 #'
 #' @return Character string with 6-character hash
 #' @keywords internal
-get_spatial_hash <- function() {
+get_spatial_hash <- function(config = pg_current_config()) {
   spatial_options <- list(
-    nrow = pgoptions$get_nrow(),
-    ncol = pgoptions$get_ncol(),
-    crs = pgoptions$get_crs(unparsed = TRUE),
-    extent = as.vector(pgoptions$get_extent())
+    nrow = config$nrow,
+    ncol = config$ncol,
+    crs = config$crs,
+    extent = as.vector(config$extent)
   )
 
   hash_input <- paste(spatial_options, collapse = "_")
@@ -21,22 +21,20 @@ get_spatial_hash <- function() {
 
 #' Get temporal configuration hash
 #'
-#' Creates a 6-character MD5 hash of the current temporal options from pgoptions.
+#' Creates a 6-character MD5 hash of the current temporal options from config.
 #' Rounds end_date to avoid creating new hashes for small date changes.
 #'
 #' @return Character string with 6-character hash
 #' @keywords internal
-get_temporal_hash <- function() {
-  # Avoid building new hash for small changes in end date.
-  # Round to first date given temporal resolution.
+get_temporal_hash <- function(config = pg_current_config()) {
   rounded_end_date <- lubridate::floor_date(
-    pgoptions$get_end_date(),
-    pgoptions$get_temporal_resolution()
+    config$end_date,
+    config$temporal_resolution
   )
 
   temporal_options <- list(
-    temporal_resolution = pgoptions$get_temporal_resolution(),
-    start_date = pgoptions$get_start_date(),
+    temporal_resolution = config$temporal_resolution,
+    start_date = config$start_date,
     end_date = rounded_end_date
   )
 
@@ -52,15 +50,15 @@ get_temporal_hash <- function() {
 #'
 #' @param version Character string specifying PRIOGRID version. Use for official releases.
 #' @param type Character string specifying release type (e.g., "05deg_yearly"). Use for official releases.
-#' @param spatial_hash Character string with 6-character spatial hash. If NULL, computed from current pgoptions.
-#' @param temporal_hash Character string with 6-character temporal hash. If NULL, computed from current pgoptions.
+#' @param spatial_hash Character string with 6-character spatial hash. If NULL, computed from current config.
+#' @param temporal_hash Character string with 6-character temporal hash. If NULL, computed from current config.
 #'
 #' @return Character string with file path
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   # Custom data with current pgoptions
+#'   # Custom data with current config
 #'   pgout_path()
 #'
 #'   # Custom data with specific hashes
@@ -72,8 +70,9 @@ get_temporal_hash <- function() {
 pgout_path <- function(version = NULL,
                        type = NULL,
                        spatial_hash = NULL,
-                       temporal_hash = NULL) {
-  base_path <- file.path(pgoptions$get_rawfolder(), "priogrid")
+                       temporal_hash = NULL,
+                       config = pg_current_config()) {
+  base_path <- file.path(pg_rawfolder(), "priogrid")
 
   if (!is.null(type)) {
     # Release mode
@@ -85,8 +84,8 @@ pgout_path <- function(version = NULL,
 
   # Custom mode
   pkg_version <- version %||% packageVersion("priogrid")
-  s_hash <- spatial_hash %||% get_spatial_hash()
-  t_hash <- temporal_hash %||% get_temporal_hash()
+  s_hash <- spatial_hash %||% get_spatial_hash(config)
+  t_hash <- temporal_hash %||% get_temporal_hash(config)
 
   file.path(base_path, "custom", pkg_version, s_hash, t_hash)
 }
@@ -94,7 +93,7 @@ pgout_path <- function(version = NULL,
 
 #' Calculate PRIO-GRID variables
 #'
-#' Calculates PRIO-GRID variables based on current pgoptions and saves them
+#' Calculates PRIO-GRID variables based on current config and saves them
 #' to disk. Each variable is computed by calling its corresponding gen_*() function
 #' and saved as an .rds file in the custom data folder.
 #'
@@ -118,7 +117,7 @@ pgout_path <- function(version = NULL,
 #'   # Recalculate existing variables
 #'   calc_pg(overwrite = TRUE)
 #' }
-calc_pg <- function(varnames = NULL, overwrite = FALSE) {
+calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_config()) {
   if (is.null(varnames)) {
     varnames <- pgvariables$name
   }
@@ -133,10 +132,35 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
     stop("No valid varnames supplied. Use names in `pgvariables`")
   }
 
-  save_to <- pgout_path()
+  s_hash <- get_spatial_hash(config)
+  t_hash <- get_temporal_hash(config)
+  save_to <- pgout_path(spatial_hash = s_hash, temporal_hash = t_hash)
 
   if (!dir.exists(save_to)) {
     dir.create(save_to, recursive = TRUE)
+  }
+
+  # Write config record on first creation
+  config_file <- file.path(save_to, "_config.R")
+  if (!file.exists(config_file)) {
+    writeLines(c(
+      paste0("# Generated by priogrid on ", Sys.Date()),
+      paste0("# Spatial hash: ", s_hash, "  Temporal hash: ", t_hash),
+      "cfg <- pg_config(",
+      paste0("  nrow = ", config$nrow, "L,"),
+      paste0("  ncol = ", config$ncol, "L,"),
+      paste0("  crs = \"", config$crs, "\","),
+      paste0("  extent = c(xmin = ", config$extent["xmin"],
+             ", xmax = ", config$extent["xmax"],
+             ", ymin = ", config$extent["ymin"],
+             ", ymax = ", config$extent["ymax"], "),"),
+      paste0("  temporal_resolution = \"", config$temporal_resolution, "\","),
+      paste0("  start_date = as.Date(\"", config$start_date, "\"),"),
+      paste0("  end_date = as.Date(\"", config$end_date, "\"),"),
+      paste0("  verbose = ", config$verbose, ","),
+      paste0("  automatic_download = ", config$automatic_download),
+      ")"
+    ), config_file)
   }
 
   existing_files <- list.files(save_to) |> tools::file_path_sans_ext()
@@ -155,7 +179,8 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
   message(paste("Saving to:", save_to))
   for (varname in valid_varnames) {
     message(paste("Calculating", varname))
-    r <- get(paste0("gen_", varname))()
+    gen_fun <- get(paste0("gen_", varname))
+    r <- gen_fun(config = config)
     save_pgvariable(r, varname, save_to = save_to)
   }
 
@@ -170,7 +195,7 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
 #' @param rast Terra SpatRaster object from a gen_*() function
 #' @param varname Character string with the variable name (must exist in pgvariables)
 #' @param save_to Character string with folder path. Defaults to current custom
-#'   data location based on pgoptions.
+#'   data location based on config.
 #'
 #' @return NULL (invisibly). Called for side effects (saving file).
 #' @export
@@ -181,6 +206,7 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE) {
 #'   save_pgvariable(r, "ne_disputed_area_share")
 #' }
 save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
+  rlang::check_installed("terra", reason = "to save PRIO-GRID variable rasters")
   if (!varname %in% pgvariables$name) {
     stop("varname '", varname, "' not found in pgvariables.")
   }
@@ -202,20 +228,23 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #' Load a PRIO-GRID variable
 #'
 #' Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.
-#' By default, loads from the official PRIOGRID release matching the current
-#' package version. Can also load custom data generated by the user.
+#' The mode is determined by the `config` argument:
 #'
-#' @param varname Character string with the variable name
+#' - `config = NULL` (default): loads from the official release (downloads if needed).
+#' - `config = pg_config(...)`: loads from custom data built with that config.
+#' - `spatial_hash` + `temporal_hash`: loads from a specific custom folder by hash.
+#'
+#' @param varname Character string with the variable name.
+#' @param config A `pg_config` object for custom data, or NULL (default) for the
+#'   official release.
 #' @param version Character string specifying PRIOGRID version (e.g., "3.0.1").
-#'   If NULL, uses current package version. Ignored if loading custom data.
+#'   Only used in release mode (config = NULL). Defaults to current package version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
-#'   If NULL, uses "05deg_yearly". Ignored if loading custom data.
-#' @param custom Logical. If TRUE, loads from custom output directory using
-#'   current pgoptions settings. Default FALSE.
-#' @param spatial_hash Character string with 6-character spatial hash for custom data.
-#'   Requires temporal_hash. Overrides pgoptions if provided.
-#' @param temporal_hash Character string with 6-character temporal hash for custom data.
-#'   Requires spatial_hash. Overrides pgoptions if provided.
+#'   Only used in release mode. Default: "05deg_yearly".
+#' @param spatial_hash Character string with 6-character spatial hash. Requires
+#'   temporal_hash. Loads from the specified custom folder directly.
+#' @param temporal_hash Character string with 6-character temporal hash. Requires
+#'   spatial_hash.
 #'
 #' @return Terra SpatRaster object
 #' @export
@@ -226,76 +255,59 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'   r <- load_pgvariable("cshapes_gwcode")
 #'
 #'   # Load from specific official release
-#'   r <- load_pgvariable("cshapes_gwcode",
-#'                        version = "3.0.1",
-#'                        type = "05deg_yearly")
+#'   r <- load_pgvariable("cshapes_gwcode", version = "3.0.1")
 #'
-#'   # Load from custom data using current pgoptions
-#'   r <- load_pgvariable("cshapes_gwcode", custom = TRUE)
+#'   # Load from custom data
+#'   cfg <- pg_config(nrow = 180, ncol = 360)
+#'   r <- load_pgvariable("cshapes_gwcode", config = cfg)
 #'
-#'   # Load from specific custom configuration
+#'   # Load from specific custom folder by hash
 #'   r <- load_pgvariable("cshapes_gwcode",
-#'                        custom = TRUE,
 #'                        spatial_hash = "ecf4dd",
 #'                        temporal_hash = "727cca")
 #' }
 load_pgvariable <- function(varname,
-                            custom = FALSE,
+                            config = NULL,
                             version = NULL,
-                            type = NULL,
+                            type = "05deg_yearly",
                             spatial_hash = NULL,
                             temporal_hash = NULL) {
+  rlang::check_installed("terra", reason = "to load PRIO-GRID variable rasters")
 
-  # Path 1: Load from custom data
-  if (custom) {
-    # Check if both hashes provided
-    if (!is.null(spatial_hash) && !is.null(temporal_hash)) {
-      if (pgoptions$get_verbose()) {
-        message("Loading custom data using specified hashes")
-      }
-      filepath <- file.path(
-        pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash),
-        paste0(varname, ".rds")
-      )
-    }
-    # Only one hash provided - error
-    else if (!is.null(spatial_hash) || !is.null(temporal_hash)) {
-      stop("Both spatial_hash and temporal_hash must be provided together")
-    }
-    # No hashes - use current pgoptions
-    else {
-      if (pgoptions$get_verbose()) {
-        message("Loading custom data using current pgoptions settings")
-      }
-      filepath <- file.path(
-        pgout_path(),
-        paste0(varname, ".rds")
-      )
-    }
+  has_hashes <- !is.null(spatial_hash) && !is.null(temporal_hash)
+  has_one_hash <- xor(!is.null(spatial_hash), !is.null(temporal_hash))
+
+  if (has_one_hash) {
+    stop("Both spatial_hash and temporal_hash must be provided together")
+  }
+  if (!is.null(config) && !is.null(version)) {
+    stop("Cannot mix config with version parameter. Use config for custom mode or version for release mode.")
+  }
+  if (has_hashes && !is.null(version)) {
+    stop("Cannot mix release parameters (version) with custom parameters (spatial_hash/temporal_hash)")
   }
 
-  # Path 2: Load from official release
-  else {
-    # Ignore hashes if provided without custom = TRUE
-    if (!is.null(spatial_hash) || !is.null(temporal_hash)) {
-      warning("spatial_hash and temporal_hash are ignored when custom = FALSE")
-    }
-
-    # Set defaults for official release
-    if (is.null(version)) {
-      version <- as.character(packageVersion("priogrid"))
-    }
-    if (is.null(type)) {
-      type <- "05deg_yearly"
-    }
-
-    if (pgoptions$get_verbose()) {
-      message("Loading official PRIOGRID version ", version, " (", type, ")")
-    }
-
-    download_priogrid(version = version, type = type)
+  if (has_hashes) {
+    # Custom mode: explicit hashes
     filepath <- file.path(
-      pgout_path(version = version, type = type),
+      pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash),
+      paste0(varname, ".rds")
+    )
+  } else if (!is.null(config)) {
+    # Custom mode: config-driven
+    if (isTRUE(config$verbose)) {
+      message("Loading custom data for config (", get_spatial_hash(config), "/", get_temporal_hash(config), ")")
+    }
+    filepath <- file.path(
+      pgout_path(spatial_hash = get_spatial_hash(config), temporal_hash = get_temporal_hash(config)),
+      paste0(varname, ".rds")
+    )
+  } else {
+    # Release mode
+    resolved_version <- version %||% as.character(packageVersion("priogrid"))
+    download_priogrid(version = resolved_version, type = type)
+    filepath <- file.path(
+      pgout_path(version = resolved_version, type = type),
       paste0(varname, ".rds")
     )
   }
@@ -312,10 +324,16 @@ load_pgvariable <- function(varname,
 #' Determines whether to use release or custom mode based on provided parameters,
 #' and returns resolved settings. Does not perform any file operations or downloads.
 #'
-#' @param version Character string specifying PRIOGRID version.
-#' @param type Character string specifying release type.
-#' @param spatial_hash Character string with 6-character spatial hash.
-#' @param temporal_hash Character string with 6-character temporal hash.
+#' Mode is signalled by `config`:
+#' - `config = NULL` (default) → release mode
+#' - `config = pg_config(...)` → custom mode
+#' - `spatial_hash` + `temporal_hash` → custom mode (explicit path override)
+#'
+#' @param config A `pg_config` object for custom mode, or NULL for release mode.
+#' @param version Character string specifying PRIOGRID version (release mode only).
+#' @param type Character string specifying release type (release mode only).
+#' @param spatial_hash Character string with 6-character spatial hash (custom mode).
+#' @param temporal_hash Character string with 6-character temporal hash (custom mode).
 #' @param overwrite Logical. Whether to overwrite existing files.
 #'
 #' @return A list with:
@@ -327,15 +345,30 @@ load_pgvariable <- function(varname,
 #'   \item{temporal_hash}{Resolved temporal hash (NULL if release)}
 #'   \item{overwrite}{Possibly modified overwrite flag}
 #'   \item{warning}{Warning message if any, otherwise NULL}
+#'   \item{config}{Resolved config for data construction}
 #'
 #' @keywords internal
-resolve_pg_mode <- function(version = NULL,
-                            type = NULL,
+resolve_pg_mode <- function(config = NULL,
+                            version = NULL,
+                            type = "05deg_yearly",
                             spatial_hash = NULL,
                             temporal_hash = NULL,
                             overwrite = FALSE) {
 
+  has_hashes <- !is.null(spatial_hash) && !is.null(temporal_hash)
+  has_one_hash <- xor(!is.null(spatial_hash), !is.null(temporal_hash))
+  has_config <- !is.null(config)
+  has_version <- !is.null(version)
 
+  if (has_one_hash) {
+    stop("Both spatial_hash and temporal_hash must be provided together")
+  }
+  if (has_config && has_version) {
+    stop("Cannot mix config with version parameter. Use config for custom mode or version for release mode.")
+  }
+  if (has_hashes && has_version) {
+    stop("Cannot mix release parameters (version) with custom parameters (spatial_hash/temporal_hash)")
+  }
 
   result <- list(
     mode = NULL,
@@ -345,35 +378,33 @@ resolve_pg_mode <- function(version = NULL,
     spatial_hash = NULL,
     temporal_hash = NULL,
     overwrite = overwrite,
-    warning = NULL
+    warning = NULL,
+    config = NULL
   )
 
-  has_release_params <- !is.null(version) || !is.null(type)
-  has_custom_params <- !is.null(spatial_hash) || !is.null(temporal_hash)
-
-  # Validate: can't mix release and custom params
-  if (has_release_params && has_custom_params) {
-    stop("Cannot mix release parameters (version/type) with custom parameters (spatial_hash/temporal_hash)")
-  }
-
-  # Validate: both hashes required if either provided
-  if (has_custom_params && (is.null(spatial_hash) || is.null(temporal_hash))) {
-    stop("Both spatial_hash and temporal_hash must be provided together")
-  }
-
-  if (has_custom_params) {
-    # Custom mode with explicit hashes
+  if (has_hashes) {
+    # Custom mode: explicit hashes override path, config used for data construction
     result$mode <- "custom"
     result$spatial_hash <- spatial_hash
     result$temporal_hash <- temporal_hash
     result$base_path <- pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash)
+    result$config <- config
 
-  } else if (has_release_params) {
-    # Explicit release mode
+  } else if (has_config) {
+    # Custom mode: config-driven
+    result$mode <- "custom"
+    result$spatial_hash <- get_spatial_hash(config)
+    result$temporal_hash <- get_temporal_hash(config)
+    result$base_path <- pgout_path(spatial_hash = result$spatial_hash, temporal_hash = result$temporal_hash)
+    result$config <- config
+
+  } else {
+    # Release mode
     result$mode <- "release"
     result$version <- version %||% as.character(packageVersion("priogrid"))
-    result$type <- type %||% "05deg_yearly"
+    result$type <- type
     result$base_path <- pgout_path(version = result$version, type = result$type)
+    result$config <- pg_release_config(result$version, result$type)
 
     if (overwrite) {
       result$warning <- paste0(
@@ -382,18 +413,6 @@ resolve_pg_mode <- function(version = NULL,
       )
       result$overwrite <- FALSE
     }
-
-  } else if (overwrite) {
-    # No params but overwrite = TRUE → custom mode with current pgoptions
-    result$mode <- "custom"
-    result$base_path <- pgout_path()
-
-  } else {
-    # No params, no overwrite → default to official release
-    result$mode <- "release"
-    result$version <- as.character(packageVersion("priogrid"))
-    result$type <- "05deg_yearly"
-    result$base_path <- pgout_path(version = result$version, type = result$type)
   }
 
   result
@@ -402,12 +421,16 @@ resolve_pg_mode <- function(version = NULL,
 #' Collect static (non-time-varying) PRIO-GRID data
 #'
 #' Loads all static variables and returns them either as a data.table or as
-#' a list of rasters. See [pgvariables] for available variables. If an official release
-#' is specified (or version, type and hashes are NULL), then this is downloaded if this
-#' is not already done.
+#' a list of rasters. See [pgvariables] for available variables.
 #'
-#' @param version Character string specifying PRIOGRID version.
-#' @param type Character string specifying release type (e.g., "05deg_yearly").
+#' The mode is determined by the `config` argument:
+#' - `config = NULL` (default): loads from the official release (downloads if needed).
+#' - `config = pg_config(...)`: loads from custom data built with that config.
+#'
+#' @param config A `pg_config` object for custom data, or NULL (default) for the
+#'   official release.
+#' @param version Character string specifying PRIOGRID version (release mode only).
+#' @param type Character string specifying release type. Default: "05deg_yearly".
 #' @param spatial_hash Character string with 6-character spatial hash (custom only).
 #' @param temporal_hash Character string with 6-character temporal hash (custom only).
 #' @param as_raster Logical. If TRUE, returns list of SpatRasters. If FALSE
@@ -422,28 +445,29 @@ resolve_pg_mode <- function(version = NULL,
 #'
 #' @examples
 #' \dontrun{
-#'   # Load as data.table
+#'   # Load official release as data.table
 #'   pg_dt <- read_pg_static()
 #'
-#'   # Test coverage
-#'   pg_dt <- read_pg_static(test = TRUE)
+#'   # Load specific official release
+#'   pg_dt <- read_pg_static(version = "3.0.1")
+#'
+#'   # Load custom data
+#'   cfg <- pg_config(nrow = 180, ncol = 360)
+#'   pg_dt <- read_pg_static(config = cfg)
 #'
 #'   # Load as rasters
 #'   pg_rast <- read_pg_static(as_raster = TRUE)
-#'
-#'   # Load official release
-#'   pg_dt <- read_pg_static(version = "3.0.1",
-#'                           type = "05deg_yearly")
 #' }
-read_pg_static <- function(version = NULL,
-                           type = NULL,
+read_pg_static <- function(config = NULL,
+                           version = NULL,
+                           type = "05deg_yearly",
                            spatial_hash = NULL,
                            temporal_hash = NULL,
                            as_raster = FALSE,
                            test = FALSE,
                            overwrite = FALSE) {
 
-  cfg <- resolve_pg_mode(version, type, spatial_hash, temporal_hash, overwrite)
+  cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash, overwrite)
 
   if (!is.null(cfg$warning)) {
     warning(cfg$warning)
@@ -455,10 +479,13 @@ read_pg_static <- function(version = NULL,
 
   fname <- file.path(cfg$base_path, "pg_static.parquet")
 
-  # Return cached if available
+  # Return cached if available (lightweight path — no terra needed)
   if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
-    return(arrow::read_parquet(fname))
+    return(nanoparquet::read_parquet(fname))
   }
+
+  # From here on, terra is required
+  rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
 
   # Load individual variables
   static <- pgvariables |> dplyr::filter(static)
@@ -467,8 +494,10 @@ read_pg_static <- function(version = NULL,
     rasters <- lapply(static$name, load_pgvariable,
                       version = cfg$version, type = cfg$type)
   } else {
+    if (is.null(cfg$config)) {
+      stop("config is required when using explicit spatial_hash/temporal_hash with read_pg_static()")
+    }
     rasters <- lapply(static$name, load_pgvariable,
-                      custom = TRUE,
                       spatial_hash = cfg$spatial_hash,
                       temporal_hash = cfg$temporal_hash)
   }
@@ -476,9 +505,12 @@ read_pg_static <- function(version = NULL,
   names(rasters) <- static$name
   rasters <- rasters[!is.na(rasters)]
 
+  # data_config is the resolved config (release params or user config)
+  data_config <- cfg$config
+
   # Test coverage if requested
   if (test) {
-    pg_idx <- length(create_pg_indices())
+    pg_idx <- length(create_pg_indices(data_config))
     coverage_test <- dplyr::bind_rows(
       lapply(rasters, function(x) terra::freq(is.na(x))),
       .id = "variable"
@@ -496,9 +528,10 @@ read_pg_static <- function(version = NULL,
   }
 
   # Build data.table
-  df <- rast_to_df(terra::rast(rasters), static = TRUE)
+  df <- rast_to_df(terra::rast(rasters), static = TRUE, config = data_config)
 
   # Save to cache
+  rlang::check_installed("arrow", reason = "to write parquet files")
   arrow::write_parquet(df, fname)
 
   return(df)
@@ -508,12 +541,16 @@ read_pg_static <- function(version = NULL,
 #' Collect time-varying (non-static) PRIO-GRID data
 #'
 #' Loads all time-varying variables and returns them either as a data.table or as
-#' a list of rasters. See [pgvariables] for available variables. If an official release
-#' is specified (or version, type and hashes are NULL), then this is downloaded if this
-#' is not already done.
+#' a list of rasters. See [pgvariables] for available variables.
 #'
-#' @param version Character string specifying PRIOGRID version.
-#' @param type Character string specifying release type (e.g., "05deg_yearly").
+#' The mode is determined by the `config` argument:
+#' - `config = NULL` (default): loads from the official release (downloads if needed).
+#' - `config = pg_config(...)`: loads from custom data built with that config.
+#'
+#' @param config A `pg_config` object for custom data, or NULL (default) for the
+#'   official release.
+#' @param version Character string specifying PRIOGRID version (release mode only).
+#' @param type Character string specifying release type. Default: "05deg_yearly".
 #' @param spatial_hash Character string with 6-character spatial hash (custom only).
 #' @param temporal_hash Character string with 6-character temporal hash (custom only).
 #' @param as_raster Logical. If TRUE, returns list of SpatRasters. If FALSE
@@ -528,28 +565,26 @@ read_pg_static <- function(version = NULL,
 #'
 #' @examples
 #' \dontrun{
-#'   # Load as data.table
+#'   # Load official release as data.table
 #'   pg_dt <- read_pg_timevarying()
 #'
-#'   # Test coverage
-#'   coverage <- read_pg_timevarying(test = TRUE)
+#'   # Load specific official release
+#'   pg_dt <- read_pg_timevarying(version = "3.0.1")
 #'
-#'   # Load as rasters
-#'   pg_rast <- read_pg_timevarying(as_raster = TRUE)
-#'
-#'   # Load official release
-#'   pg_dt <- read_pg_timevarying(version = "3.0.1",
-#'                                type = "05deg_yearly")
+#'   # Load custom data
+#'   cfg <- pg_config(nrow = 180, ncol = 360)
+#'   pg_dt <- read_pg_timevarying(config = cfg)
 #' }
-read_pg_timevarying <- function(version = NULL,
-                                type = NULL,
+read_pg_timevarying <- function(config = NULL,
+                                version = NULL,
+                                type = "05deg_yearly",
                                 spatial_hash = NULL,
                                 temporal_hash = NULL,
                                 as_raster = FALSE,
                                 test = FALSE,
                                 overwrite = FALSE) {
 
-  cfg <- resolve_pg_mode(version, type, spatial_hash, temporal_hash, overwrite)
+  cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash, overwrite)
 
   if (!is.null(cfg$warning)) {
     warning(cfg$warning)
@@ -561,10 +596,13 @@ read_pg_timevarying <- function(version = NULL,
 
   fname <- file.path(cfg$base_path, "pg_timevarying.parquet")
 
-  # Return cached if available
+  # Return cached if available (lightweight path — no terra needed)
   if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
-    return(arrow::read_parquet(fname))
+    return(nanoparquet::read_parquet(fname))
   }
+
+  # From here on, terra is required
+  rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
 
   # Load individual variables
   timevarying <- pgvariables |> dplyr::filter(!static)
@@ -573,8 +611,10 @@ read_pg_timevarying <- function(version = NULL,
     rasters <- lapply(timevarying$name, load_pgvariable,
                       version = cfg$version, type = cfg$type)
   } else {
+    if (is.null(cfg$config)) {
+      stop("config is required when using explicit spatial_hash/temporal_hash with read_pg_timevarying()")
+    }
     rasters <- lapply(timevarying$name, load_pgvariable,
-                      custom = TRUE,
                       spatial_hash = cfg$spatial_hash,
                       temporal_hash = cfg$temporal_hash)
   }
@@ -582,9 +622,12 @@ read_pg_timevarying <- function(version = NULL,
   names(rasters) <- timevarying$name
   rasters <- rasters[!is.na(rasters)]
 
+  # data_config is the resolved config (release params or user config)
+  data_config <- cfg$config
+
   # Test coverage if requested
   if (test) {
-    pg_idx <- length(create_pg_indices())
+    pg_idx <- length(create_pg_indices(data_config))
     coverage_test <- dplyr::bind_rows(
       lapply(rasters, function(x) terra::freq(is.na(x))),
       .id = "variable"
@@ -606,14 +649,15 @@ read_pg_timevarying <- function(version = NULL,
 
   # Build data.table
   timevarying_lst <- mapply(rast_to_df, rasters, names(rasters),
-                            static = FALSE, SIMPLIFY = FALSE)
+                            MoreArgs = list(static = FALSE, config = data_config),
+                            SIMPLIFY = FALSE)
 
   # Only return dates that are within the data scope
   min_date <- do.call(min, lapply(timevarying_lst, function(x) min(x$measurement_date)))
-  my_dates <- pg_dates()
+  my_dates <- pg_dates(data_config)
   my_dates <- my_dates[my_dates >= min_date]
 
-  df <- expand.grid(pgid = create_pg_indices(), measurement_date = my_dates)
+  df <- expand.grid(pgid = create_pg_indices(data_config), measurement_date = my_dates)
   df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
 
   for (sdt in timevarying_lst) {
@@ -623,6 +667,7 @@ read_pg_timevarying <- function(version = NULL,
   # Save to cache
   data.table::fwrite(df, paste0(tools::file_path_sans_ext(fname), ".csv.gz"),
                      compress = "gzip")
+  rlang::check_installed("arrow", reason = "to write parquet files")
   arrow::write_parquet(df, fname)
 
   return(df)
@@ -630,7 +675,7 @@ read_pg_timevarying <- function(version = NULL,
 
 #' Build an official PRIO-GRID release
 #'
-#' Sets pgoptions to specified configuration, calculates all variables to custom
+#' Sets config to specified configuration, calculates all variables to custom
 #' location, then copies them to the official release folder. This ensures
 #' consistency between custom and release workflows.
 #'
@@ -667,30 +712,28 @@ build_release <- function(version, type,
                           temporal_resolution,
                           start_date, end_date) {
 
-  # Set pgoptions
-  pgoptions$set_nrow(nrow)
-  pgoptions$set_ncol(ncol)
-  pgoptions$set_crs(crs)
-  pgoptions$set_extent(extent)
-  pgoptions$set_temporal_resolution(temporal_resolution)
-  pgoptions$set_start_date(start_date)
-  pgoptions$set_end_date(end_date)
+  # Construct config from explicit arguments
+  config <- pg_config(
+    nrow = nrow, ncol = ncol, crs = crs, extent = extent,
+    temporal_resolution = temporal_resolution,
+    start_date = start_date, end_date = end_date
+  )
 
   # Calculate
-  calc_pg(overwrite = TRUE)
-  read_pg_static(overwrite = TRUE)
-  read_pg_timevarying(overwrite = TRUE)
+  calc_pg(overwrite = TRUE, config = config)
+  read_pg_static(config = config, overwrite = TRUE)
+  read_pg_timevarying(config = config, overwrite = TRUE)
 
   # Promote to release
-  from_path <- pgout_path()
-  to_path <- pgout_path(version = version, type = type)
+  from_path <- pgout_path(config = config)
+  to_path <- pgout_path(version = version, type = type, config = config)
 
   dir.create(dirname(to_path), recursive = TRUE, showWarnings = FALSE)
   file.copy(from_path, dirname(to_path), recursive = TRUE)
   file.rename(file.path(dirname(to_path), basename(from_path)), to_path)
 
   current_wd <- getwd()
-  setwd(file.path(pgoptions$get_rawfolder(), "priogrid"))
+  setwd(file.path(pg_rawfolder(), "priogrid"))
   safe_version <- stringr::str_replace_all(version, "\\.", "_")
   zip(zipfile = paste0(paste("priogrid", safe_version, type, sep = "_"), ".zip"),
       files = list.files(file.path("releases", version, type), full.names = TRUE))
@@ -698,6 +741,71 @@ build_release <- function(version, type,
 
   message("Release built at: ", to_path)
   invisible(NULL)
+}
+
+#' List custom PRIO-GRID data folders
+#'
+#' Scans all custom data folders created by [calc_pg()] and prints a summary
+#' of each configuration. Returns an indexed list of [pg_config()] objects
+#' for direct programmatic use.
+#'
+#' @return An invisible named list of `pg_config` objects, one per custom folder.
+#'   Configs are indexed by position; use `[[i]]` to select one.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'   customs <- pg_list_custom()
+#'   # [1] abc123/xyz789: nrow=360, ncol=720, 1850-12-31 to 2025-08-26, 3 vars
+#'
+#'   read_pg_static(config = customs[[1]])
+#'   calc_pg("new_var", config = customs[[2]])
+#' }
+pg_list_custom <- function() {
+  base_path <- file.path(pg_rawfolder(), "priogrid", "custom")
+
+  if (!dir.exists(base_path)) {
+    message("No custom PRIOGRID data found.")
+    return(invisible(list()))
+  }
+
+  config_files <- list.files(base_path, pattern = "^_config\\.R$",
+                             recursive = TRUE, full.names = TRUE)
+
+  if (length(config_files) == 0) {
+    message("No custom PRIOGRID data found.")
+    return(invisible(list()))
+  }
+
+  configs <- vector("list", length(config_files))
+
+  for (i in seq_along(config_files)) {
+    folder <- dirname(config_files[i])
+    parts <- strsplit(folder, .Platform$file.sep)[[1]]
+    t_hash <- parts[length(parts)]
+    s_hash <- parts[length(parts) - 1]
+
+    env <- new.env(parent = getNamespace("priogrid"))
+    tryCatch(
+      sys.source(config_files[i], envir = env),
+      error = function(e) NULL
+    )
+    cfg <- env$cfg
+
+    n_vars <- length(list.files(folder, pattern = "\\.rds$"))
+    created <- format(file.info(config_files[i])$mtime, "%Y-%m-%d")
+
+    cat(sprintf("[%d] %s/%s: nrow=%d, ncol=%d, %s to %s, %d vars, created %s\n",
+      i, s_hash, t_hash,
+      cfg$nrow, cfg$ncol,
+      format(cfg$start_date), format(cfg$end_date),
+      n_vars, created
+    ))
+
+    configs[[i]] <- cfg
+  }
+
+  invisible(configs)
 }
 
 #' Download and initialize official PRIO-GRID release
@@ -752,15 +860,14 @@ download_priogrid <- function(version = NULL,
   }
 
   fname <- paste0("priogrid_", gsub("\\.", "_", version), "_", type, ".zip")
-  fpath <- file.path(pgoptions$get_rawfolder(), "priogrid", fname)
-
+  fpath <- file.path(pg_rawfolder(), "priogrid", fname)
 
   if (!file.exists(fpath) || overwrite) {
     curl::multi_download(releases[[key]], destfiles = fpath, resume = TRUE)
   }
 
   suppressWarnings(
-    unzip(fpath, exdir = file.path(pgoptions$get_rawfolder(), "priogrid"), overwrite = overwrite)
+    unzip(fpath, exdir = file.path(pg_rawfolder(), "priogrid"), overwrite = overwrite)
   )
 
   invisible(NULL)

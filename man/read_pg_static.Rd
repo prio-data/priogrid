@@ -5,8 +5,9 @@
 \title{Collect static (non-time-varying) PRIO-GRID data}
 \usage{
 read_pg_static(
+  config = NULL,
   version = NULL,
-  type = NULL,
+  type = "05deg_yearly",
   spatial_hash = NULL,
   temporal_hash = NULL,
   as_raster = FALSE,
@@ -15,9 +16,12 @@ read_pg_static(
 )
 }
 \arguments{
-\item{version}{Character string specifying PRIOGRID version.}
+\item{config}{A \code{pg_config} object for custom data, or NULL (default) for the
+official release.}
 
-\item{type}{Character string specifying release type (e.g., "05deg_yearly").}
+\item{version}{Character string specifying PRIOGRID version (release mode only).}
+
+\item{type}{Character string specifying release type. Default: "05deg_yearly".}
 
 \item{spatial_hash}{Character string with 6-character spatial hash (custom only).}
 
@@ -37,23 +41,28 @@ terra SpatRasters if as_raster=TRUE
 }
 \description{
 Loads all static variables and returns them either as a data.table or as
-a list of rasters. See \link{pgvariables} for available variables. If an official release
-is specified (or version, type and hashes are NULL), then this is downloaded if this
-is not already done.
+a list of rasters. See \link{pgvariables} for available variables.
+}
+\details{
+The mode is determined by the \code{config} argument:
+\itemize{
+\item \code{config = NULL} (default): loads from the official release (downloads if needed).
+\item \code{config = pg_config(...)}: loads from custom data built with that config.
+}
 }
 \examples{
 \dontrun{
-  # Load as data.table
+  # Load official release as data.table
   pg_dt <- read_pg_static()
 
-  # Test coverage
-  pg_dt <- read_pg_static(test = TRUE)
+  # Load specific official release
+  pg_dt <- read_pg_static(version = "3.0.1")
+
+  # Load custom data
+  cfg <- pg_config(nrow = 180, ncol = 360)
+  pg_dt <- read_pg_static(config = cfg)
 
   # Load as rasters
   pg_rast <- read_pg_static(as_raster = TRUE)
-
-  # Load official release
-  pg_dt <- read_pg_static(version = "3.0.1",
-                          type = "05deg_yearly")
 }
 }

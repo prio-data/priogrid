@@ -4,7 +4,7 @@
 \alias{read_ghsl_population_grid}
 \title{Reads the GHSL GHS Population Grid data}
 \usage{
-read_ghsl_population_grid()
+read_ghsl_population_grid(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object

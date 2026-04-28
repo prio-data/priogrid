@@ -4,7 +4,7 @@
 \alias{gen_ghs_wup_degurba_urban}
 \title{Generate GHS-WUP-DEGURBA urban proportion grid}
 \usage{
-gen_ghs_wup_degurba_urban()
+gen_ghs_wup_degurba_urban(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object with values ranging from 0 to 1

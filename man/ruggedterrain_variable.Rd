@@ -4,7 +4,7 @@
 \alias{ruggedterrain_variable}
 \title{Calculate elevation in PRIO-GRID format with set variable}
 \usage{
-ruggedterrain_variable(variable)
+ruggedterrain_variable(variable, config = pg_current_config())
 }
 \arguments{
 \item{variable}{Character string indicating elevation function.

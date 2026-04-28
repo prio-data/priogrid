@@ -4,9 +4,9 @@
 \alias{read_cru_pet}
 \title{Read and Process CRU TS Potential Evapotranspiration Data}
 \usage{
-read_cru_pet()
+read_cru_pet(config = pg_current_config())
 
-read_cru_pet()
+read_cru_pet(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with the

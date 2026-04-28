@@ -4,7 +4,7 @@
 \alias{hilda_landcover}
 \title{Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells}
 \usage{
-hilda_landcover(landcovertype)
+hilda_landcover(landcovertype, config = pg_current_config())
 }
 \arguments{
 \item{landcovertype}{Numeric. The land cover class identifier to extract from
@@ -38,7 +38,7 @@ by the specified land cover type. The raster contains:
 Calculates the proportion of each PRIO-GRID cell covered by a specific land
 cover type using HILDA+ global land use/land cover data. The function performs
 spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
-cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
+cells (see \code{\link[=pg_config]{pg_config()}}), accounting for partial coverage using area-weighted averaging.
 }
 \note{
 \itemize{

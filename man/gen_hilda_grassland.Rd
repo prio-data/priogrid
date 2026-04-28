@@ -4,7 +4,7 @@
 \alias{gen_hilda_grassland}
 \title{Extract Unmanaged Grass/Shrubland Coverage from HILDA+ Data}
 \usage{
-gen_hilda_grassland()
+gen_hilda_grassland(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with unmanaged grass/shrubland coverage proportions

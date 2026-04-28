@@ -81,9 +81,9 @@ read_ruggedterrain <- function() {
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
-ruggedterrain_variable <- function(variable) {
+ruggedterrain_variable <- function(variable, config = pg_current_config()) {
   rt <- read_ruggedterrain()
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
   if (!variable %in% c("elevation_min", "elevation_max", "elevation_mean")) {
     stop("Invalid variable. Choose from 'elevation_min', 'elevation_max', 'elevation_mean'.")
@@ -124,7 +124,7 @@ ruggedterrain_variable <- function(variable) {
     dplyr::mutate(!!variable := as.numeric(!!rlang::sym(variable))) |>
     dplyr::summarize(!!variable := fun_map[[myfun]](!!rlang::sym(variable), coverage_fraction))
 
-  values(pg)[!values(pg) %in% matching_table$value] <- NA
+  terra::values(pg)[!terra::values(pg) %in% matching_table$value] <- NA
   res <- terra::classify(pg, matching_table)
 
   return(res)
@@ -149,8 +149,8 @@ ruggedterrain_variable <- function(variable) {
 #'
 #' @references
 #' \insertRef{danielsonGlobalMultiresolutionTerrain2011}{priogrid}
-gen_ruggedterrain_elevation_mean <- function(){
-  r <- ruggedterrain_variable("elevation_mean")
+gen_ruggedterrain_elevation_mean <- function(config = pg_current_config()){
+  r <- ruggedterrain_variable("elevation_mean", config = config)
   names(r) <- "elevation_mean"
   r
 }

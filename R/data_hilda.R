@@ -60,13 +60,18 @@
 #'
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
-read_hilda <- function() {
+read_hilda <- function(config = pg_current_config()) {
   f <- get_pgfile(source_name = "HILDA+",
                   source_version = "v1.0",
                   id = "82bc4c6f-9904-484f-aa9a-77771d076690")
 
   # Unzip archive
-  unzipped_directory <- zip_file(f)
+  base_name <- tools::file_path_sans_ext(basename(f))
+  unzipped_directory <- file.path(dirname(f), paste0(base_name, "_unzipped"))
+  if (!dir.exists(unzipped_directory) || length(list.files(unzipped_directory, all.files = TRUE, no.. = TRUE)) == 0) {
+    dir.create(unzipped_directory, showWarnings = FALSE, recursive = TRUE)
+    unzip(f, exdir = unzipped_directory)
+  }
 
   # Construct the path to the raster state files directory
   states_dir <- file.path(unzipped_directory,
@@ -74,15 +79,15 @@ read_hilda <- function() {
                           "hildap_GLOB-v1.0_lulc-states")
 
   # Filter raster .tif files to those matching PRIO-GRID years
-  years_to_keep <- lubridate::year(pg_dates()) |> unique()
+  years_to_keep <- lubridate::year(pg_dates(config)) |> unique()
   tif_files <- list.files(states_dir, pattern = "\\.tif$", full.names = TRUE)
   years_in_files <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(tif_files)))
 
   filtered_files <- tif_files[years_in_files %in% years_to_keep]
   r <- terra::rast(filtered_files)
 
-  month_to_use <- pg_dates() |> lubridate::month() |> max()
-  day_to_use <- pg_dates() |> lubridate::day() |> max()
+  month_to_use <- pg_dates(config) |> lubridate::month() |> max()
+  day_to_use <- pg_dates(config) |> lubridate::day() |> max()
   years_in_rast <- as.numeric(sub(".*?(\\d{4}).*", "\\1", basename(filtered_files)))
   names(r) <- as.Date(paste(years_in_rast, month_to_use, day_to_use, sep = "-"))
 
@@ -94,7 +99,7 @@ read_hilda <- function() {
 #' Calculates the proportion of each PRIO-GRID cell covered by a specific land
 #' cover type using HILDA+ global land use/land cover data. The function performs
 #' spatial aggregation from high-resolution HILDA+ rasters (1km) to PRIO-GRID
-#' cells (see \code{\link{pgoptions}}), accounting for partial coverage using area-weighted averaging.
+#' cells (see [pg_config()]), accounting for partial coverage using area-weighted averaging.
 #'
 #' @param landcovertype Numeric. The land cover class identifier to extract from
 #'   HILDA+ data. Must be a valid land cover code according to the HILDA+
@@ -148,11 +153,11 @@ read_hilda <- function() {
 #' @export
 #' @references
 #' \insertRef{winklerHILDAGlobalLand2020}{priogrid}
-hilda_landcover <- function(landcovertype){
+hilda_landcover <- function(landcovertype, config = pg_current_config()){
   memfrac_option <- terra::terraOptions(verbose = FALSE)$memfrac
   terra::terraOptions(memfrac = 0.8)
-  r <- read_hilda()
-  res <- robust_transformation(r, function(x) mean(x == landcovertype))
+  r <- read_hilda(config = config)
+  res <- robust_transformation(r, function(x) mean(x == landcovertype), config = config)
   terra::terraOptions(memfrac = memfrac_option)
   return(res)
 }
@@ -166,8 +171,8 @@ hilda_landcover <- function(landcovertype){
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_ocean <- function(){
-  hilda_landcover(landcovertype = 00)
+gen_hilda_ocean <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 00, config = config)
 }
 
 #' Extract Urban Coverage from HILDA+ Data
@@ -179,8 +184,8 @@ gen_hilda_ocean <- function(){
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_urban <- function(){
-  hilda_landcover(landcovertype = 11)
+gen_hilda_urban <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 11, config = config)
 }
 
 #' Extract Cropland Coverage from HILDA+ Data
@@ -192,8 +197,8 @@ gen_hilda_urban <- function(){
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_cropland <- function(){
-  hilda_landcover(landcovertype = 22)
+gen_hilda_cropland <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 22, config = config)
 }
 
 #' Extract Pasture/Rangeland Coverage from HILDA+ Data
@@ -205,8 +210,8 @@ gen_hilda_cropland <- function(){
 #'   for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_pasture <- function(){
-  hilda_landcover(landcovertype = 33)
+gen_hilda_pasture <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 33, config = config)
 }
 
 #' Extract Forest Coverage from HILDA+ Data
@@ -218,8 +223,8 @@ gen_hilda_pasture <- function(){
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_forest <- function(){
-  hilda_landcover(landcovertype = 44)
+gen_hilda_forest <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 44, config = config)
 }
 
 #' Extract Unmanaged Grass/Shrubland Coverage from HILDA+ Data
@@ -231,8 +236,8 @@ gen_hilda_forest <- function(){
 #'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_grassland <- function(){
-  hilda_landcover(landcovertype = 55)
+gen_hilda_grassland <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 55, config = config)
 }
 
 #' Extract Sparse/No Vegetation Coverage from HILDA+ Data
@@ -244,8 +249,8 @@ gen_hilda_grassland <- function(){
 #'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_sparse <- function(){
-  hilda_landcover(landcovertype = 66)
+gen_hilda_sparse <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 66, config = config)
 }
 
 #' Extract Water Coverage from HILDA+ Data
@@ -257,7 +262,7 @@ gen_hilda_sparse <- function(){
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
 #' @export
-gen_hilda_water <- function(){
-  hilda_landcover(landcovertype = 77)
+gen_hilda_water <- function(config = pg_current_config()){
+  hilda_landcover(landcovertype = 77, config = config)
 }
 

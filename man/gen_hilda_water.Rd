@@ -4,7 +4,7 @@
 \alias{gen_hilda_water}
 \title{Extract Water Coverage from HILDA+ Data}
 \usage{
-gen_hilda_water()
+gen_hilda_water(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with water coverage proportions (0-1) for each

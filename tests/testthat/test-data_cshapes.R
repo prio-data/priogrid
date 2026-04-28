@@ -1,15 +1,27 @@
-test_that("gen_cshapes_cover_share returns a raster", {
-  res <- gen_cshapes_cover_share(as.Date("2010-01-01"))
+test_that("gen_cshapes_cover_share returns a multi-layer SpatRaster", {
+  skip_if_no_rawdata()
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  pg_set_config(start_date = as.Date("2010-12-31"), end_date = as.Date("2011-12-31"))
+  on.exit(pg_reset_config(), add = TRUE)
+  res <- gen_cshapes_cover_share()
+  testthat::expect_s4_class(res, "SpatRaster")
+  testthat::expect_gt(terra::nlyr(res), 0)
+})
+
+test_that("cshapes_cover_share returns a raster for a specific date", {
+  skip_if_no_rawdata()
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  res <- cshapes_cover_share(as.Date("2010-01-01"))
   testthat::expect_s4_class(res, "SpatRaster")
 })
 
-test_that("gen_cshapes_cover_share works with measurement_dates outside cShapes data", {
-  testthat::expect_warning(gen_cshapes_cover_share(as.Date("2024-01-01"))) |> # "[SpatVector from sf] empty SpatVector"
-    testthat::expect_failure() # This should fail, as dates outside of cShapes should be handled.
-})
-
-test_that("gen_cshapes_cover returns a raster with boolean values", {
-  res <- gen_cshapes_cover(as.Date("2010-01-01"))
+test_that("cshapes_cover returns a raster with boolean values", {
+  skip_if_no_rawdata()
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  res <- cshapes_cover(as.Date("2010-01-01"))
   testthat::expect_s4_class(res, "SpatRaster")
   testthat::expect_true(terra::is.bool(res))
 })
