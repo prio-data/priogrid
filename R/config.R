@@ -176,6 +176,51 @@ pg_set_rawfolder <- function(path) {
   invisible(path)
 }
 
+# ---- Release metadata ----
+
+.pg_release_specs <- list(
+  "3.0.0_05deg_yearly" = list(
+    nrow = 360L, ncol = 720L,
+    crs = "epsg:4326",
+    extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
+    temporal_resolution = "1 year",
+    start_date = as.Date("1850-12-31"),
+    end_date = as.Date("2025-08-26")
+  ),
+  "3.0.1_05deg_yearly" = list(
+    nrow = 360L, ncol = 720L,
+    crs = "epsg:4326",
+    extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
+    temporal_resolution = "1 year",
+    start_date = as.Date("1850-12-31"),
+    end_date = as.Date("2025-08-26")
+  )
+)
+
+#' Get configuration for an official PRIO-GRID release
+#'
+#' Returns a [pg_config()] object with the spatial and temporal parameters
+#' for a known official PRIO-GRID release. Useful for loading release data
+#' with the correct grid dimensions and date range.
+#'
+#' @param version Character string specifying the release version (e.g., "3.0.1").
+#'   If NULL, uses the current package version.
+#' @param type Character string specifying the release type. Default: "05deg_yearly".
+#'
+#' @return A `pg_config` object matching the release parameters.
+#' @export
+#'
+#' @examples
+#' cfg <- pg_release_config("3.0.1")
+#' cfg$nrow  # 360
+pg_release_config <- function(version = NULL, type = "05deg_yearly") {
+  if (is.null(version)) version <- as.character(packageVersion("priogrid"))
+  key <- paste(version, type, sep = "_")
+  spec <- .pg_release_specs[[key]]
+  if (is.null(spec)) stop("Unknown release: ", version, " (", type, ")")
+  do.call(pg_config, spec)
+}
+
 # ---- Internal helpers ----
 
 #' Validate a pg_config object

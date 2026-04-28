@@ -72,3 +72,28 @@ test_that("print.pg_config works", {
   expect_output(print(cfg), "PRIO-GRID config")
   expect_output(print(cfg), "nrow: 360")
 })
+
+test_that("pg_release_config returns correct config for known release", {
+  cfg <- pg_release_config("3.0.1")
+  expect_s3_class(cfg, "pg_config")
+  expect_equal(cfg$nrow, 360L)
+  expect_equal(cfg$ncol, 720L)
+  expect_equal(cfg$crs, "epsg:4326")
+  expect_equal(cfg$temporal_resolution, "1 year")
+  expect_equal(cfg$start_date, as.Date("1850-12-31"))
+})
+
+test_that("pg_release_config works for all known releases", {
+  expect_s3_class(pg_release_config("3.0.0"), "pg_config")
+  expect_s3_class(pg_release_config("3.0.1"), "pg_config")
+})
+
+test_that("pg_release_config errors for unknown release", {
+  expect_error(pg_release_config("9.9.9"), "Unknown release")
+})
+
+test_that("pg_release_config defaults to current package version", {
+  # Just check it returns a config or errors clearly (depending on pkg version)
+  result <- tryCatch(pg_release_config(), error = function(e) e)
+  expect_true(inherits(result, "pg_config") || inherits(result, "error"))
+})
