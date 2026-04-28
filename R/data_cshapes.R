@@ -130,9 +130,14 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes(), config 
 
   pg <- prio_blank_grid(config)
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
-  #cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
 
   cs_combined <- cs |> dplyr::summarize(geometry = sf::st_combine(geometry))
+
+  pgcrs <- sf::st_crs(config$crs)
+  if (sf::st_crs(cs_combined) != pgcrs) {
+    cs_combined <- sf::st_transform(cs_combined, sf::st_crs(config$crs))
+  }
+
   coversh <- exactextractr::exact_extract(pg, cs_combined)
 
   ra <- exactextractr::rasterize_polygons(cs_combined, pg)
@@ -180,7 +185,7 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes(), config 
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes(), config = pg_current_config()){
+cshapes_cover <- function(measurement_date, min_cover = 0.2, cshp = read_cshapes(), config = pg_current_config()){
   cshp_cover <- cshapes_cover_share(measurement_date, cshp, config = config)
 
   cshp_cover <- terra::ifel(cshp_cover < min_cover, NA, cshp_cover)
@@ -262,13 +267,20 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes(), config = pg_current_c
 cshapes_gwcode <- function(measurement_date, cshp = read_cshapes(), config = pg_current_config()){
   pg <- prio_blank_grid(config)
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
+
+  pgcrs <- sf::st_crs(config$crs)
+  if (sf::st_crs(cs) != pgcrs) {
+    cs <- sf::st_transform(cs, sf::st_crs(config$crs))
+  }
+
   res <- exactextractr::rasterize_polygons(cs, pg)
   cmat <- cbind(terra::minmax(res)[1,]:terra::minmax(res)[2,], cs$gwcode)
   res <- terra::classify(res, cmat)
 
-  represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
-  countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
-  assertthat::assert_that(length(countries_not_included)== 0)
+  # Commented out test as this might not work if user subsets with extent.
+  # represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
+  # countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
+  # assertthat::assert_that(length(countries_not_included)== 0)
   # res <- terra::as.factor(res)
 
   # Still need to add provision for countries that are minorities the cells
