@@ -289,16 +289,16 @@ read_shdi <- function(shdi_csv = read_shdi_csv(),
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-shdi <- function(variable = "shdi") {
+shdi <- function(variable = "shdi", config = pg_current_config()) {
 
   df <- read_shdi()
 
-  pg_years <- lubridate::year(pg_dates())
+  pg_years <- lubridate::year(pg_dates(config))
   shdi_years <- pg_years[pg_years %in% unique(df$year)]
 
   for(t in 1:length(shdi_years)){
     out <- df |> dplyr::filter(year == shdi_years[t])
-    pg <- prio_blank_grid()
+    pg <- prio_blank_grid(config)
 
     coversh <- exactextractr::exact_extract(pg, out, include_cols = variable)
 
@@ -326,8 +326,8 @@ shdi <- function(variable = "shdi") {
     }
   }
 
-  pgday <- pg_current_config()$start_date |> lubridate::day()
-  pgmonth <- pg_current_config()$start_date |> lubridate::month()
+  pgday <- config$start_date |> lubridate::day()
+  pgmonth <- config$start_date |> lubridate::month()
 
   names(r) <- as.Date(paste(shdi_years, pgmonth, pgday, sep = "-"))
   return(r)
@@ -353,8 +353,8 @@ shdi <- function(variable = "shdi") {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_shdi <- function() {
-  shdi <- shdi(variable = "shdi")
+gen_shdi <- function(config = pg_current_config()) {
+  shdi <- shdi(variable = "shdi", config = config)
   return(shdi)
 }
 
@@ -376,9 +376,9 @@ gen_shdi <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_msch <- function() {
-  msch <- shdi(variable = "msch")
-  return(shdi)
+gen_msch <- function(config = pg_current_config()) {
+  msch <- shdi(variable = "msch", config = config)
+  return(msch)
 }
 
 #' Generate PRIO-GRID Expected Years of Schooling
@@ -399,9 +399,9 @@ gen_msch <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_esch <- function() {
-  esch <- shdi(variable = "esch")
-  return(shdi)
+gen_esch <- function(config = pg_current_config()) {
+  esch <- shdi(variable = "esch", config = config)
+  return(esch)
 }
 
 #' Generate PRIO-GRID Life Expectancy
@@ -422,9 +422,9 @@ gen_esch <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_lifexp <- function() {
-  lifexp <- shdi(variable = "lifexp")
-  return(shdi)
+gen_lifexp <- function(config = pg_current_config()) {
+  lifexp <- shdi(variable = "lifexp", config = config)
+  return(lifexp)
 }
 
 #' Generate PRIO-GRID Gross National Income per Capita
@@ -445,7 +445,7 @@ gen_lifexp <- function() {
 #' @export
 #' @references
 #' \insertRef{globaldatalabSubnationalHumanDevelopment2019}{priogrid}
-gen_gnic <- function() {
-  gnic <- shdi(variable = "gnic")
-  return(shdi)
+gen_gnic <- function(config = pg_current_config()) {
+  gnic <- shdi(variable = "gnic", config = config)
+  return(gnic)
 }

@@ -125,10 +125,10 @@ read_cshapes <- function(){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
+cshapes_cover_share <- function(measurement_date, cshp = read_cshapes(), config = pg_current_config()){
   assertthat::assert_that(lubridate::is.Date(measurement_date))
 
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   #cshp_cover <- terra::rasterize(terra::vect(cs), pg, fun = "min", cover = T)
 
@@ -180,12 +180,12 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()){
-  cshp_cover <- cshapes_cover_share(measurement_date, cshp)
+cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes(), config = pg_current_config()){
+  cshp_cover <- cshapes_cover_share(measurement_date, cshp, config = config)
 
   cshp_cover <- terra::ifel(cshp_cover < min_cover, NA, cshp_cover)
 
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
   res <- terra::intersect(cshp_cover, pg)
   names(res) <- "cshapes_cover"
   return(res)
@@ -214,15 +214,15 @@ cshapes_cover <- function(measurement_date, min_cover = 0, cshp = read_cshapes()
 #' }
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_cshapes_cover_share <- function(cshp = read_cshapes()){
-  time_slices <- pg_dates()
+gen_cshapes_cover_share <- function(cshp = read_cshapes(), config = pg_current_config()){
+  time_slices <- pg_dates(config)
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  r <- cshapes_cover_share(time_slices[1], cshp = cshp)
+  r <- cshapes_cover_share(time_slices[1], cshp = cshp, config = config)
   for(i in 2:length(time_slices)){
     t <- time_slices[i]
-    terra::add(r) <- cshapes_cover_share(t, cshp = cshp)
+    terra::add(r) <- cshapes_cover_share(t, cshp = cshp, config = config)
   }
   names(r) <- as.character(time_slices)
   r
@@ -259,8 +259,8 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
-  pg <- prio_blank_grid()
+cshapes_gwcode <- function(measurement_date, cshp = read_cshapes(), config = pg_current_config()){
+  pg <- prio_blank_grid(config)
   cs <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   res <- exactextractr::rasterize_polygons(cs, pg)
   cmat <- cbind(terra::minmax(res)[1,]:terra::minmax(res)[2,], cs$gwcode)
@@ -300,15 +300,15 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_cshapes_gwcode <- function(cshp = read_cshapes()){
-  time_slices <- pg_dates()
+gen_cshapes_gwcode <- function(cshp = read_cshapes(), config = pg_current_config()){
+  time_slices <- pg_dates(config)
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  r <- cshapes_gwcode(time_slices[1], cshp = cshp)
+  r <- cshapes_gwcode(time_slices[1], cshp = cshp, config = config)
   for(i in 2:length(time_slices)){
     t <- time_slices[i]
-    terra::add(r) <- cshapes_gwcode(t, cshp = cshp)
+    terra::add(r) <- cshapes_gwcode(t, cshp = cshp, config = config)
   }
   names(r) <- as.character(time_slices)
   r
@@ -353,8 +353,8 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
-  pg <- prio_blank_grid()
+bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
+  pg <- prio_blank_grid(config)
 
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
@@ -373,7 +373,7 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
     shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
   }
 
-  gwcodes <- cshapes_gwcode(measurement_date)
+  gwcodes <- cshapes_gwcode(measurement_date, config = config)
   bdist1 <- list()
   for(i in 1:length(shared_borders)){
     if(nrow(shared_borders[[i]]) > 0){
@@ -426,17 +426,17 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_bdist1 <- function(cshp = read_cshapes()){
+gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config()){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
-  time_slices <- pg_dates()
+  time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  res <- bdist1(time_slices[1], cshp = cshp)
+  res <- bdist1(time_slices[1], cshp = cshp, config = config)
   r <- res$bdist1
   for(i in 2:length(time_slices)){
     print(i)
     t <- time_slices[i]
-    res <- bdist1(t, cshp = cshp, past_result = res)
+    res <- bdist1(t, cshp = cshp, past_result = res, config = config)
     terra::add(r) <- res$bdist1
   }
   names(r) <- as.character(time_slices)
@@ -483,8 +483,8 @@ gen_bdist1 <- function(cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
-  pg <- prio_blank_grid()
+bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
+  pg <- prio_blank_grid(config)
 
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
@@ -507,7 +507,7 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 
   res <- terra::distance(pg, shared_borders |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
 
-  cover <- cshapes_cover(measurement_date, cshp = cshp)
+  cover <- cshapes_cover(measurement_date, cshp = cshp, config = config)
   values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
 
   return(list("bdist2" = res*cover, "boundaries" = boundaries, "shared_borders" = shared_borders))
@@ -549,17 +549,17 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_bdist2 <- function(cshp = read_cshapes()){
+gen_bdist2 <- function(cshp = read_cshapes(), config = pg_current_config()){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
-  time_slices <- pg_dates()
+  time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  res <- bdist2(time_slices[1], cshp = cshp)
+  res <- bdist2(time_slices[1], cshp = cshp, config = config)
   r <- res$bdist2
   for(i in 2:length(time_slices)){
     print(i)
     t <- time_slices[i]
-    res <- bdist2(t, cshp = cshp, past_result = res)
+    res <- bdist2(t, cshp = cshp, past_result = res, config = config)
     terra::add(r) <- res$bdist2
   }
   names(r) <- as.character(time_slices)
@@ -602,8 +602,8 @@ gen_bdist2 <- function(cshp = read_cshapes()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
-  pg <- prio_blank_grid()
+bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
+  pg <- prio_blank_grid(config)
 
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
@@ -616,7 +616,7 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
     }
   }
 
-  gwcodes <- cshapes_gwcode(measurement_date)
+  gwcodes <- cshapes_gwcode(measurement_date, config = config)
   sf::sf_use_s2(TRUE)
   bdist3 <- list()
   for(i in 1:nrow(boundaries)){
@@ -641,7 +641,7 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
   bdist3 <- terra::mosaic(terra::sprc(bdist3))
   bdist3 <- terra::extend(bdist3, terra::ext(c(-180, 180, -90, 90)))
 
-  bdist3 <- robust_transformation(bdist3)
+  bdist3 <- robust_transformation(bdist3, config = config)
 
   return(list("bdist3" = bdist3, "boundaries" = boundaries))
 }
@@ -681,17 +681,17 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_bdist3 <- function(cshp = read_cshapes()){
+gen_bdist3 <- function(cshp = read_cshapes(), config = pg_current_config()){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
-  time_slices <- pg_dates()
+  time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  res <- bdist3(time_slices[1], cshp = cshp)
+  res <- bdist3(time_slices[1], cshp = cshp, config = config)
   r <- res$bdist3
   for(i in 2:length(time_slices)){
     print(i)
     t <- time_slices[i]
-    res <- bdist3(t, cshp = cshp, past_result = res)
+    res <- bdist3(t, cshp = cshp, past_result = res, config = config)
     terra::add(r) <- res$bdist3
   }
   names(r) <- as.character(time_slices)

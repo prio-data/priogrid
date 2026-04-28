@@ -154,7 +154,8 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
   message(paste("Saving to:", save_to))
   for (varname in valid_varnames) {
     message(paste("Calculating", varname))
-    r <- get(paste0("gen_", varname))()
+    gen_fun <- get(paste0("gen_", varname))
+    r <- gen_fun(config = config)
     save_pgvariable(r, varname, save_to = save_to)
   }
 
@@ -683,13 +684,6 @@ build_release <- function(version, type,
 
   # Construct config from explicit arguments
   config <- pg_config(
-    nrow = nrow, ncol = ncol, crs = crs, extent = extent,
-    temporal_resolution = temporal_resolution,
-    start_date = start_date, end_date = end_date
-  )
-
-  # Set as current session config so downstream gen_*() functions pick it up
-  pg_set_config(
     nrow = nrow, ncol = ncol, crs = crs, extent = extent,
     temporal_resolution = temporal_resolution,
     start_date = start_date, end_date = end_date

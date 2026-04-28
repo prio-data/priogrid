@@ -234,17 +234,17 @@ read_epr <- function() {
 #' @references
 #' \insertRef{wucherpfennigPoliticallyRelevantEthnic2011}{priogrid}
 #' \insertRef{vogtIntegratingDataEthnicity2015}{priogrid}
-gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")) {
+gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION"), config = pg_current_config()) {
 
   geoepr <- read_geoepr() |> dplyr::filter(type == "Regionally based") |>
     dplyr::select(from, to, gwgroupid, geometry)
   epr <- read_epr() |> dplyr::filter(status %in% excluded)
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
   df <- dplyr::inner_join(geoepr, epr, by = c("gwgroupid", "from", "to"))
 
   df <- sf::st_transform(df, crs = sf::st_crs(pg))
-  pg_intervals <- pg_date_intervals()
+  pg_intervals <- pg_date_intervals(config)
   pg_intervals <- pg_intervals[lubridate::int_start(pg_intervals) >= min(lubridate::int_start(df$date_interval))]
   pg_intervals <- pg_intervals[lubridate::int_end(pg_intervals) <= max(lubridate::int_end(df$date_interval))]
 
@@ -253,7 +253,7 @@ gen_geoepr_reg_excluded <- function(excluded = c("DISCRIMINATED", "POWERLESS", "
 
     if(nrow(sdf) > 0){
       sdf <- sdf |> dplyr::summarize(geometry = sf::st_combine(geometry))
-      pg <- prio_blank_grid()
+      pg <- prio_blank_grid(config)
       coversh <- exactextractr::exact_extract(pg, sdf)
       ra <- exactextractr::rasterize_polygons(sdf, pg)
       pg <- pg*ra # Remove non-land cells

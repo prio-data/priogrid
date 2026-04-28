@@ -144,11 +144,11 @@ read_geopko <- function(){
 #'
 #' @references
 #' \insertRef{cilMappingBlueHelmets2020}{priogrid}
-gen_geopko_operations_count <- function() {
+gen_geopko_operations_count <- function(config = pg_current_config()) {
   f <- read_geopko()
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
-  time_intervals <- pg_date_intervals()
+  time_intervals <- pg_date_intervals(config)
   stack_list <- list()
   for (i in 1:length(time_intervals)) {
     t <- time_intervals[i]
@@ -233,14 +233,14 @@ gen_geopko_operations_count <- function() {
 #'
 #' @references
 #' \insertRef{cilMappingBlueHelmets2020}{priogrid}
-gen_geopko_troops_count <- function() {
+gen_geopko_troops_count <- function(config = pg_current_config()) {
   f <- read_geopko()
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
   f$no.troops <- ifelse(f$no.troops == "unknown", NA, f$no.troops)
   f$no.troops <- as.numeric(f$no.troops)
 
-  time_intervals <- pg_date_intervals()
+  time_intervals <- pg_date_intervals(config)
   stack_list <- list()
   for (i in 1:length(time_intervals)) {
     t <- time_intervals[i]

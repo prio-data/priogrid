@@ -201,7 +201,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
 #' @references
 #' \insertRef{begueriaSPEIbase2024}{priogrid}
 #' \insertRef{begueriaStandardizedPrecipitationEvapotranspiration2014}{priogrid}
-read_speibase <- function(interval = 6) {
+read_speibase <- function(interval = 6, config = pg_current_config()) {
 
   spei_interval <- paste0("spei", formatC(interval, width=2, format='d', flag='0'), ".nc")
   out_path <- file.path(pg_rawfolder(),
@@ -250,8 +250,8 @@ read_speibase <- function(interval = 6) {
   names(r) <- terra::time(r)
 
   pg_period <- lubridate::interval(
-    pg_date_intervals() |> lubridate::int_start() |> min(),
-    pg_date_intervals() |> lubridate::int_end()   |> max()
+    pg_date_intervals(config) |> lubridate::int_start() |> min(),
+    pg_date_intervals(config) |> lubridate::int_end()   |> max()
   )
 
   terra::subset(r, which(terra::time(r) %within% pg_period))
@@ -291,13 +291,13 @@ read_speibase <- function(interval = 6) {
 #' @references
 #' \insertRef{begueriaSPEIbase2024}{priogrid}
 #' \insertRef{begueriaStandardizedPrecipitationEvapotranspiration2014}{priogrid}
-speibaseN <- function(interval, time_agg_fun){
-  r <- read_speibase(interval = interval)
+speibaseN <- function(interval, time_agg_fun, config = pg_current_config()){
+  r <- read_speibase(interval = interval, config = config)
 
   spei_time_interval <- lubridate::interval(terra::time(r) |> min(),
                                            terra::time(r) |> max())
 
-  pg_intervals <- pg_date_intervals()[pg_date_intervals() %within% spei_time_interval]
+  pg_intervals <- pg_date_intervals(config)[pg_date_intervals(config) %within% spei_time_interval]
 
   res <- list()
   # SPEI data comes in monthly resolution. Aggregate to lower resolution if PRIO-GRID is lower (e.g,. quarterly, yearly)
@@ -319,7 +319,7 @@ speibaseN <- function(interval, time_agg_fun){
   res <- terra::rast(res)
   names(res) <- lubridate::int_end(pg_intervals)
 
-  res <- robust_transformation(res, agg_fun = "mean")
+  res <- robust_transformation(res, agg_fun = "mean", config = config)
 
   return(res)
 }
@@ -352,6 +352,6 @@ speibaseN <- function(interval, time_agg_fun){
 #' @references
 #' \insertRef{begueriaSPEIbase2024}{priogrid}
 #' \insertRef{begueriaStandardizedPrecipitationEvapotranspiration2014}{priogrid}
-gen_speibase6_mean <- function(){
-  speibaseN(interval = 6, time_agg_fun = "mean")
+gen_speibase6_mean <- function(config = pg_current_config()){
+  speibaseN(interval = 6, time_agg_fun = "mean", config = config)
 }
