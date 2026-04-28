@@ -29,7 +29,7 @@
 #'     \item Temporal coverage: Years matching PRIO-GRID dates (max 1899-2019)
 #'   }
 #'
-#' The function depends on the internal [get_pgfile], [zip_file],
+#' The function depends on the internal [get_pgfile]
 #' and [pg_dates] functions from the priogrid package.
 #'
 #' @seealso

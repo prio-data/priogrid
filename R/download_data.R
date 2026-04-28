@@ -115,7 +115,7 @@ check_pgsourcefiles <- function(){
 
 #' Get file-path on local system to a data source in PRIO-GRID
 #'
-#' To look up src_name and version in PRIO-GRID, see [pgmeta] or [pg_rawfiles()].
+#' To look up src_name and version in PRIO-GRID, see [pg_rawfiles()].
 #'
 #' @param src_name character, the source name
 #' @param version character, the version number

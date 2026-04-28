@@ -6,7 +6,7 @@
 \usage{
 cshapes_cover(
   measurement_date,
-  min_cover = 0,
+  min_cover = 0.2,
   cshp = read_cshapes(),
   config = pg_current_config()
 )
