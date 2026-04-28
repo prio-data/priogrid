@@ -4,12 +4,7 @@
 \alias{save_pgvariable}
 \title{Save a PRIO-GRID variable}
 \usage{
-save_pgvariable(
-  rast,
-  varname,
-  save_to = pgout_path(),
-  config = pg_current_config()
-)
+save_pgvariable(rast, varname, save_to = pgout_path())
 }
 \arguments{
 \item{rast}{Terra SpatRaster object from a gen_*() function}

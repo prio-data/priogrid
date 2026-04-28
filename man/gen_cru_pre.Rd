@@ -4,9 +4,9 @@
 \alias{gen_cru_pre}
 \title{Generate PRIO-GRID Compatible CRU Precipitation Data}
 \usage{
-gen_cru_pre()
+gen_cru_pre(config = pg_current_config())
 
-gen_cru_pre()
+gen_cru_pre(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object with PRIO-GRID spatio-temporal resolution.

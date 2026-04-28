@@ -4,7 +4,7 @@
 \alias{gen_naturalearth_cover_share}
 \title{Share of PRIO-GRID Cells Covered by Land (Natural Earth)}
 \usage{
-gen_naturalearth_cover_share()
+gen_naturalearth_cover_share(config = pg_current_config())
 }
 \value{
 A single-layer \code{SpatRaster} object

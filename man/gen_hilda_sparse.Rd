@@ -4,7 +4,7 @@
 \alias{gen_hilda_sparse}
 \title{Extract Sparse/No Vegetation Coverage from HILDA+ Data}
 \usage{
-gen_hilda_sparse()
+gen_hilda_sparse(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with sparse/no vegetation coverage proportions

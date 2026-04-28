@@ -785,7 +785,7 @@ pg_list_custom <- function() {
     t_hash <- parts[length(parts)]
     s_hash <- parts[length(parts) - 1]
 
-    env <- new.env(parent = baseenv())
+    env <- new.env(parent = getNamespace("priogrid"))
     tryCatch(
       sys.source(config_files[i], envir = env),
       error = function(e) NULL

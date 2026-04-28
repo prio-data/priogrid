@@ -4,9 +4,9 @@
 \alias{read_cru_tmp}
 \title{Read and Process CRU TS Near Surface Temperature Data}
 \usage{
-read_cru_tmp(variable = "tmp")
+read_cru_tmp(variable = "tmp", config = pg_current_config())
 
-read_cru_tmp(variable = "tmp")
+read_cru_tmp(variable = "tmp", config = pg_current_config())
 }
 \arguments{
 \item{variable}{A character string specifying the climate variable to extract

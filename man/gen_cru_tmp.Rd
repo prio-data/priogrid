@@ -4,9 +4,9 @@
 \alias{gen_cru_tmp}
 \title{Generate PRIO-GRID Compatible CRU Near Surface Temperature Data}
 \usage{
-gen_cru_tmp()
+gen_cru_tmp(config = pg_current_config())
 
-gen_cru_tmp()
+gen_cru_tmp(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal

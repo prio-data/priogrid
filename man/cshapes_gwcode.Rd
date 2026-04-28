@@ -4,7 +4,11 @@
 \alias{cshapes_gwcode}
 \title{Assign Gleditsch-Ward Country Codes to PRIO-GRID Cells}
 \usage{
-cshapes_gwcode(measurement_date, cshp = read_cshapes())
+cshapes_gwcode(
+  measurement_date,
+  cshp = read_cshapes(),
+  config = pg_current_config()
+)
 }
 \arguments{
 \item{measurement_date}{A single \code{Date} object specifying the date for

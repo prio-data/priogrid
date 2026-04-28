@@ -4,7 +4,7 @@
 \alias{gen_hilda_ocean}
 \title{Extract Ocean Coverage from HILDA+ Data}
 \usage{
-gen_hilda_ocean()
+gen_hilda_ocean(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with ocean coverage proportions (0-1) for each

@@ -4,7 +4,7 @@
 \alias{hilda_landcover}
 \title{Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells}
 \usage{
-hilda_landcover(landcovertype)
+hilda_landcover(landcovertype, config = pg_current_config())
 }
 \arguments{
 \item{landcovertype}{Numeric. The land cover class identifier to extract from

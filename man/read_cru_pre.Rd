@@ -4,9 +4,9 @@
 \alias{read_cru_pre}
 \title{Read and Process CRU TS Precipitation Data}
 \usage{
-read_cru_pre()
+read_cru_pre(config = pg_current_config())
 
-read_cru_pre()
+read_cru_pre(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with the

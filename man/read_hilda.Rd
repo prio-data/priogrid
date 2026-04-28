@@ -4,7 +4,7 @@
 \alias{read_hilda}
 \title{Reads the HILDA+ data}
 \usage{
-read_hilda()
+read_hilda(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object (terra package) containing annual land

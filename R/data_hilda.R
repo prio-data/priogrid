@@ -66,7 +66,12 @@ read_hilda <- function(config = pg_current_config()) {
                   id = "82bc4c6f-9904-484f-aa9a-77771d076690")
 
   # Unzip archive
-  unzipped_directory <- zip_file(f)
+  base_name <- tools::file_path_sans_ext(basename(f))
+  unzipped_directory <- file.path(dirname(f), paste0(base_name, "_unzipped"))
+  if (!dir.exists(unzipped_directory) || length(list.files(unzipped_directory, all.files = TRUE, no.. = TRUE)) == 0) {
+    dir.create(unzipped_directory, showWarnings = FALSE, recursive = TRUE)
+    unzip(f, exdir = unzipped_directory)
+  }
 
   # Construct the path to the raster state files directory
   states_dir <- file.path(unzipped_directory,

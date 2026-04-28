@@ -4,7 +4,7 @@
 \alias{shdi}
 \title{Generate PRIO-GRID Compatible SHDI Variables}
 \usage{
-shdi(variable = "shdi")
+shdi(variable = "shdi", config = pg_current_config())
 }
 \arguments{
 \item{variable}{A character string specifying which SHDI-related variable to

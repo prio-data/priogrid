@@ -4,7 +4,7 @@
 \alias{gen_hilda_cropland}
 \title{Extract Cropland Coverage from HILDA+ Data}
 \usage{
-gen_hilda_cropland()
+gen_hilda_cropland(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with cropland coverage proportions (0-1) for each

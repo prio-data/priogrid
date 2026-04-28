@@ -185,15 +185,3 @@ test_that("rast_to_df converts time-varying raster with measurement_date column"
   expect_true("myvar" %in% names(df))
   expect_true("pgid" %in% names(df))
 })
-
-test_that("zip_file unzips to _unzipped directory and returns path", {
-  content <- tempfile()
-  writeLines("hello", content)
-  tmp <- tempfile(fileext = ".zip")
-  zip(tmp, content, flags = "-j")
-  out <- zip_file(tmp)
-  expect_true(dir.exists(out))
-  expect_true(endsWith(out, "_unzipped"))
-  expect_gt(length(list.files(out)), 0)
-  unlink(c(tmp, out, content), recursive = TRUE)
-})

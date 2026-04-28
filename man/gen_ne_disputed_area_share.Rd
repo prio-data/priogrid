@@ -4,7 +4,7 @@
 \alias{gen_ne_disputed_area_share}
 \title{Generate Raster for All Disputed Areas}
 \usage{
-gen_ne_disputed_area_share()
+gen_ne_disputed_area_share(config = pg_current_config())
 }
 \value{
 A single-layer \code{SpatRaster} object

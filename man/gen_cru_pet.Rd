@@ -4,9 +4,9 @@
 \alias{gen_cru_pet}
 \title{Generate PRIO-GRID Compatible CRU Potential Evapotranspiration Data}
 \usage{
-gen_cru_pet()
+gen_cru_pet(config = pg_current_config())
 
-gen_cru_pet()
+gen_cru_pet(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object with PRIO-GRID spatio-temporal resolution.

@@ -4,7 +4,7 @@
 \alias{gen_bdist1}
 \title{Generate distance to nearest land-contiguous border over time (bdist1)}
 \usage{
-gen_bdist1(cshp = read_cshapes())
+gen_bdist1(cshp = read_cshapes(), config = pg_current_config())
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with

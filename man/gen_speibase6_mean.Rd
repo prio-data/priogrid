@@ -4,7 +4,7 @@
 \alias{gen_speibase6_mean}
 \title{Generate SPEI-6 with mean-temporal aggregation compatible with PRIO-GRID}
 \usage{
-gen_speibase6_mean()
+gen_speibase6_mean(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal

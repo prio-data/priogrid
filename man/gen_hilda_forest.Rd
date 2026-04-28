@@ -4,7 +4,7 @@
 \alias{gen_hilda_forest}
 \title{Extract Forest Coverage from HILDA+ Data}
 \usage{
-gen_hilda_forest()
+gen_hilda_forest(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with forest coverage proportions (0-1) for each

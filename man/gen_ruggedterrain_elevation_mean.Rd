@@ -4,7 +4,7 @@
 \alias{gen_ruggedterrain_elevation_mean}
 \title{Generate the average (mean) elevation for PRIO-GRID cells}
 \usage{
-gen_ruggedterrain_elevation_mean()
+gen_ruggedterrain_elevation_mean(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object

@@ -4,7 +4,7 @@
 \alias{speibaseN}
 \title{Make SPEIbase data PRIO-GRID compatible}
 \usage{
-speibaseN(interval, time_agg_fun)
+speibaseN(interval, time_agg_fun, config = pg_current_config())
 }
 \arguments{
 \item{interval}{Integer. The month interval to calculate SPEI over. E.g., if the interval is
