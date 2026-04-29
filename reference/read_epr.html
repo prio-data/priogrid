@@ -23,8 +23,13 @@ columns for temporal analysis compatible with PRIO-GRID."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/citation.html">How to cite</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/citation.html">Citations and Bibliography</a></li>
+    <li><a class="dropdown-item" href="../articles/working-with-rasters.html">Accessing PRIOGRID as Rasters</a></li>
+    <li><a class="dropdown-item" href="../articles/custom-config.html">Custom Configurations</a></li>
+    <li><a class="dropdown-item" href="../articles/metadata.html">Understanding Metadata</a></li>
+    <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -44,7 +49,7 @@ columns for temporal analysis compatible with PRIO-GRID."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Reads the EPR Core 2023 data</h1>
-      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/HEAD/R/data_geoEPR.R" class="external-link"><code>R/data_geoEPR.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/master/R/data_geoEPR.R" class="external-link"><code>R/data_geoEPR.R</code></a></small>
       <div class="d-none name"><code>read_epr.Rd</code></div>
     </div>
 
@@ -127,7 +132,7 @@ engage in political competition, or face systematic discrimination.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Filter groups active in specific year</span></span></span>
 <span class="r-in"><span><span class="va">target_date</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2010-01-01"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">active_2010</span> <span class="op">&lt;-</span> <span class="va">epr_data</span><span class="op">[</span><span class="va">target_date</span> <span class="op"><a href="https://lubridate.tidyverse.org/reference/within-interval.html" class="external-link">%within%</a></span> <span class="va">epr_data</span><span class="op">$</span><span class="va">date_interval</span>, <span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">active_2010</span> <span class="op">&lt;-</span> <span class="va">epr_data</span><span class="op">[</span><span class="va">target_date</span> <span class="op">%within%</span> <span class="va">epr_data</span><span class="op">$</span><span class="va">date_interval</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">active_2010</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Analyze temporal changes for specific group</span></span></span>
@@ -146,7 +151,7 @@ engage in political competition, or face systematic discrimination.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

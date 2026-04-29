@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>How to cite • priogrid</title>
+<title>Citations and Bibliography • priogrid</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="How to cite">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Citations and Bibliography">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,10 +33,15 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/citation.html">How to cite</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
+<li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/citation.html">Citations and Bibliography</a></li>
+    <li><a class="dropdown-item" href="../articles/working-with-rasters.html">Accessing PRIOGRID as Rasters</a></li>
+    <li><a class="dropdown-item" href="../articles/custom-config.html">Custom Configurations</a></li>
+    <li><a class="dropdown-item" href="../articles/metadata.html">Understanding Metadata</a></li>
+    <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
   </ul>
 </li>
       </ul>
@@ -66,57 +71,259 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>How to cite</h1>
+      <h1>Citations and Bibliography</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/HEAD/vignettes/citation.Rmd" class="external-link"><code>vignettes/citation.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/master/vignettes/citation.Rmd" class="external-link"><code>vignettes/citation.Rmd</code></a></small>
       <div class="d-none name"><code>citation.Rmd</code></div>
     </div>
 
     
     
 <div class="section level2">
-<h2 id="citing-data-sources">Citing Data Sources<a class="anchor" aria-label="anchor" href="#citing-data-sources"></a>
+<h2 id="why-attribution-matters">Why Attribution Matters<a class="anchor" aria-label="anchor" href="#why-attribution-matters"></a>
 </h2>
-<p><strong>Always cite the original data providers when using their
-data.</strong> This is not only required by most data licenses (such as
-CC-BY), but is also an essential practice in research.</p>
-<p>The PRIOGRID package makes citation easy. If your dataset includes
-PRIOGRID variables that haven’t been renamed, simply use the
-<code><a href="../reference/pgcitations.html">pgcitations()</a></code> function to retrieve the appropriate
-citations for all data sources in your dataset.</p>
+<p>PRIOGRID aggregates data from many third-party providers. Most
+sources are licensed under Creative Commons (CC-BY) or similar terms
+that <strong>require attribution</strong>. Beyond legal compliance,
+citing data providers gives credit where it is due and helps readers
+trace the provenance of your results.</p>
+<p>PRIOGRID makes this easy: citation metadata is embedded in the
+package and linked to each variable.</p>
+</div>
+<div class="section level2">
+<h2 id="citing-variables-in-your-dataset">Citing Variables in Your Dataset<a class="anchor" aria-label="anchor" href="#citing-variables-in-your-dataset"></a>
+</h2>
+<p>If your dataset uses PRIOGRID variables with their original names,
+<code><a href="../reference/pgcitations.html">pgcitations()</a></code> retrieves all required citations in one
+call:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">variables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hilda_urban"</span>, <span class="st">"cru_tmp"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/pgcitations.html">pgcitations</a></span><span class="op">(</span><span class="va">variables</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## ## Package Citation</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Tollefsen AF, Strand H, Buhaug H (2012). "PRIO-GRID: A Unified Spatial</span></span>
-<span><span class="co">## Data Structure." _Journal of Peace Research_, *49*(2), 363-374.</span></span>
-<span><span class="co">## doi:10.1177/0022343311431287</span></span>
-<span><span class="co">## &lt;https://doi.org/10.1177/0022343311431287&gt;.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the</span></span>
-<span><span class="co">## R-package_. R package version 3.0.1,</span></span>
-<span><span class="co">## &lt;http://prio-data.github.io/priogrid&gt;.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Additionally, please cite these data providers:</span></span>
-<span><span class="co">## (based on these variables: hilda_urban, cru_tmp )</span></span></code></pre>
-<pre><code><span><span class="co">## [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS</span></span>
-<span><span class="co">## Monthly High-Resolution Gridded Multivariate Climate Dataset". In:</span></span>
-<span><span class="co">## _Scientific Data_ 7.1 (Apr. 2020), p. 109. ISSN: 2052-4463. DOI:</span></span>
-<span><span class="co">## 10.1038/s41597-020-0453-3.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## [2] K. Winkler, R. Fuchs, M. D. A. Rounsevell, et al. _HILDA+ Global</span></span>
-<span><span class="co">## Land Use Change between 1960 and 2019_. 2020. DOI:</span></span>
-<span><span class="co">## 10.1594/PANGAEA.921846. (Visited on 05/26/2025).</span></span></code></pre>
-<p>By maintaining original variable names and using this function, you
-ensure proper attribution to all data providers whose work contributes
-to your research.</p>
-<p>You can also just get the biblatex entries using
-<code>pgcitations(variables, as_biblatex = T)</code>.</p>
+<span><span class="fu"><a href="../reference/pgcitations.html">pgcitations</a></span><span class="op">(</span><span class="va">variables</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ## Package Citation</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Tollefsen AF, Strand H, Buhaug H (2012). "PRIO-GRID: A Unified Spatial</span></span>
+<span><span class="co">#&gt; Data Structure." _Journal of Peace Research_, *49*(2), 363-374.</span></span>
+<span><span class="co">#&gt; doi:10.1177/0022343311431287</span></span>
+<span><span class="co">#&gt; &lt;https://doi.org/10.1177/0022343311431287&gt;.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the</span></span>
+<span><span class="co">#&gt; R-package_. R package version 3.0.1,</span></span>
+<span><span class="co">#&gt; &lt;http://prio-data.github.io/priogrid&gt;.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Additionally, please cite these data providers:</span></span>
+<span><span class="co">#&gt; (based on these variables: hilda_urban, cru_tmp )</span></span>
+<span><span class="co">#&gt; [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS</span></span>
+<span><span class="co">#&gt; Monthly High-Resolution Gridded Multivariate Climate Dataset". In:</span></span>
+<span><span class="co">#&gt; _Scientific Data_ 7.1 (Apr. 2020), p. 109. ISSN: 2052-4463. DOI:</span></span>
+<span><span class="co">#&gt; 10.1038/s41597-020-0453-3.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; [2] K. Winkler, R. Fuchs, M. D. A. Rounsevell, et al. _HILDA+ Global</span></span>
+<span><span class="co">#&gt; Land Use Change between 1960 and 2019_. 2020. DOI:</span></span>
+<span><span class="co">#&gt; 10.1594/PANGAEA.921846. (Visited on 05/26/2025).</span></span></code></pre></div>
+<p>You can also pass a data frame directly — <code><a href="../reference/pgcitations.html">pgcitations()</a></code>
+reads the column names:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pgcitations.html">pgcitations</a></span><span class="op">(</span><span class="va">pg_static</span><span class="op">)</span>        <span class="co"># data.frame: uses column names</span></span>
+<span><span class="fu"><a href="../reference/pgcitations.html">pgcitations</a></span><span class="op">(</span><span class="va">pg_timevarying</span><span class="op">)</span>   <span class="co"># same</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="biblatex-export">BibLaTeX Export<a class="anchor" aria-label="anchor" href="#biblatex-export"></a>
+</h3>
+<p>For LaTeX documents, export as BibLaTeX entries:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pgcitations.html">pgcitations</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hilda_urban"</span>, <span class="st">"cru_tmp"</span><span class="op">)</span>, as_biblatex <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; @Article{,</span></span>
+<span><span class="co">#&gt;   title = {PRIO-GRID: A Unified Spatial Data Structure},</span></span>
+<span><span class="co">#&gt;   author = {Andreas Forø Tollefsen and Håvard Strand and Halvard Buhaug},</span></span>
+<span><span class="co">#&gt;   year = {2012},</span></span>
+<span><span class="co">#&gt;   journal = {Journal of Peace Research},</span></span>
+<span><span class="co">#&gt;   volume = {49},</span></span>
+<span><span class="co">#&gt;   number = {2},</span></span>
+<span><span class="co">#&gt;   pages = {363--374},</span></span>
+<span><span class="co">#&gt;   doi = {10.1177/0022343311431287},</span></span>
+<span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; @Manual{,</span></span>
+<span><span class="co">#&gt;   title = {priogrid: the R-package},</span></span>
+<span><span class="co">#&gt;   author = {Jonas Vestby and Andreas Forø Tollefsen and Kristine Helskog and Garret Benz},</span></span>
+<span><span class="co">#&gt;   year = {2025},</span></span>
+<span><span class="co">#&gt;   note = {R package version 3.0.1},</span></span>
+<span><span class="co">#&gt;   url = {http://prio-data.github.io/priogrid},</span></span>
+<span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt; @Misc{winklerHILDAGlobalLand2020,</span></span>
+<span><span class="co">#&gt;   title = {{{HILDA}}+ {{Global Land Use Change}} between 1960 and 2019},</span></span>
+<span><span class="co">#&gt;   author = {Karina Winkler and Richard Fuchs and Mark D. A. Rounsevell and Martin Herold},</span></span>
+<span><span class="co">#&gt;   year = {2020},</span></span>
+<span><span class="co">#&gt;   publisher = {PANGAEA},</span></span>
+<span><span class="co">#&gt;   doi = {10.1594/PANGAEA.921846},</span></span>
+<span><span class="co">#&gt;   urldate = {2025-05-26},</span></span>
+<span><span class="co">#&gt;   abstract = {Winkler, Karina; Fuchs, Richard; Rounsevell, Mark D A; Herold, Martin (2020): HILDA+ Global Land Use Change between 1960 and 2019 [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.921846},</span></span>
+<span><span class="co">#&gt;   copyright = {info:eu-repo/semantics/openAccess},</span></span>
+<span><span class="co">#&gt;   langid = {english},</span></span>
+<span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; @Article{harrisVersion4CRU2020,</span></span>
+<span><span class="co">#&gt;   title = {Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset},</span></span>
+<span><span class="co">#&gt;   author = {Ian Harris and Timothy J. Osborn and Phil Jones and David Lister},</span></span>
+<span><span class="co">#&gt;   year = {2020},</span></span>
+<span><span class="co">#&gt;   month = {apr},</span></span>
+<span><span class="co">#&gt;   journal = {Scientific Data},</span></span>
+<span><span class="co">#&gt;   volume = {7},</span></span>
+<span><span class="co">#&gt;   number = {1},</span></span>
+<span><span class="co">#&gt;   pages = {109},</span></span>
+<span><span class="co">#&gt;   issn = {2052-4463},</span></span>
+<span><span class="co">#&gt;   doi = {10.1038/s41597-020-0453-3},</span></span>
+<span><span class="co">#&gt;   abstract = {CRU TS (Climatic Research Unit gridded Time Series) is a widely used climate dataset on a 0.5{$^\circ$} latitude by 0.5{$^\circ$} longitude grid over all land domains of the world except Antarctica. It is derived by the interpolation of monthly climate anomalies from extensive networks of weather station observations. Here we describe the construction of a major new version, CRU TS v4. It is updated to span 1901--2018 by the inclusion of additional station observations, and it will be updated annually. The interpolation process has been changed to use angular-distance weighting (ADW), and the production of secondary variables has been revised to better suit this approach. This implementation of ADW provides improved traceability between each gridded value and the input observations, and allows more informative diagnostics that dataset users can utilise to assess how dataset quality might vary geographically.},</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+<p>Copy the output into your <code>.bib</code> file or paste it directly
+into an Overleaf project.</p>
 </div>
-  </main>
+</div>
+<div class="section level2">
+<h2 id="how-citation-lookup-works">How Citation Lookup Works<a class="anchor" aria-label="anchor" href="#how-citation-lookup-works"></a>
+</h2>
+<p>The chain from variable to citation is:</p>
+<pre><code>pgvariables$name → pgvariables$source_ids → pgsources$citation_keys → REFERENCES.bib</code></pre>
+<ol style="list-style-type: decimal">
+<li>
+<code>pgvariables</code> maps variable names to source UUIDs.</li>
+<li>
+<code>pgsources</code> maps source UUIDs to BibTeX keys
+(<code>citation_keys</code> column).</li>
+<li>
+<code>inst/REFERENCES.bib</code> holds the full bibliography (~200+
+entries).</li>
+</ol>
+<p>You can inspect this manually:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Find the source IDs for a variable</span></span>
+<span><span class="va">pgvariables</span><span class="op">[</span><span class="va">pgvariables</span><span class="op">$</span><span class="va">name</span> <span class="op">==</span> <span class="st">"cru_tmp"</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
+<span><span class="co">#&gt;   name    static source_ids                          </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                               </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> cru_tmp FALSE  ac037134-3567-49d9-a3ba-64f37c1ee698</span></span>
+<span></span>
+<span><span class="co"># Look up citation keys in pgsources</span></span>
+<span><span class="va">source_id</span> <span class="op">&lt;-</span> <span class="va">pgvariables</span><span class="op">[</span><span class="va">pgvariables</span><span class="op">$</span><span class="va">name</span> <span class="op">==</span> <span class="st">"cru_tmp"</span>, <span class="st">"source_ids"</span><span class="op">]</span></span>
+<span><span class="va">pgsources</span><span class="op">[</span><span class="va">pgsources</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="va">source_id</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"citation_keys"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 variables: source_name &lt;chr&gt;, citation_keys &lt;chr&gt;</span></span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="working-with-bibliography-entries-directly">Working with Bibliography Entries Directly<a class="anchor" aria-label="anchor" href="#working-with-bibliography-entries-directly"></a>
+</h2>
+<div class="section level3">
+<h3 id="get-a-bibliography-entry-by-key">Get a bibliography entry by key<a class="anchor" aria-label="anchor" href="#get-a-bibliography-entry-by-key"></a>
+</h3>
+<p><code><a href="../reference/get_bibliography.html">get_bibliography()</a></code> returns a
+<code><a href="https://docs.ropensci.org/RefManageR/reference/BibEntry.html" class="external-link">RefManageR::BibEntry</a></code> object for one or more keys:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No results.</span></span>
+<span><span class="co">#&gt; list()</span></span></code></pre></div>
+<p>Pass <code>as_biblatex = TRUE</code> for raw BibLaTeX text:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, as_biblatex <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No results.</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="extract-specific-fields">Extract specific fields<a class="anchor" aria-label="anchor" href="#extract-specific-fields"></a>
+</h3>
+<p><code><a href="../reference/get_bib_element.html">get_bib_element()</a></code> pulls out a single field (author,
+title, journal, or year):</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"author"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No results.</span></span>
+<span><span class="co">#&gt; character(0)</span></span>
+<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No results.</span></span>
+<span><span class="co">#&gt; character(0)</span></span>
+<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"title"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No results.</span></span>
+<span><span class="co">#&gt; character(0)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="parse-semicolon-separated-keys-from-pgsources">Parse semicolon-separated keys from pgsources<a class="anchor" aria-label="anchor" href="#parse-semicolon-separated-keys-from-pgsources"></a>
+</h3>
+<p>Source entries can have multiple citations separated by
+<code>"; "</code>. <code><a href="../reference/extract_bib_elements.html">extract_bib_elements()</a></code> handles this:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get all citation keys for the first source</span></span>
+<span><span class="va">first_source_keys</span> <span class="op">&lt;-</span> <span class="va">pgsources</span><span class="op">$</span><span class="va">citation_keys</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">first_source_keys</span></span>
+<span><span class="co">#&gt; [1] "elvidgeAnnualTimeSeries2021"</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/extract_bib_elements.html">extract_bib_elements</a></span><span class="op">(</span><span class="va">first_source_keys</span>, bib_element <span class="op">=</span> <span class="st">"author"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [[1]]</span></span>
+<span><span class="co">#&gt; [1] "Christopher D. Elvidge" "Mikhail Zhizhin"        "Tilottama Ghosh"       </span></span>
+<span><span class="co">#&gt; [4] "Feng-Chi Hsu"           "Jay Taneja"</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="citing-the-priogrid-package-itself">Citing the PRIOGRID Package Itself<a class="anchor" aria-label="anchor" href="#citing-the-priogrid-package-itself"></a>
+</h2>
+<p><code><a href="../reference/pgcitations.html">pgcitations()</a></code> always prints the package citation first.
+To get it directly:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"priogrid"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; To cite package 'priogrid' in publications use:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Tollefsen AF, Strand H, Buhaug H (2012). "PRIO-GRID: A Unified</span></span>
+<span><span class="co">#&gt;   Spatial Data Structure." _Journal of Peace Research_, *49*(2),</span></span>
+<span><span class="co">#&gt;   363-374. doi:10.1177/0022343311431287</span></span>
+<span><span class="co">#&gt;   &lt;https://doi.org/10.1177/0022343311431287&gt;.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the</span></span>
+<span><span class="co">#&gt;   R-package_. R package version 3.0.1,</span></span>
+<span><span class="co">#&gt;   &lt;http://prio-data.github.io/priogrid&gt;.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; To see these entries in BibTeX format, use 'print(&lt;citation&gt;,</span></span>
+<span><span class="co">#&gt; bibtex=TRUE)', 'toBibtex(.)', or set</span></span>
+<span><span class="co">#&gt; 'options(citation.bibtex.max=999)'.</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>pgcitations(vars)</code></td>
+<td>Print all citations for a set of variables</td>
+</tr>
+<tr class="even">
+<td><code>pgcitations(vars, as_biblatex = TRUE)</code></td>
+<td>Export as BibLaTeX</td>
+</tr>
+<tr class="odd">
+<td><code>get_bibliography(keys)</code></td>
+<td>Get BibEntry objects by key</td>
+</tr>
+<tr class="even">
+<td><code>get_bibliography(keys, as_biblatex = TRUE)</code></td>
+<td>Get raw BibLaTeX text</td>
+</tr>
+<tr class="odd">
+<td><code>get_bib_element(key, element)</code></td>
+<td>Extract author / title / year / journal</td>
+</tr>
+<tr class="even">
+<td><code>extract_bib_elements(keys_str)</code></td>
+<td>Parse semicolon-separated key strings</td>
+</tr>
+</tbody>
+</table>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
@@ -126,7 +333,7 @@ to your research.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

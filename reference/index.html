@@ -17,8 +17,13 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/citation.html">How to cite</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/citation.html">Citations and Bibliography</a></li>
+    <li><a class="dropdown-item" href="../articles/working-with-rasters.html">Accessing PRIOGRID as Rasters</a></li>
+    <li><a class="dropdown-item" href="../articles/custom-config.html">Custom Configurations</a></li>
+    <li><a class="dropdown-item" href="../articles/metadata.html">Understanding Metadata</a></li>
+    <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -45,564 +50,780 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
 
       <dl><dt>
 
-          <code><a href="PGOptionsManager.html">pgoptions</a></code>
-
-        </dt>
-        <dd>R6 Class to set and get package-wide options for PRIO-GRID.</dd>
-      </dl><dl><dt>
-
           <code><a href="Source.html">Source</a></code>
 
         </dt>
         <dd>Source Class</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="add_source.html">add_source()</a></code>
 
         </dt>
         <dd>Add source to CSV file</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="bdist1.html">bdist1()</a></code>
 
         </dt>
         <dd>Calculate distance to nearest land-contiguous border (bdist1)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="bdist2.html">bdist2()</a></code>
 
         </dt>
         <dd>Calculate distance to nearest international border (bdist2)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="bdist3.html">bdist3()</a></code>
 
         </dt>
         <dd>Calculate nearest distance to a country's own borders (bdist3)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="build_release.html">build_release()</a></code>
 
         </dt>
         <dd>Build an official PRIO-GRID release</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="calc_pg.html">calc_pg()</a></code>
 
         </dt>
         <dd>Calculate PRIO-GRID variables</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="calc_traveltime.html">calc_traveltime()</a></code>
 
         </dt>
         <dd>Generate travel time to nearest major city</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="check_pgsourcefiles.html">check_pgsourcefiles()</a></code>
 
         </dt>
         <dd>Test if MD5 checksums of local files are the same as a tested set of files</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="create_pg_indices.html">create_pg_indices()</a></code>
 
         </dt>
         <dd>Create matrix with index numbering conventions as for PRIO-GRID.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="cshapes_cover.html">cshapes_cover()</a></code>
 
         </dt>
         <dd>Binary Mask for Grid Cells Intersecting International State System (cShapes 2.0)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="cshapes_cover_share.html">cshapes_cover_share()</a></code>
 
         </dt>
         <dd>Calculate Grid Cell Coverage by International State System Boundaries (cShapes 2.0)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="cshapes_gwcode.html">cshapes_gwcode()</a></code>
 
         </dt>
         <dd>Assign Gleditsch-Ward Country Codes to PRIO-GRID Cells</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="download_pg_rawdata.html">download_pg_rawdata()</a></code>
 
         </dt>
         <dd>Download the raw-data for PRIO-GRID</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="download_priogrid.html">download_priogrid()</a></code>
 
         </dt>
         <dd>Download and initialize official PRIO-GRID release</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="extract_bib_elements.html">extract_bib_elements()</a></code>
 
         </dt>
         <dd>Helper function to parse bibliography elements based on a source</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_bdist1.html">gen_bdist1()</a></code>
 
         </dt>
         <dd>Generate distance to nearest land-contiguous border over time (bdist1)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_bdist2.html">gen_bdist2()</a></code>
 
         </dt>
         <dd>Generate multi-temporal distance to international borders data (bdist2)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_bdist3.html">gen_bdist3()</a></code>
 
         </dt>
         <dd>Generate distance to a country's own borders (bdist3)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_cru_pet.html">gen_cru_pet()</a></code>
 
         </dt>
         <dd>Generate PRIO-GRID Compatible CRU Potential Evapotranspiration Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_cru_pre.html">gen_cru_pre()</a></code>
 
         </dt>
         <dd>Generate PRIO-GRID Compatible CRU Precipitation Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_cru_tmp.html">gen_cru_tmp()</a></code>
 
         </dt>
         <dd>Generate PRIO-GRID Compatible CRU Near Surface Temperature Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_cshapes_cover_share.html">gen_cshapes_cover_share()</a></code>
 
         </dt>
         <dd>Generate cshapes_cover_share variable</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_cshapes_gwcode.html">gen_cshapes_gwcode()</a></code>
 
         </dt>
         <dd>Generate cshapes_gwcode variable</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="gen_esch.html">gen_esch()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID Expected Years of Schooling</dd>
+
+        <dt>
 
           <code><a href="gen_geoepr_reg_excluded.html">gen_geoepr_reg_excluded()</a></code>
 
         </dt>
         <dd>Generate Multi-Temporal Regionally Excluded Ethnic Groups Coverage</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_geopko_operations_count.html">gen_geopko_operations_count()</a></code>
 
         </dt>
         <dd>Generate Multi-Temporal Peacekeeping Operations Count Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_geopko_troops_count.html">gen_geopko_troops_count()</a></code>
 
         </dt>
         <dd>Generate Multi-Temporal Peacekeeping Troop Deployment Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_ghs_wup_degurba_urban.html">gen_ghs_wup_degurba_urban()</a></code>
 
         </dt>
         <dd>Generate GHS-WUP-DEGURBA urban proportion grid</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_ghsl_population_grid.html">gen_ghsl_population_grid()</a></code>
 
         </dt>
         <dd>Generate GHSL GHS Population Grid</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="gen_gnic.html">gen_gnic()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID Gross National Income per Capita</dd>
+
+        <dt>
 
           <code><a href="gen_hilda_cropland.html">gen_hilda_cropland()</a></code>
 
         </dt>
         <dd>Extract Cropland Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_forest.html">gen_hilda_forest()</a></code>
 
         </dt>
         <dd>Extract Forest Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_grassland.html">gen_hilda_grassland()</a></code>
 
         </dt>
         <dd>Extract Unmanaged Grass/Shrubland Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_ocean.html">gen_hilda_ocean()</a></code>
 
         </dt>
         <dd>Extract Ocean Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_pasture.html">gen_hilda_pasture()</a></code>
 
         </dt>
         <dd>Extract Pasture/Rangeland Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_sparse.html">gen_hilda_sparse()</a></code>
 
         </dt>
         <dd>Extract Sparse/No Vegetation Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_urban.html">gen_hilda_urban()</a></code>
 
         </dt>
         <dd>Extract Urban Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_hilda_water.html">gen_hilda_water()</a></code>
 
         </dt>
         <dd>Extract Water Coverage from HILDA+ Data</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="gen_lifexp.html">gen_lifexp()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID Life Expectancy</dd>
+
+        <dt>
 
           <code><a href="gen_linight_mean.html">gen_linight_mean()</a></code>
 
         </dt>
         <dd>Generate Li Nighttime Light</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="gen_msch.html">gen_msch()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID Mean Years of Schooling</dd>
+
+        <dt>
 
           <code><a href="gen_naturalearth_cover.html">gen_naturalearth_cover()</a></code>
 
         </dt>
         <dd>Land Mask for PRIO-GRID Cells (Natural Earth)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_naturalearth_cover_share.html">gen_naturalearth_cover_share()</a></code>
 
         </dt>
         <dd>Share of PRIO-GRID Cells Covered by Land (Natural Earth)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_ne_disputed_area_share.html">gen_ne_disputed_area_share()</a></code>
 
         </dt>
         <dd>Generate Raster for All Disputed Areas</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_ruggedterrain_elevation_mean.html">gen_ruggedterrain_elevation_mean()</a></code>
 
         </dt>
         <dd>Generate the average (mean) elevation for PRIO-GRID cells</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="gen_shdi.html">gen_shdi()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID SHDI</dd>
+
+        <dt>
 
           <code><a href="gen_speibase6_mean.html">gen_speibase6_mean()</a></code>
 
         </dt>
         <dd>Generate SPEI-6 with mean-temporal aggregation compatible with PRIO-GRID</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_traveltime_mean.html">gen_traveltime_mean()</a></code>
 
         </dt>
         <dd>Generate the mean travel time to nearest major city</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_traveltime_min.html">gen_traveltime_min()</a></code>
 
         </dt>
         <dd>Generate the minimum travel time to nearest major city</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="gen_ucdp_ged.html">gen_ucdp_ged()</a></code>
 
         </dt>
         <dd>Generate UCDP GED Battle-Related Deaths Variable</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="get_bib_element.html">get_bib_element()</a></code>
 
         </dt>
         <dd>Extract bibliography element</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="get_bibliography.html">get_bibliography()</a></code>
 
         </dt>
         <dd>Get the PRIO-GRID bibliography</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="get_pgfile.html">get_pgfile()</a></code>
 
         </dt>
         <dd>Get file-path on local system to a data source in PRIO-GRID</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="ghs_wup_degurba.html">ghs_wup_degurba()</a></code>
 
         </dt>
         <dd>Apply urban classification to GHS-WUP-DEGURBA data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="hilda_landcover.html">hilda_landcover()</a></code>
 
         </dt>
         <dd>Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="load_pgvariable.html">load_pgvariable()</a></code>
 
         </dt>
         <dd>Load a PRIO-GRID variable</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="ne_disputed_area_share.html">ne_disputed_area_share()</a></code>
 
         </dt>
         <dd>Generate Raster for Disputed Areas by Type</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="pg_config.html">pg_config()</a></code>
+
+        </dt>
+        <dd>Create a PRIO-GRID configuration object</dd>
+
+        <dt>
+
+          <code><a href="pg_current_config.html">pg_current_config()</a></code>
+
+        </dt>
+        <dd>Get the current session configuration</dd>
+
+        <dt>
+
+          <code><a href="pg_data_availability.html">pg_data_availability()</a></code>
+
+        </dt>
+        <dd>Check which PRIO-GRID raw data files are available locally</dd>
+
+        <dt>
 
           <code><a href="pg_date_intervals.html">pg_date_intervals()</a></code>
 
         </dt>
         <dd>Get a sequence of date intervals</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pg_dates.html">pg_dates()</a></code>
 
         </dt>
         <dd>Get a sequence of dates</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="pg_list_custom.html">pg_list_custom()</a></code>
+
+        </dt>
+        <dd>List custom PRIO-GRID data folders</dd>
+
+        <dt>
 
           <code><a href="pg_rawfiles.html">pg_rawfiles()</a></code>
 
         </dt>
         <dd>Extract url- and file-info from PRIO-GRID metadata</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="pg_rawfolder.html">pg_rawfolder()</a></code>
+
+        </dt>
+        <dd>Get the raw data folder path</dd>
+
+        <dt>
+
+          <code><a href="pg_release_config.html">pg_release_config()</a></code>
+
+        </dt>
+        <dd>Get configuration for an official PRIO-GRID release</dd>
+
+        <dt>
+
+          <code><a href="pg_reset_config.html">pg_reset_config()</a></code>
+
+        </dt>
+        <dd>Reset session configuration to defaults</dd>
+
+        <dt>
+
+          <code><a href="pg_set_config.html">pg_set_config()</a></code>
+
+        </dt>
+        <dd>Update the current session configuration</dd>
+
+        <dt>
+
+          <code><a href="pg_set_rawfolder.html">pg_set_rawfolder()</a></code>
+
+        </dt>
+        <dd>Set the raw data folder path</dd>
+
+        <dt>
 
           <code><a href="pgchecksum.html">pgchecksum</a></code>
 
         </dt>
         <dd>PRIO-GRID File Checksums (MD5)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pgcitations.html">pgcitations()</a></code>
 
         </dt>
         <dd>Print citations for PRIO-GRID variables</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pgout_path.html">pgout_path()</a></code>
 
         </dt>
         <dd>Path to store PRIOGRID results</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pgsearch.html">pgsearch()</a></code>
 
         </dt>
         <dd>Search PRIO-GRID meta-data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pgsources.html">pgsources</a></code>
 
         </dt>
         <dd>PRIO-GRID Meta-data survey and source information</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="pgvariables.html">pgvariables</a></code>
 
         </dt>
         <dd>PRIO-GRID Variables</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="print.pg_config.html">print(<i>&lt;pg_config&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print a pg_config object</dd>
+
+        <dt>
 
           <code><a href="prio_blank_grid.html">prio_blank_grid()</a></code>
 
         </dt>
         <dd>Create a raster with PRIO-GRID ids.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="rast_to_df.html">rast_to_df()</a></code>
 
         </dt>
         <dd>Converts raster with variable to data.frame</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_cru_pet.html">read_cru_pet()</a></code>
 
         </dt>
         <dd>Read and Process CRU TS Potential Evapotranspiration Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_cru_pre.html">read_cru_pre()</a></code>
 
         </dt>
         <dd>Read and Process CRU TS Precipitation Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_cru_tmp.html">read_cru_tmp()</a></code>
 
         </dt>
         <dd>Read and Process CRU TS Near Surface Temperature Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_cshapes.html">read_cshapes()</a></code>
 
         </dt>
         <dd>Reads the CShapes 2.0 raw data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_epr.html">read_epr()</a></code>
 
         </dt>
         <dd>Reads the EPR Core 2023 data</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="read_geoboundaries.html">read_geoboundaries()</a></code>
+
+        </dt>
+        <dd>Read geoBoundaries Administrative Boundary Data</dd>
+
+        <dt>
 
           <code><a href="read_geoepr.html">read_geoepr()</a></code>
 
         </dt>
         <dd>Reads the GeoEPR - Geo-referencing Ethnic Power Relations data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_geopko.html">read_geopko()</a></code>
 
         </dt>
         <dd>Reads the Geocoded Peacekeeping Operations (Geo-PKO) data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_ghs_wup_degurba.html">read_ghs_wup_degurba()</a></code>
 
         </dt>
         <dd>Reads the GHS-WUP-DEGURBA data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_ghsl_population_grid.html">read_ghsl_population_grid()</a></code>
 
         </dt>
         <dd>Reads the GHSL GHS Population Grid data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_hilda.html">read_hilda()</a></code>
 
         </dt>
         <dd>Reads the HILDA+ data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_linight.html">read_linight()</a></code>
 
         </dt>
         <dd>Reads the Li Nighttime data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_naturalearth_10m_land.html">read_naturalearth_10m_land()</a></code>
 
         </dt>
         <dd>Reads the Natural Earth 10m Physical Land Data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_ne_disputed_areas.html">read_ne_disputed_areas()</a></code>
 
         </dt>
         <dd>Reads the Natural Earth Disputed Areas Dataset</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_pg_static.html">read_pg_static()</a></code>
 
         </dt>
         <dd>Collect static (non-time-varying) PRIO-GRID data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_pg_timevarying.html">read_pg_timevarying()</a></code>
 
         </dt>
         <dd>Collect time-varying (non-static) PRIO-GRID data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_ruggedterrain.html">read_ruggedterrain()</a></code>
 
         </dt>
         <dd>Read Global Multi-resolution Terrain Elevation Data (GMTED2010)</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="read_shdi.html">read_shdi()</a></code>
+
+        </dt>
+        <dd>Reads in SHDI data and fixes empty SHDI geometries</dd>
+
+        <dt>
+
+          <code><a href="read_shdi_csv.html">read_shdi_csv()</a></code>
+
+        </dt>
+        <dd>Read GlobalDataLab Subnational Human Development Index (SHDI) Data</dd>
+
+        <dt>
+
+          <code><a href="read_shdi_shapefile.html">read_shdi_shapefile()</a></code>
+
+        </dt>
+        <dd>Read GlobalDataLab SHDI Shapefile Data</dd>
+
+        <dt>
 
           <code><a href="read_speibase.html">read_speibase()</a></code>
 
         </dt>
         <dd>Read and Process Global SPEI database data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_traveltime.html">read_traveltime()</a></code>
 
         </dt>
         <dd>Read Estimated Travel Time to Major Cities (Year 2000)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="read_ucdp_ged.html">read_ucdp_ged()</a></code>
 
         </dt>
         <dd>Reads the UCDP Georeferenced Event Dataset (GED)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="robust_transformation.html">robust_transformation()</a></code>
 
         </dt>
         <dd>Robustly transform any raster to PRIO-GRID format</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="ruggedterrain_variable.html">ruggedterrain_variable()</a></code>
 
         </dt>
         <dd>Calculate elevation in PRIO-GRID format with set variable</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="save_pgvariable.html">save_pgvariable()</a></code>
 
         </dt>
         <dd>Save a PRIO-GRID variable</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="shdi.html">shdi()</a></code>
+
+        </dt>
+        <dd>Generate PRIO-GRID Compatible SHDI Variables</dd>
+
+        <dt>
 
           <code><a href="spei.nc.html">spei.nc()</a></code>
 
         </dt>
         <dd>Compute SPEI from very large arrayed data sets in netCDF format.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="speibaseN.html">speibaseN()</a></code>
 
         </dt>
         <dd>Make SPEIbase data PRIO-GRID compatible</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="ucdp_ged.html">ucdp_ged()</a></code>
 
         </dt>
         <dd>Process UCDP GED Data with Temporal Fatality Distribution</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="urban_extent.html">urban_extent()</a></code>
 
         </dt>
         <dd>Extract contiguous urban extent around a location</dd>
-      </dl><dl><dt>
-
-          <code><a href="zip_file.html">zip_file()</a></code>
-
-        </dt>
-        <dd>Unzip a File to a Structured Directory (with Safety Check)</dd>
       </dl></div>
   </main></div>
 
@@ -612,7 +833,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

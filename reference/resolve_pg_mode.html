@@ -19,8 +19,13 @@ and returns resolved settings. Does not perform any file operations or downloads
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/citation.html">How to cite</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/citation.html">Citations and Bibliography</a></li>
+    <li><a class="dropdown-item" href="../articles/working-with-rasters.html">Accessing PRIOGRID as Rasters</a></li>
+    <li><a class="dropdown-item" href="../articles/custom-config.html">Custom Configurations</a></li>
+    <li><a class="dropdown-item" href="../articles/metadata.html">Understanding Metadata</a></li>
+    <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -40,7 +45,7 @@ and returns resolved settings. Does not perform any file operations or downloads
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Resolve PRIO-GRID data mode and paths</h1>
-      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/HEAD/R/build_priogrid.R" class="external-link"><code>R/build_priogrid.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/master/R/build_priogrid.R" class="external-link"><code>R/build_priogrid.R</code></a></small>
       <div class="d-none name"><code>resolve_pg_mode.Rd</code></div>
     </div>
 
@@ -52,8 +57,9 @@ and returns resolved settings. Does not perform any file operations or downloads
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">resolve_pg_mode</span><span class="op">(</span></span>
+<span>  config <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  version <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  type <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"05deg_yearly"</span>,</span>
 <span>  spatial_hash <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  temporal_hash <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -64,20 +70,24 @@ and returns resolved settings. Does not perform any file operations or downloads
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-version">version<a class="anchor" aria-label="anchor" href="#arg-version"></a></dt>
-<dd><p>Character string specifying PRIOGRID version.</p></dd>
+<dl><dt id="arg-config">config<a class="anchor" aria-label="anchor" href="#arg-config"></a></dt>
+<dd><p>A <code>pg_config</code> object for custom mode, or NULL for release mode.</p></dd>
+
+
+<dt id="arg-version">version<a class="anchor" aria-label="anchor" href="#arg-version"></a></dt>
+<dd><p>Character string specifying PRIOGRID version (release mode only).</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
-<dd><p>Character string specifying release type.</p></dd>
+<dd><p>Character string specifying release type (release mode only).</p></dd>
 
 
 <dt id="arg-spatial-hash">spatial_hash<a class="anchor" aria-label="anchor" href="#arg-spatial-hash"></a></dt>
-<dd><p>Character string with 6-character spatial hash.</p></dd>
+<dd><p>Character string with 6-character spatial hash (custom mode).</p></dd>
 
 
 <dt id="arg-temporal-hash">temporal_hash<a class="anchor" aria-label="anchor" href="#arg-temporal-hash"></a></dt>
-<dd><p>Character string with 6-character temporal hash.</p></dd>
+<dd><p>Character string with 6-character temporal hash (custom mode).</p></dd>
 
 
 <dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
@@ -111,7 +121,16 @@ and returns resolved settings. Does not perform any file operations or downloads
 <dt>warning</dt>
 <dd><p>Warning message if any, otherwise NULL</p></dd>
 
+<dt>config</dt>
+<dd><p>Resolved config for data construction</p></dd>
+
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Mode is signalled by <code>config</code>:</p><ul><li><p><code>config = NULL</code> (default) → release mode</p></li>
+<li><p><code>config = pg_config(...)</code> → custom mode</p></li>
+<li><p><code>spatial_hash</code> + <code>temporal_hash</code> → custom mode (explicit path override)</p></li>
+</ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
@@ -122,7 +141,7 @@ and returns resolved settings. Does not perform any file operations or downloads
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

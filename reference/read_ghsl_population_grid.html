@@ -23,8 +23,13 @@ compatibility with PRIO-GRID temporal structure."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/citation.html">How to cite</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials"><li><a class="dropdown-item" href="../articles/getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/citation.html">Citations and Bibliography</a></li>
+    <li><a class="dropdown-item" href="../articles/working-with-rasters.html">Accessing PRIOGRID as Rasters</a></li>
+    <li><a class="dropdown-item" href="../articles/custom-config.html">Custom Configurations</a></li>
+    <li><a class="dropdown-item" href="../articles/metadata.html">Understanding Metadata</a></li>
+    <li><a class="dropdown-item" href="../articles/contributing.html">Contributing</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -44,7 +49,7 @@ compatibility with PRIO-GRID temporal structure."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Reads the GHSL GHS Population Grid data</h1>
-      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/HEAD/R/data_ghsl.R" class="external-link"><code>R/data_ghsl.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/prio-data/priogrid/blob/master/R/data_ghsl.R" class="external-link"><code>R/data_ghsl.R</code></a></small>
       <div class="d-none name"><code>read_ghsl_population_grid.Rd</code></div>
     </div>
 
@@ -57,7 +62,7 @@ compatibility with PRIO-GRID temporal structure.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">read_ghsl_population_grid</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">read_ghsl_population_grid</span><span class="op">(</span>config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -86,7 +91,8 @@ resolution for multiple time periods globally. This function:</p><ul><li><p>Down
     <p>Schiavina M, Freire S, MacManus K (2023).
 “GHS-POP R2023A - GHS Population Grid Multitemporal (1975-2030).”
 <a href="https://doi.org/10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE" class="external-link">doi:10.2905/2FF68A52-5B5B-4A22-8F40-C41DA8332CFE</a>
-, <a href="2024-09-27">2024-09-27</a>.</p>
+.
+<a href="2024-09-27">2024-09-27</a>.</p>
     </div>
 
     <div class="section level2">
@@ -137,7 +143,7 @@ resolution for multiple time periods globally. This function:</p><ul><li><p>Down
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
