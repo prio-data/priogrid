@@ -145,16 +145,30 @@ returns a
 object for one or more keys:
 
 ``` r
-get_bibliography("harrisCRUTSVersiondataset2020")
-#> No results.
-#> list()
+get_bibliography("harrisVersion4CRU2020")
+#> [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS
+#> Monthly High-Resolution Gridded Multivariate Climate Dataset". In:
+#> _Scientific Data_ 7.1 (Apr. 2020), p. 109. ISSN: 2052-4463. DOI:
+#> 10.1038/s41597-020-0453-3.
 ```
 
 Pass `as_biblatex = TRUE` for raw BibLaTeX text:
 
 ``` r
-get_bibliography("harrisCRUTSVersiondataset2020", as_biblatex = TRUE)
-#> No results.
+get_bibliography("harrisVersion4CRU2020", as_biblatex = TRUE)
+#> @Article{harrisVersion4CRU2020,
+#>   title = {Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset},
+#>   author = {Ian Harris and Timothy J. Osborn and Phil Jones and David Lister},
+#>   year = {2020},
+#>   month = {apr},
+#>   journal = {Scientific Data},
+#>   volume = {7},
+#>   number = {1},
+#>   pages = {109},
+#>   issn = {2052-4463},
+#>   doi = {10.1038/s41597-020-0453-3},
+#>   abstract = {CRU TS (Climatic Research Unit gridded Time Series) is a widely used climate dataset on a 0.5{$^\circ$} latitude by 0.5{$^\circ$} longitude grid over all land domains of the world except Antarctica. It is derived by the interpolation of monthly climate anomalies from extensive networks of weather station observations. Here we describe the construction of a major new version, CRU TS v4. It is updated to span 1901--2018 by the inclusion of additional station observations, and it will be updated annually. The interpolation process has been changed to use angular-distance weighting (ADW), and the production of secondary variables has been revised to better suit this approach. This implementation of ADW provides improved traceability between each gridded value and the input observations, and allows more informative diagnostics that dataset users can utilise to assess how dataset quality might vary geographically.},
+#> }
 ```
 
 ### Extract specific fields
@@ -163,15 +177,13 @@ get_bibliography("harrisCRUTSVersiondataset2020", as_biblatex = TRUE)
 pulls out a single field (author, title, journal, or year):
 
 ``` r
-get_bib_element("harrisCRUTSVersiondataset2020", element = "author")
-#> No results.
-#> character(0)
-get_bib_element("harrisCRUTSVersiondataset2020", element = "year")
-#> No results.
-#> character(0)
-get_bib_element("harrisCRUTSVersiondataset2020", element = "title")
-#> No results.
-#> character(0)
+get_bib_element("harrisVersion4CRU2020", element = "author")
+#> [1] "Ian Harris"        "Timothy J. Osborn" "Phil Jones"       
+#> [4] "David Lister"
+get_bib_element("harrisVersion4CRU2020", element = "year")
+#> [1] "2020"
+get_bib_element("harrisVersion4CRU2020", element = "title")
+#> [1] "Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset"
 ```
 
 ### Parse semicolon-separated keys from pgsources

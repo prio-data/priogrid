@@ -11,79 +11,25 @@ on top of them.
 calculate:
 
 ``` r
-pgvariables
-#>                            name static
-#> 1                       cru_tmp  FALSE
-#> 2                       cru_pre  FALSE
-#> 3                       cru_pet  FALSE
-#> 4           cshapes_cover_share  FALSE
-#> 5                cshapes_gwcode  FALSE
-#> 6           geoepr_reg_excluded  FALSE
-#> 7                        bdist1  FALSE
-#> 8                        bdist2  FALSE
-#> 9                        bdist3  FALSE
-#> 10         ghsl_population_grid  FALSE
-#> 11               hilda_cropland  FALSE
-#> 12                 hilda_forest  FALSE
-#> 13              hilda_grassland  FALSE
-#> 14                  hilda_ocean  FALSE
-#> 15                hilda_pasture  FALSE
-#> 16                 hilda_sparse  FALSE
-#> 17                  hilda_urban  FALSE
-#> 18                  hilda_water  FALSE
-#> 19                 linight_mean  FALSE
-#> 20           naturalearth_cover   TRUE
-#> 21     naturalearth_cover_share   TRUE
-#> 22 ruggedterrain_elevation_mean   TRUE
-#> 23              traveltime_mean   TRUE
-#> 24               traveltime_min   TRUE
-#> 25          geopko_troops_count  FALSE
-#> 26      geopko_operations_count  FALSE
-#> 27       ne_disputed_area_share   TRUE
-#> 28               speibase6_mean  FALSE
-#> 29        ghs_wup_degurba_urban  FALSE
-#> 30                     ucdp_ged  FALSE
-#> 31                         shdi  FALSE
-#> 32                         msch  FALSE
-#> 33                         esch  FALSE
-#> 34                       lifexp  FALSE
-#> 35                         gnic  FALSE
-#>                                                                                                          source_ids
-#> 1                                                                              ac037134-3567-49d9-a3ba-64f37c1ee698
-#> 2                                                                              00575260-ad1c-4e87-a575-3922bc151f50
-#> 3                                                                              95399c70-7db4-47f0-95e5-2e279b6b2054
-#> 4                                                                              ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
-#> 5                                                                              ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
-#> 6                                        287bfdf7-2f4f-402a-88df-5fe1f8b7046b, 3900b527-a728-4c26-b0ab-f4441d3ee2e8
-#> 7                                                                              ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
-#> 8                                                                              ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
-#> 9                                                                              ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b
-#> 10                                                                             ae6a7612-4bef-452f-acd6-d2212cf9a7c5
-#> 11                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 12                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 13                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 14                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 15                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 16                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 17                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 18                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 19                                                                             24d76a3b-927e-42ad-b8a5-2e7443e6a275
-#> 20                                                                             92da9800-4520-4e87-a855-b28255452189
-#> 21                                                                             92da9800-4520-4e87-a855-b28255452189
-#> 22                                                                             8c8192eb-cc29-4598-8f8a-ec190ba35c2d
-#> 23                                                                             9aa052f6-4d04-4ed1-9eed-e47e08828d38
-#> 24                                                                             9aa052f6-4d04-4ed1-9eed-e47e08828d38
-#> 25                                                                             7dcbfbfb-9667-4684-af34-85f69fa8d0a0
-#> 26                                                                             7dcbfbfb-9667-4684-af34-85f69fa8d0a0
-#> 27                                                                             920663ad-d7e7-4528-b36d-4b7266def2b1
-#> 28 14839384-623a-4cf7-9241-6166a8ac465b, 95399c70-7db4-47f0-95e5-2e279b6b2054, 00575260-ad1c-4e87-a575-3922bc151f50
-#> 29                                                                             7f1f60a3-6664-4427-b086-b5359ebf45b7
-#> 30                                                                             49f79d96-4e4d-4812-9dd1-862bacfca577
-#> 31 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
-#> 32 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
-#> 33 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
-#> 34 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
-#> 35 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
+pgvariables$name
+#>  [1] "cru_tmp"                      "cru_pre"                     
+#>  [3] "cru_pet"                      "cshapes_cover_share"         
+#>  [5] "cshapes_gwcode"               "geoepr_reg_excluded"         
+#>  [7] "bdist1"                       "bdist2"                      
+#>  [9] "bdist3"                       "ghsl_population_grid"        
+#> [11] "hilda_cropland"               "hilda_forest"                
+#> [13] "hilda_grassland"              "hilda_ocean"                 
+#> [15] "hilda_pasture"                "hilda_sparse"                
+#> [17] "hilda_urban"                  "hilda_water"                 
+#> [19] "linight_mean"                 "naturalearth_cover"          
+#> [21] "naturalearth_cover_share"     "ruggedterrain_elevation_mean"
+#> [23] "traveltime_mean"              "traveltime_min"              
+#> [25] "geopko_troops_count"          "geopko_operations_count"     
+#> [27] "ne_disputed_area_share"       "speibase6_mean"              
+#> [29] "ghs_wup_degurba_urban"        "ucdp_ged"                    
+#> [31] "shdi"                         "msch"                        
+#> [33] "esch"                         "lifexp"                      
+#> [35] "gnic"
 ```
 
 | Column       | Description                                                                                                                                                                                  |

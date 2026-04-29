@@ -219,13 +219,27 @@ entries).</li>
 <p><code><a href="../reference/get_bibliography.html">get_bibliography()</a></code> returns a
 <code><a href="https://docs.ropensci.org/RefManageR/reference/BibEntry.html" class="external-link">RefManageR::BibEntry</a></code> object for one or more keys:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; No results.</span></span>
-<span><span class="co">#&gt; list()</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisVersion4CRU2020"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS</span></span>
+<span><span class="co">#&gt; Monthly High-Resolution Gridded Multivariate Climate Dataset". In:</span></span>
+<span><span class="co">#&gt; _Scientific Data_ 7.1 (Apr. 2020), p. 109. ISSN: 2052-4463. DOI:</span></span>
+<span><span class="co">#&gt; 10.1038/s41597-020-0453-3.</span></span></code></pre></div>
 <p>Pass <code>as_biblatex = TRUE</code> for raw BibLaTeX text:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, as_biblatex <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; No results.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bibliography.html">get_bibliography</a></span><span class="op">(</span><span class="st">"harrisVersion4CRU2020"</span>, as_biblatex <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; @Article{harrisVersion4CRU2020,</span></span>
+<span><span class="co">#&gt;   title = {Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset},</span></span>
+<span><span class="co">#&gt;   author = {Ian Harris and Timothy J. Osborn and Phil Jones and David Lister},</span></span>
+<span><span class="co">#&gt;   year = {2020},</span></span>
+<span><span class="co">#&gt;   month = {apr},</span></span>
+<span><span class="co">#&gt;   journal = {Scientific Data},</span></span>
+<span><span class="co">#&gt;   volume = {7},</span></span>
+<span><span class="co">#&gt;   number = {1},</span></span>
+<span><span class="co">#&gt;   pages = {109},</span></span>
+<span><span class="co">#&gt;   issn = {2052-4463},</span></span>
+<span><span class="co">#&gt;   doi = {10.1038/s41597-020-0453-3},</span></span>
+<span><span class="co">#&gt;   abstract = {CRU TS (Climatic Research Unit gridded Time Series) is a widely used climate dataset on a 0.5{$^\circ$} latitude by 0.5{$^\circ$} longitude grid over all land domains of the world except Antarctica. It is derived by the interpolation of monthly climate anomalies from extensive networks of weather station observations. Here we describe the construction of a major new version, CRU TS v4. It is updated to span 1901--2018 by the inclusion of additional station observations, and it will be updated annually. The interpolation process has been changed to use angular-distance weighting (ADW), and the production of secondary variables has been revised to better suit this approach. This implementation of ADW provides improved traceability between each gridded value and the input observations, and allows more informative diagnostics that dataset users can utilise to assess how dataset quality might vary geographically.},</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="extract-specific-fields">Extract specific fields<a class="anchor" aria-label="anchor" href="#extract-specific-fields"></a>
@@ -233,15 +247,13 @@ entries).</li>
 <p><code><a href="../reference/get_bib_element.html">get_bib_element()</a></code> pulls out a single field (author,
 title, journal, or year):</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"author"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; No results.</span></span>
-<span><span class="co">#&gt; character(0)</span></span>
-<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; No results.</span></span>
-<span><span class="co">#&gt; character(0)</span></span>
-<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisCRUTSVersiondataset2020"</span>, element <span class="op">=</span> <span class="st">"title"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; No results.</span></span>
-<span><span class="co">#&gt; character(0)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisVersion4CRU2020"</span>, element <span class="op">=</span> <span class="st">"author"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Ian Harris"        "Timothy J. Osborn" "Phil Jones"       </span></span>
+<span><span class="co">#&gt; [4] "David Lister"</span></span>
+<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisVersion4CRU2020"</span>, element <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "2020"</span></span>
+<span><span class="fu"><a href="../reference/get_bib_element.html">get_bib_element</a></span><span class="op">(</span><span class="st">"harrisVersion4CRU2020"</span>, element <span class="op">=</span> <span class="st">"title"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset"</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="parse-semicolon-separated-keys-from-pgsources">Parse semicolon-separated keys from pgsources<a class="anchor" aria-label="anchor" href="#parse-semicolon-separated-keys-from-pgsources"></a>
