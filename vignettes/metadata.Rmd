@@ -19,7 +19,7 @@ PRIOGRID embeds rich metadata about every variable and data source. This tutoria
 `pgvariables` is a data frame listing every variable PRIOGRID can calculate:
 
 ```{r pgvariables}
-pgvariables
+pgvariables$name
 ```
 
 | Column | Description |

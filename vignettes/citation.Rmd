@@ -74,13 +74,13 @@ pgsources[pgsources$id == source_id, c("source_name", "citation_keys")]
 `get_bibliography()` returns a `RefManageR::BibEntry` object for one or more keys:
 
 ```{r get-bib, echo=TRUE, results='markup'}
-get_bibliography("harrisCRUTSVersiondataset2020")
+get_bibliography("harrisVersion4CRU2020")
 ```
 
 Pass `as_biblatex = TRUE` for raw BibLaTeX text:
 
 ```{r get-bib-latex, echo=TRUE, results='markup'}
-get_bibliography("harrisCRUTSVersiondataset2020", as_biblatex = TRUE)
+get_bibliography("harrisVersion4CRU2020", as_biblatex = TRUE)
 ```
 
 ### Extract specific fields
@@ -88,9 +88,9 @@ get_bibliography("harrisCRUTSVersiondataset2020", as_biblatex = TRUE)
 `get_bib_element()` pulls out a single field (author, title, journal, or year):
 
 ```{r bib-element, echo=TRUE, results='markup'}
-get_bib_element("harrisCRUTSVersiondataset2020", element = "author")
-get_bib_element("harrisCRUTSVersiondataset2020", element = "year")
-get_bib_element("harrisCRUTSVersiondataset2020", element = "title")
+get_bib_element("harrisVersion4CRU2020", element = "author")
+get_bib_element("harrisVersion4CRU2020", element = "year")
+get_bib_element("harrisVersion4CRU2020", element = "title")
 ```
 
 ### Parse semicolon-separated keys from pgsources
