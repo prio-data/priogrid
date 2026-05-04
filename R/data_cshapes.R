@@ -520,7 +520,7 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
   res <- terra::distance(pg, shared_borders |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
 
   cover <- cshapes_cover(measurement_date, cshp = cshp, config = config)
-  values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
+  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
 
   return(list("bdist2" = res*cover, "boundaries" = boundaries, "shared_borders" = shared_borders))
 }
