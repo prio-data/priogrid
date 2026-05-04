@@ -54,6 +54,7 @@ read_side <- function() {
 # Convert SIDE country names to ISO codes with a few historical aliases handled
 # explicitly.
 .side_country_to_iso3c <- function(x) {
+  rlang::check_installed("countrycode", reason = "to match SIDE country names")
   countrycode::countrycode(
     x,
     origin = "country.name",

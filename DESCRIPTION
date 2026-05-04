@@ -39,7 +39,8 @@ Suggests:
     terra,
     sf,
     exactextractr,
-    arrow
+    arrow,
+    countrycode
 Config/testthat/edition: 3
 Imports:
     dplyr,
