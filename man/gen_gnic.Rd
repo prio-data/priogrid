@@ -4,7 +4,7 @@
 \alias{gen_gnic}
 \title{Generate PRIO-GRID Gross National Income per Capita}
 \usage{
-gen_gnic()
+gen_gnic(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object containing PRIO-GRID GNI per capita values.

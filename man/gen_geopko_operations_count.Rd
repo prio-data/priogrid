@@ -4,7 +4,7 @@
 \alias{gen_geopko_operations_count}
 \title{Generate Multi-Temporal Peacekeeping Operations Count Data}
 \usage{
-gen_geopko_operations_count()
+gen_geopko_operations_count(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object

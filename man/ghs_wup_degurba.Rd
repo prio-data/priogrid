@@ -4,7 +4,7 @@
 \alias{ghs_wup_degurba}
 \title{Apply urban classification to GHS-WUP-DEGURBA data}
 \usage{
-ghs_wup_degurba(urban_definition)
+ghs_wup_degurba(urban_definition, config = pg_current_config())
 }
 \arguments{
 \item{urban_definition}{Numeric vector of DEGURBA codes to classify as urban.

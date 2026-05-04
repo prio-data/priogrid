@@ -4,7 +4,7 @@
 \alias{gen_hilda_urban}
 \title{Extract Urban Coverage from HILDA+ Data}
 \usage{
-gen_hilda_urban()
+gen_hilda_urban(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with urban coverage proportions (0-1) for each

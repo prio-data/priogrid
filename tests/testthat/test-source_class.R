@@ -1,4 +1,6 @@
 testthat::test_that("Setting up a new source works", {
+  testthat::skip_if(system.file("REFERENCES.bib", package = "priogrid") == "", "REFERENCES.bib not found at expected path")
+  testthat::skip_if_offline()
   new_source <- Source$new(
     source_name = "my new source",
     source_version = "v1.0",
@@ -15,6 +17,8 @@ testthat::test_that("Setting up a new source works", {
   testthat::expect_false(new_source$to_tibble()$download_url_exists) # this file does not exist
   testthat::expect_equal(new_source$to_tibble()$citation_keys, "schvitzMappingInternationalSystem2022") # s is not a valid bib-key
 
+  tmp_urls <- tempfile(fileext = ".txt")
+  writeLines("https://nonexistent.example.invalid/fake.txt", tmp_urls)
   new_source <- Source$new(
     source_name = "my new source",
     source_version = "v1.0",
@@ -23,7 +27,7 @@ testthat::test_that("Setting up a new source works", {
     spatial_extent = "World",
     temporal_resolution = "Yearly",
     citation_keys = "schvitzMappingInternationalSystem2022; s",
-    download_url = "~/Downloads/urls_test.txt",
+    download_url = tmp_urls,
     tags = "test"
   )
 

@@ -23,7 +23,7 @@ then file_info will be all data returned from \code{\link[=pg_rawfiles]{pg_rawfi
 data.frame Download summary
 }
 \description{
-Before running this, you need to set the folder using pgoptions$set_rawfolder("path/to/folder")
+Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")
 }
 \examples{
 files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")

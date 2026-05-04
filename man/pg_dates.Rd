@@ -4,24 +4,16 @@
 \alias{pg_dates}
 \title{Get a sequence of dates}
 \usage{
-pg_dates(
-  start_date = pgoptions$get_start_date(),
-  end_date = pgoptions$get_end_date(),
-  temporal_resolution = pgoptions$get_temporal_resolution()
-)
+pg_dates(config = pg_current_config())
 }
 \arguments{
-\item{from}{starting date}
-
-\item{to}{end date}
-
-\item{by}{increment of sequence. See details in \link[base:seq.Date]{base::seq.Date}.}
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 Date vector
 }
 \description{
-This is a wrapper of \link[base:seq.Date]{base::seq.Date}, only with defaults that can be set in the options.
+This is a wrapper of \link[base:seq.Date]{base::seq.Date}, only with defaults that can be set in the config.
 }
 \examples{
 pg_dates()

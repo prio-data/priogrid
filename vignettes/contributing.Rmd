@@ -1,0 +1,314 @@
+---
+title: "Contributing to PRIOGRID"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Contributing to PRIOGRID}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(priogrid)
+```
+
+This tutorial walks through the process of adding a new data source and variable to PRIOGRID. Contributions are welcome — report issues or suggest new sources via the [Issue Tracker](https://github.com/prio-data/priogrid/issues).
+
+## Package Layout for Contributors
+
+```
+priogrid/
+├── R/
+│   ├── data_{source}.R        # read_*() and gen_*() functions for each source
+│   ├── config.R               # pg_config(), pg_set_config(), pg_set_rawfolder()
+│   ├── build_priogrid.R       # calc_pg(), load_pgvariable(), read_pg_static(), etc.
+│   ├── utility.R              # robust_transformation(), rast_to_df(), prio_blank_grid()
+│   ├── references.R           # pgcitations(), get_bibliography()
+│   ├── source_class.R         # Source R6 class (dev-only: used in devtools::load_all())
+│   └── download_data.R        # pgsearch(), pg_rawfiles(), check_pgsourcefiles()
+├── data_raw/
+│   ├── sources.csv            # Add new source here (54 entries)
+│   ├── variables.csv          # Add new variable here (32 entries)
+│   ├── pgsources.R            # Regenerates data/pgsources.rda from sources.csv
+│   └── pgvariables.R          # Regenerates data/pgvariables.rda from variables.csv
+├── data/
+│   ├── pgsources.rda          # Compiled metadata (auto-generated, do not edit)
+│   └── pgvariables.rda        # Compiled metadata (auto-generated, do not edit)
+├── inst/
+│   ├── REFERENCES.bib         # Full bibliography — add new BibTeX entries here
+│   └── extdata/urls/          # Multi-file URL lists (one .txt per source)
+└── tests/testthat/
+    └── test-build_priogrid.R  # Integration tests for gen_*() functions
+```
+
+## Step 1: Register the Data Source
+
+### Add to `data_raw/sources.csv`
+
+Every data source needs a row in `data_raw/sources.csv`. Required fields:
+
+| Column | Description | Example |
+|---|---|---|
+| `source_name` | Full name of the dataset | `"My New Dataset"` |
+| `source_version` | Version string | `"1.0"` |
+| `license` | SPDX or common license name | `"CC BY 4.0"` |
+| `website_url` | Landing page | `"https://example.com/data"` |
+| `spatial_extent` | One of: `"World"`, `"Multiple continents"`, `"Single continent"`, `"Several countries"` | `"World"` |
+| `temporal_resolution` | One of: `"Static"`, `"Higher than monthly"`, `"Monthly"`, `"Quarterly"`, `"Yearly"`, `"Less than yearly"` | `"Yearly"` |
+| `citation_keys` | Semicolon-separated BibTeX keys | `"doeNewDataset2025"` |
+| `download_url` | Direct download URL, or `"urls/{uuid}.txt"` for multi-file sources | `"https://example.com/data.zip"` |
+
+Optional fields: `aws_bucket`, `aws_region`, `prio_mirror`, `tags`, `reference_keys`.
+
+Generate a UUID for the `id` column using `uuid::UUIDgenerate()`:
+
+```{r gen-uuid, eval=FALSE}
+uuid::UUIDgenerate()
+# "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+```
+
+### Use the `Source` Class (dev mode)
+
+In development mode (`devtools::load_all()`), use the `Source` R6 class to validate a new source before adding it to the CSV:
+
+```{r source-class, eval=FALSE}
+new_source <- Source$new(
+  source_name          = "My New Dataset",
+  source_version       = "1.0",
+  license              = "CC BY 4.0",
+  website_url          = "https://example.com/data",
+  spatial_extent       = "World",
+  temporal_resolution  = "Yearly",
+  citation_keys        = "doeNewDataset2025",
+  download_url         = "https://example.com/data/dataset_v1.zip",
+  tags                 = "climate, land cover"
+)
+new_source  # prints validation report; warns if citation key not in REFERENCES.bib
+```
+
+The `Source` class validates required fields, checks that `spatial_extent` and `temporal_resolution` use the allowed vocabulary, and verifies that citation keys exist in `inst/REFERENCES.bib`.
+
+### Add the Citation to `inst/REFERENCES.bib`
+
+Add a BibTeX entry to `inst/REFERENCES.bib` for each `citation_keys` value:
+
+```bibtex
+@article{doeNewDataset2025,
+  author  = {Doe, Jane},
+  title   = {My New Dataset: A Global Resource},
+  journal = {Scientific Data},
+  year    = {2025},
+  volume  = {12},
+  pages   = {1--10},
+  doi     = {10.1234/sdata.2025.001}
+}
+```
+
+### Regenerate `pgsources.rda`
+
+After editing `sources.csv`, regenerate the `.rda` file:
+
+```{r regen-sources, eval=FALSE}
+source("data_raw/pgsources.R")
+```
+
+Verify the result:
+
+```{r verify-sources, eval=FALSE}
+pgsources[pgsources$source_name == "My New Dataset", ]
+```
+
+## Step 2: Write `read_*()` and `gen_*()` Functions
+
+Create a new file `R/data_mynewsource.R`.
+
+### `read_*()` — Load Raw Data
+
+The read function downloads (via `get_pgfile()`) and returns the raw data as an `sf` or `SpatRaster` object:
+
+```{r read-function, eval=FALSE}
+#' Read My New Dataset
+#'
+#' Downloads and imports My New Dataset.
+#'
+#' @return An \code{sf} object
+#' @export
+#' @references
+#' \insertRef{doeNewDataset2025}{priogrid}
+read_mynewsource <- function() {
+  f <- get_pgfile(
+    source_name    = "My New Dataset",
+    source_version = "1.0",
+    id             = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  )
+  sf::st_read(f)
+}
+```
+
+`get_pgfile()` automatically downloads the file if it is not present locally (when `automatic_download = TRUE` in the config).
+
+### `gen_*()` — Generate the PRIOGRID Variable
+
+The generate function transforms raw data to the PRIOGRID grid and returns a `SpatRaster`. The signature must accept `config`:
+
+```{r gen-function, eval=FALSE}
+#' My New Variable
+#'
+#' Computes my_new_variable for each PRIOGRID cell.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#' @return A \code{SpatRaster} object
+#' @export
+#' @references
+#' \insertRef{doeNewDataset2025}{priogrid}
+gen_my_new_variable <- function(config = pg_current_config()) {
+  raw <- read_mynewsource()
+
+  # Reproject if needed
+  pg_crs <- sf::st_crs(config$crs)
+  if (sf::st_crs(raw) != pg_crs) {
+    raw <- sf::st_transform(raw, pg_crs)
+  }
+
+  # Convert to raster and re-grid to PRIOGRID resolution
+  raw_rast <- terra::rasterize(terra::vect(raw), prio_blank_grid(config),
+                               field = "my_value_column", fun = "mean")
+
+  r <- robust_transformation(raw_rast, agg_fun = "mean", config = config)
+
+  names(r) <- "my_new_variable"
+  return(r)
+}
+```
+
+### Using `robust_transformation()`
+
+`robust_transformation()` handles reprojection, cropping, aggregation, disaggregation, and final resampling in a single call. It is the standard way to re-grid any raster:
+
+```{r robust-transform, eval=FALSE}
+robust_transformation(
+  r             = raw_rast,      # Any SpatRaster (any resolution / CRS / extent)
+  agg_fun       = "mean",        # Aggregation function for higher-res inputs
+  disagg_method = "near",        # Disaggregation for lower-res inputs
+  config        = config         # Target config
+)
+```
+
+Common `agg_fun` values: `"mean"`, `"sum"`, `"max"`, `"min"`, `"modal"` (for categorical).
+
+### Temporal Variables
+
+For time-varying variables, iterate over `pg_dates(config)` and combine layers:
+
+```{r gen-temporal, eval=FALSE}
+gen_my_yearly_variable <- function(config = pg_current_config()) {
+  dates <- pg_dates(config)
+  layers <- lapply(dates, function(d) {
+    raw <- read_mynewsource_for_year(lubridate::year(d))  # your reader
+    r   <- robust_transformation(raw, agg_fun = "mean", config = config)
+    names(r) <- as.character(d)
+    r
+  })
+  do.call(c, layers)  # stack into a multi-layer SpatRaster
+}
+```
+
+## Step 3: Register the Variable
+
+Add a row to `data_raw/variables.csv`:
+
+```
+name,static,source_ids
+my_new_variable,FALSE,a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+- `name` must match the string passed to `names(r)` in `gen_*()` and equal `gen_{name}` without the prefix.
+- `static` is `TRUE` for variables without a time dimension, `FALSE` for time-varying.
+- `source_ids` is the UUID from `sources.csv`. Multiple sources are comma-separated.
+
+Regenerate `pgvariables.rda`:
+
+```{r regen-vars, eval=FALSE}
+source("data_raw/pgvariables.R")
+```
+
+Verify:
+
+```{r verify-vars, eval=FALSE}
+pgvariables[pgvariables$name == "my_new_variable", ]
+```
+
+## Step 4: Document with roxygen2
+
+PRIOGRID uses roxygen2 with Markdown support and Rdpack for citation references.
+
+Key tags:
+- `@param config` — always document the config parameter for `gen_*()` functions
+- `@return` — describe what the function returns
+- `@export` — all user-facing functions must be exported
+- `@references \insertRef{key}{priogrid}` — links to `inst/REFERENCES.bib`
+
+Regenerate documentation:
+
+```{r regen-docs, eval=FALSE}
+devtools::document()
+```
+
+## Step 5: Add Tests
+
+Add tests to `tests/testthat/`. For a gen_* function, the minimal test:
+
+```{r test-example, eval=FALSE}
+# tests/testthat/test-data_mynewsource.R
+test_that("gen_my_new_variable returns a SpatRaster", {
+  skip_if_not_installed("terra")
+  cfg <- pg_config(
+    nrow = 36, ncol = 72,   # 5-degree resolution for fast tests
+    start_date = as.Date("2010-12-31"),
+    end_date   = as.Date("2010-12-31")
+  )
+  r <- gen_my_new_variable(config = cfg)
+  expect_s4_class(r, "SpatRaster")
+  expect_equal(names(r), "my_new_variable")
+})
+```
+
+Run tests:
+
+```{r run-tests, eval=FALSE}
+devtools::test()
+```
+
+## Step 6: Verify End-to-End
+
+Test the full pipeline:
+
+```{r e2e, eval=FALSE}
+cfg <- pg_config()
+
+# 1. Calculate
+calc_pg("my_new_variable", config = cfg)
+
+# 2. Load as raster
+r <- load_pgvariable("my_new_variable", config = cfg)
+terra::plot(r)
+
+# 3. Load as table
+pg_tv <- read_pg_timevarying(config = cfg)
+"my_new_variable" %in% names(pg_tv)
+
+# 4. Check citations resolve
+pgcitations("my_new_variable")
+```
+
+## Summary Checklist
+
+- [ ] Add row to `data_raw/sources.csv` with UUID, license, URLs, citation keys
+- [ ] Add BibTeX entry to `inst/REFERENCES.bib`
+- [ ] Run `source("data_raw/pgsources.R")` to regenerate `pgsources.rda`
+- [ ] Create `R/data_{source}.R` with `read_*()` and `gen_*()` functions
+- [ ] Add row to `data_raw/variables.csv`
+- [ ] Run `source("data_raw/pgvariables.R")` to regenerate `pgvariables.rda`
+- [ ] Run `devtools::document()` to regenerate `NAMESPACE` and `man/`
+- [ ] Add tests in `tests/testthat/`
+- [ ] Verify with `calc_pg()` → `load_pgvariable()` → `pgcitations()`

@@ -63,7 +63,7 @@
 #' @export
 #' @references
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
-read_linight <- function(overwrite_files = FALSE){
+read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 
   zip_file <- get_pgfile(source_name="Li Nighttime",
                          source_version="v8",
@@ -118,8 +118,8 @@ read_linight <- function(overwrite_files = FALSE){
   fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
   r <- terra::rast(fixed_files)
 
-  pgmonth <- pg_dates()[1] |> lubridate::month()
-  pgday <- pg_dates()[1] |> lubridate::day()
+  pgmonth <- pg_dates(config)[1] |> lubridate::month()
+  pgday <- pg_dates(config)[1] |> lubridate::day()
   yearnames <- readr::parse_number(basename(allfiles))
   yearnames <- as.Date(paste(yearnames, pgmonth, pgday, sep = "-"))
   names(r) <- yearnames
@@ -178,10 +178,10 @@ read_linight <- function(overwrite_files = FALSE){
 #' @export
 #' @references
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
-gen_linight_mean <- function(){
-  r <- read_linight()
+gen_linight_mean <- function(config = pg_current_config()){
+  r <- read_linight(config = config)
 
-  res <- robust_transformation(r, agg_fun = "mean")
+  res <- robust_transformation(r, agg_fun = "mean", config = config)
 
   return(res)
 }

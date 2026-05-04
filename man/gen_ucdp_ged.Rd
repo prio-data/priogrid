@@ -4,7 +4,7 @@
 \alias{gen_ucdp_ged}
 \title{Generate UCDP GED Battle-Related Deaths Variable}
 \usage{
-gen_ucdp_ged()
+gen_ucdp_ged(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object with multiple layers, one for each time

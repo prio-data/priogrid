@@ -5,7 +5,8 @@
 \title{Generate Multi-Temporal Regionally Excluded Ethnic Groups Coverage}
 \usage{
 gen_geoepr_reg_excluded(
-  excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")
+  excluded = c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION"),
+  config = pg_current_config()
 )
 }
 \arguments{

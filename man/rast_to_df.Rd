@@ -4,7 +4,7 @@
 \alias{rast_to_df}
 \title{Converts raster with variable to data.frame}
 \usage{
-rast_to_df(rast, static = TRUE, varname = NULL)
+rast_to_df(rast, static = TRUE, varname = NULL, config = pg_current_config())
 }
 \arguments{
 \item{rast}{SpatRaster}
@@ -12,6 +12,8 @@ rast_to_df(rast, static = TRUE, varname = NULL)
 \item{static}{True if no temporal dimension, False else.}
 
 \item{varname}{The variable name, only required if static is False.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 data.frame
@@ -22,6 +24,8 @@ otherwise, the user must supply the correct variable name. If static is false,
 the name of the raster layer is assumed to be the time variable.
 }
 \examples{
+\dontrun{
 ne <- gen_naturalearth_cover()
 rast_to_df(ne)
+}
 }

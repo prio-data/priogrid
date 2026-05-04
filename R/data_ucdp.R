@@ -120,8 +120,8 @@ read_ucdp_ged <- function(){
 #' \insertRef{sundbergIntroducingUCDPGeoreferenced2013}{priogrid}
 #'
 #' \insertRef{daviesOrganizedViolence198920242025}{priogrid}
-rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable){
-  pg <- prio_blank_grid()
+rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable, config = pg_current_config()){
+  pg <- prio_blank_grid(config)
   ged <- ged |>
     sf::st_transform(crs = sf::st_crs(pg)) |>
     dplyr::filter(lubridate::int_overlaps(date_interval, pg_interval)) |>
@@ -230,14 +230,13 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable){
 #' \insertRef{sundbergIntroducingUCDPGeoreferenced2013}{priogrid}
 #'
 #' \insertRef{daviesOrganizedViolence198920242025}{priogrid}
-ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_variable = "best"){
-  require(data.table)
+ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_variable = "best", config = pg_current_config()){
   distribute_fatalities <- function(ged_dt, value_var = "best") {
     if(!"event_id" %in% names(ged_dt)) {
       ged_dt[, event_id := .I]
     }
 
-    agg_intervals <- pg_date_intervals()
+    agg_intervals <- pg_date_intervals(config)
     agg_dt <- data.table(
       interval_id = seq_along(agg_intervals),
       agg_start = lubridate::int_start(agg_intervals),
@@ -315,16 +314,16 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
   agg_result$geometry <- sf::st_geometry(ged)[idx]
   agg_sf <- sf::st_as_sf(agg_result, crs = sf::st_crs(ged))
 
-  time_intervals <- pg_date_intervals()
+  time_intervals <- pg_date_intervals(config)
   ged_interval <- lubridate::interval(min(ged$date_start), max(ged$date_end))
   time_intervals <- time_intervals[time_intervals %within% ged_interval]
 
   agg_sf <- agg_sf |> dplyr::rename(date_start= agg_start, date_end = agg_end, !!(fatality_variable) := fatalities)
   agg_sf <- agg_sf |> dplyr::mutate(date_interval = lubridate::interval(date_start, date_end))
-  r <- rasterize_ged_crossection(agg_sf, pg_interval = time_intervals[1], fatality_variable = fatality_variable)
+  r <- rasterize_ged_crossection(agg_sf, pg_interval = time_intervals[1], fatality_variable = fatality_variable, config = config)
   for(i in 2:length(time_intervals)){
     t <- time_intervals[i]
-    rt <- rasterize_ged_crossection(agg_sf, pg_interval = t, fatality_variable = fatality_variable)
+    rt <- rasterize_ged_crossection(agg_sf, pg_interval = t, fatality_variable = fatality_variable, config = config)
     terra::add(r) <- rt
   }
   names(r) <- as.character(lubridate::int_end(time_intervals))
@@ -407,8 +406,8 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 #' \insertRef{sundbergIntroducingUCDPGeoreferenced2013}{priogrid}
 #'
 #' \insertRef{daviesOrganizedViolence198920242025}{priogrid}
-gen_ucdp_ged <- function(){
-  ucdp_ged(ged = read_ucdp_ged(), violence_types = c(1, 2, 3), fatality_variable = "best")
+gen_ucdp_ged <- function(config = pg_current_config()){
+  ucdp_ged(ged = read_ucdp_ged(), violence_types = c(1, 2, 3), fatality_variable = "best", config = config)
 }
 
 
@@ -428,17 +427,17 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
   gwcodes <- unique(cshp$gwcode)
 
   cover <- cshapes_cover(measurement_date, cshp = cshp)
-  values(cover) <- dplyr::if_else(values(cover) == T, 1, NA)
+  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
 
   result <- pg
-  result[values(result)] <- 0
+  result[terra::values(result)] <- 0
   result <- result*cover
   suppressMessages(sf::sf_use_s2(FALSE)) # Only use sf here to subset data.
   distances <- list()
   for(gwcode in gwcodes){
     tmp <- rgw
-    tmp[values(tmp) != gwcode] <- NA
-    tmp[!is.na(values(tmp))] <- 1
+    tmp[terra::values(tmp) != gwcode] <- NA
+    tmp[!is.na(terra::values(tmp))] <- 1
 
     suppressMessages(
       ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
@@ -451,9 +450,9 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
       result <- result + dist
     } else{
       # If no GED events in country, then set the distance to missing (to separate from being 0 m from events)
-      tmp[is.na(values(tmp))] <- 0
-      tmp[values(tmp) == 1] <- NA
-      tmp[values(tmp) == 0] <- 1
+      tmp[is.na(terra::values(tmp))] <- 0
+      tmp[terra::values(tmp) == 1] <- NA
+      tmp[terra::values(tmp) == 0] <- 1
       result <- result * tmp
     }
   }

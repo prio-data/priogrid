@@ -4,7 +4,7 @@
 \alias{gen_lifexp}
 \title{Generate PRIO-GRID Life Expectancy}
 \usage{
-gen_lifexp()
+gen_lifexp(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object containing PRIO-GRID life expectancy values.

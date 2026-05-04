@@ -1,0 +1,205 @@
+---
+title: "Understanding PRIOGRID Metadata"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Understanding PRIOGRID Metadata}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(priogrid)
+```
+
+PRIOGRID embeds rich metadata about every variable and data source. This tutorial walks through the three core metadata objects — `pgvariables`, `pgsources`, and `pgchecksum` — and the search and discovery tools built on top of them.
+
+## Variables: `pgvariables`
+
+`pgvariables` is a data frame listing every variable PRIOGRID can calculate:
+
+```{r pgvariables}
+pgvariables$name
+```
+
+| Column | Description |
+|---|---|
+| `name` | Variable name used in `load_pgvariable()`, `calc_pg()`, etc. |
+| `static` | `TRUE` = no temporal dimension; `FALSE` = time-varying |
+| `source_ids` | Comma-separated UUIDs of the data sources feeding this variable |
+
+Static and time-varying variables:
+
+```{r split-vars}
+pgvariables[pgvariables$static == TRUE,  "name"]  # terrain, borders, etc.
+pgvariables[pgvariables$static == FALSE, "name"]  # climate, conflict, etc.
+```
+
+## Data Sources: `pgsources`
+
+`pgsources` describes every raw data source that PRIOGRID draws on:
+
+```{r pgsources}
+str(pgsources)
+```
+
+Key columns:
+
+| Column | Description |
+|---|---|
+| `id` | UUID — links to `pgvariables$source_ids` |
+| `source_name` | Human-readable name (e.g., `"CRU TS"`, `"UCDP GED"`) |
+| `source_version` | Data version used |
+| `license` | Data license (e.g., `"CC BY 4.0"`) |
+| `citation_keys` | Semicolon-separated BibTeX keys → `inst/REFERENCES.bib` |
+| `tags` | Comma-separated tags (e.g., `"climate"`, `"conflict"`) |
+| `spatial_extent` | `"World"`, `"Multiple continents"`, etc. |
+| `temporal_resolution` | `"Yearly"`, `"Monthly"`, `"Static"`, etc. |
+| `download_url` | Primary download URL |
+| `website_url` | Landing page URL |
+| `prio_mirror` | PRIO-hosted mirror URL |
+
+Browse sources by tag or license:
+
+```{r filter-sources}
+# All sources with CC-BY license
+pgsources[grepl("CC BY", pgsources$license), c("source_name", "license")]
+
+# Yearly time-varying sources
+pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_version")]
+```
+
+## File Integrity: `pgchecksum`
+
+`pgchecksum` stores MD5 checksums for downloaded files, allowing you to verify that your local copies match those used to build the official release:
+
+```{r pgchecksum}
+pgchecksum
+```
+
+Use `check_pgsourcefiles()` to run the check against your local storage:
+
+```{r check-files, eval=FALSE}
+check_pgsourcefiles()
+# "All files in your local storage are similar to a tested set."
+```
+
+## Metadata Linking: Variables → Sources → Bibliography
+
+The three metadata objects form a chain:
+
+```
+pgvariables$source_ids → pgsources$id → pgsources$citation_keys → REFERENCES.bib
+```
+
+Here's the full lookup for a single variable:
+
+```{r metadata-chain}
+# 1. Find source IDs for a variable
+var_row <- pgvariables[pgvariables$name == "cru_tmp", ]
+source_ids <- strsplit(var_row$source_ids, ", ")[[1]]
+source_ids
+
+# 2. Look up source metadata
+src <- pgsources[pgsources$id %in% source_ids, c("source_name", "source_version", "citation_keys", "license")]
+src
+
+# 3. Get citation keys
+bibkeys <- unlist(strsplit(src$citation_keys, "; "))
+bibkeys
+```
+
+Then retrieve the full bibliography:
+
+```{r get-bib, echo=TRUE, results='markup'}
+get_bibliography(bibkeys[1])
+```
+
+## Searching Metadata: `pgsearch()`
+
+`pgsearch()` searches across all text fields in `pgsources` using regex:
+
+```{r pgsearch}
+results <- pgsearch("population")
+```
+
+It returns a named list with matches from each search field:
+
+```{r pgsearch-results}
+# Sources matching by name
+results$in_name[, c("source_name", "source_version")]
+
+# Sources matching by tag
+results$in_tags[, c("source_name", "tags")]
+```
+
+Search by temporal resolution:
+
+```{r pgsearch-temporal}
+pgsearch("Monthly")$in_temporal_resolution[, c("source_name", "temporal_resolution")]
+```
+
+Search by spatial extent:
+
+```{r pgsearch-spatial}
+pgsearch("World")$in_spatial_extent[, c("source_name", "spatial_extent")]
+```
+
+### Searching Bibliography Elements
+
+Include `bib_element` to also search author names, titles, journals, or years:
+
+```{r pgsearch-bib, eval=TRUE, results='markup'}
+# Find sources citing a specific author
+harris_results <- pgsearch("Harris", bib_element = "author")
+harris_results$in_element[, c("source_name", "citation_keys")]
+```
+
+## Listing Raw Files
+
+`pg_rawfiles()` returns a data frame of all files PRIOGRID can download, with their URLs and expected local paths:
+
+```{r rawfiles}
+files <- pg_rawfiles()
+head(files[, c("source_name", "source_version", "filename")])
+```
+
+Filter to a specific source:
+
+```{r rawfiles-filter}
+files[files$source_name == "ETH ICR cShapes", c("source_name", "filename", "url")]
+```
+
+Download a specific source:
+
+```{r download-source, eval=FALSE}
+ucdp_files <- pg_rawfiles() |> dplyr::filter(source_name == "UCDP GED")
+download_pg_rawdata(file_info = ucdp_files)
+```
+
+Get the local path to a downloaded file:
+
+```{r get-pgfile, eval=FALSE}
+get_pgfile(
+  source_name    = "ETH ICR cShapes",
+  source_version = "2.0",
+  id             = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b"
+)
+```
+
+## Checking Data Availability
+
+`pg_data_availability()` shows which sources have been downloaded locally:
+
+```{r data-availability, eval=FALSE}
+pg_data_availability()
+#   source_name   source_version n_files n_present all_present
+# 1 CRU TS        4.08                1         1        TRUE
+# 2 ETH ICR cShapes 2.0              1         1        TRUE
+# ...
+```
+
+## Next Steps
+
+- [Citations and Bibliography](citation.html) — citing data providers in publications
+- [Contributing to PRIOGRID](contributing.html) — adding new sources and variables

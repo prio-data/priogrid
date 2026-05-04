@@ -4,7 +4,12 @@
 \alias{bdist2}
 \title{Calculate distance to nearest international border (bdist2)}
 \usage{
-bdist2(measurement_date, cshp = read_cshapes(), past_result = NULL)
+bdist2(
+  measurement_date,
+  cshp = read_cshapes(),
+  past_result = NULL,
+  config = pg_current_config()
+)
 }
 \arguments{
 \item{measurement_date}{A single \code{Date} object specifying the date for

@@ -5,21 +5,24 @@
 \title{Resolve PRIO-GRID data mode and paths}
 \usage{
 resolve_pg_mode(
+  config = NULL,
   version = NULL,
-  type = NULL,
+  type = "05deg_yearly",
   spatial_hash = NULL,
   temporal_hash = NULL,
   overwrite = FALSE
 )
 }
 \arguments{
-\item{version}{Character string specifying PRIOGRID version.}
+\item{config}{A \code{pg_config} object for custom mode, or NULL for release mode.}
 
-\item{type}{Character string specifying release type.}
+\item{version}{Character string specifying PRIOGRID version (release mode only).}
 
-\item{spatial_hash}{Character string with 6-character spatial hash.}
+\item{type}{Character string specifying release type (release mode only).}
 
-\item{temporal_hash}{Character string with 6-character temporal hash.}
+\item{spatial_hash}{Character string with 6-character spatial hash (custom mode).}
+
+\item{temporal_hash}{Character string with 6-character temporal hash (custom mode).}
 
 \item{overwrite}{Logical. Whether to overwrite existing files.}
 }
@@ -33,9 +36,18 @@ A list with:
 \item{temporal_hash}{Resolved temporal hash (NULL if release)}
 \item{overwrite}{Possibly modified overwrite flag}
 \item{warning}{Warning message if any, otherwise NULL}
+\item{config}{Resolved config for data construction}
 }
 \description{
 Determines whether to use release or custom mode based on provided parameters,
 and returns resolved settings. Does not perform any file operations or downloads.
+}
+\details{
+Mode is signalled by \code{config}:
+\itemize{
+\item \code{config = NULL} (default) → release mode
+\item \code{config = pg_config(...)} → custom mode
+\item \code{spatial_hash} + \code{temporal_hash} → custom mode (explicit path override)
+}
 }
 \keyword{internal}

@@ -4,7 +4,7 @@
 \alias{gen_traveltime_mean}
 \title{Generate the mean travel time to nearest major city}
 \usage{
-gen_traveltime_mean()
+gen_traveltime_mean(config = pg_current_config())
 }
 \value{
 A single-layer \code{SpatRaster} object

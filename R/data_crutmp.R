@@ -43,7 +43,7 @@
 #' @export
 #' @references
 #' \insertRef{harrisVersion4CRU2020}{priogrid}
-read_cru_tmp <- function(variable = "tmp") {
+read_cru_tmp <- function(variable = "tmp", config = pg_current_config()) {
 
   cru_file <- get_pgfile(
     source_name = "CRU Climate tmp",
@@ -62,8 +62,8 @@ read_cru_tmp <- function(variable = "tmp") {
   names(r) <- terra::time(r)
 
   pg_period <- lubridate::interval(
-    pg_date_intervals() |> lubridate::int_start() |> min(),
-    pg_date_intervals() |> lubridate::int_end()   |> max()
+    pg_date_intervals(config) |> lubridate::int_start() |> min(),
+    pg_date_intervals(config) |> lubridate::int_end()   |> max()
   )
 
   terra::subset(r, which(terra::time(r) %within% pg_period))
@@ -99,13 +99,13 @@ read_cru_tmp <- function(variable = "tmp") {
 #' @export
 #' @references
 #' \insertRef{harrisVersion4CRU2020}{priogrid}
-gen_cru_tmp <- function(){
-  r <- read_cru_tmp()
+gen_cru_tmp <- function(config = pg_current_config()){
+  r <- read_cru_tmp(config = config)
 
   cru_time_interval <- lubridate::interval(terra::time(r) |> min(),
                                            terra::time(r) |> max())
 
-  pg_intervals <- pg_date_intervals()[pg_date_intervals() %within% cru_time_interval]
+  pg_intervals <- pg_date_intervals(config)[pg_date_intervals(config) %within% cru_time_interval]
 
   res <- list()
   # CRU data comes in monthly resolution. Aggregate to lower resolution if PRIO-GRID is lower (e.g,. quarterly, yearly)
@@ -120,7 +120,7 @@ gen_cru_tmp <- function(){
   res <- terra::rast(res)
   names(res) <- lubridate::int_end(pg_intervals)
 
-  res <- robust_transformation(res, agg_fun = "mean")
+  res <- robust_transformation(res, agg_fun = "mean", config = config)
 
   return(res)
 }

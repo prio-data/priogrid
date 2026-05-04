@@ -89,6 +89,7 @@ get_bib_element <- function(key, element = "author", as_character = TRUE){
 #' @examples
 #' extract_bib_elements(pgsources$citation_keys[1])
 extract_bib_elements <- function(citation_liststr, bib_element = "author", ...){
+  if (is.na(citation_liststr)) return(list())
   citations <- stringr::str_split(citation_liststr, ";") |> trimws()
   element <- lapply(citations, get_bib_element, element = bib_element, ...)
   element

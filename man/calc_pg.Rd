@@ -4,7 +4,7 @@
 \alias{calc_pg}
 \title{Calculate PRIO-GRID variables}
 \usage{
-calc_pg(varnames = NULL, overwrite = FALSE)
+calc_pg(varnames = NULL, overwrite = FALSE, config = pg_current_config())
 }
 \arguments{
 \item{varnames}{Character vector with variable names from \link{pgvariables}.
@@ -17,7 +17,7 @@ exist in the output folder. If TRUE, recalculates all specified variables.}
 NULL (invisibly). Called for side effects (saving files).
 }
 \description{
-Calculates PRIO-GRID variables based on current pgoptions and saves them
+Calculates PRIO-GRID variables based on current config and saves them
 to disk. Each variable is computed by calling its corresponding gen_*() function
 and saved as an .rds file in the custom data folder.
 }

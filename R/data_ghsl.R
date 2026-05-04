@@ -65,7 +65,7 @@
 #' @export
 #' @references
 #' \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}
-read_ghsl_population_grid <- function(){
+read_ghsl_population_grid <- function(config = pg_current_config()){
   zip_files <- get_pgfile(source_name = "GHSL GHS Population Grid",
                   source_version = "R2023",
                   id = "ae6a7612-4bef-452f-acd6-d2212cf9a7c5")
@@ -85,8 +85,8 @@ read_ghsl_population_grid <- function(){
     terra::add(r) <- terra::rast(file.path(dirname(zip_files[i]), tif_files[i]))
   }
 
-  pgmonth <- pg_dates()[1] |> lubridate::month()
-  pgday <- pg_dates()[1] |> lubridate::day()
+  pgmonth <- pg_dates(config)[1] |> lubridate::month()
+  pgday <- pg_dates(config)[1] |> lubridate::day()
   tif_dates <- stringr::str_extract(tif_files, seq(1975, 2030, by = 5) |> paste(collapse = "|"))
   tif_dates <- lubridate::ymd(paste(tif_dates, pgmonth, pgday, sep = "-")) |> as.character()
 
@@ -137,9 +137,9 @@ read_ghsl_population_grid <- function(){
 #'
 #' @references
 #' \insertRef{schiavinaGHSPOPR2023AGHS2023}{priogrid}
-gen_ghsl_population_grid <- function(){
-  r <- read_ghsl_population_grid()
-  res <- robust_transformation(r, agg_fun = "sum")
+gen_ghsl_population_grid <- function(config = pg_current_config()){
+  r <- read_ghsl_population_grid(config = config)
+  res <- robust_transformation(r, agg_fun = "sum", config = config)
 
   #pg <- prio_blank_grid()
   #ragg <- terra::aggregate(r, terra::res(pg)/terra::res(r), fun = "sum")

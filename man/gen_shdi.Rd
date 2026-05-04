@@ -4,7 +4,7 @@
 \alias{gen_shdi}
 \title{Generate PRIO-GRID SHDI}
 \usage{
-gen_shdi()
+gen_shdi(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object containing PRIO-GRID SHDI values.

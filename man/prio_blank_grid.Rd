@@ -4,21 +4,10 @@
 \alias{prio_blank_grid}
 \title{Create a raster with PRIO-GRID ids.}
 \usage{
-prio_blank_grid(
-  ncol = pgoptions$get_ncol(),
-  nrow = pgoptions$get_nrow(),
-  extent = pgoptions$get_extent(),
-  crs_string = pgoptions$get_crs()
-)
+prio_blank_grid(config = pg_current_config())
 }
 \arguments{
-\item{ncol}{Number of columns}
-
-\item{nrow}{Number of rows}
-
-\item{extent}{The extent of the raster as a vector c(xmin, xmax, ymin, ymax)}
-
-\item{crs_string}{A CRS-string. Description of the Coordinate Reference System (map projection) in PROJ.4, WKT or authority:code notation.}
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 SpatRaster
@@ -27,5 +16,7 @@ SpatRaster
 Create a raster with PRIO-GRID ids.
 }
 \examples{
+\dontrun{
 pg <- prio_blank_grid()
+}
 }

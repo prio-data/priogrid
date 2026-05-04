@@ -4,7 +4,7 @@
 \alias{read_linight}
 \title{Reads the Li Nighttime data}
 \usage{
-read_linight(overwrite_files = FALSE)
+read_linight(overwrite_files = FALSE, config = pg_current_config())
 }
 \arguments{
 \item{overwrite_files}{Logical. If \code{TRUE}, previously fixed rasters are

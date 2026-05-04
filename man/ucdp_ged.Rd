@@ -7,7 +7,8 @@
 ucdp_ged(
   ged = read_ucdp_ged(),
   violence_types = c(1, 2, 3),
-  fatality_variable = "best"
+  fatality_variable = "best",
+  config = pg_current_config()
 )
 }
 \arguments{

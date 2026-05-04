@@ -4,7 +4,7 @@
 \alias{ne_disputed_area_share}
 \title{Generate Raster for Disputed Areas by Type}
 \usage{
-ne_disputed_area_share(type)
+ne_disputed_area_share(type, config = pg_current_config())
 }
 \arguments{
 \item{type}{Character string specifying the type of disputed area to include.

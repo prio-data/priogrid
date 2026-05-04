@@ -4,7 +4,7 @@
 \alias{gen_cshapes_gwcode}
 \title{Generate cshapes_gwcode variable}
 \usage{
-gen_cshapes_gwcode(cshp = read_cshapes())
+gen_cshapes_gwcode(cshp = read_cshapes(), config = pg_current_config())
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with

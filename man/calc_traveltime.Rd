@@ -4,7 +4,7 @@
 \alias{calc_traveltime}
 \title{Generate travel time to nearest major city}
 \usage{
-calc_traveltime(aggregation_function)
+calc_traveltime(aggregation_function, config = pg_current_config())
 }
 \arguments{
 \item{aggregation_function}{Function or character string specifying the

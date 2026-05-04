@@ -4,7 +4,7 @@
 \alias{gen_bdist2}
 \title{Generate multi-temporal distance to international borders data (bdist2)}
 \usage{
-gen_bdist2(cshp = read_cshapes())
+gen_bdist2(cshp = read_cshapes(), config = pg_current_config())
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with

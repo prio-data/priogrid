@@ -3,14 +3,7 @@
 > [!NOTE]
 > PRIOGRID v.3.0.1 is an unstable Alpha release. We will be releasing a Beta version shortly.
 
-An R-package for collecting and standardizing open spatial data. 
-
-## What's New in PRIOGRID v.3.x
-
-- **Better metadata handling** — Stores information about data licenses, citations, and download URLs. Automatically downloads data and handles local data with user-specified options.
-- **R, not SQL** — More researchers know R, and the package leverages excellent spatial-data infrastructure with `sf`, `terra`, and `exactextractr`.
-- **Flexible spatio-temporal configuration** — Change resolution, extent, and projection to test the modifiable areal unit problem or create tailored datasets (e.g., area-equal projections for polar regions).
-- **PRIOGRID is a research tool, not just a dataset.**
+An R-package for collecting and standardizing open spatial data into a common grid format.
 
 **Resources:**
 - [R-package repository](https://github.com/prio-data/priogrid)
@@ -18,6 +11,12 @@ An R-package for collecting and standardizing open spatial data.
 - [Suggest data sources and variables, or report issues](https://github.com/prio-data/priogrid/issues)
 - [Download PRIOGRID data as .zip](https://www.prio.org/data/40)
 
+## What's New in PRIOGRID v.3.x
+
+- **Better metadata handling** — Stores information about data licenses, citations, and download URLs. Automatically downloads data and handles local data with user-specified options.
+- **R, not SQL** — More researchers know R, and the package leverages excellent spatial-data infrastructure with `sf`, `terra`, and `exactextractr`.
+- **Flexible spatio-temporal configuration** — Change resolution, extent, and projection to test the modifiable areal unit problem or create tailored datasets (e.g., area-equal projections for polar regions).
+- **PRIOGRID is a research tool, not just a dataset.**
 
 ## Installation
 
@@ -28,9 +27,13 @@ install.packages("renv")
 renv::install("prio-data/priogrid")
 ```
 
+### Optional R Packages
+
+`terra`, `sf`, `exactextractr`, and `arrow` are listed in `Suggests` and are **not installed automatically**. They are only required for specific functionality (working with rasters) and will be requested the first time you use a function that needs them.
+
 ### Troubleshooting Installation
 
-PRIOGRID depends on several spatial libraries (`terra`, `sf`, and `exactextractr`) that require system-level geo-libraries. If installation fails, please refer to the installation guides for these dependencies:
+`terra`, `sf`, and `exactextractr` depend on system-level geo-libraries. If installation of these packages fails, refer to their installation guides:
 
 - [terra installation guide](https://github.com/rspatial/terra)
 - [sf installation guide](https://github.com/r-spatial/sf/)
@@ -46,231 +49,58 @@ If you encounter SSL certificate errors when downloading data, try:
 
 **Mac (Homebrew users):**
 ```bash
-   brew update
-   brew install ca-certificates
+brew update
+brew install ca-certificates
 ```
 
 **Linux (Ubuntu/Debian):**
 ```bash
-   sudo apt-get update
-   sudo apt-get install ca-certificates
+sudo apt-get update
+sudo apt-get install ca-certificates
 ```
 
-2. **Install CURL R-package from source**
+2. **Install CURL R-package from source:**
 ```r
-   install.packages("curl", type = "source")
+install.packages("curl", type = "source")
 ```
 
-## Initial Setup
+## Getting Started
 
-PRIOGRID stores settings locally that persist across R sessions. Before using the package, configure where PRIOGRID will store downloaded raw data and transformed datasets:
+Set a local folder for PRIOGRID to store downloaded and processed data (this persists across R sessions):
 
 ```r
 library(priogrid)
 
-# Set the folder for PRIOGRID data storage
-pgoptions$set_rawfolder("/path/to/your/data/folder")
-
-# Configure temporal settings (optional)
-pgoptions$set_start_date(as.Date("1990-12-31"))
-pgoptions$set_end_date(as.Date("2023-12-31"))
-
-# View your configuration
-pg_dates()
-pg_date_intervals()
-pg <- prio_blank_grid()
-print(pg)
-terra::plot(pg)
+pg_set_rawfolder("/path/to/your/data/folder")
 ```
 
-### Default Settings
-
-| Setting | Default Value |
-|---------|---------------|
-| Spatial resolution | 0.5×0.5 degrees (720×360 cells) |
-| Projection | EPSG:4326 (WGS84) |
-| Extent | Global (-180 to 180, -90 to 90) |
-| Temporal resolution | 1 year |
-| Temporal extent | 1850 to present (where data exists) |
-
-> **Note:** When setting dates, use the last day of your desired temporal increment. For example, use `1850-12-31` for yearly data instead of `1850-01-01`.
-
-## Basic Usage
-
-### Download and Read PRIOGRID Data
-
-The simplest workflow involves downloading the complete PRIOGRID dataset and reading it into R:
+Download the official release and read it into R:
 
 ```r
-# Download the latest PRIOGRID dataset to your local folder
 download_priogrid()
 
-# Read the dataset into memory
-pg_static <- read_pg_static()
+pg_static     <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
-
-# Explore the data
-View(pg_static)
-
-# Load a single variable as raster
-ucdp <- load_pgvariable("ucdp_ged")
-terra::plot(log1p(ucdp[["2024-12-31"]]))
-
-# View list of available variables
-View(pgvariables)
 ```
 
-### Citing Data Sources
-
-**Always cite the original data providers.** Most data licenses require attribution (e.g., CC-BY), and proper citation is fundamental to good research practice. 
-
-When using PRIOGRID data with original variable names, retrieve all necessary citations with:
+Browse available variables:
 
 ```r
-# Get citations for all variables in your dataset
-pgcitations(names(pg_timevarying))
-
-# Get citation for a specific variable
-pgcitations("ucdp_ged")
-
-# Export as BibLaTeX for use in LaTeX documents
-pgcitations("ucdp_ged", as_biblatex = TRUE)
+pgvariables
 ```
 
-## Advanced Usage
+## Documentation
 
-### Working with Original Data Sources
+Full documentation is available in the package vignettes:
 
-For users who need to transform data to custom specifications or work with original source data. The steps below are also automatically done when running the read_() functions. 
-
-```r
-# View available data sources
-View(pgsources)
-
-# List all downloadable files
-files_to_download <- pg_rawfiles()
-View(files_to_download)
-
-# Download specific sources
-ucdp_files <- pg_rawfiles() |> 
-  dplyr::filter(source_name == "UCDP GED")
-download_pg_rawdata(file_info = ucdp_files)
-```
-
-### Reading and Transforming Source Data
-
-Each data source has dedicated functions for reading and transformation. Large files use memory-efficient processing via [terra](https://github.com/rspatial/terra):
-
-```r
-# Read population data
-r <- read_ghsl_population_grid()
-print(r)
-
-# Load PRIOGRID variable
-ghsl_pg <- load_pgvariable("ghsl_population_grid")
-terra::plot(log1p(ghsl_pg[["2025-12-31"]]))
-
-# Calculate travel time with custom aggregation
-ttime_max <- calc_traveltime(aggregation_function = "max")
-terra::plot(log1p(ttime_max))
-```
-
-Source-specific transformation functions are documented in the corresponding `R/data_[source].R` files.
-
-### Customizing Spatial and Temporal Resolution
-
-PRIOGRID supports flexible spatial and temporal configurations:
-
-#### Temporal Resolution Examples
-
-```r
-pgoptions$set_start_date(as.Date("2022-12-31"))
-
-# Monthly data
-pgoptions$set_temporal_resolution("1 month")
-r_monthly <- gen_cru_tmp()
-terra::plot(r_monthly)
-
-# Quarterly data
-pgoptions$set_temporal_resolution("1 quarter")
-r_quarterly <- gen_cru_tmp()
-print(r_quarterly)
-terra::plot(r_quarterly)
-```
-
-### Customizing Spatial Resolution and Projection
-
-```r
-# Lower resolution with custom extent (e.g., Northern/Eastern hemisphere)
-pgoptions$set_ncol(36)
-pgoptions$set_nrow(18)
-pgoptions$set_extent(c("xmin" = 0, "xmax" = 180, "ymin" = 0, "ymax" = 90))
-r_low_res <- gen_cru_tmp()
-terra::plot(r_low_res[["2024-10-31"]])
-
-# Custom projection (Lambert Azimuthal Equal-Area)
-pgoptions$set_crs("+proj=laea +lon_0=106.875 +lat_0=58.5295629 +datum=WGS84 +units=m +no_defs")
-r_low_res_lambert_azimuthal <- gen_cru_tmp()
-terra::plot(r_low_res_lambert_azimuthal[["2024-10-31"]])
-```
-
-#### Resetting to Default Settings
-
-```r
-pgoptions$set_start_date(as.Date("1850-12-31"))
-pgoptions$set_end_date(as.Date("2025-08-26"))
-pgoptions$set_temporal_resolution("1 year")
-pgoptions$set_nrow(360)
-pgoptions$set_ncol(720)
-pgoptions$set_crs("epsg:4326")
-pgoptions$set_extent(c(xmin = -180, xmax = 180, ymin = -90, ymax = 90))
-```
-
-> **Important:** When changing spatial resolution, extent, or projection, PRIOGRID IDs will differ from the default configuration. These custom IDs should only be used within datasets sharing the same spatial configuration.
-
-### Memory Management
-
-For very large grids, PRIOGRID switches to disk-based processing in `terra` when estimated memory usage exceeds 4GB:
-
-```r
-# Standard resolution (fits in memory)
-pgoptions$set_nrow(360)
-pgoptions$set_ncol(720)
-
-# High resolution (triggers disk-based processing)
-pgoptions$set_nrow(10000)
-pgoptions$set_ncol(15000)
-```
-
-Temporary files are stored in `{rawfolder}/tmp/` and automatically cleaned up after processing.
-
-## Data Storage
-
-PRIOGRID uses a single base folder for all data, set via `pgoptions$set_rawfolder()`.
-
-### Directory Structure
-
-```
-{rawfolder}/
-├── {source_name}/{version}/{id}/   # Raw source files
-├── priogrid/
-│   ├── releases/{version}/{type}/  # Official releases
-│   └── custom/{pkg_version}/{spatial_hash}/{temporal_hash}/  # Custom builds
-└── tmp/                            # Temporary processing files
-```
-
-### Storage Modes
-
-| Mode | Path | Use Case |
-|------|------|----------|
-| **Release** | `releases/3.0.1/05deg_yearly/` | Official PRIOGRID data (default) |
-| **Custom** | `custom/{version}/{spatial_hash}/{temporal_hash}/` | User-defined spatial/temporal settings |
-
-Custom builds use 6-character MD5 hashes to identify unique spatial configurations (resolution, extent, CRS) and temporal configurations (resolution, date range).
-
-### Temporary Files
-
-Large raster operations use `{rawfolder}/tmp/` for intermediate files. These are automatically cleaned up after processing. When estimated memory usage exceeds 4GB, `terra` switches to disk-based processing automatically.
+| Vignette | Description |
+|---|---|
+| [Getting Started](https://prio-data.github.io/priogrid/articles/getting-started.html) | Setup, downloading, and reading tabular data |
+| [Accessing as Rasters](https://prio-data.github.io/priogrid/articles/working-with-rasters.html) | Working with individual variables using `terra` |
+| [Citations and Bibliography](https://prio-data.github.io/priogrid/articles/citation.html) | Citing data providers in publications |
+| [Custom Configurations](https://prio-data.github.io/priogrid/articles/custom-config.html) | Custom resolution, extent, projection, and time periods |
+| [Understanding Metadata](https://prio-data.github.io/priogrid/articles/metadata.html) | Exploring `pgsources`, `pgvariables`, and `pgsearch()` |
+| [Contributing](https://prio-data.github.io/priogrid/articles/contributing.html) | Adding new data sources and variables |
 
 ## Contributing
 

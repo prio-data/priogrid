@@ -4,7 +4,7 @@
 \alias{gen_hilda_pasture}
 \title{Extract Pasture/Rangeland Coverage from HILDA+ Data}
 \usage{
-gen_hilda_pasture()
+gen_hilda_pasture(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} with pasture/rangeland coverage proportions (0-1)

@@ -39,7 +39,7 @@ build_release(
 NULL (invisibly). Called for side effects (creating release).
 }
 \description{
-Sets pgoptions to specified configuration, calculates all variables to custom
+Sets config to specified configuration, calculates all variables to custom
 location, then copies them to the official release folder. This ensures
 consistency between custom and release workflows.
 }

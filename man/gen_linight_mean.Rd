@@ -4,7 +4,7 @@
 \alias{gen_linight_mean}
 \title{Generate Li Nighttime Light}
 \usage{
-gen_linight_mean()
+gen_linight_mean(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object

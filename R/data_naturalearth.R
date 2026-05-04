@@ -137,11 +137,17 @@ read_ne_disputed_areas <- function() {
 #' @export
 #' @references
 #' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
-gen_naturalearth_cover_share <- function(){
+gen_naturalearth_cover_share <- function(config = pg_current_config()){
   ne <- read_naturalearth_10m_land()
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
   ne_combined <- ne |> dplyr::summarize(geometry = sf::st_combine(geometry))
+
+  pgcrs <- sf::st_crs(config$crs)
+  if (sf::st_crs(ne_combined) != pgcrs) {
+    ne_combined <- sf::st_transform(ne_combined, sf::st_crs(config$crs))
+  }
+
   coversh <- exactextractr::exact_extract(pg, ne_combined)
 
   ra <- exactextractr::rasterize_polygons(ne_combined, pg)
@@ -190,11 +196,11 @@ gen_naturalearth_cover_share <- function(){
 #' @export
 #' @references
 #' \insertRef{naturalearthLand10mPhysical2024}{priogrid}
-gen_naturalearth_cover <- function(min_cover = 0){
-  land_cover_share <- gen_naturalearth_cover_share()
+gen_naturalearth_cover <- function(min_cover = 0, config = pg_current_config()){
+  land_cover_share <- gen_naturalearth_cover_share(config = config)
 
   land_cover_share <- terra::ifel(land_cover_share < min_cover, NA, land_cover_share)
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
   ne_cover <- terra::intersect(land_cover_share, pg)
   names(ne_cover) <- "naturalearth_cover"
   return(ne_cover)
@@ -228,12 +234,12 @@ gen_naturalearth_cover <- function(min_cover = 0){
 #' @export
 #' @references
 #' \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}
-ne_disputed_area_share <- function(type) {
+ne_disputed_area_share <- function(type, config = pg_current_config()) {
   if(!is.character(type)){
     stop("Invalid type. Please choose from: ", paste(valid_types, collapse = ", "))
   }
 
-  disputed_areas = read_ne_disputed_areas()
+  disputed_areas <- read_ne_disputed_areas()
 
   # Consistent lower-case
   disputed_areas$TYPE <- tolower(disputed_areas$TYPE)
@@ -250,12 +256,12 @@ ne_disputed_area_share <- function(type) {
     df <- disputed_areas |> dplyr::filter(TYPE == type)
   }
 
-  pgcrs <- sf::st_crs(pgoptions$get_crs())
+  pgcrs <- sf::st_crs(config$crs)
   if (sf::st_crs(df) != pgcrs) {
     df <- sf::st_transform(df, crs = pgcrs)
   }
 
-  pg <- prio_blank_grid()
+  pg <- prio_blank_grid(config)
 
   data_combined <- df |> dplyr::summarize(geometry = sf::st_combine(geometry))
   coversh <- exactextractr::exact_extract(pg, data_combined)
@@ -293,6 +299,6 @@ ne_disputed_area_share <- function(type) {
 #' @export
 #' @references
 #' \insertRef{naturalearthAdmin0Breakaway2024}{priogrid}
-gen_ne_disputed_area_share <- function() {
-  ne_disputed_area_share(type = "All")
+gen_ne_disputed_area_share <- function(config = pg_current_config()) {
+  ne_disputed_area_share(type = "All", config = config)
 }

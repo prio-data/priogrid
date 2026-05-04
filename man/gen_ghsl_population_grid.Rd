@@ -4,7 +4,7 @@
 \alias{gen_ghsl_population_grid}
 \title{Generate GHSL GHS Population Grid}
 \usage{
-gen_ghsl_population_grid()
+gen_ghsl_population_grid(config = pg_current_config())
 }
 \value{
 A \code{SpatRaster} object

@@ -4,7 +4,12 @@
 \alias{cshapes_cover}
 \title{Binary Mask for Grid Cells Intersecting International State System (cShapes 2.0)}
 \usage{
-cshapes_cover(measurement_date, min_cover = 0, cshp = read_cshapes())
+cshapes_cover(
+  measurement_date,
+  min_cover = 0.2,
+  cshp = read_cshapes(),
+  config = pg_current_config()
+)
 }
 \arguments{
 \item{measurement_date}{A single \code{Date} object specifying the date for
