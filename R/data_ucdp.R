@@ -237,7 +237,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
     }
 
     agg_intervals <- pg_date_intervals(config)
-    agg_dt <- data.table(
+    agg_dt <- data.table::data.table(
       interval_id = seq_along(agg_intervals),
       agg_start = lubridate::int_start(agg_intervals),
       agg_end = lubridate::int_end(agg_intervals)
@@ -274,7 +274,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
     result[, base_count := floor(total_fatalities * prop_share)]
     result[, residual := total_fatalities[1] - sum(base_count), by = event_id]
     result[, frac_part := (total_fatalities * prop_share) - base_count]
-    result[, rank := frank(-frac_part, ties.method = "random"), by = event_id]
+    result[, rank := data.table::frank(-frac_part, ties.method = "random"), by = event_id]
     result[, distributed_count := base_count + as.integer(rank <= residual)]
 
     result[, is_last_period := rank == max(rank), by = event_id]
@@ -296,7 +296,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 
   ged <- ged |> dplyr::filter(type_of_violence %in% violence_types)
   ged_dt <- sf::st_drop_geometry(ged) |> dplyr::select(id, date_start, date_end, date_prec, dplyr::all_of(fatality_variable))
-  setDT(ged_dt)
+  data.table::setDT(ged_dt)
   result <- distribute_fatalities(ged_dt, value_var = fatality_variable)
 
   agg_result <- result[, .(
