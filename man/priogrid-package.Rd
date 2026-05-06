@@ -21,14 +21,14 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Andreas For<U+00F8> Tollefsen \email{andreas@prio.org} (\href{https://orcid.org/0000-0002-0864-5132}{ORCID})
+  \item Andreas Forø Tollefsen \email{andreas@prio.org} (\href{https://orcid.org/0000-0002-0864-5132}{ORCID})
 }
 
 Other contributors:
 \itemize{
   \item Karim Bahgat \email{karim.bahgat@outlook.com} (Co-author of PG2) [contributor]
   \item Peace Research Institute Oslo (PRIO) [copyright holder]
-  \item H<U+00E5>vard Strand \email{hs@prio.org} [contributor]
+  \item Håvard Strand \email{hs@prio.org} [contributor]
   \item Scott Gates \email{scott@prio.org} [contributor]
   \item Halvard Buhaug \email{halvard@prio.org} [contributor]
   \item Kristine Helskog \email{krihel@prio.org} [contributor]
