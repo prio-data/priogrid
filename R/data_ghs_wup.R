@@ -430,7 +430,7 @@ gen_ghs_wup_degurba_urban <- function(config = pg_current_config()){
 #' \insertRef{schiavinaGHSWUPDEGURBAR2025AGHSWUP2025}{priogrid}
 #'
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
-urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22, 23, 30), max_extent = 1000e3){
+urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22, 23, 30), max_extent = 1000e3, config = pg_current_config()){
   # lat <- 59.935320; lon <- 10.763063 Oslo
   # lat <- 28.612738 lon <- 77.231487 New Delhi
 
@@ -455,6 +455,6 @@ urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22
   urban_extent_raster <- terra::ifel(urban_patches == center_patch_id, 1, NA)
   urban_extent_raster <- terra::trim(urban_extent_raster)
   res <- terra::as.polygons(urban_extent_raster, dissolve = TRUE) |> sf::st_as_sf()
-  res <- sf::st_transform(res, pg_current_config()$crs)
+  res <- sf::st_transform(res, sf::st_crs(config$crs))
   res
 }
