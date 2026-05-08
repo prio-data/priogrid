@@ -39,13 +39,16 @@ prio_blank_grid <- function(config = pg_current_config()){
 
   pg_lonlat <- terra::rast(terra::ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
   terra::values(pg_lonlat) <- create_pg_indices(config)
-  pg_lonlat <- terra::project(pg_lonlat, crs_string)
 
-  pg <- terra::deepcopy(pg_lonlat)
-  terra::values(pg) <- create_pg_indices(pg_config(ncol = terra::ncol(pg), nrow = terra::nrow(pg)))
-  pg <- terra::ifel(is.nan(pg_lonlat), NaN, pg)
-
-
+  if(crs_string != "epsg:4326"){
+    bbox_t <- sf::st_transform(sf::st_bbox(extent, crs = 4326), crs = crs_string)
+    mask <- terra::project(pg_lonlat, crs_string) |> terra::crop(bbox_t)
+    pg <- terra::deepcopy(mask)
+    terra::values(pg) <- create_pg_indices(pg_config(ncol = terra::ncol(pg), nrow = terra::nrow(pg)))
+    pg <- terra::mask(pg, mask)
+  } else{
+    pg <- pg_lonlat
+  }
 
   names(pg) <- "pgid"
   return(pg)
