@@ -9,6 +9,8 @@ gen_cshapes_cover_share(cshp = read_cshapes(), config = pg_current_config())
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.
 Defaults to \code{\link{read_cshapes}()} if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

@@ -31,6 +31,8 @@
 #'
 #' @return A \code{SpatRaster} object with DEGURBA classification codes
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @note
 #' \itemize{
 #'   \item Files are automatically extracted from zip archives and cached locally
@@ -116,6 +118,7 @@ read_ghs_wup_degurba <- function(config = pg_current_config()){
 #'
 #' @param urban_definition Numeric vector of DEGURBA codes to classify as urban.
 #'   Valid codes are: 10, 11, 12, 13, 21, 22, 23, 30. See Details for code meanings.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @details
 #' The DEGURBA classification codes represent:
@@ -183,7 +186,7 @@ ghs_wup_degurba <- function(urban_definition, config = pg_current_config()){
   r <- read_ghs_wup_degurba(config = config)
 
   temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
+  dir.create(temporary_directory, recursive = TRUE)
   tmp1 <- tempfile(pattern = "urban_classification", fileext = ".tif", tmpdir = temporary_directory)
 
   r <- terra::classify(r, cl_mat, filename = tmp1)

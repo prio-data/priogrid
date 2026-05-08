@@ -16,10 +16,12 @@ cshapes_cover(
 boundary analysis. Must be within CShapes temporal coverage.}
 
 \item{min_cover}{Numeric. Minimum coverage threshold (0-1). Grid cells with
-state coverage below this value are set to NA. Default is 0 (any intersection).}
+state coverage below this value are set to NA. Default is 0.2 (20\% coverage required).}
 
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data.
 Defaults to \code{\link{read_cshapes}()} if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \description{
 Creates a binary raster mask indicating whether PRIO-GRID cells intersect

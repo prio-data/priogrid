@@ -36,7 +36,7 @@
 #'
 #' @seealso
 #' \code{\link{ucdp_ged}} for rasterizing events to PRIO-GRID,
-#' \code{\link{ged_ucdp_ged}} for generating the standard UCDP GED variable
+#' \code{\link{gen_ucdp_ged}} for generating the standard UCDP GED variable
 #'
 #' @examples
 #' \dontrun{
@@ -196,7 +196,7 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable, confi
 #'
 #' @seealso
 #' \code{\link{read_ucdp_ged}} for loading raw UCDP GED data,
-#' \code{\link{ged_ucdp_ged}} for the standard generator function,
+#' \code{\link{gen_ucdp_ged}} for the standard generator function,
 #' \code{\link{pg_date_intervals}} for PRIO-GRID temporal structure
 #'
 #' @examples
@@ -279,7 +279,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 
     result[, is_last_period := rank == max(rank), by = event_id]
     result[total_fatalities > 1 & sum(base_count) == 0,
-           distributed_count := fifelse(is_last_period & distributed_count == 0, 1L, distributed_count),
+           distributed_count := data.table::fifelse(is_last_period & distributed_count == 0, 1L, distributed_count),
            by = event_id]
 
     check <- result[, .(
@@ -379,7 +379,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 #' @examples
 #' \dontrun{
 #' # Generate standard UCDP GED variable
-#' ged_fatalities <- ged_ucdp_ged()
+#' ged_fatalities <- gen_ucdp_ged()
 #'
 #' # Examine the result
 #' print(ged_fatalities)
@@ -411,6 +411,28 @@ gen_ucdp_ged <- function(config = pg_current_config()){
 }
 
 
+#' Distance to nearest UCDP GED event within each country
+#'
+#' For each PRIO-GRID cell, computes the distance (in meters) to the nearest
+#' UCDP GED conflict event that occurred within the same country during the
+#' period containing \code{measurement_date}. Cells in countries with no
+#' recorded events are set to NA (not 0), to distinguish absence of events
+#' from proximity to events. Events with spatial precision code >= 6
+#' (national-level or coarser) are excluded.
+#'
+#' @param measurement_date A single \code{Date} object specifying the measurement date.
+#' @param ged An \code{sf} object containing UCDP GED data. Defaults to
+#'   \code{\link{read_ucdp_ged}()}.
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data. Defaults to
+#'   \code{\link{read_cshapes}()}.
+#'
+#' @return A \code{SpatRaster} with distances in meters to the nearest conflict event
+#'   within the same country. NA indicates no events recorded in that country for
+#'   the period.
+#'
+#' @seealso \code{\link{ucdp_ged}} for fatality-count rasters,
+#'   \code{\link{read_ucdp_ged}} for loading raw UCDP GED data
+#'
 #' @export
 ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes()){
   cshp <- cshp |> dplyr::filter(measurement_date %within% date_interval)

@@ -9,6 +9,8 @@ ghs_wup_degurba(urban_definition, config = pg_current_config())
 \arguments{
 \item{urban_definition}{Numeric vector of DEGURBA codes to classify as urban.
 Valid codes are: 10, 11, 12, 13, 21, 22, 23, 30. See Details for code meanings.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object with values ranging from 0 to 1, representing

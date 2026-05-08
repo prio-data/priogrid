@@ -8,7 +8,8 @@ bdist3(
   measurement_date,
   cshp = read_cshapes(),
   past_result = NULL,
-  config = pg_current_config()
+  config = pg_current_config(),
+  geodesic = NULL
 )
 }
 \arguments{
@@ -21,9 +22,18 @@ Defaults to \code{\link{read_cshapes}()} if not provided.}
 \item{past_result}{A list object from a previous \code{bdist3} calculation.
 If boundaries haven't changed, the function returns this result directly,
 avoiding recomputation. Default is NULL.}
+
+\item{config}{A pg_config object, see \code{\link{pg_config()}}.}
+
+\item{geodesic}{Logical or NULL. If TRUE, computes distances in WGS84 using
+spherical (S2) geometry; \code{robust_transformation()} reprojects the
+result to the config CRS. If FALSE, uses Euclidean distances in the config
+CRS. Default NULL auto-detects: geodesic for projected CRS (e.g. UTM),
+native for geographic CRS (e.g. WGS84, which terra already handles
+geodesically).}
 }
 \value{
-A list containing three elements:
+A list containing two elements:
 \itemize{
 \item \code{bdist3}: A \code{SpatRaster} with distances (km) from cell centroids
 to the border of the country.

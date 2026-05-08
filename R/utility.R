@@ -199,6 +199,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #' @param disagg_method Character string specifying disaggregation method for
 #'   low-resolution data. Options are "near" (nearest neighbor, default),
 #'   "bilinear", or "cubic". See \code{\link[terra]{disagg}} for details.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #' @param cores Integer specifying number of CPU cores to use for aggregation
 #'   operations. Defaults to 1. Higher values can speed up processing of large datasets.
 #' @param ... Additional arguments passed to \code{\link[terra]{aggregate}}.
@@ -206,9 +207,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #'
 #' @return SpatRaster object conforming to PRIO-GRID specifications:
 #' \itemize{
-#'   \item CRS: As specified in global options (default: EPSG:4326)
-#'   \item Extent: As specified in global options (default: global extent)
-#'   \item Resolution: Calculated from nrow/ncol in global options
+#'   \item CRS: As specified in \code{config} (default: EPSG:4326)
+#'   \item Extent: As specified in \code{config} (default: global extent)
+#'   \item Resolution: Calculated from \code{nrow}/\code{ncol} in \code{config}
 #'   \item Grid alignment: Exactly matched to PRIO-GRID cell boundaries
 #' }
 #'
@@ -219,8 +220,6 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #'   \item Ensuring adequate disk space in the raw data folder for temporary files
 #'   \item Pre-cropping input data to region of interest before transformation
 #' }
-#'
-#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @examples
 #' \dontrun{
@@ -238,7 +237,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", config = p
   pg_configure_terra_memory(config)
   pg <- prio_blank_grid(config)
   temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
+  dir.create(temporary_directory, recursive = TRUE)
 
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){

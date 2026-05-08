@@ -49,7 +49,7 @@ Alternative estimates (low, high) can be accessed through \code{\link{ucdp_ged}}
 \examples{
 \dontrun{
 # Generate standard UCDP GED variable
-ged_fatalities <- ged_ucdp_ged()
+ged_fatalities <- gen_ucdp_ged()
 
 # Examine the result
 print(ged_fatalities)

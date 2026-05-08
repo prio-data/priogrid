@@ -92,6 +92,7 @@ read_cshapes <- function(){
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
 #'   properly formatted date intervals. Defaults to \code{\link{read_cshapes}()}
 #'   if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @seealso
 #' \code{\link{read_cshapes}} for loading CShapes boundary data,
@@ -170,9 +171,10 @@ cshapes_cover_share <- function(measurement_date, cshp = read_cshapes(), config 
 #' @param measurement_date A single \code{Date} object specifying the date for
 #'   boundary analysis. Must be within CShapes temporal coverage.
 #' @param min_cover Numeric. Minimum coverage threshold (0-1). Grid cells with
-#'   state coverage below this value are set to NA. Default is 0 (any intersection).
+#'   state coverage below this value are set to NA. Default is 0.2 (20% coverage required).
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data.
 #'   Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @examples
 #' \dontrun{
@@ -205,6 +207,7 @@ cshapes_cover <- function(measurement_date, min_cover = 0.2, cshp = read_cshapes
 #'
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data.
 #'   Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #' @export
@@ -244,13 +247,13 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes(), config = pg_current_c
 #'   country assignment. Must be within the temporal range of the CShapes dataset.
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
 #'   Gleditsch-Ward country codes. Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'
 #' @note
 #' \itemize{
 #'   \item Small countries or territories may not appear if they don't dominate any grid cells
-#'   \item The function includes an assertion check to verify all countries are represented
 #'   \item Future versions may include provisions for minority country representation
 #' }
 #'
@@ -299,6 +302,7 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes(), config = pg_
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
 #'   Gleditsch-Ward country codes and temporal information. Defaults to
 #'   \code{\link{read_cshapes}()} if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'
@@ -349,8 +353,14 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes(), config = pg_current_config
 #' @param past_result A list object from a previous \code{bdist1} calculation.
 #'   If boundaries haven't changed, the function returns this result directly,
 #'   avoiding recomputation. Default is NULL.
+#' @param config A pg_config object, see \code{\link{pg_config()}}.
+#' @param geodesic Logical or NULL. If TRUE, computes distances in WGS84 using
+#'   spherical (S2) geometry and reprojects the result to the config CRS. If
+#'   FALSE, uses Euclidean distances in the config CRS. Default NULL
+#'   auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+#'   CRS (e.g. WGS84, which terra already handles geodesically).
 #'
-#' @return A list containing three elements:
+#' @return A list containing two elements:
 #'   \itemize{
 #'     \item \code{bdist1}: A \code{SpatRaster} with distances (km) from cell centroids
 #'       to nearest international borders, masked to state system coverage
@@ -365,8 +375,13 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes(), config = pg_current_config
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
+bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config(), geodesic = NULL){
   pg <- prio_blank_grid(config)
+  unit_factor <- terra::linearUnits(pg)
+  use_geodesic <- if (is.null(geodesic)) unit_factor != 0 else geodesic
+  prev_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(use_geodesic)
+  on.exit(sf::sf_use_s2(prev_s2))
 
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
@@ -379,25 +394,35 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
     }
   }
 
-  sf::sf_use_s2(TRUE)
   shared_borders <- list()
   for(i in 1:nrow(boundaries)){
     shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
   }
 
-  gwcodes <- cshapes_gwcode(measurement_date, config = config)
-  bdist1 <- list()
+  if (use_geodesic) {
+    wgs84_config <- config
+    wgs84_config$crs <- "epsg:4326"
+    gwcodes <- cshapes_gwcode(measurement_date, config = wgs84_config)
+  } else {
+    gwcodes <- cshapes_gwcode(measurement_date, config = config)
+  }
+
+  res <- list()
   for(i in 1:length(shared_borders)){
     if(nrow(shared_borders[[i]]) > 0){
       gwcode <- shared_borders[[i]]$gwcode |> unique()
       gwrast <- terra::ifel(gwcodes == gwcode, 1, NA)
       tmp  <- terra::distance(gwcodes, shared_borders[[i]] |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
-      bdist1[[as.character(gwcode)]] <- tmp * gwrast
+      res[[as.character(gwcode)]] <- tmp * gwrast
     }
   }
-  bdist1 <- terra::mosaic(terra::sprc(bdist1))
+  bdist1_result <- terra::mosaic(terra::sprc(res))
 
-  return(list("bdist1" = bdist1, "boundaries" = boundaries))
+  if (use_geodesic) {
+    bdist1_result <- terra::project(bdist1_result, pg, method = "bilinear")
+  }
+
+  return(list("bdist1" = bdist1_result, "boundaries" = boundaries))
 }
 
 #' Generate distance to nearest land-contiguous border over time (bdist1)
@@ -416,6 +441,12 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
 #'
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data with
 #'   temporal information. Defaults to \code{\link{read_cshapes}()} if not provided.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#' @param geodesic Logical or NULL. If TRUE, computes distances in WGS84 using
+#'   spherical (S2) geometry and reprojects the result to the config CRS. If
+#'   FALSE, uses Euclidean distances in the config CRS. Default NULL
+#'   auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+#'   CRS (e.g. WGS84, which terra already handles geodesically).
 #'
 #' @return A \code{SpatRaster} object
 #'
@@ -438,17 +469,17 @@ bdist1 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config()){
+gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config(), geodesic = NULL){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  res <- bdist1(time_slices[1], cshp = cshp, config = config)
+  res <- bdist1(time_slices[1], cshp = cshp, config = config, geodesic = geodesic)
   r <- res$bdist1
   for(i in 2:length(time_slices)){
     print(i)
     t <- time_slices[i]
-    res <- bdist1(t, cshp = cshp, past_result = res, config = config)
+    res <- bdist1(t, cshp = cshp, past_result = res, config = config, geodesic = geodesic)
     terra::add(r) <- res$bdist1
   }
   names(r) <- as.character(time_slices)
@@ -467,8 +498,10 @@ gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config()){
 #' if country boundaries haven't changed since the last computation, significantly
 #' reducing processing time for temporal sequences.
 #'
-#' Distance calculations use spherical geometry (S2) for accurate measurements
-#' across the globe, particularly important for high-latitude regions.
+#' Distance calculations use spherical geometry (S2) with WGS84 projection for accurate
+#' measurements across the globe as default, particularly important for high-latitude regions.
+#' Users can use euclidean distances by setting geodesic = FALSE. This could be relevant,
+#' for instance with UTM projections for small extents.
 #'
 #' @param measurement_date A single \code{Date} object specifying the date for
 #'   boundary analysis. Must be within CShapes temporal coverage.
@@ -477,6 +510,13 @@ gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config()){
 #' @param past_result A list object from a previous \code{bdist2} calculation.
 #'   If boundaries haven't changed, the function returns this result directly,
 #'   avoiding recomputation. Default is NULL.
+#' @param config A pg_config object, see \code{\link{pg_config()}}.
+#' @param geodesic Logical or NULL. If TRUE, uses spherical (S2/WGS84) geometry
+#'   for distance calculations, projecting the result back to the config CRS.
+#'   If FALSE, uses Euclidean distances in the config CRS, converting to meters
+#'   via \code{terra::linearUnits()}. Default NULL auto-detects: geodesic for
+#'   projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
+#'   already geodesic via terra's internal handling).
 #'
 #' @return A list containing three elements:
 #'   \itemize{
@@ -495,9 +535,9 @@ gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
-  pg <- prio_blank_grid(config)
+bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config(), geodesic = NULL){
 
+  # Find shared borders
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
   boundaries <- sf::st_cast(boundaries, "MULTILINESTRING")
@@ -509,18 +549,50 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
     }
   }
 
-  sf::sf_use_s2(TRUE)
   shared_borders <- list()
   for(i in 1:nrow(boundaries)){
     shared_borders[[i]] <- sf::st_intersection(boundaries[i,], boundaries[-i,])
   }
   shared_borders <- dplyr::bind_rows(shared_borders)
-  #shared_borders |> sf::st_geometry() |> plot()
 
-  res <- terra::distance(pg, shared_borders |> sf::st_combine() |> terra::vect(), rasterize = TRUE)
 
+  # Calculate distances
+  pg <- prio_blank_grid(config)
+  unit_factor <- terra::linearUnits(pg)
+  # Default: geodesic for projected CRS, native for geographic CRS
+  use_geodesic <- if(is.null(geodesic)) unit_factor != 0 else geodesic
+
+  prev_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(use_geodesic)
+  on.exit(sf::sf_use_s2(prev_s2))
+
+  if(!use_geodesic){
+    # Trust the user's projection (e.g. UTM over small extent)
+    shared_borders_trans <- shared_borders |>
+      sf::st_collection_extract("LINESTRING") |>
+      sf::st_combine() |>
+      sf::st_transform(crs = sf::st_crs(pg)) |>
+      terra::vect()
+    res <- terra::distance(pg, shared_borders_trans, rasterize = TRUE)
+    if(unit_factor != 1) res <- res * unit_factor  # normalize to meters
+  } else {
+    # This is the default
+    # Fall back to WGS84 geodesic, reproject result
+    wgs84_config <- config
+    wgs84_config$crs <- "epsg:4326"
+    pg_4326 <- prio_blank_grid(wgs84_config)
+    shared_borders_4326 <- shared_borders |>
+      sf::st_collection_extract("LINESTRING") |>
+      sf::st_combine() |>
+      # sf::st_transform(crs = sf::st_crs(4326)) |> # cShapes is 4326 by default
+      terra::vect()
+    res_4326 <- terra::distance(pg_4326, shared_borders_4326, rasterize = TRUE)
+    res <- terra::project(res_4326, pg, method = "bilinear")
+  }
+
+  # Mask cells without cshapes land-cover
   cover <- cshapes_cover(measurement_date, cshp = cshp, config = config)
-  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
+  cover <- terra::ifel(cover, 1, NA)
 
   return(list("bdist2" = res*cover, "boundaries" = boundaries, "shared_borders" = shared_borders))
 }
@@ -598,8 +670,15 @@ gen_bdist2 <- function(cshp = read_cshapes(), config = pg_current_config()){
 #' @param past_result A list object from a previous \code{bdist3} calculation.
 #'   If boundaries haven't changed, the function returns this result directly,
 #'   avoiding recomputation. Default is NULL.
+#' @param config A pg_config object, see \code{\link{pg_config()}}.
+#' @param geodesic Logical or NULL. If TRUE, computes distances in WGS84 using
+#'   spherical (S2) geometry; \code{robust_transformation()} reprojects the
+#'   result to the config CRS. If FALSE, uses Euclidean distances in the config
+#'   CRS. Default NULL auto-detects: geodesic for projected CRS (e.g. UTM),
+#'   native for geographic CRS (e.g. WGS84, which terra already handles
+#'   geodesically).
 #'
-#' @return A list containing three elements:
+#' @return A list containing two elements:
 #'   \itemize{
 #'     \item \code{bdist3}: A \code{SpatRaster} with distances (km) from cell centroids
 #'       to the border of the country.
@@ -614,8 +693,23 @@ gen_bdist2 <- function(cshp = read_cshapes(), config = pg_current_config()){
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config()){
+bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, config = pg_current_config(), geodesic = NULL){
   pg <- prio_blank_grid(config)
+  unit_factor <- terra::linearUnits(pg)
+  use_geodesic <- if (is.null(geodesic)) unit_factor != 0 else geodesic
+  prev_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(use_geodesic)
+  on.exit(sf::sf_use_s2(prev_s2))
+
+  if (use_geodesic) {
+    wgs84_config <- config
+    wgs84_config$crs <- "epsg:4326"
+    pg_calc <- prio_blank_grid(wgs84_config)
+    gwcodes <- cshapes_gwcode(measurement_date, config = wgs84_config)
+  } else {
+    pg_calc <- pg
+    gwcodes <- cshapes_gwcode(measurement_date, config = config)
+  }
 
   features <- cshp |> dplyr::filter(measurement_date %within% date_interval)
   boundaries <- sf::st_boundary(features)
@@ -628,9 +722,7 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
     }
   }
 
-  gwcodes <- cshapes_gwcode(measurement_date, config = config)
-  sf::sf_use_s2(TRUE)
-  bdist3 <- list()
+  res <- list()
   for(i in 1:nrow(boundaries)){
     gwcode <- boundaries[i,]$gwcode
     gwrast <- terra::ifel(gwcodes == gwcode, 1, NA)
@@ -647,15 +739,15 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
 
     # Now distance() only computes for cells in the cropped raster
     tmp <- terra::distance(country_rast, boundary_vect, rasterize = TRUE)
-    bdist3[[as.character(gwcode)]] <- tmp * country_rast
+    res[[as.character(gwcode)]] <- tmp * country_rast
   }
 
-  bdist3 <- terra::mosaic(terra::sprc(bdist3))
-  bdist3 <- terra::extend(bdist3, terra::ext(c(-180, 180, -90, 90)))
+  bdist3_result <- terra::mosaic(terra::sprc(res))
+  bdist3_result <- terra::extend(bdist3_result, terra::ext(pg_calc))
 
-  bdist3 <- robust_transformation(bdist3, config = config)
+  bdist3_result <- robust_transformation(bdist3_result, config = config)
 
-  return(list("bdist3" = bdist3, "boundaries" = boundaries))
+  return(list("bdist3" = bdist3_result, "boundaries" = boundaries))
 }
 
 
@@ -693,17 +785,17 @@ bdist3 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
 #' @export
 #' @references
 #' \insertRef{schvitzMappingInternationalSystem2022}{priogrid}
-gen_bdist3 <- function(cshp = read_cshapes(), config = pg_current_config()){
+gen_bdist3 <- function(cshp = read_cshapes(), config = pg_current_config(), geodesic = NULL){
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
-  res <- bdist3(time_slices[1], cshp = cshp, config = config)
+  res <- bdist3(time_slices[1], cshp = cshp, config = config, geodesic = geodesic)
   r <- res$bdist3
   for(i in 2:length(time_slices)){
     print(i)
     t <- time_slices[i]
-    res <- bdist3(t, cshp = cshp, past_result = res, config = config)
+    res <- bdist3(t, cshp = cshp, past_result = res, config = config, geodesic = geodesic)
     terra::add(r) <- res$bdist3
   }
   names(r) <- as.character(time_slices)
