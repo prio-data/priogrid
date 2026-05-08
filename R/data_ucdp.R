@@ -425,6 +425,12 @@ gen_ucdp_ged <- function(config = pg_current_config()){
 #'   \code{\link{read_ucdp_ged}()}.
 #' @param cshp An \code{sf} object containing CShapes 2.0 boundary data. Defaults to
 #'   \code{\link{read_cshapes}()}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#' @param geodesic Logical or NULL. If TRUE, computes distances in WGS84 using
+#'   spherical (S2) geometry and reprojects the result to the config CRS. If
+#'   FALSE, uses Euclidean distances in the config CRS. Default NULL
+#'   auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+#'   CRS (e.g. WGS84, which terra already handles geodesically).
 #'
 #' @return A \code{SpatRaster} with distances in meters to the nearest conflict event
 #'   within the same country. NA indicates no events recorded in that country for
@@ -434,39 +440,54 @@ gen_ucdp_ged <- function(config = pg_current_config()){
 #'   \code{\link{read_ucdp_ged}} for loading raw UCDP GED data
 #'
 #' @export
-ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes()){
+ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes(), config = pg_current_config(), geodesic = NULL){
+  pg <- prio_blank_grid(config)
+  unit_factor <- terra::linearUnits(pg)
+  use_geodesic <- if (is.null(geodesic)) unit_factor != 0 else geodesic
+
+  # sf::sf_use_s2 must be FALSE: cShapes has degenerate geometries that cause
+  # s2 to error. terra::distance uses its own internal geodesic logic and is
+  # not affected by this setting.
+  prev_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(prev_s2))
+
+  if (use_geodesic) {
+    wgs84_config <- config
+    wgs84_config$crs <- "epsg:4326"
+    pg_calc <- prio_blank_grid(wgs84_config)
+    rgw <- cshapes_gwcode(measurement_date, cshp = cshp, config = wgs84_config)
+  } else {
+    pg_calc <- pg
+    rgw <- cshapes_gwcode(measurement_date, cshp = cshp, config = config)
+  }
+
   cshp <- cshp |> dplyr::filter(measurement_date %within% date_interval)
 
   pg_interval <- pg_date_intervals()[measurement_date %within% pg_date_intervals()]
 
-  pg <- prio_blank_grid()
   ged <- ged |>
-    sf::st_transform(crs = sf::st_crs(pg)) |>
+    sf::st_transform(crs = sf::st_crs(pg_calc)) |>
     dplyr::filter(lubridate::int_overlaps(date_interval, pg_interval)) |>
     dplyr::filter(where_prec < 6) # Remove where_prec >= 6 (i.e. not sub-national precision)
 
-  rgw <- cshapes_gwcode(measurement_date, cshp = cshp)
   gwcodes <- unique(cshp$gwcode)
 
-  cover <- cshapes_cover(measurement_date, cshp = cshp)
-  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
+  result <- pg_calc
+  terra::values(result) <- 0
 
-  result <- pg
-  result[terra::values(result)] <- 0
-  result <- result*cover
-  suppressMessages(sf::sf_use_s2(FALSE)) # Only use sf here to subset data.
-  distances <- list()
   for(gwcode in gwcodes){
     tmp <- rgw
     tmp[terra::values(tmp) != gwcode] <- NA
     tmp[!is.na(terra::values(tmp))] <- 1
 
-    suppressMessages(
-      ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
-    )
+    # Skip countries with no grid cells (e.g. micro-states that don't dominate any cell)
+    if (all(is.na(terra::values(tmp)))) next
+
+    ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
 
     if(nrow(ged_sub) > 0){
-      dist <- terra::distance(tmp, terra::vect(ged_sub), rasterize = T)
+      dist <- terra::distance(tmp, terra::vect(ged_sub), rasterize = TRUE)
       dist <- (dist*tmp)
       dist[is.na(dist)] <- 0
       result <- result + dist
@@ -478,9 +499,16 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
       result <- result * tmp
     }
   }
-  suppressMessages(sf::sf_use_s2(TRUE))
 
-  #plot(1/log1p(result))
-  #plot(1/result)
+  if (use_geodesic) {
+    result <- robust_transformation(result, config = config)
+  } else {
+    if (unit_factor != 1 && unit_factor != 0) result <- result * unit_factor
+  }
+
+  cover <- cshapes_cover(measurement_date, cshp = cshp, config = config)
+  cover <- terra::ifel(cover, 1, NA)
+  result <- result * cover
+
   return(result)
 }
