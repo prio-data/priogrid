@@ -2,13 +2,21 @@
 % Please edit documentation in R/data_side.R
 \name{gen_side_included}
 \alias{gen_side_included}
-\title{Generate SIDE Included Share}
+\title{Generate Included Ethnic Population Shares from SIDE}
 \usage{
-gen_side_included()
+gen_side_included(config = pg_current_config())
+}
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.}
 }
 \value{
-A \code{SpatRaster} object
+A \code{SpatRaster} with included population shares for each PRIO-GRID
+cell. See \code{\link{side}} for full documentation.
 }
 \description{
-Generate SIDE Included Share
+A convenience wrapper for \code{\link{side}} that extracts the share of
+the local population belonging to politically included ethnic groups.
+}
+\seealso{
+\code{\link{side}} for full documentation and parameters
 }

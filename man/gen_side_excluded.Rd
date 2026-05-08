@@ -2,13 +2,21 @@
 % Please edit documentation in R/data_side.R
 \name{gen_side_excluded}
 \alias{gen_side_excluded}
-\title{Generate SIDE Excluded Share}
+\title{Generate Excluded Ethnic Population Shares from SIDE}
 \usage{
-gen_side_excluded()
+gen_side_excluded(config = pg_current_config())
+}
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.}
 }
 \value{
-A \code{SpatRaster} object
+A \code{SpatRaster} with excluded population shares for each PRIO-GRID
+cell. See \code{\link{side}} for full documentation.
 }
 \description{
-Generate SIDE Excluded Share
+A convenience wrapper for \code{\link{side}} that extracts the share of
+the local population belonging to politically excluded ethnic groups.
+}
+\seealso{
+\code{\link{side}} for full documentation and parameters
 }

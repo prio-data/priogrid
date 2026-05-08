@@ -229,7 +229,7 @@ read_side <- function() {
 #' @examples
 #' \dontrun{
 #' # Generate excluded population shares at default PRIO-GRID resolution
-#' excluded <- gen_side("excluded")
+#' excluded <- side("excluded")
 #' print(excluded)
 #'
 #' # Plot excluded share for a specific year
@@ -239,14 +239,14 @@ read_side <- function() {
 #' cfg <- pg_config(start_date = as.Date("2000-12-31"),
 #'                  end_date   = as.Date("2010-12-31"),
 #'                  temporal_resolution = "1 year")
-#' excluded_2000s <- gen_side("excluded", config = cfg)
+#' excluded_2000s <- side("excluded", config = cfg)
 #' }
 #'
 #' @export
 #'
 #' @references
 #' \insertRef{spatial-data-on-ethnicity}{priogrid}
-gen_side <- function(status = c("excluded", "included", "irrelevant"), config = pg_current_config()) {
+side <- function(status = c("excluded", "included", "irrelevant"), config = pg_current_config()) {
   status <- match.arg(status)
 
   side <- read_side()
@@ -295,42 +295,42 @@ gen_side <- function(status = c("excluded", "included", "irrelevant"), config = 
 
 #' Generate Excluded Ethnic Population Shares from SIDE
 #'
-#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' A convenience wrapper for \code{\link{side}} that extracts the share of
 #' the local population belonging to politically excluded ethnic groups.
 #'
 #' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
 #' @return A \code{SpatRaster} with excluded population shares for each PRIO-GRID
-#'   cell. See \code{\link{gen_side}} for full documentation.
-#' @seealso \code{\link{gen_side}} for full documentation and parameters
+#'   cell. See \code{\link{side}} for full documentation.
+#' @seealso \code{\link{side}} for full documentation and parameters
 #' @export
 gen_side_excluded <- function(config = pg_current_config()) {
-  gen_side(status = "excluded", config = config)
+  side(status = "excluded", config = config)
 }
 
 #' Generate Included Ethnic Population Shares from SIDE
 #'
-#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' A convenience wrapper for \code{\link{side}} that extracts the share of
 #' the local population belonging to politically included ethnic groups.
 #'
 #' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
 #' @return A \code{SpatRaster} with included population shares for each PRIO-GRID
-#'   cell. See \code{\link{gen_side}} for full documentation.
-#' @seealso \code{\link{gen_side}} for full documentation and parameters
+#'   cell. See \code{\link{side}} for full documentation.
+#' @seealso \code{\link{side}} for full documentation and parameters
 #' @export
 gen_side_included <- function(config = pg_current_config()) {
-  gen_side(status = "included", config = config)
+  side(status = "included", config = config)
 }
 
 #' Generate Irrelevant Ethnic Population Shares from SIDE
 #'
-#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' A convenience wrapper for \code{\link{side}} that extracts the share of
 #' the local population belonging to politically irrelevant ethnic groups.
 #'
 #' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
 #' @return A \code{SpatRaster} with irrelevant population shares for each PRIO-GRID
-#'   cell. See \code{\link{gen_side}} for full documentation.
-#' @seealso \code{\link{gen_side}} for full documentation and parameters
+#'   cell. See \code{\link{side}} for full documentation.
+#' @seealso \code{\link{side}} for full documentation and parameters
 #' @export
 gen_side_irrelevant <- function(config = pg_current_config()) {
-  gen_side(status = "irrelevant", config = config)
+  side(status = "irrelevant", config = config)
 }
