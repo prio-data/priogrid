@@ -277,20 +277,17 @@ cshapes_gwcode <- function(measurement_date, cshp = read_cshapes(), config = pg_
   }
 
   res <- exactextractr::rasterize_polygons(cs, pg)
-  cmat <- cbind(terra::minmax(res)[1,]:terra::minmax(res)[2,], cs$gwcode)
-  res <- terra::classify(res, cmat)
 
-  # Commented out test as this might not work if user subsets with extent.
-  # represented_gwcodes <- terra::values(res) |> as.vector() |> unique()
-  # countries_not_included <- cs$gwcode[!cs$gwcode %in% represented_gwcodes]
-  # assertthat::assert_that(length(countries_not_included)== 0)
-  # res <- terra::as.factor(res)
+  # This is important when extent is smaller than the full globe
+  poly_idx <- sort(unique(na.omit(terra::values(res, mat = FALSE))))
+  cmat <- cbind(poly_idx, cs$gwcode[poly_idx])
+
+  res <- terra::classify(res, cmat)
 
   # Still need to add provision for countries that are minorities the cells
   # they occupy (Palestine would be an example).
   res
 }
-
 
 #' Generate cshapes_gwcode variable
 #'
