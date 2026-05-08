@@ -178,22 +178,75 @@ read_side <- function() {
   .side_sum_rasters(country_rasters)
 }
 
-#' Generate PRIO-GRID SIDE Status Shares
+#' Generate PRIO-GRID Ethnic Settlement Shares by Political Status from SIDE
 #'
-#' Aggregates annual SIDE ethnic settlement shares to PRIO-GRID for one status
-#' category at a time. SIDE group surfaces are averaged across all available map
-#' rounds for each group-country combination, then combined with the bundled
-#' annual `leda_matches` table.
+#' Aggregates annual SIDE ethnic settlement shares to PRIO-GRID cells for one
+#' political status category at a time. Each cell contains the summed share of
+#' the local population belonging to ethnic groups with the selected status in
+#' that year.
 #'
-#' @param status One of `"excluded"`, `"included"`, or `"irrelevant"`.
+#' @details
+#' SIDE (Spatially Interpolated Data on Ethnicity) provides raster surfaces
+#' representing the settlement patterns of ethnic groups. This function links
+#' those surfaces to political status via the bundled \code{leda_matches} table,
+#' which connects SIDE groups to the EPR (Ethnic Power Relations) typology.
 #'
-#' @return A \code{SpatRaster} object at the current PRIO-GRID spatio-temporal
-#' resolution.
+#' The processing pipeline:
+#' \itemize{
+#'   \item Filters \code{leda_matches} to the requested status category
+#'   \item Averages each group's surface across all available SIDE map rounds
+#'   \item For each year in the config date range, sums the averaged surfaces of
+#'     all groups with that status
+#'   \item Reprojects and aggregates the native SIDE raster to PRIO-GRID
+#'     resolution using mean aggregation
+#'   \item Returns one layer per date in \code{pg_date_intervals(config)}
+#' }
+#'
+#' @param status Character. Political status category to extract. One of
+#'   \code{"excluded"} (groups excluded from central government power),
+#'   \code{"included"} (groups represented in government), or
+#'   \code{"irrelevant"} (groups not relevant to central power).
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
+#'
+#' @return A \code{SpatRaster} object (terra package) conforming to the
+#'   PRIO-GRID specification defined in \code{config}. Each cell contains the
+#'   summed population share of ethnic groups with the requested political status.
+#'   The raster contains:
+#'   \itemize{
+#'     \item Values: Shares ranging from 0 (none of the cell population has this
+#'       status) to 1 (all of the cell population has this status); values can
+#'       exceed 1 where group territories overlap
+#'     \item Layers: One layer per date interval in \code{pg_date_intervals(config)}
+#'     \item Layer names: Dates in YYYY-MM-DD format
+#'   }
+#'
+#' @seealso
+#' \code{\link{read_side}} for reading the raw SIDE surfaces and match table,
+#' \code{\link{gen_side_excluded}}, \code{\link{gen_side_included}},
+#' \code{\link{gen_side_irrelevant}} for convenience wrappers,
+#' \code{\link{pg_date_intervals}} for PRIO-GRID temporal coverage
+#'
+#' @examples
+#' \dontrun{
+#' # Generate excluded population shares at default PRIO-GRID resolution
+#' excluded <- gen_side("excluded")
+#' print(excluded)
+#'
+#' # Plot excluded share for a specific year
+#' terra::plot(excluded[["2010-12-31"]], main = "Excluded ethnic population share 2010")
+#'
+#' # Use a custom config with a restricted date range
+#' cfg <- pg_config(start_date = as.Date("2000-12-31"),
+#'                  end_date   = as.Date("2010-12-31"),
+#'                  temporal_resolution = "1 year")
+#' excluded_2000s <- gen_side("excluded", config = cfg)
+#' }
+#'
 #' @export
 #'
 #' @references
 #' \insertRef{spatial-data-on-ethnicity}{priogrid}
-gen_side <- function(status = c("excluded", "included", "irrelevant")) {
+gen_side <- function(status = c("excluded", "included", "irrelevant"), config = pg_current_config()) {
   status <- match.arg(status)
 
   side <- read_side()
@@ -204,7 +257,7 @@ gen_side <- function(status = c("excluded", "included", "irrelevant")) {
     stop("No SIDE matches found for status '", status, "'.")
   }
 
-  measurement_dates <- as.Date(lubridate::int_end(pg_date_intervals()))
+  measurement_dates <- as.Date(lubridate::int_end(pg_date_intervals(config)))
   years_needed <- sort(unique(lubridate::year(measurement_dates)))
   surfaces <- .side_prepare_group_surfaces(side$meta, status_matches)
 
@@ -215,11 +268,11 @@ gen_side <- function(status = c("excluded", "included", "irrelevant")) {
     native_raster <- .side_build_year_raster(years_needed[[i]], status_matches, surfaces)
 
     if (is.null(native_raster)) {
-      blank <- prio_blank_grid()
+      blank <- prio_blank_grid(config)
       blank <- blank * NA_real_
       annual_layers[[i]] <- blank
     } else {
-      annual_layers[[i]] <- robust_transformation(native_raster, agg_fun = "mean")
+      annual_layers[[i]] <- robust_transformation(native_raster, agg_fun = "mean", config = config)
     }
   }
 
@@ -229,7 +282,7 @@ gen_side <- function(status = c("excluded", "included", "irrelevant")) {
   year_lookup <- match(lubridate::year(measurement_dates), years_needed)
   result_layers <- lapply(year_lookup, function(i) {
     if (is.na(i)) {
-      blank <- prio_blank_grid()
+      blank <- prio_blank_grid(config)
       return(blank * NA_real_)
     }
     annual_stack[[i]]
@@ -240,26 +293,44 @@ gen_side <- function(status = c("excluded", "included", "irrelevant")) {
   result
 }
 
-#' Generate SIDE Excluded Share
+#' Generate Excluded Ethnic Population Shares from SIDE
 #'
-#' @return A \code{SpatRaster} object
+#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' the local population belonging to politically excluded ethnic groups.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
+#' @return A \code{SpatRaster} with excluded population shares for each PRIO-GRID
+#'   cell. See \code{\link{gen_side}} for full documentation.
+#' @seealso \code{\link{gen_side}} for full documentation and parameters
 #' @export
-gen_side_excluded <- function() {
-  gen_side(status = "excluded")
+gen_side_excluded <- function(config = pg_current_config()) {
+  gen_side(status = "excluded", config = config)
 }
 
-#' Generate SIDE Included Share
+#' Generate Included Ethnic Population Shares from SIDE
 #'
-#' @return A \code{SpatRaster} object
+#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' the local population belonging to politically included ethnic groups.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
+#' @return A \code{SpatRaster} with included population shares for each PRIO-GRID
+#'   cell. See \code{\link{gen_side}} for full documentation.
+#' @seealso \code{\link{gen_side}} for full documentation and parameters
 #' @export
-gen_side_included <- function() {
-  gen_side(status = "included")
+gen_side_included <- function(config = pg_current_config()) {
+  gen_side(status = "included", config = config)
 }
 
-#' Generate SIDE Irrelevant Share
+#' Generate Irrelevant Ethnic Population Shares from SIDE
 #'
-#' @return A \code{SpatRaster} object
+#' A convenience wrapper for \code{\link{gen_side}} that extracts the share of
+#' the local population belonging to politically irrelevant ethnic groups.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}}.
+#' @return A \code{SpatRaster} with irrelevant population shares for each PRIO-GRID
+#'   cell. See \code{\link{gen_side}} for full documentation.
+#' @seealso \code{\link{gen_side}} for full documentation and parameters
 #' @export
-gen_side_irrelevant <- function() {
-  gen_side(status = "irrelevant")
+gen_side_irrelevant <- function(config = pg_current_config()) {
+  gen_side(status = "irrelevant", config = config)
 }
