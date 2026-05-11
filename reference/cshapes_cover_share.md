@@ -30,6 +30,11 @@ cshapes_cover_share(
   [`read_cshapes()`](http://prio-data.github.io/priogrid/reference/read_cshapes.md)
   if not provided.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Details
 
 This function uses CShapes 2.0 historical boundary data to calculate the

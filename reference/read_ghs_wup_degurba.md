@@ -12,6 +12,13 @@ compatibility with PRIO-GRID temporal structure.
 read_ghs_wup_degurba(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object with DEGURBA classification codes

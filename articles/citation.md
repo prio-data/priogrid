@@ -18,6 +18,7 @@ If your dataset uses PRIOGRID variables with their original names,
 retrieves all required citations in one call:
 
 ``` r
+
 variables <- c("hilda_urban", "cru_tmp")
 pgcitations(variables)
 #> ## Package Citation
@@ -49,6 +50,7 @@ You can also pass a data frame directly —
 reads the column names:
 
 ``` r
+
 pgcitations(pg_static)        # data.frame: uses column names
 pgcitations(pg_timevarying)   # same
 ```
@@ -58,6 +60,7 @@ pgcitations(pg_timevarying)   # same
 For LaTeX documents, export as BibLaTeX entries:
 
 ``` r
+
 pgcitations(c("hilda_urban", "cru_tmp"), as_biblatex = TRUE)
 #> @Article{,
 #>   title = {PRIO-GRID: A Unified Spatial Data Structure},
@@ -121,6 +124,7 @@ The chain from variable to citation is:
 You can inspect this manually:
 
 ``` r
+
 # Find the source IDs for a variable
 pgvariables[pgvariables$name == "cru_tmp", ]
 #> # A tibble: 1 × 3
@@ -145,6 +149,7 @@ returns a
 object for one or more keys:
 
 ``` r
+
 get_bibliography("harrisVersion4CRU2020")
 #> [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS
 #> Monthly High-Resolution Gridded Multivariate Climate Dataset". In:
@@ -155,6 +160,7 @@ get_bibliography("harrisVersion4CRU2020")
 Pass `as_biblatex = TRUE` for raw BibLaTeX text:
 
 ``` r
+
 get_bibliography("harrisVersion4CRU2020", as_biblatex = TRUE)
 #> @Article{harrisVersion4CRU2020,
 #>   title = {Version 4 of the {{CRU TS}} Monthly High-Resolution Gridded Multivariate Climate Dataset},
@@ -177,6 +183,7 @@ get_bibliography("harrisVersion4CRU2020", as_biblatex = TRUE)
 pulls out a single field (author, title, journal, or year):
 
 ``` r
+
 get_bib_element("harrisVersion4CRU2020", element = "author")
 #> [1] "Ian Harris"        "Timothy J. Osborn" "Phil Jones"       
 #> [4] "David Lister"
@@ -193,6 +200,7 @@ Source entries can have multiple citations separated by `"; "`.
 handles this:
 
 ``` r
+
 # Get all citation keys for the first source
 first_source_keys <- pgsources$citation_keys[1]
 first_source_keys
@@ -210,6 +218,7 @@ extract_bib_elements(first_source_keys, bib_element = "author")
 always prints the package citation first. To get it directly:
 
 ``` r
+
 citation("priogrid")
 #> To cite package 'priogrid' in publications use:
 #> 
@@ -229,11 +238,11 @@ citation("priogrid")
 
 ## Summary
 
-| Function                                     | Purpose                                    |
-|----------------------------------------------|--------------------------------------------|
-| `pgcitations(vars)`                          | Print all citations for a set of variables |
-| `pgcitations(vars, as_biblatex = TRUE)`      | Export as BibLaTeX                         |
-| `get_bibliography(keys)`                     | Get BibEntry objects by key                |
-| `get_bibliography(keys, as_biblatex = TRUE)` | Get raw BibLaTeX text                      |
-| `get_bib_element(key, element)`              | Extract author / title / year / journal    |
-| `extract_bib_elements(keys_str)`             | Parse semicolon-separated key strings      |
+| Function | Purpose |
+|----|----|
+| `pgcitations(vars)` | Print all citations for a set of variables |
+| `pgcitations(vars, as_biblatex = TRUE)` | Export as BibLaTeX |
+| `get_bibliography(keys)` | Get BibEntry objects by key |
+| `get_bibliography(keys, as_biblatex = TRUE)` | Get raw BibLaTeX text |
+| `get_bib_element(key, element)` | Extract author / title / year / journal |
+| `extract_bib_elements(keys_str)` | Parse semicolon-separated key strings |

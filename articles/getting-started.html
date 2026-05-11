@@ -113,7 +113,7 @@ official PRIOGRID release:</p>
 <span><span class="co">#&gt;   extent: -180 180 -90 90 </span></span>
 <span><span class="co">#&gt;   temporal_resolution: 1 year </span></span>
 <span><span class="co">#&gt;   start_date: 1850-12-31 </span></span>
-<span><span class="co">#&gt;   end_date: 2026-04-29 </span></span>
+<span><span class="co">#&gt;   end_date: 2026-05-11 </span></span>
 <span><span class="co">#&gt;   verbose: TRUE </span></span>
 <span><span class="co">#&gt;   automatic_download: TRUE</span></span></code></pre></div>
 <table class="table">
@@ -265,6 +265,9 @@ PRIOGRID:</p>
 <span><span class="co">#&gt; 33                         esch  FALSE</span></span>
 <span><span class="co">#&gt; 34                       lifexp  FALSE</span></span>
 <span><span class="co">#&gt; 35                         gnic  FALSE</span></span>
+<span><span class="co">#&gt; 36                side_excluded  FALSE</span></span>
+<span><span class="co">#&gt; 37                side_included  FALSE</span></span>
+<span><span class="co">#&gt; 38              side_irrelevant  FALSE</span></span>
 <span><span class="co">#&gt;                                                                                                          source_ids</span></span>
 <span><span class="co">#&gt; 1                                                                              ac037134-3567-49d9-a3ba-64f37c1ee698</span></span>
 <span><span class="co">#&gt; 2                                                                              00575260-ad1c-4e87-a575-3922bc151f50</span></span>
@@ -300,7 +303,10 @@ PRIOGRID:</p>
 <span><span class="co">#&gt; 32 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span>
 <span><span class="co">#&gt; 33 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span>
 <span><span class="co">#&gt; 34 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span>
-<span><span class="co">#&gt; 35 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span></code></pre></div>
+<span><span class="co">#&gt; 35 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span>
+<span><span class="co">#&gt; 36                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span>
+<span><span class="co">#&gt; 37                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span>
+<span><span class="co">#&gt; 38                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span></code></pre></div>
 <p>The <code>static</code> column indicates whether a variable varies
 over time. Use this to filter:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -326,7 +332,8 @@ over time. Use this to filter:</p>
 <span><span class="co">#&gt; [23] "ghs_wup_degurba_urban"   "ucdp_ged"               </span></span>
 <span><span class="co">#&gt; [25] "shdi"                    "msch"                   </span></span>
 <span><span class="co">#&gt; [27] "esch"                    "lifexp"                 </span></span>
-<span><span class="co">#&gt; [29] "gnic"</span></span></code></pre></div>
+<span><span class="co">#&gt; [29] "gnic"                    "side_excluded"          </span></span>
+<span><span class="co">#&gt; [31] "side_included"           "side_irrelevant"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="rawfolder-structure">Rawfolder Structure<a class="anchor" aria-label="anchor" href="#rawfolder-structure"></a>

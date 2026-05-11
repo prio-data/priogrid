@@ -11,6 +11,7 @@ on top of them.
 calculate:
 
 ``` r
+
 pgvariables$name
 #>  [1] "cru_tmp"                      "cru_pre"                     
 #>  [3] "cru_pet"                      "cshapes_cover_share"         
@@ -29,18 +30,20 @@ pgvariables$name
 #> [29] "ghs_wup_degurba_urban"        "ucdp_ged"                    
 #> [31] "shdi"                         "msch"                        
 #> [33] "esch"                         "lifexp"                      
-#> [35] "gnic"
+#> [35] "gnic"                         "side_excluded"               
+#> [37] "side_included"                "side_irrelevant"
 ```
 
-| Column       | Description                                                                                                                                                                                  |
-|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`       | Variable name used in [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md), [`calc_pg()`](http://prio-data.github.io/priogrid/reference/calc_pg.md), etc. |
-| `static`     | `TRUE` = no temporal dimension; `FALSE` = time-varying                                                                                                                                       |
-| `source_ids` | Comma-separated UUIDs of the data sources feeding this variable                                                                                                                              |
+| Column | Description |
+|----|----|
+| `name` | Variable name used in [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md), [`calc_pg()`](http://prio-data.github.io/priogrid/reference/calc_pg.md), etc. |
+| `static` | `TRUE` = no temporal dimension; `FALSE` = time-varying |
+| `source_ids` | Comma-separated UUIDs of the data sources feeding this variable |
 
 Static and time-varying variables:
 
 ``` r
+
 pgvariables[pgvariables$static == TRUE,  "name"]  # terrain, borders, etc.
 #> [1] "naturalearth_cover"           "naturalearth_cover_share"    
 #> [3] "ruggedterrain_elevation_mean" "traveltime_mean"             
@@ -60,7 +63,8 @@ pgvariables[pgvariables$static == FALSE, "name"]  # climate, conflict, etc.
 #> [23] "ghs_wup_degurba_urban"   "ucdp_ged"               
 #> [25] "shdi"                    "msch"                   
 #> [27] "esch"                    "lifexp"                 
-#> [29] "gnic"
+#> [29] "gnic"                    "side_excluded"          
+#> [31] "side_included"           "side_irrelevant"
 ```
 
 ## Data Sources: `pgsources`
@@ -68,8 +72,9 @@ pgvariables[pgvariables$static == FALSE, "name"]  # climate, conflict, etc.
 `pgsources` describes every raw data source that PRIOGRID draws on:
 
 ``` r
+
 str(pgsources)
-#> Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 50 obs. of  18 variables:
+#> Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 51 obs. of  18 variables:
 #>  $ id                 : chr  "04254b82-85f0-4c06-9f1b-86ed35e05403" "0a746ab8-cc8e-4b31-bb71-8479a9ac8fa3" "1604221b-e558-4e65-b7fe-d6b0a517ff5c" "190c7abc-b779-4462-97ff-00994cbd2431" ...
 #>  $ source_name        : chr  "EOG Annual VIIRS Nighttime Lights" "SEDAC Food Insecurity Hotspots" "Global Area Equipped for Irrigation Dataset 1900-2015" "GlobalDataLab Area Database" ...
 #>  $ source_version     : chr  "V2.2" "v1" "v4" "v.4.2" ...
@@ -136,23 +141,24 @@ str(pgsources)
 
 Key columns:
 
-| Column                | Description                                             |
-|-----------------------|---------------------------------------------------------|
-| `id`                  | UUID — links to `pgvariables$source_ids`                |
-| `source_name`         | Human-readable name (e.g., `"CRU TS"`, `"UCDP GED"`)    |
-| `source_version`      | Data version used                                       |
-| `license`             | Data license (e.g., `"CC BY 4.0"`)                      |
-| `citation_keys`       | Semicolon-separated BibTeX keys → `inst/REFERENCES.bib` |
-| `tags`                | Comma-separated tags (e.g., `"climate"`, `"conflict"`)  |
-| `spatial_extent`      | `"World"`, `"Multiple continents"`, etc.                |
-| `temporal_resolution` | `"Yearly"`, `"Monthly"`, `"Static"`, etc.               |
-| `download_url`        | Primary download URL                                    |
-| `website_url`         | Landing page URL                                        |
-| `prio_mirror`         | PRIO-hosted mirror URL                                  |
+| Column | Description |
+|----|----|
+| `id` | UUID — links to `pgvariables$source_ids` |
+| `source_name` | Human-readable name (e.g., `"CRU TS"`, `"UCDP GED"`) |
+| `source_version` | Data version used |
+| `license` | Data license (e.g., `"CC BY 4.0"`) |
+| `citation_keys` | Semicolon-separated BibTeX keys → `inst/REFERENCES.bib` |
+| `tags` | Comma-separated tags (e.g., `"climate"`, `"conflict"`) |
+| `spatial_extent` | `"World"`, `"Multiple continents"`, etc. |
+| `temporal_resolution` | `"Yearly"`, `"Monthly"`, `"Static"`, etc. |
+| `download_url` | Primary download URL |
+| `website_url` | Landing page URL |
+| `prio_mirror` | PRIO-hosted mirror URL |
 
 Browse sources by tag or license:
 
 ``` r
+
 # All sources with CC-BY license
 pgsources[grepl("CC BY", pgsources$license), c("source_name", "license")]
 #>                                               source_name         license
@@ -187,6 +193,7 @@ pgsources[grepl("CC BY", pgsources$license), c("source_name", "license")]
 #> 44                                          geoBoundaries       CC BY 4.0
 #> 49                                        GHS-WUP-DEGURBA       CC BY 4.0
 #> 50                                               UCDP GED       CC BY 4.0
+#> 51                                               ETH SIDE       CC BY 4.0
 
 # Yearly time-varying sources
 pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_version")]
@@ -210,6 +217,7 @@ pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_ve
 #> 34           UCDP Violent Political Protest Dataset (VPP)           20.1
 #> 37 World Bank Subnational Poverty and Inequality Database       Oct 2024
 #> 40          World Bank Subnational Doing Business Reports           2022
+#> 51                                               ETH SIDE             v1
 ```
 
 ## File Integrity: `pgchecksum`
@@ -219,6 +227,7 @@ verify that your local copies match those used to build the official
 release:
 
 ``` r
+
 pgchecksum
 #>                                               source_name source_version
 #> 1                                         ETH ICR cShapes            2.0
@@ -511,6 +520,7 @@ Use
 to run the check against your local storage:
 
 ``` r
+
 check_pgsourcefiles()
 # "All files in your local storage are similar to a tested set."
 ```
@@ -524,6 +534,7 @@ The three metadata objects form a chain:
 Here’s the full lookup for a single variable:
 
 ``` r
+
 # 1. Find source IDs for a variable
 var_row <- pgvariables[pgvariables$name == "cru_tmp", ]
 source_ids <- strsplit(var_row$source_ids, ", ")[[1]]
@@ -547,6 +558,7 @@ bibkeys
 Then retrieve the full bibliography:
 
 ``` r
+
 get_bibliography(bibkeys[1])
 #> [1] I. Harris, T. J. Osborn, P. Jones, et al. "Version 4 of the CRU TS
 #> Monthly High-Resolution Gridded Multivariate Climate Dataset". In:
@@ -560,12 +572,14 @@ get_bibliography(bibkeys[1])
 searches across all text fields in `pgsources` using regex:
 
 ``` r
+
 results <- pgsearch("population")
 ```
 
 It returns a named list with matches from each search field:
 
 ``` r
+
 # Sources matching by name
 results$in_name[, c("source_name", "source_version")]
 #> # A tibble: 1 × 2
@@ -592,6 +606,7 @@ results$in_tags[, c("source_name", "tags")]
 Search by temporal resolution:
 
 ``` r
+
 pgsearch("Monthly")$in_temporal_resolution[, c("source_name", "temporal_resolution")]
 #> # A tibble: 9 × 2
 #>   source_name                                  temporal_resolution
@@ -610,6 +625,7 @@ pgsearch("Monthly")$in_temporal_resolution[, c("source_name", "temporal_resoluti
 Search by spatial extent:
 
 ``` r
+
 pgsearch("World")$in_spatial_extent[, c("source_name", "spatial_extent")]
 #> # A tibble: 46 × 2
 #>    source_name                                           spatial_extent
@@ -633,6 +649,7 @@ Include `bib_element` to also search author names, titles, journals, or
 years:
 
 ``` r
+
 # Find sources citing a specific author
 harris_results <- pgsearch("Harris", bib_element = "author")
 #> No results.
@@ -659,6 +676,7 @@ returns a data frame of all files PRIOGRID can download, with their URLs
 and expected local paths:
 
 ``` r
+
 files <- pg_rawfiles()
 head(files[, c("source_name", "source_version", "filename")])
 #> # A tibble: 6 × 3
@@ -675,6 +693,7 @@ head(files[, c("source_name", "source_version", "filename")])
 Filter to a specific source:
 
 ``` r
+
 files[files$source_name == "ETH ICR cShapes", c("source_name", "filename", "url")]
 #> # A tibble: 1 × 3
 #>   source_name     filename                                                 url  
@@ -685,6 +704,7 @@ files[files$source_name == "ETH ICR cShapes", c("source_name", "filename", "url"
 Download a specific source:
 
 ``` r
+
 ucdp_files <- pg_rawfiles() |> dplyr::filter(source_name == "UCDP GED")
 download_pg_rawdata(file_info = ucdp_files)
 ```
@@ -692,6 +712,7 @@ download_pg_rawdata(file_info = ucdp_files)
 Get the local path to a downloaded file:
 
 ``` r
+
 get_pgfile(
   source_name    = "ETH ICR cShapes",
   source_version = "2.0",
@@ -705,6 +726,7 @@ get_pgfile(
 shows which sources have been downloaded locally:
 
 ``` r
+
 pg_data_availability()
 #   source_name   source_version n_files n_present all_present
 # 1 CRU TS        4.08                1         1        TRUE

@@ -13,7 +13,8 @@ bdist2(
   measurement_date,
   cshp = read_cshapes(),
   past_result = NULL,
-  config = pg_current_config()
+  config = pg_current_config(),
+  geodesic = NULL
 )
 ```
 
@@ -36,6 +37,22 @@ bdist2(
   haven't changed, the function returns this result directly, avoiding
   recomputation. Default is NULL.
 
+- config:
+
+  A pg_config object, see
+  [`pg_config()`](http://prio-data.github.io/priogrid/reference/pg_config.md).
+
+- geodesic:
+
+  Logical or NULL. If TRUE, uses spherical (S2/WGS84) geometry for
+  distance calculations, projecting the result back to the config CRS.
+  If FALSE, uses Euclidean distances in the config CRS, converting to
+  meters via
+  [`terra::linearUnits()`](https://rspatial.github.io/terra/reference/linearUnits.html).
+  Default NULL auto-detects: geodesic for projected CRS (e.g. UTM),
+  native for geographic CRS (e.g. WGS84, which is already geodesic via
+  terra's internal handling).
+
 ## Value
 
 A list containing three elements:
@@ -55,9 +72,11 @@ calculations if country boundaries haven't changed since the last
 computation, significantly reducing processing time for temporal
 sequences.
 
-Distance calculations use spherical geometry (S2) for accurate
-measurements across the globe, particularly important for high-latitude
-regions.
+Distance calculations use spherical geometry (S2) with WGS84 projection
+for accurate measurements across the globe as default, particularly
+important for high-latitude regions. Users can use euclidean distances
+by setting geodesic = FALSE. This could be relevant, for instance with
+UTM projections for small extents.
 
 ## References
 

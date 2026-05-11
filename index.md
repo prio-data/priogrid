@@ -32,6 +32,7 @@ PRIOGRID data as .zip](https://www.prio.org/data/40)
 Install PRIOGRID from GitHub using `remotes` or `renv`:
 
 ``` r
+
 install.packages("renv")
 renv::install("prio-data/priogrid")
 ```
@@ -80,6 +81,7 @@ sudo apt-get install ca-certificates
 2.  **Install CURL R-package from source:**
 
 ``` r
+
 install.packages("curl", type = "source")
 ```
 
@@ -89,6 +91,7 @@ Set a local folder for PRIOGRID to store downloaded and processed data
 (this persists across R sessions):
 
 ``` r
+
 library(priogrid)
 
 pg_set_rawfolder("/path/to/your/data/folder")
@@ -97,6 +100,7 @@ pg_set_rawfolder("/path/to/your/data/folder")
 Download the official release and read it into R:
 
 ``` r
+
 download_priogrid()
 
 pg_static     <- read_pg_static()
@@ -106,6 +110,7 @@ pg_timevarying <- read_pg_timevarying()
 Browse available variables:
 
 ``` r
+
 pgvariables
 ```
 
@@ -113,14 +118,14 @@ pgvariables
 
 Full documentation is available in the package vignettes:
 
-| Vignette                                                                                        | Description                                                                                                         |
-|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| [Getting Started](https://prio-data.github.io/priogrid/articles/getting-started.html)           | Setup, downloading, and reading tabular data                                                                        |
-| [Accessing as Rasters](https://prio-data.github.io/priogrid/articles/working-with-rasters.html) | Working with individual variables using `terra`                                                                     |
-| [Citations and Bibliography](https://prio-data.github.io/priogrid/articles/citation.html)       | Citing data providers in publications                                                                               |
-| [Custom Configurations](https://prio-data.github.io/priogrid/articles/custom-config.html)       | Custom resolution, extent, projection, and time periods                                                             |
-| [Understanding Metadata](https://prio-data.github.io/priogrid/articles/metadata.html)           | Exploring `pgsources`, `pgvariables`, and [`pgsearch()`](http://prio-data.github.io/priogrid/reference/pgsearch.md) |
-| [Contributing](https://prio-data.github.io/priogrid/articles/contributing.html)                 | Adding new data sources and variables                                                                               |
+| Vignette | Description |
+|----|----|
+| [Getting Started](https://prio-data.github.io/priogrid/articles/getting-started.html) | Setup, downloading, and reading tabular data |
+| [Accessing as Rasters](https://prio-data.github.io/priogrid/articles/working-with-rasters.html) | Working with individual variables using `terra` |
+| [Citations and Bibliography](https://prio-data.github.io/priogrid/articles/citation.html) | Citing data providers in publications |
+| [Custom Configurations](https://prio-data.github.io/priogrid/articles/custom-config.html) | Custom resolution, extent, projection, and time periods |
+| [Understanding Metadata](https://prio-data.github.io/priogrid/articles/metadata.html) | Exploring `pgsources`, `pgvariables`, and [`pgsearch()`](http://prio-data.github.io/priogrid/reference/pgsearch.md) |
+| [Contributing](https://prio-data.github.io/priogrid/articles/contributing.html) | Adding new data sources and variables |
 
 ## Contributing
 

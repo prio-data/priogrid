@@ -62,11 +62,11 @@ robust_transformation(
 
 SpatRaster object conforming to PRIO-GRID specifications:
 
-- CRS: As specified in global options (default: EPSG:4326)
+- CRS: As specified in `config` (default: EPSG:4326)
 
-- Extent: As specified in global options (default: global extent)
+- Extent: As specified in `config` (default: global extent)
 
-- Resolution: Calculated from nrow/ncol in global options
+- Resolution: Calculated from `nrow`/`ncol` in `config`
 
 - Grid alignment: Exactly matched to PRIO-GRID cell boundaries
 

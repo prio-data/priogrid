@@ -11,6 +11,7 @@ PRIOGRID stores raw downloaded data and processed outputs in a single
 folder on your machine. This path persists across R sessions.
 
 ``` r
+
 library(priogrid)
 
 # Set the data folder (run once; persists across sessions)
@@ -20,6 +21,7 @@ pg_set_rawfolder("/path/to/your/data/folder")
 Once set, you can retrieve it at any time:
 
 ``` r
+
 pg_rawfolder()
 ```
 
@@ -30,6 +32,7 @@ spatial and temporal parameters of the grid. The defaults match the
 official PRIOGRID release:
 
 ``` r
+
 pg_current_config()
 #> PRIO-GRID config:
 #>   nrow: 360 
@@ -38,7 +41,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-04-29 
+#>   end_date: 2026-05-11 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```
@@ -55,6 +58,7 @@ pg_current_config()
 You can inspect individual fields:
 
 ``` r
+
 cfg <- pg_current_config()
 cfg$nrow
 #> [1] 360
@@ -73,12 +77,14 @@ Download the current official PRIOGRID release with a single call. This
 downloads a zip archive and extracts it to your raw data folder:
 
 ``` r
+
 download_priogrid()
 ```
 
 To see what releases are available:
 
 ``` r
+
 download_priogrid(list_releases = TRUE)
 ```
 
@@ -96,6 +102,7 @@ Static variables do not change over time (e.g., terrain elevation,
 country border distances):
 
 ``` r
+
 pg_static <- read_pg_static()
 head(pg_static)
 ```
@@ -109,6 +116,7 @@ Time-varying variables have a `measurement_date` column in addition to
 `pgid`:
 
 ``` r
+
 pg_tv <- read_pg_timevarying()
 head(pg_tv)
 ```
@@ -119,6 +127,7 @@ data.
 ### Example: subsetting and merging
 
 ``` r
+
 library(data.table)
 
 # Subset to a specific year
@@ -133,6 +142,7 @@ pg_merged <- merge(pg_static, pg_2020, by = "pgid")
 The `pgvariables` data frame lists all variables in PRIOGRID:
 
 ``` r
+
 pgvariables
 #>                            name static
 #> 1                       cru_tmp  FALSE
@@ -170,6 +180,9 @@ pgvariables
 #> 33                         esch  FALSE
 #> 34                       lifexp  FALSE
 #> 35                         gnic  FALSE
+#> 36                side_excluded  FALSE
+#> 37                side_included  FALSE
+#> 38              side_irrelevant  FALSE
 #>                                                                                                          source_ids
 #> 1                                                                              ac037134-3567-49d9-a3ba-64f37c1ee698
 #> 2                                                                              00575260-ad1c-4e87-a575-3922bc151f50
@@ -206,12 +219,16 @@ pgvariables
 #> 33 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
 #> 34 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
 #> 35 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c
+#> 36                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
+#> 37                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
+#> 38                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
 ```
 
 The `static` column indicates whether a variable varies over time. Use
 this to filter:
 
 ``` r
+
 # Static variables
 pgvariables[pgvariables$static == TRUE, "name"]
 #> [1] "naturalearth_cover"           "naturalearth_cover_share"    
@@ -234,7 +251,8 @@ pgvariables[pgvariables$static == FALSE, "name"]
 #> [23] "ghs_wup_degurba_urban"   "ucdp_ged"               
 #> [25] "shdi"                    "msch"                   
 #> [27] "esch"                    "lifexp"                 
-#> [29] "gnic"
+#> [29] "gnic"                    "side_excluded"          
+#> [31] "side_included"           "side_irrelevant"
 ```
 
 ## Rawfolder Structure

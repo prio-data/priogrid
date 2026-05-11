@@ -120,8 +120,9 @@ Violence 1989–2024, and the Challenges of Identifying Civilian Victims.”
 ## See also
 
 [`read_ucdp_ged`](http://prio-data.github.io/priogrid/reference/read_ucdp_ged.md)
-for loading raw UCDP GED data, `ged_ucdp_ged` for the standard generator
-function,
+for loading raw UCDP GED data,
+[`gen_ucdp_ged`](http://prio-data.github.io/priogrid/reference/gen_ucdp_ged.md)
+for the standard generator function,
 [`pg_date_intervals`](http://prio-data.github.io/priogrid/reference/pg_date_intervals.md)
 for PRIO-GRID temporal structure
 

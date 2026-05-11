@@ -101,6 +101,12 @@
   : Generate the average (mean) elevation for PRIO-GRID cells
 - [`gen_shdi()`](http://prio-data.github.io/priogrid/reference/gen_shdi.md)
   : Generate PRIO-GRID SHDI
+- [`gen_side_excluded()`](http://prio-data.github.io/priogrid/reference/gen_side_excluded.md)
+  : Generate Excluded Ethnic Population Shares from SIDE
+- [`gen_side_included()`](http://prio-data.github.io/priogrid/reference/gen_side_included.md)
+  : Generate Included Ethnic Population Shares from SIDE
+- [`gen_side_irrelevant()`](http://prio-data.github.io/priogrid/reference/gen_side_irrelevant.md)
+  : Generate Irrelevant Ethnic Population Shares from SIDE
 - [`gen_speibase6_mean()`](http://prio-data.github.io/priogrid/reference/gen_speibase6_mean.md)
   : Generate SPEI-6 with mean-temporal aggregation compatible with
   PRIO-GRID
@@ -120,6 +126,8 @@
   : Apply urban classification to GHS-WUP-DEGURBA data
 - [`hilda_landcover()`](http://prio-data.github.io/priogrid/reference/hilda_landcover.md)
   : Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells
+- [`leda_matches`](http://prio-data.github.io/priogrid/reference/leda_matches.md)
+  : SIDE-LEDA Match Table
 - [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md)
   : Load a PRIO-GRID variable
 - [`ne_disputed_area_share()`](http://prio-data.github.io/priogrid/reference/ne_disputed_area_share.md)
@@ -206,6 +214,8 @@
   : Read GlobalDataLab Subnational Human Development Index (SHDI) Data
 - [`read_shdi_shapefile()`](http://prio-data.github.io/priogrid/reference/read_shdi_shapefile.md)
   : Read GlobalDataLab SHDI Shapefile Data
+- [`read_side()`](http://prio-data.github.io/priogrid/reference/read_side.md)
+  : Read SIDE Ethnic Map Metadata and Local Files
 - [`read_speibase()`](http://prio-data.github.io/priogrid/reference/read_speibase.md)
   : Read and Process Global SPEI database data
 - [`read_traveltime()`](http://prio-data.github.io/priogrid/reference/read_traveltime.md)
@@ -220,11 +230,16 @@
   : Save a PRIO-GRID variable
 - [`shdi()`](http://prio-data.github.io/priogrid/reference/shdi.md) :
   Generate PRIO-GRID Compatible SHDI Variables
+- [`side()`](http://prio-data.github.io/priogrid/reference/side.md) :
+  Generate PRIO-GRID Ethnic Settlement Shares by Political Status from
+  SIDE
 - [`spei.nc()`](http://prio-data.github.io/priogrid/reference/spei.nc.md)
   : Compute SPEI from very large arrayed data sets in netCDF format.
 - [`speibaseN()`](http://prio-data.github.io/priogrid/reference/speibaseN.md)
   : Make SPEIbase data PRIO-GRID compatible
 - [`ucdp_ged()`](http://prio-data.github.io/priogrid/reference/ucdp_ged.md)
   : Process UCDP GED Data with Temporal Fatality Distribution
+- [`ucdpged_distance_within_country()`](http://prio-data.github.io/priogrid/reference/ucdpged_distance_within_country.md)
+  : Distance to nearest UCDP GED event within each country
 - [`urban_extent()`](http://prio-data.github.io/priogrid/reference/urban_extent.md)
   : Extract contiguous urban extent around a location

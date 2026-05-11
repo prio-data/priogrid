@@ -58,6 +58,9 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_ne_disputed_area_share.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_ruggedterrain_elevation_mean.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_shdi.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/gen_side_excluded.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/gen_side_included.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/gen_side_irrelevant.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_speibase6_mean.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_traveltime_mean.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/gen_traveltime_min.html</loc></url>
@@ -70,6 +73,7 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/ghs_wup_degurba.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/hilda_landcover.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/index.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/leda_matches.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/load_pgvariable.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/ne_disputed_area_share.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_config.html</loc></url>
@@ -116,6 +120,7 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/read_shdi.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/read_shdi_csv.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/read_shdi_shapefile.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/read_side.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/read_speibase.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/read_traveltime.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/read_ucdp_ged.html</loc></url>
@@ -124,9 +129,11 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/ruggedterrain_variable.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/save_pgvariable.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/shdi.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/side.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/spei.nc.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/speibaseN.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/ucdp_ged.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/ucdpged_distance_within_country.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/urban_extent.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/validate_pg_config.html</loc></url>
 </urlset>

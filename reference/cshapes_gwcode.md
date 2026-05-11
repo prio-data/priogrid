@@ -30,6 +30,11 @@ cshapes_gwcode(
   [`read_cshapes()`](http://prio-data.github.io/priogrid/reference/read_cshapes.md)
   if not provided.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object
@@ -38,9 +43,6 @@ A `SpatRaster` object
 
 - Small countries or territories may not appear if they don't dominate
   any grid cells
-
-- The function includes an assertion check to verify all countries are
-  represented
 
 - Future versions may include provisions for minority country
   representation

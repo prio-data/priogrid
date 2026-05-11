@@ -63,7 +63,8 @@ boundary data.</p>
 <span>  <span class="va">measurement_date</span>,</span>
 <span>  cshp <span class="op">=</span> <span class="fu"><a href="read_cshapes.html">read_cshapes</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  past_result <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  geodesic <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,10 +87,23 @@ Defaults to <code><a href="read_cshapes.html">read_cshapes()</a></code> if not p
 If boundaries haven't changed, the function returns this result directly,
 avoiding recomputation. Default is NULL.</p></dd>
 
+
+<dt id="arg-config">config<a class="anchor" aria-label="anchor" href="#arg-config"></a></dt>
+<dd><p>A pg_config object, see <code><a href="pg_config.html">pg_config()</a></code>.</p></dd>
+
+
+<dt id="arg-geodesic">geodesic<a class="anchor" aria-label="anchor" href="#arg-geodesic"></a></dt>
+<dd><p>Logical or NULL. If TRUE, computes distances in WGS84 using
+spherical (S2) geometry; <code><a href="robust_transformation.html">robust_transformation()</a></code> reprojects the
+result to the config CRS. If FALSE, uses Euclidean distances in the config
+CRS. Default NULL auto-detects: geodesic for projected CRS (e.g. UTM),
+native for geographic CRS (e.g. WGS84, which terra already handles
+geodesically).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing three elements:</p><ul><li><p><code>bdist3</code>: A <code>SpatRaster</code> with distances (km) from cell centroids
+    <p>A list containing two elements:</p><ul><li><p><code>bdist3</code>: A <code>SpatRaster</code> with distances (km) from cell centroids
 to the border of the country.</p></li>
 <li><p><code>boundaries</code>: An <code>sf</code> object with country boundary line geometries</p></li>
 </ul></div>

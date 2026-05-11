@@ -11,7 +11,8 @@ bdist3(
   measurement_date,
   cshp = read_cshapes(),
   past_result = NULL,
-  config = pg_current_config()
+  config = pg_current_config(),
+  geodesic = NULL
 )
 ```
 
@@ -34,9 +35,24 @@ bdist3(
   haven't changed, the function returns this result directly, avoiding
   recomputation. Default is NULL.
 
+- config:
+
+  A pg_config object, see
+  [`pg_config()`](http://prio-data.github.io/priogrid/reference/pg_config.md).
+
+- geodesic:
+
+  Logical or NULL. If TRUE, computes distances in WGS84 using spherical
+  (S2) geometry;
+  [`robust_transformation()`](http://prio-data.github.io/priogrid/reference/robust_transformation.md)
+  reprojects the result to the config CRS. If FALSE, uses Euclidean
+  distances in the config CRS. Default NULL auto-detects: geodesic for
+  projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which
+  terra already handles geodesically).
+
 ## Value
 
-A list containing three elements:
+A list containing two elements:
 
 - `bdist3`: A `SpatRaster` with distances (km) from cell centroids to
   the border of the country.

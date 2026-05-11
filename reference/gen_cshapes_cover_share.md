@@ -19,6 +19,11 @@ gen_cshapes_cover_share(cshp = read_cshapes(), config = pg_current_config())
   [`read_cshapes()`](http://prio-data.github.io/priogrid/reference/read_cshapes.md)
   if not provided.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object

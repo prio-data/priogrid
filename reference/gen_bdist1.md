@@ -12,7 +12,11 @@ within states are still measured.
 ## Usage
 
 ``` r
-gen_bdist1(cshp = read_cshapes(), config = pg_current_config())
+gen_bdist1(
+  cshp = read_cshapes(),
+  config = pg_current_config(),
+  geodesic = NULL
+)
 ```
 
 ## Arguments
@@ -23,6 +27,19 @@ gen_bdist1(cshp = read_cshapes(), config = pg_current_config())
   information. Defaults to
   [`read_cshapes()`](http://prio-data.github.io/priogrid/reference/read_cshapes.md)
   if not provided.
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
+- geodesic:
+
+  Logical or NULL. If TRUE, computes distances in WGS84 using spherical
+  (S2) geometry and reprojects the result to the config CRS. If FALSE,
+  uses Euclidean distances in the config CRS. Default NULL auto-detects:
+  geodesic for projected CRS (e.g. UTM), native for geographic CRS (e.g.
+  WGS84, which terra already handles geodesically).
 
 ## Value
 

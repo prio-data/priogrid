@@ -37,16 +37,16 @@ Tracker](https://github.com/prio-data/priogrid/issues).
 Every data source needs a row in `data_raw/sources.csv`. Required
 fields:
 
-| Column                | Description                                                                                               | Example                          |
-|-----------------------|-----------------------------------------------------------------------------------------------------------|----------------------------------|
-| `source_name`         | Full name of the dataset                                                                                  | `"My New Dataset"`               |
-| `source_version`      | Version string                                                                                            | `"1.0"`                          |
-| `license`             | SPDX or common license name                                                                               | `"CC BY 4.0"`                    |
-| `website_url`         | Landing page                                                                                              | `"https://example.com/data"`     |
-| `spatial_extent`      | One of: `"World"`, `"Multiple continents"`, `"Single continent"`, `"Several countries"`                   | `"World"`                        |
-| `temporal_resolution` | One of: `"Static"`, `"Higher than monthly"`, `"Monthly"`, `"Quarterly"`, `"Yearly"`, `"Less than yearly"` | `"Yearly"`                       |
-| `citation_keys`       | Semicolon-separated BibTeX keys                                                                           | `"doeNewDataset2025"`            |
-| `download_url`        | Direct download URL, or `"urls/{uuid}.txt"` for multi-file sources                                        | `"https://example.com/data.zip"` |
+| Column | Description | Example |
+|----|----|----|
+| `source_name` | Full name of the dataset | `"My New Dataset"` |
+| `source_version` | Version string | `"1.0"` |
+| `license` | SPDX or common license name | `"CC BY 4.0"` |
+| `website_url` | Landing page | `"https://example.com/data"` |
+| `spatial_extent` | One of: `"World"`, `"Multiple continents"`, `"Single continent"`, `"Several countries"` | `"World"` |
+| `temporal_resolution` | One of: `"Static"`, `"Higher than monthly"`, `"Monthly"`, `"Quarterly"`, `"Yearly"`, `"Less than yearly"` | `"Yearly"` |
+| `citation_keys` | Semicolon-separated BibTeX keys | `"doeNewDataset2025"` |
+| `download_url` | Direct download URL, or `"urls/{uuid}.txt"` for multi-file sources | `"https://example.com/data.zip"` |
 
 Optional fields: `aws_bucket`, `aws_region`, `prio_mirror`, `tags`,
 `reference_keys`.
@@ -55,6 +55,7 @@ Generate a UUID for the `id` column using
 [`uuid::UUIDgenerate()`](https://rdrr.io/pkg/uuid/man/UUIDgenerate.html):
 
 ``` r
+
 uuid::UUIDgenerate()
 # "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 ```
@@ -65,6 +66,7 @@ In development mode (`devtools::load_all()`), use the `Source` R6 class
 to validate a new source before adding it to the CSV:
 
 ``` r
+
 new_source <- Source$new(
   source_name          = "My New Dataset",
   source_version       = "1.0",
@@ -105,12 +107,14 @@ value:
 After editing `sources.csv`, regenerate the `.rda` file:
 
 ``` r
+
 source("data_raw/pgsources.R")
 ```
 
 Verify the result:
 
 ``` r
+
 pgsources[pgsources$source_name == "My New Dataset", ]
 ```
 
@@ -125,6 +129,7 @@ The read function downloads (via
 and returns the raw data as an `sf` or `SpatRaster` object:
 
 ``` r
+
 #' Read My New Dataset
 #'
 #' Downloads and imports My New Dataset.
@@ -153,6 +158,7 @@ The generate function transforms raw data to the PRIOGRID grid and
 returns a `SpatRaster`. The signature must accept `config`:
 
 ``` r
+
 #' My New Variable
 #'
 #' Computes my_new_variable for each PRIOGRID cell.
@@ -190,6 +196,7 @@ resampling in a single call. It is the standard way to re-grid any
 raster:
 
 ``` r
+
 robust_transformation(
   r             = raw_rast,      # Any SpatRaster (any resolution / CRS / extent)
   agg_fun       = "mean",        # Aggregation function for higher-res inputs
@@ -207,6 +214,7 @@ For time-varying variables, iterate over `pg_dates(config)` and combine
 layers:
 
 ``` r
+
 gen_my_yearly_variable <- function(config = pg_current_config()) {
   dates <- pg_dates(config)
   layers <- lapply(dates, function(d) {
@@ -236,12 +244,14 @@ Add a row to `data_raw/variables.csv`:
 Regenerate `pgvariables.rda`:
 
 ``` r
+
 source("data_raw/pgvariables.R")
 ```
 
 Verify:
 
 ``` r
+
 pgvariables[pgvariables$name == "my_new_variable", ]
 ```
 
@@ -258,6 +268,7 @@ Key tags: - `@param config` — always document the config parameter for
 Regenerate documentation:
 
 ``` r
+
 devtools::document()
 ```
 
@@ -267,6 +278,7 @@ Add tests to `tests/testthat/`. For a gen\_\* function, the minimal
 test:
 
 ``` r
+
 # tests/testthat/test-data_mynewsource.R
 test_that("gen_my_new_variable returns a SpatRaster", {
   skip_if_not_installed("terra")
@@ -284,6 +296,7 @@ test_that("gen_my_new_variable returns a SpatRaster", {
 Run tests:
 
 ``` r
+
 devtools::test()
 ```
 
@@ -292,6 +305,7 @@ devtools::test()
 Test the full pipeline:
 
 ``` r
+
 cfg <- pg_config()
 
 # 1. Calculate

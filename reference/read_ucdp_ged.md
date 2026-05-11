@@ -72,8 +72,9 @@ Violence 1989–2024, and the Challenges of Identifying Civilian Victims.”
 ## See also
 
 [`ucdp_ged`](http://prio-data.github.io/priogrid/reference/ucdp_ged.md)
-for rasterizing events to PRIO-GRID, `ged_ucdp_ged` for generating the
-standard UCDP GED variable
+for rasterizing events to PRIO-GRID,
+[`gen_ucdp_ged`](http://prio-data.github.io/priogrid/reference/gen_ucdp_ged.md)
+for generating the standard UCDP GED variable
 
 ## Examples
 

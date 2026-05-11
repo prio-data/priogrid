@@ -8,6 +8,7 @@ tabular form.
 All raster-related functions in PRIOGRID require `terra`:
 
 ``` r
+
 install.packages("terra")
 library(terra)
 ```
@@ -20,6 +21,7 @@ This is useful to understand the grid geometry and to attach values for
 plotting:
 
 ``` r
+
 pg <- prio_blank_grid()
 pg
 # class       : SpatRaster
@@ -40,6 +42,7 @@ downloads (if needed) and returns any PRIOGRID variable as a
 `SpatRaster`. By default it uses the official release:
 
 ``` r
+
 ucdp <- load_pgvariable("ucdp_ged")
 ucdp
 ```
@@ -48,6 +51,7 @@ Each layer corresponds to one time step. Layer names are dates in
 `"YYYY-MM-DD"` format:
 
 ``` r
+
 names(ucdp)[1:5]
 # [1] "1989-12-31" "1990-12-31" "1991-12-31" "1992-12-31" "1993-12-31"
 ```
@@ -55,6 +59,7 @@ names(ucdp)[1:5]
 Select a single layer by name:
 
 ``` r
+
 ucdp_2020 <- ucdp[["2020-12-31"]]
 terra::plot(log1p(ucdp_2020), main = "UCDP GED events (log scale), 2020")
 ```
@@ -65,6 +70,7 @@ Static variables (no time dimension) are returned as a named list of
 single-layer `SpatRaster` objects:
 
 ``` r
+
 static_rasters <- read_pg_static(as_raster = TRUE)
 names(static_rasters)
 
@@ -78,6 +84,7 @@ Time-varying variables are returned as a named list, each element being
 a multi-layer `SpatRaster`:
 
 ``` r
+
 tv_rasters <- read_pg_timevarying(as_raster = TRUE)
 
 # Each element is a SpatRaster with one layer per year
@@ -91,6 +98,7 @@ searches the meta-data across source names, versions, tags, spatial
 extent, and temporal resolution:
 
 ``` r
+
 results <- pgsearch("climate")
 # Returns a named list of data frames for each search category
 
@@ -108,6 +116,7 @@ results$in_tags[, c("source_name", "tags")]
 Search by tag to find related variables:
 
 ``` r
+
 conflict_sources <- pgsearch("conflict")$in_tags
 conflict_sources[, c("source_name", "temporal_resolution")]
 #> # A tibble: 3 × 2
@@ -125,6 +134,7 @@ converts a `SpatRaster` to a `data.table` with `pgid` (and
 `measurement_date` for time-varying data):
 
 ``` r
+
 r <- load_pgvariable("ruggedterrain_elevation_mean")
 df <- rast_to_df(r, static = TRUE, varname = "ruggedterrain_elevation_mean")
 head(df)
@@ -137,6 +147,7 @@ head(df)
 For time-varying data, set `static = FALSE`:
 
 ``` r
+
 r <- load_pgvariable("cru_tmp")
 df <- rast_to_df(r, static = FALSE, varname = "cru_tmp")
 head(df)
@@ -150,6 +161,7 @@ head(df)
 are a few patterns:
 
 ``` r
+
 # Stack two variables for combined analysis
 elev <- load_pgvariable("ruggedterrain_elevation_mean")
 pop  <- load_pgvariable("ghsl_population_grid")[["2020-12-31"]]
@@ -170,6 +182,7 @@ saves any `SpatRaster` back to the PRIOGRID data folder as a wrapped
 `.rds` file:
 
 ``` r
+
 r <- gen_ruggedterrain_elevation_mean()
 save_pgvariable(r, "ruggedterrain_elevation_mean")
 

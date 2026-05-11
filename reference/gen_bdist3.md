@@ -8,7 +8,11 @@ temporal time slices as defined in PRIOGRID.
 ## Usage
 
 ``` r
-gen_bdist3(cshp = read_cshapes(), config = pg_current_config())
+gen_bdist3(
+  cshp = read_cshapes(),
+  config = pg_current_config(),
+  geodesic = NULL
+)
 ```
 
 ## Arguments

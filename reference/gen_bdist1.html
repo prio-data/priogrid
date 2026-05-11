@@ -71,7 +71,11 @@ is shorter. Cells belonging to island states with no contiguous neighboring coun
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gen_bdist1</span><span class="op">(</span>cshp <span class="op">=</span> <span class="fu"><a href="read_cshapes.html">read_cshapes</a></span><span class="op">(</span><span class="op">)</span>, config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gen_bdist1</span><span class="op">(</span></span>
+<span>  cshp <span class="op">=</span> <span class="fu"><a href="read_cshapes.html">read_cshapes</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  geodesic <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,6 +85,18 @@ is shorter. Cells belonging to island states with no contiguous neighboring coun
 <dl><dt id="arg-cshp">cshp<a class="anchor" aria-label="anchor" href="#arg-cshp"></a></dt>
 <dd><p>An <code>sf</code> object containing CShapes 2.0 boundary data with
 temporal information. Defaults to <code><a href="read_cshapes.html">read_cshapes()</a></code> if not provided.</p></dd>
+
+
+<dt id="arg-config">config<a class="anchor" aria-label="anchor" href="#arg-config"></a></dt>
+<dd><p>A <code>pg_config</code> object. Defaults to <code><a href="pg_current_config.html">pg_current_config()</a></code>.</p></dd>
+
+
+<dt id="arg-geodesic">geodesic<a class="anchor" aria-label="anchor" href="#arg-geodesic"></a></dt>
+<dd><p>Logical or NULL. If TRUE, computes distances in WGS84 using
+spherical (S2) geometry and reprojects the result to the config CRS. If
+FALSE, uses Euclidean distances in the config CRS. Default NULL
+auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+CRS (e.g. WGS84, which terra already handles geodesically).</p></dd>
 
 </dl></div>
     <div class="section level2">

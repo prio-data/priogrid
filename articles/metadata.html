@@ -109,7 +109,8 @@ PRIOGRID can calculate:</p>
 <span><span class="co">#&gt; [29] "ghs_wup_degurba_urban"        "ucdp_ged"                    </span></span>
 <span><span class="co">#&gt; [31] "shdi"                         "msch"                        </span></span>
 <span><span class="co">#&gt; [33] "esch"                         "lifexp"                      </span></span>
-<span><span class="co">#&gt; [35] "gnic"</span></span></code></pre></div>
+<span><span class="co">#&gt; [35] "gnic"                         "side_excluded"               </span></span>
+<span><span class="co">#&gt; [37] "side_included"                "side_irrelevant"</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -158,7 +159,8 @@ time-varying</td>
 <span><span class="co">#&gt; [23] "ghs_wup_degurba_urban"   "ucdp_ged"               </span></span>
 <span><span class="co">#&gt; [25] "shdi"                    "msch"                   </span></span>
 <span><span class="co">#&gt; [27] "esch"                    "lifexp"                 </span></span>
-<span><span class="co">#&gt; [29] "gnic"</span></span></code></pre></div>
+<span><span class="co">#&gt; [29] "gnic"                    "side_excluded"          </span></span>
+<span><span class="co">#&gt; [31] "side_included"           "side_irrelevant"</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="data-sources-pgsources">Data Sources: <code>pgsources</code><a class="anchor" aria-label="anchor" href="#data-sources-pgsources"></a>
@@ -167,7 +169,7 @@ time-varying</td>
 draws on:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">pgsources</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 50 obs. of  18 variables:</span></span>
+<span><span class="co">#&gt; Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 51 obs. of  18 variables:</span></span>
 <span><span class="co">#&gt;  $ id                 : chr  "04254b82-85f0-4c06-9f1b-86ed35e05403" "0a746ab8-cc8e-4b31-bb71-8479a9ac8fa3" "1604221b-e558-4e65-b7fe-d6b0a517ff5c" "190c7abc-b779-4462-97ff-00994cbd2431" ...</span></span>
 <span><span class="co">#&gt;  $ source_name        : chr  "EOG Annual VIIRS Nighttime Lights" "SEDAC Food Insecurity Hotspots" "Global Area Equipped for Irrigation Dataset 1900-2015" "GlobalDataLab Area Database" ...</span></span>
 <span><span class="co">#&gt;  $ source_version     : chr  "V2.2" "v1" "v4" "v.4.2" ...</span></span>
@@ -331,6 +333,7 @@ draws on:</p>
 <span><span class="co">#&gt; 44                                          geoBoundaries       CC BY 4.0</span></span>
 <span><span class="co">#&gt; 49                                        GHS-WUP-DEGURBA       CC BY 4.0</span></span>
 <span><span class="co">#&gt; 50                                               UCDP GED       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 51                                               ETH SIDE       CC BY 4.0</span></span>
 <span></span>
 <span><span class="co"># Yearly time-varying sources</span></span>
 <span><span class="va">pgsources</span><span class="op">[</span><span class="va">pgsources</span><span class="op">$</span><span class="va">temporal_resolution</span> <span class="op">==</span> <span class="st">"Yearly"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"source_version"</span><span class="op">)</span><span class="op">]</span></span>
@@ -353,7 +356,8 @@ draws on:</p>
 <span><span class="co">#&gt; 33         GlobalDataLab International Wealth Index (IWI)          v.4.2</span></span>
 <span><span class="co">#&gt; 34           UCDP Violent Political Protest Dataset (VPP)           20.1</span></span>
 <span><span class="co">#&gt; 37 World Bank Subnational Poverty and Inequality Database       Oct 2024</span></span>
-<span><span class="co">#&gt; 40          World Bank Subnational Doing Business Reports           2022</span></span></code></pre></div>
+<span><span class="co">#&gt; 40          World Bank Subnational Doing Business Reports           2022</span></span>
+<span><span class="co">#&gt; 51                                               ETH SIDE             v1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="file-integrity-pgchecksum">File Integrity: <code>pgchecksum</code><a class="anchor" aria-label="anchor" href="#file-integrity-pgchecksum"></a>

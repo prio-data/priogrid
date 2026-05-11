@@ -66,7 +66,8 @@ regardless of whether countries are separated by international waters.</p>
 <span>  <span class="va">measurement_date</span>,</span>
 <span>  cshp <span class="op">=</span> <span class="fu"><a href="read_cshapes.html">read_cshapes</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  past_result <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  config <span class="op">=</span> <span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  geodesic <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,6 +90,19 @@ Defaults to <code><a href="read_cshapes.html">read_cshapes()</a></code> if not p
 If boundaries haven't changed, the function returns this result directly,
 avoiding recomputation. Default is NULL.</p></dd>
 
+
+<dt id="arg-config">config<a class="anchor" aria-label="anchor" href="#arg-config"></a></dt>
+<dd><p>A pg_config object, see <code><a href="pg_config.html">pg_config()</a></code>.</p></dd>
+
+
+<dt id="arg-geodesic">geodesic<a class="anchor" aria-label="anchor" href="#arg-geodesic"></a></dt>
+<dd><p>Logical or NULL. If TRUE, uses spherical (S2/WGS84) geometry
+for distance calculations, projecting the result back to the config CRS.
+If FALSE, uses Euclidean distances in the config CRS, converting to meters
+via <code><a href="https://rspatial.github.io/terra/reference/linearUnits.html" class="external-link">terra::linearUnits()</a></code>. Default NULL auto-detects: geodesic for
+projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
+already geodesic via terra's internal handling).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -103,8 +117,10 @@ between neighboring countries</p></li>
     <p>The function includes optimization logic that reuses previous calculations
 if country boundaries haven't changed since the last computation, significantly
 reducing processing time for temporal sequences.</p>
-<p>Distance calculations use spherical geometry (S2) for accurate measurements
-across the globe, particularly important for high-latitude regions.</p>
+<p>Distance calculations use spherical geometry (S2) with WGS84 projection for accurate
+measurements across the globe as default, particularly important for high-latitude regions.
+Users can use euclidean distances by setting geodesic = FALSE. This could be relevant,
+for instance with UTM projections for small extents.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

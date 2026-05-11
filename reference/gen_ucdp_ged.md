@@ -91,7 +91,7 @@ for temporal structure
 ``` r
 if (FALSE) { # \dontrun{
 # Generate standard UCDP GED variable
-ged_fatalities <- ged_ucdp_ged()
+ged_fatalities <- gen_ucdp_ged()
 
 # Examine the result
 print(ged_fatalities)

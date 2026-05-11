@@ -78,12 +78,16 @@ boundary analysis. Must be within CShapes temporal coverage.</p></dd>
 
 <dt id="arg-min-cover">min_cover<a class="anchor" aria-label="anchor" href="#arg-min-cover"></a></dt>
 <dd><p>Numeric. Minimum coverage threshold (0-1). Grid cells with
-state coverage below this value are set to NA. Default is 0 (any intersection).</p></dd>
+state coverage below this value are set to NA. Default is 0.2 (20% coverage required).</p></dd>
 
 
 <dt id="arg-cshp">cshp<a class="anchor" aria-label="anchor" href="#arg-cshp"></a></dt>
 <dd><p>An <code>sf</code> object containing CShapes 2.0 boundary data.
 Defaults to <code><a href="read_cshapes.html">read_cshapes()</a></code> if not provided.</p></dd>
+
+
+<dt id="arg-config">config<a class="anchor" aria-label="anchor" href="#arg-config"></a></dt>
+<dd><p>A <code>pg_config</code> object. Defaults to <code><a href="pg_current_config.html">pg_current_config()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

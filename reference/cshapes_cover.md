@@ -26,14 +26,19 @@ cshapes_cover(
 - min_cover:
 
   Numeric. Minimum coverage threshold (0-1). Grid cells with state
-  coverage below this value are set to NA. Default is 0 (any
-  intersection).
+  coverage below this value are set to NA. Default is 0.2 (20% coverage
+  required).
 
 - cshp:
 
   An `sf` object containing CShapes 2.0 boundary data. Defaults to
   [`read_cshapes()`](http://prio-data.github.io/priogrid/reference/read_cshapes.md)
   if not provided.
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
 
 ## Details
 

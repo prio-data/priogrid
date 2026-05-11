@@ -32,6 +32,7 @@ PRIOGRID data as .zip](https://www.prio.org/data/40)
 Install PRIOGRID from GitHub using `remotes` or `renv`:
 
 ``` r
+
 install.packages("renv")
 renv::install("prio-data/priogrid")
 ```
@@ -80,6 +81,7 @@ sudo apt-get install ca-certificates
 2.  **Install CURL R-package from source:**
 
 ``` r
+
 install.packages("curl", type = "source")
 ```
 
@@ -89,6 +91,7 @@ Set a local folder for PRIOGRID to store downloaded and processed data
 (this persists across R sessions):
 
 ``` r
+
 library(priogrid)
 
 pg_set_rawfolder("/path/to/your/data/folder")
@@ -97,6 +100,7 @@ pg_set_rawfolder("/path/to/your/data/folder")
 Download the official release and read it into R:
 
 ``` r
+
 download_priogrid()
 
 pg_static     <- read_pg_static()
@@ -106,6 +110,7 @@ pg_timevarying <- read_pg_timevarying()
 Browse available variables:
 
 ``` r
+
 pgvariables
 ```
 
@@ -113,14 +118,14 @@ pgvariables
 
 Full documentation is available in the package vignettes:
 
-| Vignette                                                                                        | Description                                                                                                         |
-|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| [Getting Started](https://prio-data.github.io/priogrid/articles/getting-started.html)           | Setup, downloading, and reading tabular data                                                                        |
-| [Accessing as Rasters](https://prio-data.github.io/priogrid/articles/working-with-rasters.html) | Working with individual variables using `terra`                                                                     |
-| [Citations and Bibliography](https://prio-data.github.io/priogrid/articles/citation.html)       | Citing data providers in publications                                                                               |
-| [Custom Configurations](https://prio-data.github.io/priogrid/articles/custom-config.html)       | Custom resolution, extent, projection, and time periods                                                             |
-| [Understanding Metadata](https://prio-data.github.io/priogrid/articles/metadata.html)           | Exploring `pgsources`, `pgvariables`, and [`pgsearch()`](http://prio-data.github.io/priogrid/reference/pgsearch.md) |
-| [Contributing](https://prio-data.github.io/priogrid/articles/contributing.html)                 | Adding new data sources and variables                                                                               |
+| Vignette | Description |
+|----|----|
+| [Getting Started](https://prio-data.github.io/priogrid/articles/getting-started.html) | Setup, downloading, and reading tabular data |
+| [Accessing as Rasters](https://prio-data.github.io/priogrid/articles/working-with-rasters.html) | Working with individual variables using `terra` |
+| [Citations and Bibliography](https://prio-data.github.io/priogrid/articles/citation.html) | Citing data providers in publications |
+| [Custom Configurations](https://prio-data.github.io/priogrid/articles/custom-config.html) | Custom resolution, extent, projection, and time periods |
+| [Understanding Metadata](https://prio-data.github.io/priogrid/articles/metadata.html) | Exploring `pgsources`, `pgvariables`, and [`pgsearch()`](http://prio-data.github.io/priogrid/reference/pgsearch.md) |
+| [Contributing](https://prio-data.github.io/priogrid/articles/contributing.html) | Adding new data sources and variables |
 
 ## Contributing
 
@@ -235,6 +240,12 @@ details on how you can contribute with code.
   : Generate the average (mean) elevation for PRIO-GRID cells
 - [`gen_shdi()`](http://prio-data.github.io/priogrid/reference/gen_shdi.md)
   : Generate PRIO-GRID SHDI
+- [`gen_side_excluded()`](http://prio-data.github.io/priogrid/reference/gen_side_excluded.md)
+  : Generate Excluded Ethnic Population Shares from SIDE
+- [`gen_side_included()`](http://prio-data.github.io/priogrid/reference/gen_side_included.md)
+  : Generate Included Ethnic Population Shares from SIDE
+- [`gen_side_irrelevant()`](http://prio-data.github.io/priogrid/reference/gen_side_irrelevant.md)
+  : Generate Irrelevant Ethnic Population Shares from SIDE
 - [`gen_speibase6_mean()`](http://prio-data.github.io/priogrid/reference/gen_speibase6_mean.md)
   : Generate SPEI-6 with mean-temporal aggregation compatible with
   PRIO-GRID
@@ -254,6 +265,8 @@ details on how you can contribute with code.
   : Apply urban classification to GHS-WUP-DEGURBA data
 - [`hilda_landcover()`](http://prio-data.github.io/priogrid/reference/hilda_landcover.md)
   : Extract Land Cover Proportions from HILDA+ Data for PRIO-GRID Cells
+- [`leda_matches`](http://prio-data.github.io/priogrid/reference/leda_matches.md)
+  : SIDE-LEDA Match Table
 - [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md)
   : Load a PRIO-GRID variable
 - [`ne_disputed_area_share()`](http://prio-data.github.io/priogrid/reference/ne_disputed_area_share.md)
@@ -340,6 +353,8 @@ details on how you can contribute with code.
   : Read GlobalDataLab Subnational Human Development Index (SHDI) Data
 - [`read_shdi_shapefile()`](http://prio-data.github.io/priogrid/reference/read_shdi_shapefile.md)
   : Read GlobalDataLab SHDI Shapefile Data
+- [`read_side()`](http://prio-data.github.io/priogrid/reference/read_side.md)
+  : Read SIDE Ethnic Map Metadata and Local Files
 - [`read_speibase()`](http://prio-data.github.io/priogrid/reference/read_speibase.md)
   : Read and Process Global SPEI database data
 - [`read_traveltime()`](http://prio-data.github.io/priogrid/reference/read_traveltime.md)
@@ -354,12 +369,17 @@ details on how you can contribute with code.
   : Save a PRIO-GRID variable
 - [`shdi()`](http://prio-data.github.io/priogrid/reference/shdi.md) :
   Generate PRIO-GRID Compatible SHDI Variables
+- [`side()`](http://prio-data.github.io/priogrid/reference/side.md) :
+  Generate PRIO-GRID Ethnic Settlement Shares by Political Status from
+  SIDE
 - [`spei.nc()`](http://prio-data.github.io/priogrid/reference/spei.nc.md)
   : Compute SPEI from very large arrayed data sets in netCDF format.
 - [`speibaseN()`](http://prio-data.github.io/priogrid/reference/speibaseN.md)
   : Make SPEIbase data PRIO-GRID compatible
 - [`ucdp_ged()`](http://prio-data.github.io/priogrid/reference/ucdp_ged.md)
   : Process UCDP GED Data with Temporal Fatality Distribution
+- [`ucdpged_distance_within_country()`](http://prio-data.github.io/priogrid/reference/ucdpged_distance_within_country.md)
+  : Distance to nearest UCDP GED event within each country
 - [`urban_extent()`](http://prio-data.github.io/priogrid/reference/urban_extent.md)
   : Extract contiguous urban extent around a location
 
