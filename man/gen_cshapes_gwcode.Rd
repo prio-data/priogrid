@@ -10,6 +10,8 @@ gen_cshapes_gwcode(cshp = read_cshapes(), config = pg_current_config())
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
 Gleditsch-Ward country codes and temporal information. Defaults to
 \code{\link{read_cshapes}()} if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

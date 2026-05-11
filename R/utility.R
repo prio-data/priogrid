@@ -39,13 +39,16 @@ prio_blank_grid <- function(config = pg_current_config()){
 
   pg_lonlat <- terra::rast(terra::ext(extent), crs = "epsg:4326", ncol = ncol, nrow = nrow)
   terra::values(pg_lonlat) <- create_pg_indices(config)
-  pg_lonlat <- terra::project(pg_lonlat, crs_string)
 
-  pg <- terra::deepcopy(pg_lonlat)
-  terra::values(pg) <- create_pg_indices(pg_config(ncol = terra::ncol(pg), nrow = terra::nrow(pg)))
-  pg <- terra::ifel(is.nan(pg_lonlat), NaN, pg)
-
-
+  if(crs_string != "epsg:4326"){
+    bbox_t <- sf::st_transform(sf::st_bbox(extent, crs = 4326), crs = crs_string)
+    mask <- terra::project(pg_lonlat, crs_string) |> terra::crop(bbox_t)
+    pg <- terra::deepcopy(mask)
+    terra::values(pg) <- create_pg_indices(pg_config(ncol = terra::ncol(pg), nrow = terra::nrow(pg)))
+    pg <- terra::mask(pg, mask)
+  } else{
+    pg <- pg_lonlat
+  }
 
   names(pg) <- "pgid"
   return(pg)
@@ -199,6 +202,7 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #' @param disagg_method Character string specifying disaggregation method for
 #'   low-resolution data. Options are "near" (nearest neighbor, default),
 #'   "bilinear", or "cubic". See \code{\link[terra]{disagg}} for details.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #' @param cores Integer specifying number of CPU cores to use for aggregation
 #'   operations. Defaults to 1. Higher values can speed up processing of large datasets.
 #' @param ... Additional arguments passed to \code{\link[terra]{aggregate}}.
@@ -206,9 +210,9 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #'
 #' @return SpatRaster object conforming to PRIO-GRID specifications:
 #' \itemize{
-#'   \item CRS: As specified in global options (default: EPSG:4326)
-#'   \item Extent: As specified in global options (default: global extent)
-#'   \item Resolution: Calculated from nrow/ncol in global options
+#'   \item CRS: As specified in \code{config} (default: EPSG:4326)
+#'   \item Extent: As specified in \code{config} (default: global extent)
+#'   \item Resolution: Calculated from \code{nrow}/\code{ncol} in \code{config}
 #'   \item Grid alignment: Exactly matched to PRIO-GRID cell boundaries
 #' }
 #'
@@ -219,8 +223,6 @@ rast_to_df <- function(rast, static = TRUE, varname = NULL, config = pg_current_
 #'   \item Ensuring adequate disk space in the raw data folder for temporary files
 #'   \item Pre-cropping input data to region of interest before transformation
 #' }
-#'
-#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @examples
 #' \dontrun{
@@ -238,7 +240,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", config = p
   pg_configure_terra_memory(config)
   pg <- prio_blank_grid(config)
   temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
+  dir.create(temporary_directory, recursive = TRUE)
 
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){

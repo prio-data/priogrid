@@ -4,11 +4,23 @@
 \alias{gen_bdist1}
 \title{Generate distance to nearest land-contiguous border over time (bdist1)}
 \usage{
-gen_bdist1(cshp = read_cshapes(), config = pg_current_config())
+gen_bdist1(
+  cshp = read_cshapes(),
+  config = pg_current_config(),
+  geodesic = NULL
+)
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
 temporal information. Defaults to \code{\link{read_cshapes}()} if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+
+\item{geodesic}{Logical or NULL. If TRUE, computes distances in WGS84 using
+spherical (S2) geometry and reprojects the result to the config CRS. If
+FALSE, uses Euclidean distances in the config CRS. Default NULL
+auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+CRS (e.g. WGS84, which terra already handles geodesically).}
 }
 \value{
 A \code{SpatRaster} object

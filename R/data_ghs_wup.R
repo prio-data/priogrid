@@ -31,6 +31,8 @@
 #'
 #' @return A \code{SpatRaster} object with DEGURBA classification codes
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @note
 #' \itemize{
 #'   \item Files are automatically extracted from zip archives and cached locally
@@ -116,6 +118,7 @@ read_ghs_wup_degurba <- function(config = pg_current_config()){
 #'
 #' @param urban_definition Numeric vector of DEGURBA codes to classify as urban.
 #'   Valid codes are: 10, 11, 12, 13, 21, 22, 23, 30. See Details for code meanings.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @details
 #' The DEGURBA classification codes represent:
@@ -183,7 +186,7 @@ ghs_wup_degurba <- function(urban_definition, config = pg_current_config()){
   r <- read_ghs_wup_degurba(config = config)
 
   temporary_directory <- file.path(pg_rawfolder(), "tmp", tempdir() |> basename())
-  dir.create(temporary_directory)
+  dir.create(temporary_directory, recursive = TRUE)
   tmp1 <- tempfile(pattern = "urban_classification", fileext = ".tif", tmpdir = temporary_directory)
 
   r <- terra::classify(r, cl_mat, filename = tmp1)
@@ -427,7 +430,7 @@ gen_ghs_wup_degurba_urban <- function(config = pg_current_config()){
 #' \insertRef{schiavinaGHSWUPDEGURBAR2025AGHSWUP2025}{priogrid}
 #'
 #' \insertRef{europeancommissionApplyingDegreeUrbanisation2021}{priogrid}
-urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22, 23, 30), max_extent = 1000e3){
+urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22, 23, 30), max_extent = 1000e3, config = pg_current_config()){
   # lat <- 59.935320; lon <- 10.763063 Oslo
   # lat <- 28.612738 lon <- 77.231487 New Delhi
 
@@ -452,6 +455,6 @@ urban_extent <- function(lon, lat, measurement_date, urban_definition = c(21, 22
   urban_extent_raster <- terra::ifel(urban_patches == center_patch_id, 1, NA)
   urban_extent_raster <- terra::trim(urban_extent_raster)
   res <- terra::as.polygons(urban_extent_raster, dissolve = TRUE) |> sf::st_as_sf()
-  res <- sf::st_transform(res, pg_current_config()$crs)
+  res <- sf::st_transform(res, sf::st_crs(config$crs))
   res
 }

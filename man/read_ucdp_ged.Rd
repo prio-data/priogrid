@@ -73,5 +73,5 @@ events_2020 <- ged_data[year(ged_data$date_start) == 2020, ]
 }
 \seealso{
 \code{\link{ucdp_ged}} for rasterizing events to PRIO-GRID,
-\code{\link{ged_ucdp_ged}} for generating the standard UCDP GED variable
+\code{\link{gen_ucdp_ged}} for generating the standard UCDP GED variable
 }

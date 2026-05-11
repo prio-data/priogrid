@@ -16,6 +16,8 @@ country assignment. Must be within the temporal range of the CShapes dataset.}
 
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
 Gleditsch-Ward country codes. Defaults to \code{\link{read_cshapes}()} if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object
@@ -29,7 +31,6 @@ coverage is assigned, with ties broken by selecting the lowest country code.
 \note{
 \itemize{
 \item Small countries or territories may not appear if they don't dominate any grid cells
-\item The function includes an assertion check to verify all countries are represented
 \item Future versions may include provisions for minority country representation
 }
 }

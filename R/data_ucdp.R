@@ -36,7 +36,7 @@
 #'
 #' @seealso
 #' \code{\link{ucdp_ged}} for rasterizing events to PRIO-GRID,
-#' \code{\link{ged_ucdp_ged}} for generating the standard UCDP GED variable
+#' \code{\link{gen_ucdp_ged}} for generating the standard UCDP GED variable
 #'
 #' @examples
 #' \dontrun{
@@ -196,7 +196,7 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable, confi
 #'
 #' @seealso
 #' \code{\link{read_ucdp_ged}} for loading raw UCDP GED data,
-#' \code{\link{ged_ucdp_ged}} for the standard generator function,
+#' \code{\link{gen_ucdp_ged}} for the standard generator function,
 #' \code{\link{pg_date_intervals}} for PRIO-GRID temporal structure
 #'
 #' @examples
@@ -237,7 +237,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
     }
 
     agg_intervals <- pg_date_intervals(config)
-    agg_dt <- data.table(
+    agg_dt <- data.table::data.table(
       interval_id = seq_along(agg_intervals),
       agg_start = lubridate::int_start(agg_intervals),
       agg_end = lubridate::int_end(agg_intervals)
@@ -274,12 +274,12 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
     result[, base_count := floor(total_fatalities * prop_share)]
     result[, residual := total_fatalities[1] - sum(base_count), by = event_id]
     result[, frac_part := (total_fatalities * prop_share) - base_count]
-    result[, rank := frank(-frac_part, ties.method = "random"), by = event_id]
+    result[, rank := data.table::frank(-frac_part, ties.method = "random"), by = event_id]
     result[, distributed_count := base_count + as.integer(rank <= residual)]
 
     result[, is_last_period := rank == max(rank), by = event_id]
     result[total_fatalities > 1 & sum(base_count) == 0,
-           distributed_count := fifelse(is_last_period & distributed_count == 0, 1L, distributed_count),
+           distributed_count := data.table::fifelse(is_last_period & distributed_count == 0, 1L, distributed_count),
            by = event_id]
 
     check <- result[, .(
@@ -296,7 +296,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 
   ged <- ged |> dplyr::filter(type_of_violence %in% violence_types)
   ged_dt <- sf::st_drop_geometry(ged) |> dplyr::select(id, date_start, date_end, date_prec, dplyr::all_of(fatality_variable))
-  setDT(ged_dt)
+  data.table::setDT(ged_dt)
   result <- distribute_fatalities(ged_dt, value_var = fatality_variable)
 
   agg_result <- result[, .(
@@ -379,7 +379,7 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 #' @examples
 #' \dontrun{
 #' # Generate standard UCDP GED variable
-#' ged_fatalities <- ged_ucdp_ged()
+#' ged_fatalities <- gen_ucdp_ged()
 #'
 #' # Examine the result
 #' print(ged_fatalities)
@@ -411,40 +411,83 @@ gen_ucdp_ged <- function(config = pg_current_config()){
 }
 
 
+#' Distance to nearest UCDP GED event within each country
+#'
+#' For each PRIO-GRID cell, computes the distance (in meters) to the nearest
+#' UCDP GED conflict event that occurred within the same country during the
+#' period containing \code{measurement_date}. Cells in countries with no
+#' recorded events are set to NA (not 0), to distinguish absence of events
+#' from proximity to events. Events with spatial precision code >= 6
+#' (national-level or coarser) are excluded.
+#'
+#' @param measurement_date A single \code{Date} object specifying the measurement date.
+#' @param ged An \code{sf} object containing UCDP GED data. Defaults to
+#'   \code{\link{read_ucdp_ged}()}.
+#' @param cshp An \code{sf} object containing CShapes 2.0 boundary data. Defaults to
+#'   \code{\link{read_cshapes}()}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#' @param geodesic Logical or NULL. If TRUE, computes distances in WGS84 using
+#'   spherical (S2) geometry and reprojects the result to the config CRS. If
+#'   FALSE, uses Euclidean distances in the config CRS. Default NULL
+#'   auto-detects: geodesic for projected CRS (e.g. UTM), native for geographic
+#'   CRS (e.g. WGS84, which terra already handles geodesically).
+#'
+#' @return A \code{SpatRaster} with distances in meters to the nearest conflict event
+#'   within the same country. NA indicates no events recorded in that country for
+#'   the period.
+#'
+#' @seealso \code{\link{ucdp_ged}} for fatality-count rasters,
+#'   \code{\link{read_ucdp_ged}} for loading raw UCDP GED data
+#'
 #' @export
-ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes()){
+ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ged(), cshp = read_cshapes(), config = pg_current_config(), geodesic = NULL){
+  pg <- prio_blank_grid(config)
+  unit_factor <- terra::linearUnits(pg)
+  use_geodesic <- if (is.null(geodesic)) unit_factor != 0 else geodesic
+
+  # sf::sf_use_s2 must be FALSE: cShapes has degenerate geometries that cause
+  # s2 to error. terra::distance uses its own internal geodesic logic and is
+  # not affected by this setting.
+  prev_s2 <- sf::sf_use_s2()
+  sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(prev_s2))
+
+  if (use_geodesic) {
+    wgs84_config <- config
+    wgs84_config$crs <- "epsg:4326"
+    pg_calc <- prio_blank_grid(wgs84_config)
+    rgw <- cshapes_gwcode(measurement_date, cshp = cshp, config = wgs84_config)
+  } else {
+    pg_calc <- pg
+    rgw <- cshapes_gwcode(measurement_date, cshp = cshp, config = config)
+  }
+
   cshp <- cshp |> dplyr::filter(measurement_date %within% date_interval)
 
   pg_interval <- pg_date_intervals()[measurement_date %within% pg_date_intervals()]
 
-  pg <- prio_blank_grid()
   ged <- ged |>
-    sf::st_transform(crs = sf::st_crs(pg)) |>
+    sf::st_transform(crs = sf::st_crs(pg_calc)) |>
     dplyr::filter(lubridate::int_overlaps(date_interval, pg_interval)) |>
     dplyr::filter(where_prec < 6) # Remove where_prec >= 6 (i.e. not sub-national precision)
 
-  rgw <- cshapes_gwcode(measurement_date, cshp = cshp)
   gwcodes <- unique(cshp$gwcode)
 
-  cover <- cshapes_cover(measurement_date, cshp = cshp)
-  terra::values(cover) <- dplyr::if_else(terra::values(cover) == T, 1, NA)
+  result <- pg_calc
+  terra::values(result) <- 0
 
-  result <- pg
-  result[terra::values(result)] <- 0
-  result <- result*cover
-  suppressMessages(sf::sf_use_s2(FALSE)) # Only use sf here to subset data.
-  distances <- list()
   for(gwcode in gwcodes){
     tmp <- rgw
     tmp[terra::values(tmp) != gwcode] <- NA
     tmp[!is.na(terra::values(tmp))] <- 1
 
-    suppressMessages(
-      ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
-    )
+    # Skip countries with no grid cells (e.g. micro-states that don't dominate any cell)
+    if (all(is.na(terra::values(tmp)))) next
+
+    ged_sub <- ged[sf::st_intersects(ged, cshp[cshp$gwcode == gwcode, ], sparse = FALSE),]
 
     if(nrow(ged_sub) > 0){
-      dist <- terra::distance(tmp, terra::vect(ged_sub), rasterize = T)
+      dist <- terra::distance(tmp, terra::vect(ged_sub), rasterize = TRUE)
       dist <- (dist*tmp)
       dist[is.na(dist)] <- 0
       result <- result + dist
@@ -456,9 +499,16 @@ ucdpged_distance_within_country <- function(measurement_date, ged = read_ucdp_ge
       result <- result * tmp
     }
   }
-  suppressMessages(sf::sf_use_s2(TRUE))
 
-  #plot(1/log1p(result))
-  #plot(1/result)
+  if (use_geodesic) {
+    result <- robust_transformation(result, config = config)
+  } else {
+    if (unit_factor != 1 && unit_factor != 0) result <- result * unit_factor
+  }
+
+  cover <- cshapes_cover(measurement_date, cshp = cshp, config = config)
+  cover <- terra::ifel(cover, 1, NA)
+  result <- result * cover
+
   return(result)
 }

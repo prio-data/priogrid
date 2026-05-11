@@ -34,9 +34,9 @@ operations. Defaults to 1. Higher values can speed up processing of large datase
 \value{
 SpatRaster object conforming to PRIO-GRID specifications:
 \itemize{
-\item CRS: As specified in global options (default: EPSG:4326)
-\item Extent: As specified in global options (default: global extent)
-\item Resolution: Calculated from nrow/ncol in global options
+\item CRS: As specified in \code{config} (default: EPSG:4326)
+\item Extent: As specified in \code{config} (default: global extent)
+\item Resolution: Calculated from \code{nrow}/\code{ncol} in \code{config}
 \item Grid alignment: Exactly matched to PRIO-GRID cell boundaries
 }
 }

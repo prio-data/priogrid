@@ -18,6 +18,8 @@ of the CShapes dataset (1886 onwards).}
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
 properly formatted date intervals. Defaults to \code{\link{read_cshapes}()}
 if not provided.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \description{
 Computes the proportion of each PRIO-GRID cell that intersects with country

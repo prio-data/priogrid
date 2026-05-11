@@ -8,7 +8,8 @@ bdist2(
   measurement_date,
   cshp = read_cshapes(),
   past_result = NULL,
-  config = pg_current_config()
+  config = pg_current_config(),
+  geodesic = NULL
 )
 }
 \arguments{
@@ -21,6 +22,15 @@ Defaults to \code{\link{read_cshapes}()} if not provided.}
 \item{past_result}{A list object from a previous \code{bdist2} calculation.
 If boundaries haven't changed, the function returns this result directly,
 avoiding recomputation. Default is NULL.}
+
+\item{config}{A pg_config object, see \code{\link{pg_config()}}.}
+
+\item{geodesic}{Logical or NULL. If TRUE, uses spherical (S2/WGS84) geometry
+for distance calculations, projecting the result back to the config CRS.
+If FALSE, uses Euclidean distances in the config CRS, converting to meters
+via \code{terra::linearUnits()}. Default NULL auto-detects: geodesic for
+projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
+already geodesic via terra's internal handling).}
 }
 \value{
 A list containing three elements:
@@ -43,8 +53,10 @@ The function includes optimization logic that reuses previous calculations
 if country boundaries haven't changed since the last computation, significantly
 reducing processing time for temporal sequences.
 
-Distance calculations use spherical geometry (S2) for accurate measurements
-across the globe, particularly important for high-latitude regions.
+Distance calculations use spherical geometry (S2) with WGS84 projection for accurate
+measurements across the globe as default, particularly important for high-latitude regions.
+Users can use euclidean distances by setting geodesic = FALSE. This could be relevant,
+for instance with UTM projections for small extents.
 }
 \examples{
 \dontrun{

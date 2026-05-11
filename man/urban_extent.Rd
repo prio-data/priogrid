@@ -9,7 +9,8 @@ urban_extent(
   lat,
   measurement_date,
   urban_definition = c(21, 22, 23, 30),
-  max_extent = 1e+06
+  max_extent = 1e+06,
+  config = pg_current_config()
 )
 }
 \arguments{

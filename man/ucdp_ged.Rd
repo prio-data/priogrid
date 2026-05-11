@@ -107,6 +107,6 @@ terra::plot(total_fatalities, main = "Total Fatalities (All Periods)")
 }
 \seealso{
 \code{\link{read_ucdp_ged}} for loading raw UCDP GED data,
-\code{\link{ged_ucdp_ged}} for the standard generator function,
+\code{\link{gen_ucdp_ged}} for the standard generator function,
 \code{\link{pg_date_intervals}} for PRIO-GRID temporal structure
 }

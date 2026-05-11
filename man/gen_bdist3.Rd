@@ -4,7 +4,11 @@
 \alias{gen_bdist3}
 \title{Generate distance to a country's own borders (bdist3)}
 \usage{
-gen_bdist3(cshp = read_cshapes(), config = pg_current_config())
+gen_bdist3(
+  cshp = read_cshapes(),
+  config = pg_current_config(),
+  geodesic = NULL
+)
 }
 \arguments{
 \item{cshp}{An \code{sf} object containing CShapes 2.0 boundary data with
