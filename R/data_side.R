@@ -26,7 +26,12 @@ read_side <- function() {
     id = "e42b30e3-75da-4dd4-a375-0d6557087804"
   )
 
-  side_meta <- sidedata::side_metadata() |>
+  side_meta_file <- files[grepl("side.metadata.df.RData", files)]
+  files <- files[!grepl("side.metadata.df.RData", files)]
+
+  load(side_meta_file)
+
+  side_meta <- side.metadata.df |>
     dplyr::filter(marker == "ethnic") |>
     dplyr::mutate(
       sideid = as.character(sideid),
@@ -257,12 +262,16 @@ side <- function(status = c("excluded", "included", "irrelevant"), config = pg_c
     stop("No SIDE matches found for status '", status, "'.")
   }
 
-  measurement_dates <- as.Date(lubridate::int_end(pg_date_intervals(config)))
+  measurement_dates <- pg_dates(config)
   years_needed <- sort(unique(lubridate::year(measurement_dates)))
+  years_needed <- years_needed[years_needed %in% unique(status_matches$year)]
   surfaces <- .side_prepare_group_surfaces(side$meta, status_matches)
 
   annual_layers <- vector("list", length(years_needed))
-  annual_layer_names <- as.character(as.Date(paste0(years_needed, "-12-31")))
+  annual_layer_names <- lubridate::make_date(years_needed, lubridate::month(config$start_date), lubridate::day(config$start_date)) |>
+    as.character()
+
+
 
   for (i in seq_along(years_needed)) {
     native_raster <- .side_build_year_raster(years_needed[[i]], status_matches, surfaces)
@@ -279,18 +288,7 @@ side <- function(status = c("excluded", "included", "irrelevant"), config = pg_c
   annual_stack <- terra::rast(annual_layers)
   names(annual_stack) <- annual_layer_names
 
-  year_lookup <- match(lubridate::year(measurement_dates), years_needed)
-  result_layers <- lapply(year_lookup, function(i) {
-    if (is.na(i)) {
-      blank <- prio_blank_grid(config)
-      return(blank * NA_real_)
-    }
-    annual_stack[[i]]
-  })
-  result <- terra::rast(result_layers)
-  names(result) <- as.character(measurement_dates)
-
-  result
+  annual_stack
 }
 
 #' Generate Excluded Ethnic Population Shares from SIDE

@@ -1,3 +1,4 @@
+https://github.com/carl-mc/sidedata/raw/refs/heads/master/data/side.metadata.df.RData
 https://side.ethz.ch/raw/v1/side_v1_82_1.asc
 https://side.ethz.ch/raw/v1/side_v1_82_2.asc
 https://side.ethz.ch/raw/v1/side_v1_82_3.asc
