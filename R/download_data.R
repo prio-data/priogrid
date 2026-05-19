@@ -387,11 +387,11 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size 
 #'   file is missing locally.
 #'
 #' @return A data.frame of checksums (invisibly). Also saves to `data/pgchecksum.rda`.
-#' @export
+#' @keywords internal
 #'
 #' @examples
 #' \dontrun{
-#' pg_update_checksums()
+#' priogrid:::pg_update_checksums()
 #' }
 pg_update_checksums <- function(only_present = TRUE) {
   rlang::check_installed("usethis", reason = "to save pgchecksum.rda")

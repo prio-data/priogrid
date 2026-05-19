@@ -277,6 +277,74 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   invisible(NULL)
 }
 
+# Internal admin helper: bulk-bootstrap _checksums.csv for all .rds/.parquet
+# files in a resolved output folder. Useful after files have been placed without
+# going through save_pgvariable() / read_pg_static() / read_pg_timevarying().
+#
+# @param config,version,type,spatial_hash,temporal_hash Passed to resolve_pg_mode().
+# @param overwrite_existing Logical. If FALSE (default), skips files that already
+#   have an entry in _checksums.csv. If TRUE, recomputes all entries.
+# @return A list with elements `n_added` and `n_updated` (integers), invisibly.
+# @keywords internal
+.pg_bootstrap_checksums <- function(config = NULL,
+                                    version = NULL,
+                                    type = "05deg_yearly",
+                                    spatial_hash = NULL,
+                                    temporal_hash = NULL,
+                                    overwrite_existing = FALSE) {
+
+  cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash)
+  base_path <- cfg$base_path
+
+  if (!dir.exists(base_path)) {
+    stop("Output directory does not exist: ", base_path, call. = FALSE)
+  }
+
+  target_files <- list.files(base_path, pattern = "\\.(rds|parquet)$", full.names = FALSE)
+
+  if (length(target_files) == 0) {
+    message("No .rds or .parquet files found in: ", base_path)
+    return(invisible(list(n_added = 0L, n_updated = 0L)))
+  }
+
+  checksum_file <- file.path(base_path, "_checksums.csv")
+  existing_labels <- if (file.exists(checksum_file)) {
+    utils::read.csv(checksum_file, stringsAsFactors = FALSE)$varname
+  } else {
+    character(0)
+  }
+
+  n_added   <- 0L
+  n_updated <- 0L
+
+  for (fname in target_files) {
+    label <- if (grepl("\\.rds$", fname)) tools::file_path_sans_ext(fname) else fname
+    already_exists <- label %in% existing_labels
+
+    if (already_exists && !overwrite_existing) next
+
+    .pg_record_checksum(file.path(base_path, fname), label, base_path)
+
+    if (already_exists) {
+      n_updated <- n_updated + 1L
+    } else {
+      n_added <- n_added + 1L
+      existing_labels <- c(existing_labels, label)
+    }
+  }
+
+  message(
+    "Bootstrap complete for: ", base_path, "\n",
+    "  Added:   ", n_added, " new checksum(s)\n",
+    "  Updated: ", n_updated, " existing checksum(s)\n",
+    "  Skipped: ", length(target_files) - n_added - n_updated,
+    " already-present checksum(s) (use overwrite_existing=TRUE to force)"
+  )
+
+  invisible(list(n_added = n_added, n_updated = n_updated))
+}
+
+
 #' Load a PRIO-GRID variable
 #'
 #' Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.

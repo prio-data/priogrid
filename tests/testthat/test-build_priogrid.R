@@ -122,3 +122,47 @@ test_that("pg_list_custom returns configs and prints summary", {
   expect_s3_class(customs[[1]], "pg_config")
   expect_true(any(grepl("\\[1\\]", output)))
 })
+
+test_that(".pg_bootstrap_checksums adds entries for existing files", {
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
+
+  pg_set_rawfolder(tmp_raw)
+  cfg <- pg_config()
+  s_hash <- priogrid:::get_spatial_hash(cfg)
+  t_hash <- priogrid:::get_temporal_hash(cfg)
+  out_path <- pgout_path(spatial_hash = s_hash, temporal_hash = t_hash)
+  dir.create(out_path, recursive = TRUE)
+
+  saveRDS(list(x = 1), file.path(out_path, "fake_var.rds"))
+
+  result <- priogrid:::.pg_bootstrap_checksums(config = cfg)
+
+  checksum_file <- file.path(out_path, "_checksums.csv")
+  expect_true(file.exists(checksum_file))
+  cs <- utils::read.csv(checksum_file, stringsAsFactors = FALSE)
+  expect_true("fake_var" %in% cs$varname)
+  expect_equal(result$n_added, 1L)
+  expect_equal(result$n_updated, 0L)
+})
+
+test_that(".pg_bootstrap_checksums skips existing entries by default", {
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
+
+  pg_set_rawfolder(tmp_raw)
+  cfg <- pg_config()
+  s_hash <- priogrid:::get_spatial_hash(cfg)
+  t_hash <- priogrid:::get_temporal_hash(cfg)
+  out_path <- pgout_path(spatial_hash = s_hash, temporal_hash = t_hash)
+  dir.create(out_path, recursive = TRUE)
+
+  saveRDS(list(x = 1), file.path(out_path, "fake_var.rds"))
+  priogrid:::.pg_bootstrap_checksums(config = cfg)
+
+  result2 <- priogrid:::.pg_bootstrap_checksums(config = cfg)
+  expect_equal(result2$n_added, 0L)
+  expect_equal(result2$n_updated, 0L)
+})
