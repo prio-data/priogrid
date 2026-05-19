@@ -177,11 +177,43 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
   # Calculate variables
   message(paste("Variables to calculate:", paste(valid_varnames, collapse = ", ")))
   message(paste("Saving to:", save_to))
+  failed_vars <- character(0)
   for (varname in valid_varnames) {
     message(paste("Calculating", varname))
-    gen_fun <- get(paste0("gen_", varname))
-    r <- gen_fun(config = config)
-    save_pgvariable(r, varname, save_to = save_to)
+    result <- tryCatch({
+      gen_fun <- get(paste0("gen_", varname))
+      r <- gen_fun(config = config)
+      save_pgvariable(r, varname, save_to = save_to)
+      NULL
+    }, error = function(e) {
+      is_file_error <- grepl(
+        "not found|does not exist|No such file|cannot open|missing files|No files in metadata",
+        conditionMessage(e), ignore.case = TRUE
+      )
+      if (is_file_error) {
+        warning(
+          sprintf("Skipping '%s': a required source file is missing or unreadable.\n", varname),
+          "  Error: ", conditionMessage(e), "\n",
+          "  Check availability: pg_data_availability()\n",
+          "  Download missing:   download_pg_rawdata()",
+          call. = FALSE)
+      } else {
+        warning(
+          sprintf("Skipping '%s': computation failed.\n", varname),
+          "  Error: ", conditionMessage(e),
+          call. = FALSE)
+      }
+      varname
+    })
+    if (!is.null(result)) failed_vars <- c(failed_vars, result)
+  }
+
+  if (length(failed_vars) > 0) {
+    message(
+      "calc_pg() completed with ", length(failed_vars), " failure(s): ",
+      paste(failed_vars, collapse = ", "), "\n",
+      "Succeeded: ", length(valid_varnames) - length(failed_vars),
+      " / ", length(valid_varnames))
   }
 
   invisible(NULL)
@@ -222,6 +254,24 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   }
 
   saveRDS(rast, filepath)
+  .pg_record_checksum(filepath, varname, save_to)
+  invisible(NULL)
+}
+
+# Internal helper: record an MD5 checksum entry in _checksums.csv
+.pg_record_checksum <- function(filepath, label, base_path) {
+  md5_val <- tools::md5sum(filepath)
+  checksum_file <- file.path(base_path, "_checksums.csv")
+  row <- data.frame(varname = label, filename = basename(filepath), md5 = md5_val,
+                    recorded_at = as.character(Sys.time()), stringsAsFactors = FALSE)
+  if (file.exists(checksum_file)) {
+    existing <- utils::read.csv(checksum_file, stringsAsFactors = FALSE)
+    existing <- existing[existing$varname != label, ]
+    updated <- rbind(existing, row)
+  } else {
+    updated <- row
+  }
+  utils::write.csv(updated, checksum_file, row.names = FALSE)
   invisible(NULL)
 }
 
@@ -271,7 +321,8 @@ load_pgvariable <- function(varname,
                             version = NULL,
                             type = "05deg_yearly",
                             spatial_hash = NULL,
-                            temporal_hash = NULL) {
+                            temporal_hash = NULL,
+                            verify_checksums = FALSE) {
   rlang::check_installed("terra", reason = "to load PRIO-GRID variable rasters")
 
   has_hashes <- !is.null(spatial_hash) && !is.null(temporal_hash)
@@ -314,6 +365,26 @@ load_pgvariable <- function(varname,
 
   if (!file.exists(filepath)) {
     stop("Variable '", varname, "' not found at: ", filepath)
+  }
+
+  if (isTRUE(verify_checksums)) {
+    cs_file <- file.path(dirname(filepath), "_checksums.csv")
+    if (file.exists(cs_file)) {
+      cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
+      expected <- cs_df[cs_df$varname == varname, ]
+      if (nrow(expected) == 1) {
+        actual <- tools::md5sum(filepath)
+        if (actual != expected$md5) {
+          warning(
+            "Checksum mismatch for '", varname, "': the file may be corrupted.\n",
+            "  Expected MD5: ", expected$md5, "\n",
+            "  Actual MD5:   ", actual, "\n",
+            "  File: ", filepath, "\n",
+            "  Recalculate with: calc_pg('", varname, "', overwrite = TRUE)",
+            call. = FALSE)
+        }
+      }
+    }
   }
 
   terra::unwrap(readRDS(filepath))
@@ -465,7 +536,8 @@ read_pg_static <- function(config = NULL,
                            temporal_hash = NULL,
                            as_raster = FALSE,
                            test = FALSE,
-                           overwrite = FALSE) {
+                           overwrite = FALSE,
+                           verify_checksums = FALSE) {
 
   cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash, overwrite)
 
@@ -481,6 +553,24 @@ read_pg_static <- function(config = NULL,
 
   # Return cached if available (lightweight path — no terra needed)
   if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
+    if (isTRUE(verify_checksums)) {
+      cs_file <- file.path(cfg$base_path, "_checksums.csv")
+      if (file.exists(cs_file)) {
+        cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
+        expected <- cs_df[cs_df$varname == "pg_static.parquet", ]
+        if (nrow(expected) == 1) {
+          actual <- tools::md5sum(fname)
+          if (actual != expected$md5) {
+            warning(
+              "Checksum mismatch for cached 'pg_static.parquet': the file may be corrupted.\n",
+              "  Expected MD5: ", expected$md5, "\n",
+              "  Actual MD5:   ", actual, "\n",
+              "  Rebuild with: read_pg_static(overwrite = TRUE)",
+              call. = FALSE)
+          }
+        }
+      }
+    }
     return(nanoparquet::read_parquet(fname))
   }
 
@@ -533,6 +623,7 @@ read_pg_static <- function(config = NULL,
   # Save to cache
   rlang::check_installed("arrow", reason = "to write parquet files")
   arrow::write_parquet(df, fname)
+  .pg_record_checksum(fname, "pg_static.parquet", cfg$base_path)
 
   return(df)
 }
@@ -582,7 +673,8 @@ read_pg_timevarying <- function(config = NULL,
                                 temporal_hash = NULL,
                                 as_raster = FALSE,
                                 test = FALSE,
-                                overwrite = FALSE) {
+                                overwrite = FALSE,
+                                verify_checksums = FALSE) {
 
   cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash, overwrite)
 
@@ -598,6 +690,24 @@ read_pg_timevarying <- function(config = NULL,
 
   # Return cached if available (lightweight path — no terra needed)
   if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
+    if (isTRUE(verify_checksums)) {
+      cs_file <- file.path(cfg$base_path, "_checksums.csv")
+      if (file.exists(cs_file)) {
+        cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
+        expected <- cs_df[cs_df$varname == "pg_timevarying.parquet", ]
+        if (nrow(expected) == 1) {
+          actual <- tools::md5sum(fname)
+          if (actual != expected$md5) {
+            warning(
+              "Checksum mismatch for cached 'pg_timevarying.parquet': the file may be corrupted.\n",
+              "  Expected MD5: ", expected$md5, "\n",
+              "  Actual MD5:   ", actual, "\n",
+              "  Rebuild with: read_pg_timevarying(overwrite = TRUE)",
+              call. = FALSE)
+          }
+        }
+      }
+    }
     return(nanoparquet::read_parquet(fname))
   }
 
@@ -669,6 +779,7 @@ read_pg_timevarying <- function(config = NULL,
                      compress = "gzip")
   rlang::check_installed("arrow", reason = "to write parquet files")
   arrow::write_parquet(df, fname)
+  .pg_record_checksum(fname, "pg_timevarying.parquet", cfg$base_path)
 
   return(df)
 }

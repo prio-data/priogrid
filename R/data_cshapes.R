@@ -227,6 +227,15 @@ gen_cshapes_cover_share <- function(cshp = read_cshapes(), config = pg_current_c
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
+  if (length(time_slices) == 0) {
+    warning(
+      "gen_cshapes_cover_share(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap CShapes coverage [", min(cshp$gwsdate), " to ", max(cshp$gwedate), "].\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
+
   r <- cshapes_cover_share(time_slices[1], cshp = cshp, config = config)
   for(i in 2:length(time_slices)){
     t <- time_slices[i]
@@ -317,6 +326,15 @@ gen_cshapes_gwcode <- function(cshp = read_cshapes(), config = pg_current_config
   time_slices <- pg_dates(config)
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  if (length(time_slices) == 0) {
+    warning(
+      "gen_cshapes_gwcode(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap CShapes coverage [", min(cshp$gwsdate), " to ", max(cshp$gwedate), "].\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
 
   r <- cshapes_gwcode(time_slices[1], cshp = cshp, config = config)
   for(i in 2:length(time_slices)){
@@ -470,6 +488,15 @@ gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config(), geod
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  if (length(time_slices) == 0) {
+    warning(
+      "gen_bdist1(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap CShapes coverage [", min(cshp$gwsdate), " to ", max(cshp$gwedate), "].\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
 
   res <- bdist1(time_slices[1], cshp = cshp, config = config, geodesic = geodesic)
   r <- res$bdist1
@@ -635,6 +662,15 @@ gen_bdist2 <- function(cshp = read_cshapes(), config = pg_current_config()){
   time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
 
+  if (length(time_slices) == 0) {
+    warning(
+      "gen_bdist2(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap CShapes coverage [", min(cshp$gwsdate), " to ", max(cshp$gwedate), "].\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
+
   res <- bdist2(time_slices[1], cshp = cshp, config = config)
   r <- res$bdist2
   for(i in 2:length(time_slices)){
@@ -786,6 +822,15 @@ gen_bdist3 <- function(cshp = read_cshapes(), config = pg_current_config(), geod
   temporal_interval <- lubridate::interval(min(cshp$gwsdate), max(cshp$gwedate))
   time_slices <- pg_dates(config)
   time_slices <- time_slices[time_slices %within% temporal_interval]
+
+  if (length(time_slices) == 0) {
+    warning(
+      "gen_bdist3(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap CShapes coverage [", min(cshp$gwsdate), " to ", max(cshp$gwedate), "].\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
 
   res <- bdist3(time_slices[1], cshp = cshp, config = config, geodesic = geodesic)
   r <- res$bdist3

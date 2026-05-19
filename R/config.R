@@ -35,7 +35,8 @@ pg_config <- function(nrow = 360L,
                       start_date = as.Date("1850-12-31"),
                       end_date = Sys.Date(),
                       verbose = TRUE,
-                      automatic_download = TRUE) {
+                      automatic_download = TRUE,
+                      verify_checksums = FALSE) {
 
   if (!is.numeric(extent) || length(extent) != 4) stop("extent must be a numeric vector of length 4")
 
@@ -48,7 +49,8 @@ pg_config <- function(nrow = 360L,
     start_date = as.Date(start_date),
     end_date = if (identical(end_date, "today")) Sys.Date() else as.Date(end_date),
     verbose = as.logical(verbose),
-    automatic_download = as.logical(automatic_download)
+    automatic_download = as.logical(automatic_download),
+    verify_checksums = as.logical(verify_checksums)
   )
 
   validate_pg_config(cfg)
@@ -87,7 +89,8 @@ pg_set_config <- function(...) {
   updates <- list(...)
 
   valid_fields <- c("nrow", "ncol", "crs", "extent", "temporal_resolution",
-                    "start_date", "end_date", "verbose", "automatic_download")
+                    "start_date", "end_date", "verbose", "automatic_download",
+                    "verify_checksums")
   invalid <- setdiff(names(updates), valid_fields)
   if (length(invalid) > 0) {
     stop("Unknown config fields: ", paste(invalid, collapse = ", "),
@@ -237,6 +240,7 @@ validate_pg_config <- function(cfg) {
   if (!inherits(cfg$end_date, "Date")) stop("end_date must be a Date")
   if (!is.logical(cfg$verbose) || is.na(cfg$verbose)) stop("verbose must be logical")
   if (!is.logical(cfg$automatic_download) || is.na(cfg$automatic_download)) stop("automatic_download must be logical")
+  if (!is.logical(cfg$verify_checksums) || is.na(cfg$verify_checksums)) stop("verify_checksums must be logical")
   invisible(NULL)
 }
 

@@ -296,6 +296,16 @@ shdi <- function(variable = "shdi", config = pg_current_config()) {
   pg_years <- lubridate::year(pg_dates(config))
   shdi_years <- pg_years[pg_years %in% unique(df$year)]
 
+  if (length(shdi_years) == 0) {
+    warning(
+      "shdi(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap SHDI data coverage (years ",
+      min(unique(df$year)), " to ", max(unique(df$year)), ").\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
+
   for(t in 1:length(shdi_years)){
     out <- df |> dplyr::filter(year == shdi_years[t])
     pg <- prio_blank_grid(config)
