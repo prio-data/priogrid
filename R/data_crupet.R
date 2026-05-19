@@ -25,6 +25,8 @@
 #' pet_data <- read_cru_pet()
 #' }
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @seealso
 #' \code{\link{get_pgfile}} for file retrieval functionality,
 #' \code{\link{pg_date_intervals}} for PRIO-GRID temporal boundaries
@@ -69,6 +71,8 @@ read_cru_pet <- function(config = pg_current_config()) {
 #' \dontrun{
 #' r <- gen_cru_pet()
 #' }
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @seealso
 #' \code{\link{read_cru_pet}}, \code{\link{pg_date_intervals}},

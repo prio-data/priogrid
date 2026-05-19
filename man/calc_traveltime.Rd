@@ -9,6 +9,8 @@ calc_traveltime(aggregation_function, config = pg_current_config())
 \arguments{
 \item{aggregation_function}{Function or character string specifying the
 aggregation method (see details above)}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

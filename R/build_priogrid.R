@@ -52,6 +52,7 @@ get_temporal_hash <- function(config = pg_current_config()) {
 #' @param type Character string specifying release type (e.g., "05deg_yearly"). Use for official releases.
 #' @param spatial_hash Character string with 6-character spatial hash. If NULL, computed from current config.
 #' @param temporal_hash Character string with 6-character temporal hash. If NULL, computed from current config.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @return Character string with file path
 #' @export
@@ -101,6 +102,7 @@ pgout_path <- function(version = NULL,
 #'   If NULL (default), calculates all available variables.
 #' @param overwrite Logical. If FALSE (default), skips variables that already
 #'   exist in the output folder. If TRUE, recalculates all specified variables.
+#' @param config A `pg_config` object. Defaults to [pg_current_config()].
 #'
 #' @return NULL (invisibly). Called for side effects (saving files).
 #' @export
@@ -295,6 +297,8 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'   temporal_hash. Loads from the specified custom folder directly.
 #' @param temporal_hash Character string with 6-character temporal hash. Requires
 #'   spatial_hash.
+#' @param verify_checksums Logical. If TRUE, verifies the file's MD5 checksum
+#'   against stored values. Default FALSE.
 #'
 #' @return Terra SpatRaster object
 #' @export
@@ -509,6 +513,8 @@ resolve_pg_mode <- function(config = NULL,
 #' @param test Logical. If TRUE, prints coverage summary for each variable.
 #' @param overwrite Logical. If FALSE (default) and cached file exists, returns
 #'   cached data. If TRUE, rebuilds from individual variables.
+#' @param verify_checksums Logical. If TRUE, verifies checksums of cached files
+#'   against stored MD5 values. Default FALSE.
 #'
 #' @return data.table with pgid as rows and variables as columns, or list of
 #'   terra SpatRasters if as_raster=TRUE
@@ -649,6 +655,8 @@ read_pg_static <- function(config = NULL,
 #' @param test Logical. If TRUE, returns coverage summary data.frame.
 #' @param overwrite Logical. If FALSE (default) and cached file exists, returns
 #'   cached data. If TRUE, rebuilds from individual variables.
+#' @param verify_checksums Logical. If TRUE, verifies checksums of cached files
+#'   against stored MD5 values. Default FALSE.
 #'
 #' @return data.table with pgid + measurement_date as rows and variables as columns,
 #'   or list of terra SpatRasters if as_raster=TRUE, or coverage test data.frame if test=TRUE
@@ -928,6 +936,8 @@ pg_list_custom <- function() {
 #' @param version Character string with release version
 #' @param type Character string with release type (default: "05deg_yearly")
 #' @param overwrite Logical. If TRUE, re-downloads even if file exists.
+#' @param list_releases Logical. If TRUE, prints and returns a data.frame of
+#'   available releases instead of downloading. Default FALSE.
 #'
 #' @return NULL (invisibly). Called for side effects (downloading data).
 #' @export

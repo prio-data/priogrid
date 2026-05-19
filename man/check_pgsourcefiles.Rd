@@ -6,6 +6,9 @@
 \usage{
 check_pgsourcefiles(verbose = TRUE)
 }
+\arguments{
+\item{verbose}{Logical. If TRUE (default), prints a summary message.}
+}
 \value{
 data.frame
 }

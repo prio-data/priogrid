@@ -31,6 +31,9 @@ temporal_hash. Loads from the specified custom folder directly.}
 
 \item{temporal_hash}{Character string with 6-character temporal hash. Requires
 spatial_hash.}
+
+\item{verify_checksums}{Logical. If TRUE, verifies the file's MD5 checksum
+against stored values. Default FALSE.}
 }
 \value{
 Terra SpatRaster object

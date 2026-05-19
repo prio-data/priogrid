@@ -192,6 +192,7 @@ read_epr <- function() {
 #'     \item "STATE COLLAPSE": Groups during state collapse periods
 #'   }
 #'   Default is \code{c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @examples
 #' \dontrun{

@@ -9,6 +9,8 @@ read_linight(overwrite_files = FALSE, config = pg_current_config())
 \arguments{
 \item{overwrite_files}{Logical. If \code{TRUE}, previously fixed rasters are
 recalculated and overwritten. Defaults to \code{FALSE}.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

@@ -38,6 +38,7 @@ pgsearch <- function(search_string, bib_element = NULL){
 #' Extract url- and file-info from PRIO-GRID metadata
 #'
 #' @param use_mirror Boolean. Whether or not to use PRIO-GRID mirror.
+#' @param only_file_extensions Logical. If TRUE, returns file extensions only. Used for testing. Default FALSE.
 #'
 #' @return data.frame
 #' @export
@@ -82,6 +83,8 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 #' PRIO-GRID, and test it against a similar method for your own
 #' local files. This is to verify that you are using the same files
 #' as we used to build PRIO-GRID.
+#'
+#' @param verbose Logical. If TRUE (default), prints a summary message.
 #'
 #' @return data.frame
 #' @export
@@ -148,8 +151,11 @@ check_pgsourcefiles <- function(verbose = TRUE){
 #'
 #' To look up src_name and version in PRIO-GRID, see [pg_rawfiles()].
 #'
-#' @param src_name character, the source name
-#' @param version character, the version number
+#' @param source_name Character. The source name.
+#' @param source_version Character. The version number.
+#' @param id Character. The source id (UUID).
+#' @param verify_checksums Logical. If TRUE, verifies file checksums against
+#'   stored MD5 values. Defaults to value from [pg_current_config()].
 #'
 #' @return file path, string
 #' @export
@@ -259,10 +265,11 @@ pg_data_availability <- function() {
 #'
 #' Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")
 #'
-#' @param overwrite Whether or not to download and overwrite files already in local folder.
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
-#' @param resume If true, will also download files that did not finish download last time the function was run.
+#' @param overwrite Whether or not to download and overwrite files already in local folder.
+#' @param batch_size Integer. Number of files per download batch. Default 20.
+#' @param max_retry Integer. Maximum number of retry attempts for failed downloads. Default 10.
 #'
 #' @return data.frame Download summary
 #' @export

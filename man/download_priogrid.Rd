@@ -17,6 +17,9 @@ download_priogrid(
 \item{type}{Character string with release type (default: "05deg_yearly")}
 
 \item{overwrite}{Logical. If TRUE, re-downloads even if file exists.}
+
+\item{list_releases}{Logical. If TRUE, prints and returns a data.frame of
+available releases instead of downloading. Default FALSE.}
 }
 \value{
 NULL (invisibly). Called for side effects (downloading data).

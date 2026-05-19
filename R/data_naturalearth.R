@@ -107,6 +107,8 @@ read_ne_disputed_areas <- function() {
 #' layer aligned to PRIO-GRID resolution with values in the range \code{[0, 1]}
 #' indicating land coverage share.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A single-layer \code{SpatRaster} object
 #'
 #' @note
@@ -179,6 +181,7 @@ gen_naturalearth_cover_share <- function(config = pg_current_config()){
 #' @param min_cover Numeric, default \code{0}. Minimum fraction of a grid cell
 #'   that must be covered by land for the cell to be classified as land.
 #'   Should be between \code{0} and \code{1}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A single-layer \code{SpatRaster} object
 #'
@@ -215,8 +218,7 @@ gen_naturalearth_cover <- function(min_cover = 0, config = pg_current_config()){
 #' @param type Character string specifying the type of disputed area to include.
 #'   Valid options are: "all", "breakaway", "disputed", "geo subunit", "geo unit",
 #'   "indeterminate", "lease", or "overlay".
-#' @param disputed_areas Optional \code{sf} object of disputed areas. Defaults
-#'   to the result of \code{\link{read_ne_disputed_areas}}().
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A single-layer \code{SpatRaster} object
 #'
@@ -286,6 +288,8 @@ ne_disputed_area_share <- function(type, config = pg_current_config()) {
 #' This function is a convenience wrapper around
 #' \code{\link{ne_disputed_area_share}}, automatically using \code{type = "all"}
 #' to combine all disputed area types into a single raster layer.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A single-layer \code{SpatRaster} object
 #'

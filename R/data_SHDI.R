@@ -266,6 +266,7 @@ read_shdi <- function(shdi_csv = read_shdi_csv(),
 #'     \item \code{"gnic"} – Gross national income per capita
 #'   }
 #'   Default is \code{"shdi"}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (from the \pkg{terra} package) aligned to the
 #'   PRIO-GRID, containing the selected SHDI variable aggregated to grid cells using
@@ -350,6 +351,8 @@ shdi <- function(variable = "shdi", config = pg_current_config()) {
 #' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
 #' raster of the Subnational Human Development Index (SHDI).
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object containing PRIO-GRID SHDI values.
 #'
 #' @examples
@@ -372,6 +375,8 @@ gen_shdi <- function(config = pg_current_config()) {
 #'
 #' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
 #' raster of mean years of schooling.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object containing PRIO-GRID mean years of schooling.
 #'
@@ -396,6 +401,8 @@ gen_msch <- function(config = pg_current_config()) {
 #' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
 #' raster of expected years of schooling.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object containing PRIO-GRID expected years of schooling.
 #'
 #' @examples
@@ -419,6 +426,8 @@ gen_esch <- function(config = pg_current_config()) {
 #' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
 #' raster of life expectancy at birth.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object containing PRIO-GRID life expectancy values.
 #'
 #' @examples
@@ -441,6 +450,8 @@ gen_lifexp <- function(config = pg_current_config()) {
 #'
 #' Convenience wrapper around \code{\link{shdi}} that generates a PRIO-GRID–aligned
 #' raster of gross national income per capita.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object containing PRIO-GRID GNI per capita values.
 #'

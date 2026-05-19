@@ -117,6 +117,7 @@ read_hilda <- function(config = pg_current_config()) {
 #'   \item 77: Water
 #'   \item 99: No data
 #' }
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (terra package) with the same structure as
 #'   PRIO-GRID, where each cell contains the proportion (0-1) of that cell covered
@@ -167,6 +168,7 @@ hilda_landcover <- function(landcovertype, config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' ocean coverage proportions (class code 00) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with ocean coverage proportions (0-1) for each
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -180,6 +182,7 @@ gen_hilda_ocean <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' urban coverage proportions (class code 11) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with urban coverage proportions (0-1) for each
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -193,6 +196,7 @@ gen_hilda_urban <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' cropland coverage proportions (class code 22) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with cropland coverage proportions (0-1) for each
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -206,6 +210,7 @@ gen_hilda_cropland <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' pasture/rangeland coverage proportions (class code 33) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with pasture/rangeland coverage proportions (0-1)
 #'   for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -219,6 +224,7 @@ gen_hilda_pasture <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' forest coverage proportions (class code 44) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with forest coverage proportions (0-1) for each
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -232,6 +238,7 @@ gen_hilda_forest <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' unmanaged grass/shrubland coverage proportions (class code 55) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with unmanaged grass/shrubland coverage proportions
 #'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -245,6 +252,7 @@ gen_hilda_grassland <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' sparse/no vegetation coverage proportions (class code 66) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with sparse/no vegetation coverage proportions
 #'   (0-1) for each PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters
@@ -258,6 +266,7 @@ gen_hilda_sparse <- function(config = pg_current_config()){
 #' A convenience wrapper for \code{\link{hilda_landcover}} that extracts
 #' water coverage proportions (class code 77) for PRIO-GRID cells.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #' @return A \code{SpatRaster} with water coverage proportions (0-1) for each
 #'   PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.
 #' @seealso \code{\link{hilda_landcover}} for full documentation and parameters

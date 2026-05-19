@@ -17,6 +17,8 @@ generate. Supported values include:
 \item \code{"gnic"} – Gross national income per capita
 }
 Default is \code{"shdi"}.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) aligned to the

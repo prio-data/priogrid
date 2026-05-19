@@ -9,6 +9,8 @@ ruggedterrain_variable(variable, config = pg_current_config())
 \arguments{
 \item{variable}{Character string indicating elevation function.
 Must be one of: "elevation_min", "elevation_max", "elevation_mean"}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

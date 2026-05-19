@@ -12,6 +12,8 @@ If NULL (default), calculates all available variables.}
 
 \item{overwrite}{Logical. If FALSE (default), skips variables that already
 exist in the output folder. If TRUE, recalculates all specified variables.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 NULL (invisibly). Called for side effects (saving files).

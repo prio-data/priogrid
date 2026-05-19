@@ -10,6 +10,8 @@ read_speibase(interval = 6, config = pg_current_config())
 \item{interval}{Integer. The month interval to calculate SPEI over. E.g., if the interval is
 6, then monthly precipitation and potential evapotranspiration are aggregated over the last 6 months,
 then the SPEI (anomaly) is calculated. This is done for each month.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \description{
 While this data can be downloaded from the Global SPEI database, it is only open

@@ -17,7 +17,9 @@ then file_info will be all data returned from \code{\link[=pg_rawfiles]{pg_rawfi
 
 \item{overwrite}{Whether or not to download and overwrite files already in local folder.}
 
-\item{resume}{If true, will also download files that did not finish download last time the function was run.}
+\item{batch_size}{Integer. Number of files per download batch. Default 20.}
+
+\item{max_retry}{Integer. Maximum number of retry attempts for failed downloads. Default 10.}
 }
 \value{
 data.frame Download summary

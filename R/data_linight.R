@@ -23,6 +23,7 @@
 #'
 #' @param overwrite_files Logical. If \code{TRUE}, previously fixed rasters are
 #'   recalculated and overwritten. Defaults to \code{FALSE}.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'
@@ -144,6 +145,8 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 #'   \item Aligns precisely to PRIO-GRID spatial extent (resampling handled
 #'         in \code{\link{read_linight}})
 #' }
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'

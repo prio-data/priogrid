@@ -72,6 +72,7 @@ read_traveltime <- function() {
 #'
 #' @param aggregation_function Function or character string specifying the
 #'   aggregation method (see details above)
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'
@@ -106,6 +107,8 @@ calc_traveltime <- function(aggregation_function, config = pg_current_config()) 
 #' using \code{aggregation_function = "min"}. It reads the global travel time
 #' raster and summarizes each PRIO-GRID cell to the minimum travel time value.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A single-layer \code{SpatRaster} object
 #'
 #' @examples
@@ -139,6 +142,8 @@ gen_traveltime_min <- function(config = pg_current_config()){
 #' This function is a convenience wrapper around \code{\link{calc_traveltime}}
 #' using \code{aggregation_function = "mean"}. It reads the global travel time
 #' raster and summarizes each PRIO-GRID cell to the mean travel time value.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A single-layer \code{SpatRaster} object
 #'

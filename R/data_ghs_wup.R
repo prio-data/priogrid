@@ -219,6 +219,8 @@ ghs_wup_degurba <- function(urban_definition, config = pg_current_config()){
 #'
 #' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object with values ranging from 0 to 1
 #'
 #' @note
@@ -293,6 +295,7 @@ gen_ghs_wup_degurba_urban <- function(config = pg_current_config()){
 #' @param max_extent Numeric. Maximum search radius in meters around the input
 #'   coordinates. Default is 1000000 (1000 km). This limits the area searched
 #'   for connected urban patches and improves computational efficiency.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @details
 #' The function performs the following workflow:

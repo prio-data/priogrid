@@ -12,9 +12,14 @@ get_pgfile(
 )
 }
 \arguments{
-\item{src_name}{character, the source name}
+\item{source_name}{Character. The source name.}
 
-\item{version}{character, the version number}
+\item{source_version}{Character. The version number.}
+
+\item{id}{Character. The source id (UUID).}
+
+\item{verify_checksums}{Logical. If TRUE, verifies file checksums against
+stored MD5 values. Defaults to value from \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 file path, string

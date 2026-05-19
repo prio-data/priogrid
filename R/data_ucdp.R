@@ -180,6 +180,7 @@ rasterize_ged_crossection <- function(ged, pg_interval, fatality_variable, confi
 #'     \item "high": High estimate of fatalities
 #'     \item "event_count": Count of events rather than fatalities
 #'   }
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object with multiple layers, one for each time
 #'   interval in \code{\link{pg_date_intervals}}. Layer names correspond to
@@ -363,6 +364,8 @@ ucdp_ged <- function(ged = read_ucdp_ged(), violence_types = c(1,2,3), fatality_
 #'     \item Layer names: Character representation of interval end dates
 #'     \item NA values: Grid cells with no recorded events or outside state system
 #'   }
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @note
 #' \itemize{

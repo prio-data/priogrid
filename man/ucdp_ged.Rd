@@ -32,6 +32,8 @@ to use. Options are:
 \item "high": High estimate of fatalities
 \item "event_count": Count of events rather than fatalities
 }}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object with multiple layers, one for each time

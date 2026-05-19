@@ -16,6 +16,8 @@
 #'   \item Provides population data at 5-year intervals (typically 1975-2030)
 #' }
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object
 #'
 #' @note
@@ -104,6 +106,8 @@ read_ghsl_population_grid <- function(config = pg_current_config()){
 #' on system performance and the size of the underlying rasters.
 #'
 #' A slight nearest neighbor resampling was applied to get the exact PRIO-GRID extent.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'

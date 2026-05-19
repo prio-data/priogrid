@@ -11,8 +11,7 @@ ne_disputed_area_share(type, config = pg_current_config())
 Valid options are: "all", "breakaway", "disputed", "geo subunit", "geo unit",
 "indeterminate", "lease", or "overlay".}
 
-\item{disputed_areas}{Optional \code{sf} object of disputed areas. Defaults
-to the result of \code{\link{read_ne_disputed_areas}}().}
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A single-layer \code{SpatRaster} object

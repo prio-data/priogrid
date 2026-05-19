@@ -30,6 +30,8 @@ Valid codes are: 10, 11, 12, 13, 21, 22, 23, 30. See Details for code meanings.}
 \item{max_extent}{Numeric. Maximum search radius in meters around the input
 coordinates. Default is 1000000 (1000 km). This limits the area searched
 for connected urban patches and improves computational efficiency.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 An \code{sf} polygon object representing the contiguous urban extent

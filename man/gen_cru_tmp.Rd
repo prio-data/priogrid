@@ -6,6 +6,9 @@
 \usage{
 gen_cru_tmp(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal
 resolution as defined in PRIO-GRID.

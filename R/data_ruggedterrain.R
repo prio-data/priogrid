@@ -63,6 +63,7 @@ read_ruggedterrain <- function() {
 #'
 #' @param variable Character string indicating elevation function.
 #' Must be one of: "elevation_min", "elevation_max", "elevation_mean"
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #' @export
@@ -134,6 +135,8 @@ ruggedterrain_variable <- function(variable, config = pg_current_config()) {
 #'
 #' A convenience wrapper function that calculates mean elevation values for each
 #' PRIO-GRID cell using \code{\link{ruggedterrain_variable}}.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #' @export
