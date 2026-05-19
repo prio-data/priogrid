@@ -12,7 +12,8 @@ read_pg_timevarying(
   temporal_hash = NULL,
   as_raster = FALSE,
   test = FALSE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  verify_checksums = FALSE
 )
 }
 \arguments{

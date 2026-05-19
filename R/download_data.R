@@ -320,7 +320,7 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size 
     download_report <- dplyr::bind_rows(download_reports) |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
 
     if(nrow(download_report) == 0){
-      return(dplyr::tibble())
+      return(file_info[0, ])
     }
 
     unfinished_files <- file_info[file_info$url %in% download_report$url,]

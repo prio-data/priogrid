@@ -10,7 +10,8 @@ load_pgvariable(
   version = NULL,
   type = "05deg_yearly",
   spatial_hash = NULL,
-  temporal_hash = NULL
+  temporal_hash = NULL,
+  verify_checksums = FALSE
 )
 }
 \arguments{

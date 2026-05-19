@@ -89,7 +89,7 @@ test_that("calc_pg writes _config.R on first creation", {
 
   withr::with_envvar(list(), {
     pg_set_rawfolder(tmp_raw)
-    calc_pg(pgvariables$name[1], config = cfg)
+    calc_pg("naturalearth_cover_share", config = cfg)
 
     s_hash <- priogrid:::get_spatial_hash(cfg)
     t_hash <- priogrid:::get_temporal_hash(cfg)
@@ -115,7 +115,7 @@ test_that("pg_list_custom returns configs and prints summary", {
   on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
 
   pg_set_rawfolder(tmp_raw)
-  calc_pg(pgvariables$name[1], config = cfg)
+  calc_pg("naturalearth_cover_share", config = cfg)
 
   output <- capture.output(customs <- pg_list_custom())
   expect_length(customs, 1L)
