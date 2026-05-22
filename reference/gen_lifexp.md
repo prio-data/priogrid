@@ -10,6 +10,13 @@ generates a PRIO-GRID–aligned raster of life expectancy at birth.
 gen_lifexp(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object containing PRIO-GRID life expectancy values.

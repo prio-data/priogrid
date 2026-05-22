@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Understanding PRIOGRID Metadata • priogrid</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -169,7 +169,7 @@ time-varying</td>
 draws on:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">pgsources</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 51 obs. of  18 variables:</span></span>
+<span><span class="co">#&gt; Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 52 obs. of  18 variables:</span></span>
 <span><span class="co">#&gt;  $ id                 : chr  "04254b82-85f0-4c06-9f1b-86ed35e05403" "0a746ab8-cc8e-4b31-bb71-8479a9ac8fa3" "1604221b-e558-4e65-b7fe-d6b0a517ff5c" "190c7abc-b779-4462-97ff-00994cbd2431" ...</span></span>
 <span><span class="co">#&gt;  $ source_name        : chr  "EOG Annual VIIRS Nighttime Lights" "SEDAC Food Insecurity Hotspots" "Global Area Equipped for Irrigation Dataset 1900-2015" "GlobalDataLab Area Database" ...</span></span>
 <span><span class="co">#&gt;  $ source_version     : chr  "V2.2" "v1" "v4" "v.4.2" ...</span></span>
@@ -306,34 +306,35 @@ draws on:</p>
 <span><span class="co">#&gt; 2                          SEDAC Food Insecurity Hotspots       CC BY 4.0</span></span>
 <span><span class="co">#&gt; 3   Global Area Equipped for Irrigation Dataset 1900-2015       CC BY 4.0</span></span>
 <span><span class="co">#&gt; 6                                            Li Nighttime       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 7      World Bank Global Subnational Poverty Atlas (GSAP)       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 9                                                UCDP GED       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 13             MCC-PIK DOSE – Subnational Economic Output       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 16                               WorldPop Migration Flows       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 17                                       GHSL GHS-BUILT-C       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 19                                       GHSL GHS-BUILT-H       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 21                                                 HILDA+       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 22                              GISCO Geostat Census Grid       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 23     GlobalDataLab Subnational Human Development (SHDI)        CC BY-NC</span></span>
-<span><span class="co">#&gt; 24         Global Multi-resolution Terrain Elevation Data       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 27                                  Estimated Travel Time       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 28                                       GHSL GHS-BUILT-V       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 29                                 Global Irrigated Areas    CC BY-NC 3.0</span></span>
-<span><span class="co">#&gt; 30                                   ORNL Landscan Global       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 32                               GHSL GHS Population Grid       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 34           UCDP Violent Political Protest Dataset (VPP)       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 36                               ReliefWeb Disasters List       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 37 World Bank Subnational Poverty and Inequality Database       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 38                                       GHSL GHS-BUILT-S       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 39                                     ESA WorldCover 10m       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 40          World Bank Subnational Doing Business Reports       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 41                                           GHSL GHS-DUC       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 42                                        ETH ICR cShapes CC BY-NC-SA 4.0</span></span>
-<span><span class="co">#&gt; 43                         GHSL GHS Settlement Model Grid       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 44                                          geoBoundaries       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 49                                        GHS-WUP-DEGURBA       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 50                                               UCDP GED       CC BY 4.0</span></span>
-<span><span class="co">#&gt; 51                                               ETH SIDE       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 7                                            Li Nighttime       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 8      World Bank Global Subnational Poverty Atlas (GSAP)       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 10                                               UCDP GED       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 14             MCC-PIK DOSE – Subnational Economic Output       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 17                               WorldPop Migration Flows       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 18                                       GHSL GHS-BUILT-C       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 20                                       GHSL GHS-BUILT-H       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 22                                                 HILDA+       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 23                              GISCO Geostat Census Grid       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 24     GlobalDataLab Subnational Human Development (SHDI)        CC BY-NC</span></span>
+<span><span class="co">#&gt; 25         Global Multi-resolution Terrain Elevation Data       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 28                                  Estimated Travel Time       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 29                                       GHSL GHS-BUILT-V       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 30                                 Global Irrigated Areas    CC BY-NC 3.0</span></span>
+<span><span class="co">#&gt; 31                                   ORNL Landscan Global       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 33                               GHSL GHS Population Grid       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 35           UCDP Violent Political Protest Dataset (VPP)       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 37                               ReliefWeb Disasters List       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 38 World Bank Subnational Poverty and Inequality Database       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 39                                       GHSL GHS-BUILT-S       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 40                                     ESA WorldCover 10m       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 41          World Bank Subnational Doing Business Reports       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 42                                           GHSL GHS-DUC       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 43                                        ETH ICR cShapes CC BY-NC-SA 4.0</span></span>
+<span><span class="co">#&gt; 44                         GHSL GHS Settlement Model Grid       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 45                                          geoBoundaries       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 50                                        GHS-WUP-DEGURBA       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 51                                               UCDP GED       CC BY 4.0</span></span>
+<span><span class="co">#&gt; 52                                               ETH SIDE       CC BY 4.0</span></span>
 <span></span>
 <span><span class="co"># Yearly time-varying sources</span></span>
 <span><span class="va">pgsources</span><span class="op">[</span><span class="va">pgsources</span><span class="op">$</span><span class="va">temporal_resolution</span> <span class="op">==</span> <span class="st">"Yearly"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"source_version"</span><span class="op">)</span><span class="op">]</span></span>
@@ -341,23 +342,24 @@ draws on:</p>
 <span><span class="co">#&gt; 1                       EOG Annual VIIRS Nighttime Lights           V2.2</span></span>
 <span><span class="co">#&gt; 4                             GlobalDataLab Area Database          v.4.2</span></span>
 <span><span class="co">#&gt; 6                                            Li Nighttime             v8</span></span>
-<span><span class="co">#&gt; 7      World Bank Global Subnational Poverty Atlas (GSAP)      Oct. 2024</span></span>
-<span><span class="co">#&gt; 8                                        ETH ICR EPR Core           2023</span></span>
-<span><span class="co">#&gt; 11                                         ETH ICR GeoEPR           2023</span></span>
-<span><span class="co">#&gt; 12                            WIDE Education Inequalities           9.23</span></span>
-<span><span class="co">#&gt; 13             MCC-PIK DOSE – Subnational Economic Output           v2.9</span></span>
-<span><span class="co">#&gt; 15                   World Bank Geocoded Research Release          1.4.2</span></span>
-<span><span class="co">#&gt; 21                                                 HILDA+           v1.0</span></span>
-<span><span class="co">#&gt; 22                              GISCO Geostat Census Grid           2021</span></span>
-<span><span class="co">#&gt; 23     GlobalDataLab Subnational Human Development (SHDI)          v.7.0</span></span>
-<span><span class="co">#&gt; 29                                 Global Irrigated Areas           2018</span></span>
-<span><span class="co">#&gt; 30                                   ORNL Landscan Global           2023</span></span>
-<span><span class="co">#&gt; 31 SEDAC Global Gridded Relative Deprivation Index (GRDI)             v1</span></span>
-<span><span class="co">#&gt; 33         GlobalDataLab International Wealth Index (IWI)          v.4.2</span></span>
-<span><span class="co">#&gt; 34           UCDP Violent Political Protest Dataset (VPP)           20.1</span></span>
-<span><span class="co">#&gt; 37 World Bank Subnational Poverty and Inequality Database       Oct 2024</span></span>
-<span><span class="co">#&gt; 40          World Bank Subnational Doing Business Reports           2022</span></span>
-<span><span class="co">#&gt; 51                                               ETH SIDE             v1</span></span></code></pre></div>
+<span><span class="co">#&gt; 7                                            Li Nighttime            v10</span></span>
+<span><span class="co">#&gt; 8      World Bank Global Subnational Poverty Atlas (GSAP)      Oct. 2024</span></span>
+<span><span class="co">#&gt; 9                                        ETH ICR EPR Core           2023</span></span>
+<span><span class="co">#&gt; 12                                         ETH ICR GeoEPR           2023</span></span>
+<span><span class="co">#&gt; 13                            WIDE Education Inequalities           9.23</span></span>
+<span><span class="co">#&gt; 14             MCC-PIK DOSE – Subnational Economic Output           v2.9</span></span>
+<span><span class="co">#&gt; 16                   World Bank Geocoded Research Release          1.4.2</span></span>
+<span><span class="co">#&gt; 22                                                 HILDA+           v1.0</span></span>
+<span><span class="co">#&gt; 23                              GISCO Geostat Census Grid           2021</span></span>
+<span><span class="co">#&gt; 24     GlobalDataLab Subnational Human Development (SHDI)          v.7.0</span></span>
+<span><span class="co">#&gt; 30                                 Global Irrigated Areas           2018</span></span>
+<span><span class="co">#&gt; 31                                   ORNL Landscan Global           2023</span></span>
+<span><span class="co">#&gt; 32 SEDAC Global Gridded Relative Deprivation Index (GRDI)             v1</span></span>
+<span><span class="co">#&gt; 34         GlobalDataLab International Wealth Index (IWI)          v.4.2</span></span>
+<span><span class="co">#&gt; 35           UCDP Violent Political Protest Dataset (VPP)           20.1</span></span>
+<span><span class="co">#&gt; 38 World Bank Subnational Poverty and Inequality Database       Oct 2024</span></span>
+<span><span class="co">#&gt; 41          World Bank Subnational Doing Business Reports           2022</span></span>
+<span><span class="co">#&gt; 52                                               ETH SIDE             v1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="file-integrity-pgchecksum">File Integrity: <code>pgchecksum</code><a class="anchor" aria-label="anchor" href="#file-integrity-pgchecksum"></a>
@@ -674,9 +676,9 @@ local storage:</p>
 <span><span class="va">src</span> <span class="op">&lt;-</span> <span class="va">pgsources</span><span class="op">[</span><span class="va">pgsources</span><span class="op">$</span><span class="va">id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">source_ids</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"source_version"</span>, <span class="st">"citation_keys"</span>, <span class="st">"license"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">src</span></span>
 <span><span class="co">#&gt;        source_name source_version         citation_keys</span></span>
-<span><span class="co">#&gt; 45 CRU Climate tmp          v4.09 harrisVersion4CRU2020</span></span>
+<span><span class="co">#&gt; 46 CRU Climate tmp          v4.09 harrisVersion4CRU2020</span></span>
 <span><span class="co">#&gt;                                                                       license</span></span>
-<span><span class="co">#&gt; 45 https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/</span></span>
+<span><span class="co">#&gt; 46 https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/</span></span>
 <span></span>
 <span><span class="co"># 3. Get citation keys</span></span>
 <span><span class="va">bibkeys</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">src</span><span class="op">$</span><span class="va">citation_keys</span>, <span class="st">"; "</span><span class="op">)</span><span class="op">)</span></span>
@@ -738,7 +740,7 @@ local storage:</p>
 <p>Search by spatial extent:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pgsearch.html">pgsearch</a></span><span class="op">(</span><span class="st">"World"</span><span class="op">)</span><span class="op">$</span><span class="va">in_spatial_extent</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"spatial_extent"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 46 × 2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 47 × 2</span></span></span>
 <span><span class="co">#&gt;    source_name                                           spatial_extent</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> EOG Annual VIIRS Nighttime Lights                     World         </span></span>
@@ -746,12 +748,12 @@ local storage:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> GlobalDataLab Area Database                           World         </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> SEDAC Global Subnational Infant Mortality Rates       World         </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> Li Nighttime                                          World         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> World Bank Global Subnational Poverty Atlas (GSAP)    World         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> ETH ICR EPR Core                                      World         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> UCDP GED                                              World         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> ETH ICR GeoEPR                                        World         </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> WIDE Education Inequalities                           World         </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 36 more rows</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> Li Nighttime                                          World         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> World Bank Global Subnational Poverty Atlas (GSAP)    World         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> ETH ICR EPR Core                                      World         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> UCDP GED                                              World         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> ETH ICR GeoEPR                                        World         </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 37 more rows</span></span></span></code></pre></div>
 <div class="section level3">
 <h3 id="searching-bibliography-elements">Searching Bibliography Elements<a class="anchor" aria-label="anchor" href="#searching-bibliography-elements"></a>
 </h3>
@@ -786,14 +788,14 @@ can download, with their URLs and expected local paths:</p>
 <code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pg_rawfiles.html">pg_rawfiles</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">files</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"source_version"</span>, <span class="st">"filename"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 3</span></span></span>
-<span><span class="co">#&gt;   source_name                                        source_version filename    </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> SEDAC Food Insecurity Hotspots                     v1             SEDAC Food …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> SEDAC Global Subnational Infant Mortality Rates    v2.01          SEDAC Globa…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Li Nighttime                                       v8             Li Nighttim…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> World Bank Global Subnational Poverty Atlas (GSAP) Oct. 2024      World Bank …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ETH ICR EPR Core                                   2023           ETH ICR EPR…</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> UCDP GED                                           24.1           UCDP GED/24…</span></span></code></pre></div>
+<span><span class="co">#&gt;   source_name                                     source_version filename       </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> SEDAC Food Insecurity Hotspots                  v1             SEDAC Food Ins…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> SEDAC Global Subnational Infant Mortality Rates v2.01          SEDAC Global S…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Li Nighttime                                    v8             Li Nighttime/v…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Li Nighttime                                    v8             Li Nighttime/v…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Li Nighttime                                    v8             Li Nighttime/v…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Li Nighttime                                    v8             Li Nighttime/v…</span></span></code></pre></div>
 <p>Filter to a specific source:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">files</span><span class="op">[</span><span class="va">files</span><span class="op">$</span><span class="va">source_name</span> <span class="op">==</span> <span class="st">"ETH ICR cShapes"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"filename"</span>, <span class="st">"url"</span><span class="op">)</span><span class="op">]</span></span>

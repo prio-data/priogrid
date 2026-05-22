@@ -17,6 +17,11 @@ calc_traveltime(aggregation_function, config = pg_current_config())
   Function or character string specifying the aggregation method (see
   details above)
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object

@@ -32,6 +32,11 @@ shdi(variable = "shdi", config = pg_current_config())
 
   Default is `"shdi"`.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object (from the terra package) aligned to the PRIO-GRID,

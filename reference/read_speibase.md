@@ -20,6 +20,11 @@ read_speibase(interval = 6, config = pg_current_config())
   evapotranspiration are aggregated over the last 6 months, then the
   SPEI (anomaly) is calculated. This is done for each month.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Details
 
 We use R-code from Beguería S. (2017) SPEIbase: R code used in

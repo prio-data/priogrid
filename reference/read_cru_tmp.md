@@ -21,6 +21,11 @@ read_cru_tmp(variable = "tmp", config = pg_current_config())
   dataset. Available options include "tmp" (temperature), "stn" (station
   count), "mae" (mean absolute error), and "maea". Default is "tmp".
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object (from the terra package) with the following

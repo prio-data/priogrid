@@ -23,6 +23,11 @@ calc_pg(varnames = NULL, overwrite = FALSE, config = pg_current_config())
   Logical. If FALSE (default), skips variables that already exist in the
   output folder. If TRUE, recalculates all specified variables.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 NULL (invisibly). Called for side effects (saving files).

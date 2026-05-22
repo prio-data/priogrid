@@ -41,7 +41,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-05-11 
+#>   end_date: 2026-05-22 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```
@@ -202,7 +202,7 @@ pgvariables
 #> 16                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
 #> 17                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
 #> 18                                                                             82bc4c6f-9904-484f-aa9a-77771d076690
-#> 19                                                                             24d76a3b-927e-42ad-b8a5-2e7443e6a275
+#> 19                                                                             d99fbea7-2a01-4221-b900-29a58d33f591
 #> 20                                                                             92da9800-4520-4e87-a855-b28255452189
 #> 21                                                                             92da9800-4520-4e87-a855-b28255452189
 #> 22                                                                             8c8192eb-cc29-4598-8f8a-ec190ba35c2d

@@ -29,10 +29,14 @@ download_pg_rawdata(
   Whether or not to download and overwrite files already in local
   folder.
 
-- resume:
+- batch_size:
 
-  If true, will also download files that did not finish download last
-  time the function was run.
+  Integer. Number of files per download batch. Default 20.
+
+- max_retry:
+
+  Integer. Maximum number of retry attempts for failed downloads.
+  Default 10.
 
 ## Value
 

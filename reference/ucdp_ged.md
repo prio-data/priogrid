@@ -51,6 +51,11 @@ ucdp_ged(
 
   - "event_count": Count of events rather than fatalities
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object with multiple layers, one for each time interval

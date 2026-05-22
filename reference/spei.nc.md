@@ -58,6 +58,10 @@ spei.nc(
   Integer. Number of latitude blocks to be processed at the same time.
   Must be an integer dividend of 360.
 
+- tlapse:
+
+  Numeric. Temperature lapse rate. Default NA.
+
 ## Value
 
 Computes the SPEI time series and stores it in outFile following the

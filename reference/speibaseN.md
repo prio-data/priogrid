@@ -26,6 +26,11 @@ speibaseN(interval, time_agg_fun, config = pg_current_config())
   PRIO-GRID is lower resolution, then we need to aggregate over time.
   Currently, mean and max functions are implemented.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object (from the terra package) with spatio-temporal

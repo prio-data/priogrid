@@ -74,7 +74,7 @@ pgvariables[pgvariables$static == FALSE, "name"]  # climate, conflict, etc.
 ``` r
 
 str(pgsources)
-#> Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 51 obs. of  18 variables:
+#> Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 52 obs. of  18 variables:
 #>  $ id                 : chr  "04254b82-85f0-4c06-9f1b-86ed35e05403" "0a746ab8-cc8e-4b31-bb71-8479a9ac8fa3" "1604221b-e558-4e65-b7fe-d6b0a517ff5c" "190c7abc-b779-4462-97ff-00994cbd2431" ...
 #>  $ source_name        : chr  "EOG Annual VIIRS Nighttime Lights" "SEDAC Food Insecurity Hotspots" "Global Area Equipped for Irrigation Dataset 1900-2015" "GlobalDataLab Area Database" ...
 #>  $ source_version     : chr  "V2.2" "v1" "v4" "v.4.2" ...
@@ -166,34 +166,35 @@ pgsources[grepl("CC BY", pgsources$license), c("source_name", "license")]
 #> 2                          SEDAC Food Insecurity Hotspots       CC BY 4.0
 #> 3   Global Area Equipped for Irrigation Dataset 1900-2015       CC BY 4.0
 #> 6                                            Li Nighttime       CC BY 4.0
-#> 7      World Bank Global Subnational Poverty Atlas (GSAP)       CC BY 4.0
-#> 9                                                UCDP GED       CC BY 4.0
-#> 13             MCC-PIK DOSE – Subnational Economic Output       CC BY 4.0
-#> 16                               WorldPop Migration Flows       CC BY 4.0
-#> 17                                       GHSL GHS-BUILT-C       CC BY 4.0
-#> 19                                       GHSL GHS-BUILT-H       CC BY 4.0
-#> 21                                                 HILDA+       CC BY 4.0
-#> 22                              GISCO Geostat Census Grid       CC BY 4.0
-#> 23     GlobalDataLab Subnational Human Development (SHDI)        CC BY-NC
-#> 24         Global Multi-resolution Terrain Elevation Data       CC BY 4.0
-#> 27                                  Estimated Travel Time       CC BY 4.0
-#> 28                                       GHSL GHS-BUILT-V       CC BY 4.0
-#> 29                                 Global Irrigated Areas    CC BY-NC 3.0
-#> 30                                   ORNL Landscan Global       CC BY 4.0
-#> 32                               GHSL GHS Population Grid       CC BY 4.0
-#> 34           UCDP Violent Political Protest Dataset (VPP)       CC BY 4.0
-#> 36                               ReliefWeb Disasters List       CC BY 4.0
-#> 37 World Bank Subnational Poverty and Inequality Database       CC BY 4.0
-#> 38                                       GHSL GHS-BUILT-S       CC BY 4.0
-#> 39                                     ESA WorldCover 10m       CC BY 4.0
-#> 40          World Bank Subnational Doing Business Reports       CC BY 4.0
-#> 41                                           GHSL GHS-DUC       CC BY 4.0
-#> 42                                        ETH ICR cShapes CC BY-NC-SA 4.0
-#> 43                         GHSL GHS Settlement Model Grid       CC BY 4.0
-#> 44                                          geoBoundaries       CC BY 4.0
-#> 49                                        GHS-WUP-DEGURBA       CC BY 4.0
-#> 50                                               UCDP GED       CC BY 4.0
-#> 51                                               ETH SIDE       CC BY 4.0
+#> 7                                            Li Nighttime       CC BY 4.0
+#> 8      World Bank Global Subnational Poverty Atlas (GSAP)       CC BY 4.0
+#> 10                                               UCDP GED       CC BY 4.0
+#> 14             MCC-PIK DOSE – Subnational Economic Output       CC BY 4.0
+#> 17                               WorldPop Migration Flows       CC BY 4.0
+#> 18                                       GHSL GHS-BUILT-C       CC BY 4.0
+#> 20                                       GHSL GHS-BUILT-H       CC BY 4.0
+#> 22                                                 HILDA+       CC BY 4.0
+#> 23                              GISCO Geostat Census Grid       CC BY 4.0
+#> 24     GlobalDataLab Subnational Human Development (SHDI)        CC BY-NC
+#> 25         Global Multi-resolution Terrain Elevation Data       CC BY 4.0
+#> 28                                  Estimated Travel Time       CC BY 4.0
+#> 29                                       GHSL GHS-BUILT-V       CC BY 4.0
+#> 30                                 Global Irrigated Areas    CC BY-NC 3.0
+#> 31                                   ORNL Landscan Global       CC BY 4.0
+#> 33                               GHSL GHS Population Grid       CC BY 4.0
+#> 35           UCDP Violent Political Protest Dataset (VPP)       CC BY 4.0
+#> 37                               ReliefWeb Disasters List       CC BY 4.0
+#> 38 World Bank Subnational Poverty and Inequality Database       CC BY 4.0
+#> 39                                       GHSL GHS-BUILT-S       CC BY 4.0
+#> 40                                     ESA WorldCover 10m       CC BY 4.0
+#> 41          World Bank Subnational Doing Business Reports       CC BY 4.0
+#> 42                                           GHSL GHS-DUC       CC BY 4.0
+#> 43                                        ETH ICR cShapes CC BY-NC-SA 4.0
+#> 44                         GHSL GHS Settlement Model Grid       CC BY 4.0
+#> 45                                          geoBoundaries       CC BY 4.0
+#> 50                                        GHS-WUP-DEGURBA       CC BY 4.0
+#> 51                                               UCDP GED       CC BY 4.0
+#> 52                                               ETH SIDE       CC BY 4.0
 
 # Yearly time-varying sources
 pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_version")]
@@ -201,23 +202,24 @@ pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_ve
 #> 1                       EOG Annual VIIRS Nighttime Lights           V2.2
 #> 4                             GlobalDataLab Area Database          v.4.2
 #> 6                                            Li Nighttime             v8
-#> 7      World Bank Global Subnational Poverty Atlas (GSAP)      Oct. 2024
-#> 8                                        ETH ICR EPR Core           2023
-#> 11                                         ETH ICR GeoEPR           2023
-#> 12                            WIDE Education Inequalities           9.23
-#> 13             MCC-PIK DOSE – Subnational Economic Output           v2.9
-#> 15                   World Bank Geocoded Research Release          1.4.2
-#> 21                                                 HILDA+           v1.0
-#> 22                              GISCO Geostat Census Grid           2021
-#> 23     GlobalDataLab Subnational Human Development (SHDI)          v.7.0
-#> 29                                 Global Irrigated Areas           2018
-#> 30                                   ORNL Landscan Global           2023
-#> 31 SEDAC Global Gridded Relative Deprivation Index (GRDI)             v1
-#> 33         GlobalDataLab International Wealth Index (IWI)          v.4.2
-#> 34           UCDP Violent Political Protest Dataset (VPP)           20.1
-#> 37 World Bank Subnational Poverty and Inequality Database       Oct 2024
-#> 40          World Bank Subnational Doing Business Reports           2022
-#> 51                                               ETH SIDE             v1
+#> 7                                            Li Nighttime            v10
+#> 8      World Bank Global Subnational Poverty Atlas (GSAP)      Oct. 2024
+#> 9                                        ETH ICR EPR Core           2023
+#> 12                                         ETH ICR GeoEPR           2023
+#> 13                            WIDE Education Inequalities           9.23
+#> 14             MCC-PIK DOSE – Subnational Economic Output           v2.9
+#> 16                   World Bank Geocoded Research Release          1.4.2
+#> 22                                                 HILDA+           v1.0
+#> 23                              GISCO Geostat Census Grid           2021
+#> 24     GlobalDataLab Subnational Human Development (SHDI)          v.7.0
+#> 30                                 Global Irrigated Areas           2018
+#> 31                                   ORNL Landscan Global           2023
+#> 32 SEDAC Global Gridded Relative Deprivation Index (GRDI)             v1
+#> 34         GlobalDataLab International Wealth Index (IWI)          v.4.2
+#> 35           UCDP Violent Political Protest Dataset (VPP)           20.1
+#> 38 World Bank Subnational Poverty and Inequality Database       Oct 2024
+#> 41          World Bank Subnational Doing Business Reports           2022
+#> 52                                               ETH SIDE             v1
 ```
 
 ## File Integrity: `pgchecksum`
@@ -545,9 +547,9 @@ source_ids
 src <- pgsources[pgsources$id %in% source_ids, c("source_name", "source_version", "citation_keys", "license")]
 src
 #>        source_name source_version         citation_keys
-#> 45 CRU Climate tmp          v4.09 harrisVersion4CRU2020
+#> 46 CRU Climate tmp          v4.09 harrisVersion4CRU2020
 #>                                                                       license
-#> 45 https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+#> 46 https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
 
 # 3. Get citation keys
 bibkeys <- unlist(strsplit(src$citation_keys, "; "))
@@ -627,7 +629,7 @@ Search by spatial extent:
 ``` r
 
 pgsearch("World")$in_spatial_extent[, c("source_name", "spatial_extent")]
-#> # A tibble: 46 × 2
+#> # A tibble: 47 × 2
 #>    source_name                                           spatial_extent
 #>    <chr>                                                 <chr>         
 #>  1 EOG Annual VIIRS Nighttime Lights                     World         
@@ -635,12 +637,12 @@ pgsearch("World")$in_spatial_extent[, c("source_name", "spatial_extent")]
 #>  3 GlobalDataLab Area Database                           World         
 #>  4 SEDAC Global Subnational Infant Mortality Rates       World         
 #>  5 Li Nighttime                                          World         
-#>  6 World Bank Global Subnational Poverty Atlas (GSAP)    World         
-#>  7 ETH ICR EPR Core                                      World         
-#>  8 UCDP GED                                              World         
-#>  9 ETH ICR GeoEPR                                        World         
-#> 10 WIDE Education Inequalities                           World         
-#> # ℹ 36 more rows
+#>  6 Li Nighttime                                          World         
+#>  7 World Bank Global Subnational Poverty Atlas (GSAP)    World         
+#>  8 ETH ICR EPR Core                                      World         
+#>  9 UCDP GED                                              World         
+#> 10 ETH ICR GeoEPR                                        World         
+#> # ℹ 37 more rows
 ```
 
 ### Searching Bibliography Elements
@@ -680,14 +682,14 @@ and expected local paths:
 files <- pg_rawfiles()
 head(files[, c("source_name", "source_version", "filename")])
 #> # A tibble: 6 × 3
-#>   source_name                                        source_version filename    
-#>   <chr>                                              <chr>          <chr>       
-#> 1 SEDAC Food Insecurity Hotspots                     v1             SEDAC Food …
-#> 2 SEDAC Global Subnational Infant Mortality Rates    v2.01          SEDAC Globa…
-#> 3 Li Nighttime                                       v8             Li Nighttim…
-#> 4 World Bank Global Subnational Poverty Atlas (GSAP) Oct. 2024      World Bank …
-#> 5 ETH ICR EPR Core                                   2023           ETH ICR EPR…
-#> 6 UCDP GED                                           24.1           UCDP GED/24…
+#>   source_name                                     source_version filename       
+#>   <chr>                                           <chr>          <chr>          
+#> 1 SEDAC Food Insecurity Hotspots                  v1             SEDAC Food Ins…
+#> 2 SEDAC Global Subnational Infant Mortality Rates v2.01          SEDAC Global S…
+#> 3 Li Nighttime                                    v8             Li Nighttime/v…
+#> 4 Li Nighttime                                    v8             Li Nighttime/v…
+#> 5 Li Nighttime                                    v8             Li Nighttime/v…
+#> 6 Li Nighttime                                    v8             Li Nighttime/v…
 ```
 
 Filter to a specific source:

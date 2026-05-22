@@ -21,7 +21,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-05-11 
+#>   end_date: 2026-05-22 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```

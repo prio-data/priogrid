@@ -14,6 +14,11 @@ pg_rawfiles(use_mirror = TRUE, only_file_extensions = FALSE)
 
   Boolean. Whether or not to use PRIO-GRID mirror.
 
+- only_file_extensions:
+
+  Logical. If TRUE, returns file extensions only. Used for testing.
+  Default FALSE.
+
 ## Value
 
 data.frame

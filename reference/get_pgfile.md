@@ -6,18 +6,33 @@ To look up src_name and version in PRIO-GRID, see
 ## Usage
 
 ``` r
-get_pgfile(source_name, source_version, id)
+get_pgfile(
+  source_name,
+  source_version,
+  id,
+  verify_checksums = pg_current_config()$verify_checksums
+)
 ```
 
 ## Arguments
 
-- src_name:
+- source_name:
 
-  character, the source name
+  Character. The source name.
 
-- version:
+- source_version:
 
-  character, the version number
+  Character. The version number.
+
+- id:
+
+  Character. The source id (UUID).
+
+- verify_checksums:
+
+  Logical. If TRUE, verifies file checksums against stored MD5 values.
+  Defaults to value from
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
 
 ## Value
 

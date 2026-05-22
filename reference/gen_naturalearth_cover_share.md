@@ -11,6 +11,13 @@ raster layer aligned to PRIO-GRID resolution with values in the range
 gen_naturalearth_cover_share(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A single-layer `SpatRaster` object

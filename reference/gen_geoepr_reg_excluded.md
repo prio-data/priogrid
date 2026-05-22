@@ -43,6 +43,11 @@ gen_geoepr_reg_excluded(
 
   Default is `c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")`.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object

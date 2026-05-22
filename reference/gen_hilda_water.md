@@ -11,6 +11,13 @@ cells.
 gen_hilda_water(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` with water coverage proportions (0-1) for each PRIO-GRID

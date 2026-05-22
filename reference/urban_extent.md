@@ -51,6 +51,11 @@ urban_extent(
   Default is 1000000 (1000 km). This limits the area searched for
   connected urban patches and improves computational efficiency.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 An `sf` polygon object representing the contiguous urban extent

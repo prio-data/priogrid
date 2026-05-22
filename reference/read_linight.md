@@ -18,6 +18,11 @@ read_linight(overwrite_files = FALSE, config = pg_current_config())
   Logical. If `TRUE`, previously fixed rasters are recalculated and
   overwritten. Defaults to `FALSE`.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object

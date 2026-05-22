@@ -18,7 +18,8 @@ pg_config(
   start_date = as.Date("1850-12-31"),
   end_date = Sys.Date(),
   verbose = TRUE,
-  automatic_download = TRUE
+  automatic_download = TRUE,
+  verify_checksums = FALSE
 )
 ```
 

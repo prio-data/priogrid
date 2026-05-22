@@ -11,6 +11,13 @@ PRIO-GRID cells.
 gen_hilda_pasture(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` with pasture/rangeland coverage proportions (0-1) for

@@ -16,6 +16,11 @@ ruggedterrain_variable(variable, config = pg_current_config())
   Character string indicating elevation function. Must be one of:
   "elevation_min", "elevation_max", "elevation_mean"
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object

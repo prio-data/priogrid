@@ -12,7 +12,8 @@ load_pgvariable(
   version = NULL,
   type = "05deg_yearly",
   spatial_hash = NULL,
-  temporal_hash = NULL
+  temporal_hash = NULL,
+  verify_checksums = FALSE
 )
 ```
 
@@ -47,6 +48,11 @@ load_pgvariable(
 
   Character string with 6-character temporal hash. Requires
   spatial_hash.
+
+- verify_checksums:
+
+  Logical. If TRUE, verifies the file's MD5 checksum against stored
+  values. Default FALSE.
 
 ## Value
 

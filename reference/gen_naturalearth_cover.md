@@ -20,6 +20,11 @@ gen_naturalearth_cover(min_cover = 0, config = pg_current_config())
   covered by land for the cell to be classified as land. Should be
   between `0` and `1`.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A single-layer `SpatRaster` object

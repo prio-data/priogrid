@@ -11,6 +11,13 @@ temporal information, so all disputes are treated as current/undated.
 gen_ne_disputed_area_share(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A single-layer `SpatRaster` object

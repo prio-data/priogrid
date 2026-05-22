@@ -37,6 +37,11 @@ pgout_path(
   Character string with 6-character temporal hash. If NULL, computed
   from current config.
 
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 Character string with file path

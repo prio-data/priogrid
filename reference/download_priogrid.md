@@ -29,6 +29,11 @@ download_priogrid(
 
   Logical. If TRUE, re-downloads even if file exists.
 
+- list_releases:
+
+  Logical. If TRUE, prints and returns a data.frame of available
+  releases instead of downloading. Default FALSE.
+
 ## Value
 
 NULL (invisibly). Called for side effects (downloading data).

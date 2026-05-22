@@ -11,6 +11,13 @@ each PRIO-GRID cell for all available 5-year intervals (1975–2030).
 gen_ghs_wup_degurba_urban(config = pg_current_config())
 ```
 
+## Arguments
+
+- config:
+
+  A `pg_config` object. Defaults to
+  [`pg_current_config()`](http://prio-data.github.io/priogrid/reference/pg_current_config.md).
+
 ## Value
 
 A `SpatRaster` object with values ranging from 0 to 1

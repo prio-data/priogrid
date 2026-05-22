@@ -16,7 +16,8 @@ read_pg_timevarying(
   temporal_hash = NULL,
   as_raster = FALSE,
   test = FALSE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  verify_checksums = FALSE
 )
 ```
 
@@ -56,6 +57,11 @@ read_pg_timevarying(
 
   Logical. If FALSE (default) and cached file exists, returns cached
   data. If TRUE, rebuilds from individual variables.
+
+- verify_checksums:
+
+  Logical. If TRUE, verifies checksums of cached files against stored
+  MD5 values. Default FALSE.
 
 ## Value
 

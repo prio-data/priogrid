@@ -9,8 +9,14 @@ the same files as we used to build PRIO-GRID.
 ## Usage
 
 ``` r
-check_pgsourcefiles()
+check_pgsourcefiles(verbose = TRUE)
 ```
+
+## Arguments
+
+- verbose:
+
+  Logical. If TRUE (default), prints a summary message.
 
 ## Value
 
