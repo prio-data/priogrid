@@ -213,6 +213,7 @@ read_speibase <- function(interval = 6, config = pg_current_config()) {
                         spei_interval)
 
   if(!file.exists(out_path)){
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     # Calculate SPEI. This is a parallel process using snowfall.
     cru_pet_gz <- get_pgfile(
       source_name = "CRU Climate pet",
