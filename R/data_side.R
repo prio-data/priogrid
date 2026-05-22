@@ -29,7 +29,37 @@ read_side <- function() {
   side_meta_file <- files[grepl("side.metadata.df.RData", files)]
   files <- files[!grepl("side.metadata.df.RData", files)]
 
-  load(side_meta_file)
+  if (length(side_meta_file) == 0) {
+    stop(
+      "Expected 'side.metadata.df.RData' was not found among the SIDE source files.\n",
+      "  Files returned: ", paste(basename(files), collapse = ", "), "\n",
+      "  Re-download: download_pg_rawdata(file_info = pg_rawfiles() |> dplyr::filter(source_name == 'ETH SIDE'))",
+      call. = FALSE)
+  }
+
+  side_load_env <- new.env(parent = emptyenv())
+  tryCatch(
+    load(side_meta_file, envir = side_load_env),
+    error = function(e) stop(
+      "Failed to load SIDE metadata file: ", side_meta_file, "\n",
+      "  The file may be corrupted. Original error: ", conditionMessage(e), "\n",
+      "  Re-download with overwrite=TRUE: download_pg_rawdata(file_info = pg_rawfiles() |> dplyr::filter(source_name == 'ETH SIDE'), overwrite = TRUE)",
+      call. = FALSE)
+  )
+  if (!exists("side.metadata.df", envir = side_load_env)) {
+    stop(
+      "'side.metadata.df' not found in loaded RData file. Objects present: ",
+      paste(ls(side_load_env), collapse = ", "), "\n",
+      "  The file may be a different version. Contact the PRIO-GRID administrators.",
+      call. = FALSE)
+  }
+  side.metadata.df <- side_load_env$side.metadata.df
+  required_cols <- c("sideid", "marker", "country", "groupname")
+  missing_cols <- setdiff(required_cols, names(side.metadata.df))
+  if (length(missing_cols) > 0) {
+    stop("'side.metadata.df' is missing expected columns: ",
+         paste(missing_cols, collapse = ", "), call. = FALSE)
+  }
 
   side_meta <- side.metadata.df |>
     dplyr::filter(marker == "ethnic") |>
@@ -265,6 +295,17 @@ side <- function(status = c("excluded", "included", "irrelevant"), config = pg_c
   measurement_dates <- pg_dates(config)
   years_needed <- sort(unique(lubridate::year(measurement_dates)))
   years_needed <- years_needed[years_needed %in% unique(status_matches$year)]
+
+  if (length(years_needed) == 0) {
+    warning(
+      "side(): config date range [", config$start_date, " to ", config$end_date,
+      "] does not overlap available SIDE match years for status '", status, "' (",
+      min(status_matches$year), " to ", max(status_matches$year), ").\n",
+      "  Returning empty SpatRaster. Adjust config$start_date / config$end_date.",
+      call. = FALSE)
+    return(terra::rast())
+  }
+
   surfaces <- .side_prepare_group_surfaces(side$meta, status_matches)
 
   annual_layers <- vector("list", length(years_needed))

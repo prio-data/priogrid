@@ -6,6 +6,9 @@
 \usage{
 gen_traveltime_mean(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A single-layer \code{SpatRaster} object
 }

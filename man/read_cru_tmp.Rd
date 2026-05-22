@@ -12,6 +12,8 @@ from the raster stack. Must match the prefix of variable names in the CRU
 dataset. Available options include "tmp" (temperature), "stn" (station count),
 "mae" (mean absolute error), and "maea".
 Default is "tmp".}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with the

@@ -10,6 +10,7 @@
 #'   dataset. Available options include "tmp" (temperature), "stn" (station count),
 #'   "mae" (mean absolute error), and "maea".
 #'   Default is "tmp".
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (from the \pkg{terra} package) with the
 #'   following characteristics:
@@ -81,6 +82,8 @@ read_cru_tmp <- function(variable = "tmp", config = pg_current_config()) {
 #'
 #' This takes the CRU TS dataset and aggregates it in time and space to
 #' PRIO-GRID specifications.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal
 #' resolution as defined in PRIO-GRID.

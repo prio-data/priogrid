@@ -38,6 +38,7 @@ pgsearch <- function(search_string, bib_element = NULL){
 #' Extract url- and file-info from PRIO-GRID metadata
 #'
 #' @param use_mirror Boolean. Whether or not to use PRIO-GRID mirror.
+#' @param only_file_extensions Logical. If TRUE, returns file extensions only. Used for testing. Default FALSE.
 #'
 #' @return data.frame
 #' @export
@@ -83,72 +84,146 @@ pg_rawfiles <- function(use_mirror = TRUE, only_file_extensions = FALSE){
 #' local files. This is to verify that you are using the same files
 #' as we used to build PRIO-GRID.
 #'
+#' @param verbose Logical. If TRUE (default), prints a summary message.
+#'
 #' @return data.frame
 #' @export
 #'
 #' @examples
 #' res <- check_pgsourcefiles()
-check_pgsourcefiles <- function(){
+check_pgsourcefiles <- function(verbose = TRUE){
   destfolder <- pg_rawfolder()
   file_info <- pg_rawfiles()
 
   lacking_pgchecksum <- dplyr::anti_join(file_info, pgchecksum, by = c("source_name", "source_version", "id", "filename"))
 
-  if(nrow(lacking_pgchecksum)>0){
-    stop("pgchecksum data is outdated. Please contact the administrators of PRIO-GRID.")
+  if (nrow(lacking_pgchecksum) > 0) {
+    warning(
+      nrow(lacking_pgchecksum), " file(s) have no reference checksum in pgchecksum and will be skipped.\n",
+      "  These are likely sources added after the last tested build.\n",
+      "  Sources without checksums: ",
+      paste(unique(lacking_pgchecksum$source_name), collapse = ", "), "\n",
+      "  Run pg_update_checksums() to update the reference checksums.",
+      call. = FALSE)
   }
 
-  local_checksum <- file_info |> dplyr::mutate(
-    local_md5 = tools::md5sum(file.path(destfolder, filename))
-  ) |> dplyr::select(source_name, source_version, id, filename, local_md5)
+  # Only check files present locally
+  file_info$local_path <- file.path(destfolder, file_info$filename)
+  present_files <- file_info[file.exists(file_info$local_path), ]
 
-  df <- dplyr::left_join(local_checksum, pgchecksum, by = c("source_name", "source_version", "id", "filename")) |>
-    dplyr::mutate(files_are_equal = local_md5 == md5)
-
-  if(all(df$files_are_equal)){
-    print("All files in your local storage are similar to a tested set.")
-  } else{
-    print("Some files in your local storage are different to a tested set. Please see the returned data.frame for details.")
+  if (nrow(present_files) == 0) {
+    message("No local raw files found in: ", destfolder,
+            "\nRun download_pg_rawdata() first.")
+    return(invisible(NULL))
   }
-  return(df)
+
+  checkable <- dplyr::inner_join(
+    present_files, pgchecksum, by = c("source_name", "source_version", "id", "filename")
+  )
+
+  if (nrow(checkable) == 0) {
+    message("None of the locally present files have reference checksums in pgchecksum.")
+    return(invisible(NULL))
+  }
+
+  checkable$local_md5 <- tools::md5sum(checkable$local_path)
+  df <- dplyr::mutate(checkable, files_are_equal = local_md5 == md5) |>
+    dplyr::select(source_name, source_version, id, filename, local_md5, md5, files_are_equal)
+
+  n_ok <- sum(df$files_are_equal)
+  n_bad <- sum(!df$files_are_equal)
+
+  if (verbose) {
+    if (n_bad == 0) {
+      message("All ", n_ok, " checked file(s) match the tested reference checksums.")
+    } else {
+      message(
+        n_ok, " file(s) match. ", n_bad, " file(s) differ from tested checksums:\n  ",
+        paste(df$filename[!df$files_are_equal], collapse = "\n  "), "\n",
+        "These may be updated versions or corrupted downloads.\n",
+        "Re-download with: download_pg_rawdata(..., overwrite = TRUE)")
+    }
+  }
+  return(invisible(df))
 }
 
 #' Get file-path on local system to a data source in PRIO-GRID
 #'
 #' To look up src_name and version in PRIO-GRID, see [pg_rawfiles()].
 #'
-#' @param src_name character, the source name
-#' @param version character, the version number
+#' @param source_name Character. The source name.
+#' @param source_version Character. The version number.
+#' @param id Character. The source id (UUID).
+#' @param verify_checksums Logical. If TRUE, verifies file checksums against
+#'   stored MD5 values. Defaults to value from [pg_current_config()].
 #'
 #' @return file path, string
 #' @export
 #'
 #' @examples
 #' get_pgfile(source_name = "ETH ICR cShapes", source_version = "2.0", id = "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")
-get_pgfile <- function(source_name, source_version, id){
+get_pgfile <- function(source_name, source_version, id,
+                       verify_checksums = pg_current_config()$verify_checksums) {
   file_info <- pg_rawfiles() |> dplyr::filter(source_name == !!rlang::enquo(source_name),
                                       source_version == !!rlang::enquo(source_version),
                                       id == !!rlang::enquo(id))
   destfolder <- pg_rawfolder()
-  if(length(file_info$filename) == 0){
-    return(message("No files in metadata with that name and version."))
+
+  if (length(file_info$filename) == 0) {
+    stop(sprintf(
+      "No files found in metadata for source_name='%s', source_version='%s', id='%s'.\n",
+      source_name, source_version, id),
+      "  Use pgsearch() or pg_rawfiles() to check available sources.",
+      call. = FALSE)
   }
 
-  if(!dir.exists(destfolder)){
+  if (!dir.exists(destfolder)) {
     stop(paste(destfolder, "does not exist. Please use pg_set_rawfolder()."))
   }
 
   full_file_path <- file.path(destfolder, file_info$filename)
 
   file_found <- file.exists(full_file_path)
-  if(!all(file_found) & pg_current_config()$automatic_download){
-    missing_files <- full_file_path[!file.exists(full_file_path)]
+  if (!all(file_found) & pg_current_config()$automatic_download) {
     download_pg_rawdata(file_info = file_info)
   }
 
   file_found <- file.exists(full_file_path)
-  if(!all(file_found)){
-    stop(paste("Some files were not found in", destfolder, ":\n", file_info$filename[!file_found], "\n See ?download_pg_rawfiles"))
+  if (!all(file_found)) {
+    missing_names <- file_info$filename[!file_found]
+    if (pg_current_config()$automatic_download) {
+      stop(sprintf(
+        "%d file(s) for '%s' v%s not found after download attempt:\n  %s\n",
+        sum(!file_found), source_name, source_version,
+        paste(missing_names, collapse = "\n  ")),
+        "  The download may have failed or been interrupted.\n",
+        "  Try download_pg_rawdata() manually, or check pg_data_availability().",
+        call. = FALSE)
+    } else {
+      stop(sprintf(
+        "%d file(s) for '%s' v%s are missing from '%s':\n  %s\n",
+        sum(!file_found), source_name, source_version, destfolder,
+        paste(missing_names, collapse = "\n  ")),
+        "  automatic_download is FALSE, so no download was attempted.\n",
+        "  Run download_pg_rawdata() or set automatic_download=TRUE in pg_config().",
+        call. = FALSE)
+    }
+  }
+
+  if (isTRUE(verify_checksums)) {
+    checkable <- dplyr::inner_join(file_info, pgchecksum,
+                                   by = c("source_name", "source_version", "id", "filename"))
+    if (nrow(checkable) > 0) {
+      checkable$local_md5 <- tools::md5sum(file.path(destfolder, checkable$filename))
+      mismatches <- checkable[checkable$local_md5 != checkable$md5, ]
+      if (nrow(mismatches) > 0) {
+        warning(nrow(mismatches), " file(s) for '", source_name,
+                "' do not match tested checksums:\n  ",
+                paste(mismatches$filename, collapse = "\n  "), "\n",
+                "  Run check_pgsourcefiles() for details, or re-download with overwrite=TRUE.",
+                call. = FALSE)
+      }
+    }
   }
 
   return(full_file_path)
@@ -190,10 +265,11 @@ pg_data_availability <- function() {
 #'
 #' Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")
 #'
-#' @param overwrite Whether or not to download and overwrite files already in local folder.
 #' @param file_info A data.frame with the same structure as the result from [pg_rawfiles()]. If file_info is null (default),
 #'   then file_info will be all data returned from [pg_rawfiles()].
-#' @param resume If true, will also download files that did not finish download last time the function was run.
+#' @param overwrite Whether or not to download and overwrite files already in local folder.
+#' @param batch_size Integer. Number of files per download batch. Default 20.
+#' @param max_retry Integer. Maximum number of retry attempts for failed downloads. Default 10.
 #'
 #' @return data.frame Download summary
 #' @export
@@ -251,7 +327,7 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size 
     download_report <- dplyr::bind_rows(download_reports) |> dplyr::filter(!(success %in% c(TRUE))) # NA or FALSE
 
     if(nrow(download_report) == 0){
-      return(dplyr::tibble())
+      return(file_info[0, ])
     }
 
     unfinished_files <- file_info[file_info$url %in% download_report$url,]
@@ -261,16 +337,90 @@ download_pg_rawdata <- function(file_info = NULL, overwrite = FALSE, batch_size 
 
   unfinished_files <- batch_download(file_info, batch_size)
 
-  if(nrow(unfinished_files) == 0){
-    return()
+  for(i in seq_len(max_retry)){
+    if(nrow(unfinished_files) == 0) break
+    warning("Download was interrupted before finished. Resuming.", call. = FALSE)
+    unfinished_files <- batch_download(unfinished_files, batch_size)
   }
 
-  for(i in 1:max_retry){
-    warning("Download was interrupted before finished. Resuming.")
-    unfinished_files <- batch_download(unfinished_files, batch_size)
+  if (nrow(unfinished_files) > 0) {
+    message(nrow(unfinished_files), " file(s) could not be downloaded after ", max_retry,
+            " retries: ", paste(unfinished_files$filename, collapse = ", "))
+  }
 
-    if(nrow(unfinished_files) == 0){
-      return()
+  # Verify MD5 of newly downloaded files against pgchecksum where available
+  successful_files <- file_info[!file_info$url %in% unfinished_files$url, ]
+  checkable <- dplyr::inner_join(successful_files, pgchecksum,
+                                 by = c("source_name", "source_version", "id", "filename"))
+  if (nrow(checkable) > 0) {
+    message("Verifying MD5 checksums for ", nrow(checkable), " downloaded file(s)...")
+    checkable$local_md5 <- tools::md5sum(file.path(destfolder, checkable$filename))
+    mismatches <- checkable[checkable$local_md5 != checkable$md5, ]
+    if (nrow(mismatches) > 0) {
+      warning(
+        nrow(mismatches), " downloaded file(s) do not match tested checksums:\n",
+        paste(sprintf("  %s\n    expected %s\n    got      %s",
+                      mismatches$filename, mismatches$md5, mismatches$local_md5),
+              collapse = "\n"), "\n",
+        "  These may be updated versions. Run check_pgsourcefiles() for a full report.",
+        call. = FALSE)
+    } else {
+      message("All ", nrow(checkable), " downloaded file(s) match tested checksums.")
     }
   }
+
+  invisible(NULL)
+}
+
+#' Regenerate pgchecksum from locally verified files
+#'
+#' Developer-facing function that recomputes MD5 checksums for all raw source
+#' files currently present in the raw data folder and saves them to
+#' `data/pgchecksum.rda`. Replaces the manual `data_raw/pgchecksum.R` script.
+#'
+#' Only run this when you have a fully verified, clean set of downloaded files.
+#' The resulting `pgchecksum` object is bundled with the package and used by
+#' [check_pgsourcefiles()] and the optional checksum verification in [get_pgfile()].
+#'
+#' @param only_present Logical. If TRUE (default), only compute checksums for
+#'   files currently present in the raw folder. If FALSE, stops if any metadata
+#'   file is missing locally.
+#'
+#' @return A data.frame of checksums (invisibly). Also saves to `data/pgchecksum.rda`.
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' priogrid:::pg_update_checksums()
+#' }
+pg_update_checksums <- function(only_present = TRUE) {
+  rlang::check_installed("usethis", reason = "to save pgchecksum.rda")
+  destfolder <- pg_rawfolder()
+  file_info <- pg_rawfiles()
+  file_info$exists <- file.exists(file.path(destfolder, file_info$filename))
+
+  if (!only_present && !all(file_info$exists)) {
+    missing <- file_info$filename[!file_info$exists]
+    stop(
+      sum(!file_info$exists), " file(s) not found locally (only_present=FALSE requires all files):\n",
+      paste(missing, collapse = "\n"),
+      call. = FALSE)
+  }
+
+  if (only_present) {
+    file_info <- file_info[file_info$exists, ]
+  }
+
+  if (nrow(file_info) == 0) {
+    stop("No local raw files found. Download files first with download_pg_rawdata().", call. = FALSE)
+  }
+
+  message("Computing MD5 for ", nrow(file_info), " file(s)...")
+  pgchecksum <- file_info |>
+    dplyr::mutate(md5 = tools::md5sum(file.path(destfolder, filename))) |>
+    dplyr::select(source_name, source_version, id, filename, md5)
+
+  usethis::use_data(pgchecksum, overwrite = TRUE)
+  message("pgchecksum saved to data/pgchecksum.rda (", nrow(pgchecksum), " entries).")
+  invisible(pgchecksum)
 }

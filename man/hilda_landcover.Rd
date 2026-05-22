@@ -23,6 +23,8 @@ HILDA+ land cover class codes (for stable categories):
 \item 77: Water
 \item 99: No data
 }}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object (terra package) with the same structure as

@@ -6,6 +6,9 @@
 \usage{
 gen_ghsl_population_grid(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A \code{SpatRaster} object
 }

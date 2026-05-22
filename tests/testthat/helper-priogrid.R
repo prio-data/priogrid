@@ -1,6 +1,9 @@
 # Skip test if raw data folder is unset
 skip_if_no_rawdata <- function() {
-  tryCatch(pg_rawfolder(), error = function(e) testthat::skip("Raw data folder not set"))
+  tryCatch({
+    folder <- pg_rawfolder()
+    if (!dir.exists(folder)) testthat::skip("Raw data folder does not exist")
+  }, error = function(e) testthat::skip("Raw data folder not set"))
 }
 
 # Tiny config for fast tests that need no downloaded data

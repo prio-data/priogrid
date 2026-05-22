@@ -24,6 +24,8 @@ gen_geoepr_reg_excluded(
 \item "STATE COLLAPSE": Groups during state collapse periods
 }
 Default is \code{c("DISCRIMINATED", "POWERLESS", "SELF-EXCLUSION")}.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object

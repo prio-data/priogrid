@@ -6,6 +6,9 @@
 \usage{
 gen_ghs_wup_degurba_urban(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A \code{SpatRaster} object with values ranging from 0 to 1
 }

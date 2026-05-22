@@ -4,7 +4,10 @@
 \alias{check_pgsourcefiles}
 \title{Test if MD5 checksums of local files are the same as a tested set of files}
 \usage{
-check_pgsourcefiles()
+check_pgsourcefiles(verbose = TRUE)
+}
+\arguments{
+\item{verbose}{Logical. If TRUE (default), prints a summary message.}
 }
 \value{
 data.frame

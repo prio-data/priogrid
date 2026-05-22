@@ -6,6 +6,9 @@
 \usage{
 gen_msch(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A \code{SpatRaster} object containing PRIO-GRID mean years of schooling.
 }

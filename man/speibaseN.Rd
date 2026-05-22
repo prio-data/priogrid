@@ -13,6 +13,8 @@ then the SPEI (anomaly) is calculated. This is done for each month.}
 
 \item{time_agg_fun}{Character. Either "mean" or "max". Original data is monthly, so if PRIO-GRID is lower
 resolution, then we need to aggregate over time. Currently, mean and max functions are implemented.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal

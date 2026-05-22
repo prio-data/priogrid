@@ -96,6 +96,8 @@ read_geopko <- function(){
 #' aggregates Geo-PKO deployment locations to grid cells, providing a measure
 #' of peacekeeping intensity and geographic distribution over time.
 #'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
+#'
 #' @return A \code{SpatRaster} object
 #' @export
 #'
@@ -173,6 +175,8 @@ gen_geopko_operations_count <- function(config = pg_current_config()) {
 #' troops deployed within each PRIO-GRID cell across all temporal intervals.
 #' The function aggregates Geo-PKO troop deployment data to grid cells,
 #' providing a measure of peacekeeping force strength and geographic distribution over time.
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object
 #'

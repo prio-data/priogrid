@@ -6,6 +6,9 @@
 \usage{
 gen_hilda_cropland(config = pg_current_config())
 }
+\arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+}
 \value{
 A \code{SpatRaster} with cropland coverage proportions (0-1) for each
 PRIO-GRID cell. See \code{\link{hilda_landcover}} for details.

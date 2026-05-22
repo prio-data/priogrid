@@ -9,6 +9,7 @@
 #' @param inMask    Character vector. Path to a netCDF mask file.
 #' @param block     Integer. Number of latitude blocks to be processed at the
 #' same time. Must be an integer dividend of 360.
+#' @param tlapse Numeric. Temperature lapse rate. Default NA.
 #'
 #' @return Computes the SPEI time series and stores it in outFile following
 #' the same data structure of inPre.
@@ -192,6 +193,7 @@ spei.nc <- function(sca, inPre, outFile, inEtp=NA, title=NA, comment=NA,
 #' @param interval Integer. The month interval to calculate SPEI over. E.g., if the interval is
 #'  6, then monthly precipitation and potential evapotranspiration are aggregated over the last 6 months,
 #'  then the SPEI (anomaly) is calculated. This is done for each month.
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @seealso
 #' \code{\link{get_pgfile}} for file retrieval functionality,
@@ -211,6 +213,7 @@ read_speibase <- function(interval = 6, config = pg_current_config()) {
                         spei_interval)
 
   if(!file.exists(out_path)){
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     # Calculate SPEI. This is a parallel process using snowfall.
     cru_pet_gz <- get_pgfile(
       source_name = "CRU Climate pet",
@@ -268,7 +271,7 @@ read_speibase <- function(interval = 6, config = pg_current_config()) {
 #'  then the SPEI (anomaly) is calculated. This is done for each month.
 #' @param time_agg_fun Character. Either "mean" or "max". Original data is monthly, so if PRIO-GRID is lower
 #'  resolution, then we need to aggregate over time. Currently, mean and max functions are implemented.
-#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal
 #' resolution as defined in PRIO-GRID.
@@ -330,6 +333,8 @@ speibaseN <- function(interval, time_agg_fun, config = pg_current_config()){
 #' resolution defined by PRIO-GRID date intervals (which may be quarterly, yearly,
 #' or other intervals), while also performing spatial aggregation to the PRIO-GRID resolution.
 #'
+#'
+#' @param config A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.
 #'
 #' @return A \code{SpatRaster} object (from the \pkg{terra} package) with spatio-temporal
 #' resolution as defined in PRIO-GRID.

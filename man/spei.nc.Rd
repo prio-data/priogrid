@@ -36,6 +36,8 @@ spei.nc(
 
 \item{block}{Integer. Number of latitude blocks to be processed at the
 same time. Must be an integer dividend of 360.}
+
+\item{tlapse}{Numeric. Temperature lapse rate. Default NA.}
 }
 \value{
 Computes the SPEI time series and stores it in outFile following

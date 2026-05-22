@@ -20,6 +20,8 @@ pgout_path(
 \item{spatial_hash}{Character string with 6-character spatial hash. If NULL, computed from current config.}
 
 \item{temporal_hash}{Character string with 6-character temporal hash. If NULL, computed from current config.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
 Character string with file path

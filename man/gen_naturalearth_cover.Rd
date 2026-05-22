@@ -10,6 +10,8 @@ gen_naturalearth_cover(min_cover = 0, config = pg_current_config())
 \item{min_cover}{Numeric, default \code{0}. Minimum fraction of a grid cell
 that must be covered by land for the cell to be classified as land.
 Should be between \code{0} and \code{1}.}
+
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A single-layer \code{SpatRaster} object
