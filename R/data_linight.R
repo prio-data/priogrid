@@ -1,16 +1,15 @@
 #' Reads the Li Nighttime data
 #'
 #' Downloads, preprocesses, and harmonizes the Li et al. global nighttime
-#' light dataset (v8). This dataset provides global, annual composites
+#' light dataset (v10). This dataset provides global, annual composites
 #' of nighttime light intensity, harmonized across multiple satellite
 #' sensors to produce a consistent multi-decadal time series.
 #'
 #' @details
 #' The function:
 #' \itemize{
-#'   \item Downloads the zipped Li Nighttime Lights raster files from the
-#'         PRIO-GRID data repository
-#'   \item Extracts TIF files, caching results to avoid repeated unzipping
+#'   \item Downloads individual Li Nighttime Lights raster files from the
+#'         PRIO-GRID data repository via the Figshare API
 #'   \item Identifies rasters with extent mismatches (common in the dataset)
 #'   \item Resamples problematic rasters to a standardized global template
 #'         (\code{EPSG:4326}, extent -180/180, -90/90) using nearest neighbor
@@ -66,24 +65,16 @@
 #' \insertRef{liHarmonizedGlobalNighttime2020}{priogrid}
 read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 
-  zip_file <- get_pgfile(source_name="Li Nighttime",
-                         source_version="v8",
-                         id="24d76a3b-927e-42ad-b8a5-2e7443e6a275")
+  allfiles <- get_pgfile(source_name="Li Nighttime",
+                         source_version="v10",
+                         id="d99fbea7-2a01-4221-b900-29a58d33f591")
 
+  data_dir <- dirname(allfiles[1])
 
-  suppressWarnings(unzip(zipfile = zip_file, overwrite = overwrite_files, exdir = dirname(zip_file)))
-
-  allfiles <- list.files(dirname(zip_file),pattern = "^Harmonized", full.names = TRUE)
-
-  # Extents vary depending on the source, and is often marginally larger than the world.
-  #extents <- lapply(allfiles, function(x) terra::ext(terra::rast(x)))
-  #allfiles[!sapply(extents, function(x) x == terra::ext(c(-180, 180, -90, 90)))]
-
-  fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
+  fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
   if(overwrite_files){
-    # Re-calculate from source file
     file.remove(fixed_files)
-    fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
+    fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
   }
 
   fixed_files <- fixed_files[file.info(fixed_files)$size > 3e7] # can occur if resampling is interrupted
@@ -101,9 +92,6 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
                              crs = "EPSG:4326"
     )
 
-    #template <- terra::rast(x = files_to_fix[1])
-    #template <- terra::extend(template, terra::ext(c(-180, 180, -90, 90)))
-
     n <- length(files_to_fix)
     pb <- txtProgressBar(min = 0, max = n, style = 3)
 
@@ -111,12 +99,12 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
       setTxtProgressBar(pb, i)
       rsub <- terra::rast(x = files_to_fix[i])
       fname <- paste0("fixed_", basename(files_to_fix[i]))
-      res <- terra::resample(rsub, template, method = "near", threads = T, overwrite = TRUE, progress = FALSE, filename = file.path(dirname(zip_file), fname))
+      res <- terra::resample(rsub, template, method = "near", threads = T, overwrite = TRUE, progress = FALSE, filename = file.path(data_dir, fname))
     }
     close(pb)
   }
 
-  fixed_files <- list.files(dirname(zip_file),pattern = "^fixed", full.names = TRUE)
+  fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
   r <- terra::rast(fixed_files)
 
   pgmonth <- pg_dates(config)[1] |> lubridate::month()
@@ -130,7 +118,7 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 #' Generate Li Nighttime Light
 #'
 #' Aggregates the high-resolution Li et al. harmonized global nighttime lights
-#' dataset to PRIO-GRID resolution for all available years (1992–2021).
+#' dataset to PRIO-GRID resolution for all available years (1992–2024).
 #' This produces PRIO-GRID cell-level averages of nighttime light intensity,
 #' harmonized with PRIO-GRID’s spatial and temporal structure.
 #'
@@ -140,7 +128,7 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 #'   \item Reads annual nighttime lights rasters via \code{\link{read_linight}}
 #'   \item Aggregates 1 km nighttime light intensity values into PRIO-GRID
 #'         cells using mean values
-#'   \item Retains global temporal coverage (1992–2021) as a multi-layer
+#'   \item Retains global temporal coverage (1992–2024) as a multi-layer
 #'         \code{SpatRaster}
 #'   \item Aligns precisely to PRIO-GRID spatial extent (resampling handled
 #'         in \code{\link{read_linight}})
