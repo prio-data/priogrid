@@ -1,0 +1,15 @@
+---
+title: "Building PRIOGRID"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Citations and Bibliography}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+## Sources 
+
+## Requirements 
+
+
