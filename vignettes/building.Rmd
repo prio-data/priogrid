@@ -7,9 +7,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+It is possible to build PRIOGRID from source using the `priogrid::calc_pg` function. When run, the function will fetch source data for each variable, and then perform the necessary data transformations to standardize the data into the PRIOGRID format. The result is a set of `rds` files, one for each PRIOGRID variable.
 
 ## Sources 
 
-## Requirements 
+PRIOGRID is compiled from a large collection of data sources that are available online. Building PRIOGRID involves fetching a copy of each of the source datasets. This process is handled by package internals when compiling the finished dataset. The PRIOGRID package contains both a registry of where to locate the source data online, and will download data on-demand.
 
+The data sources for PRIOGRID can be inspected in the pgsources table, which is available after loading the priogrid package:
 
+```{r show pgsources}
+library(priogrid)
+head(pgsources)
+```
+
+As seen in this dataset, each source is tied to  a `download_url` which will be called to download the raw data. 
+
+For example, to download the source data  for the `naturalearth_cover` variable, which is the `"Natural Earth Physical 10m Land"` source dataset, use the `read_naturalearth_10m_land` function.
