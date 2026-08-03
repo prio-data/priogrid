@@ -14,11 +14,23 @@
 #'   \item Resamples problematic rasters to a standardized global template
 #'         (\code{EPSG:4326}, extent -180/180, -90/90) using nearest neighbor
 #'         resampling
-#'   \item Stores corrected rasters with a \code{"fixed_"} prefix for reuse
+#'   \item Stores corrected rasters as GeoTIFF with a \code{"fixed_"} prefix
+#'         for reuse
 #'   \item Combines corrected rasters into a multi-layer \code{SpatRaster}
 #'   \item Assigns layer names as dates, aligned to PRIO-GRID temporal
-#'         conventions (January 1 of each year by default)
+#'         conventions (the month and day are taken from the first date of
+#'         \code{config})
 #' }
+#'
+#' @section Year mapping:
+#' The files are served by the Figshare API, so they are stored locally under
+#' bare numeric IDs that contain neither a file extension nor a year. The year
+#' of each raster therefore cannot be parsed from its filename and is instead
+#' taken from its position in the source URL list
+#' (\code{inst/extdata/urls/d99fbea7-2a01-4221-b900-29a58d33f591.txt}), which is
+#' chronological: 22 DMSP-era files (1992-2013) followed by 11
+#' simulated-VIIRS files (2014-2024). If the URL list ever changes length, the
+#' function stops rather than risk mislabelling layers.
 #'
 #' @param overwrite_files Logical. If \code{TRUE}, previously fixed rasters are
 #'   recalculated and overwritten. Defaults to \code{FALSE}.
@@ -44,20 +56,12 @@
 #' # Inspect structure
 #' print(linight)
 #'
-#' # Plot nighttime lights for year 2000
+#' # Layer names are dates; the month/day follow the active config
+#' names(linight)
+#'
+#' # Plot nighttime lights for year 2000 (default config)
 #' terra::plot(linight[["2000-01-01"]],
 #'             main = "Global Nighttime Lights 2000")
-#'
-#' # Compare change between 2000 and 2020
-#' lights_2000 <- linight[["2000-01-01"]]
-#' lights_2020 <- linight[["2020-01-01"]]
-#' change <- lights_2020 - lights_2000
-#' terra::plot(change, main = "Nighttime Lights Change 2000–2020")
-#'
-#' # Extract regional time series
-#' # example_extent <- terra::ext(100, 120, 20, 40) # East Asia
-#' # region_lights <- terra::crop(linight, example_extent)
-#' # terra::plot(region_lights[[1]], main = "Regional Nighttime Lights")
 #' }
 #'
 #' @export
@@ -71,47 +75,81 @@ read_linight <- function(overwrite_files = FALSE, config = pg_current_config()){
 
   data_dir <- dirname(allfiles[1])
 
-  fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
-  if(overwrite_files){
-    file.remove(fixed_files)
-    fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
+  # Years covered by the v10 series, in the order the source URLs are listed.
+  # See the "Year mapping" section above for why the year cannot be taken from
+  # the filename.
+  linight_years <- 1992:2024
+
+  if(length(allfiles) != length(linight_years)){
+    stop("Li Nighttime: expected ", length(linight_years), " files (",
+         min(linight_years), "-", max(linight_years), "), found ",
+         length(allfiles), ".\n",
+         "  The year mapping in read_linight() must be updated to match the URL list.",
+         call. = FALSE)
   }
 
-  fixed_files <- fixed_files[file.info(fixed_files)$size > 3e7] # can occur if resampling is interrupted
+  # Derive each harmonized raster's path from its source file, so that layer
+  # order is guaranteed to match linight_years by construction.
+  # NB: do not use list.files() here. Its alphabetical ordering does not match
+  # the order of the URL list, which would silently attach the wrong years.
+  fixed_paths <- file.path(
+    data_dir,
+    paste0("fixed_", tools::file_path_sans_ext(basename(allfiles)), ".tif"))
 
-  files_to_fix <- allfiles[!basename(allfiles) %in% stringr::str_remove(basename(fixed_files), "^fixed_")]
+  if(overwrite_files){
+    file.remove(fixed_paths[file.exists(fixed_paths)])
+  }
+
+  # Clear any temporary files left behind by an interrupted earlier run.
+  unlink(list.files(data_dir, pattern = "^tmp_fixed_.*\\.tif$", full.names = TRUE))
+
+  files_to_fix <- which(!file.exists(fixed_paths))
 
   if(length(files_to_fix) > 0){
     message("Harmonizing extent of Li Nighttime rasters. Next time you run the function, this will not be required")
 
     # Extent of many tifs are wrong, use template
     template <- terra::rast(vals = NA,
-                             nrows = 21600, # Note that this is 1 cell less than original data
-                             ncols = 43200, # Note that this is 1 cell less than original data
-                             extent = terra::ext(c(-180, 180, -90, 90)),
-                             crs = "EPSG:4326"
+                            nrows = 21600, # Note that this is 1 cell less than original data
+                            ncols = 43200, # Note that this is 1 cell less than original data
+                            extent = terra::ext(c(-180, 180, -90, 90)),
+                            crs = "EPSG:4326"
     )
 
     n <- length(files_to_fix)
     pb <- txtProgressBar(min = 0, max = n, style = 3)
 
-    for(i in 1:n){
-      setTxtProgressBar(pb, i)
-      rsub <- terra::rast(x = files_to_fix[i])
-      fname <- paste0("fixed_", basename(files_to_fix[i]))
-      res <- terra::resample(rsub, template, method = "near", threads = T, overwrite = TRUE, progress = FALSE, filename = file.path(data_dir, fname))
+    for(k in 1:n){
+      setTxtProgressBar(pb, k)
+      i <- files_to_fix[k]
+
+      rsub <- terra::rast(x = allfiles[i])
+
+      # Write to a temporary name and rename only on success, so that an
+      # interrupted resample cannot leave a truncated raster under the final
+      # name (which would then be treated as already harmonized).
+      tmpfile <- file.path(data_dir, paste0("tmp_", basename(fixed_paths[i])))
+
+      terra::resample(rsub, template,
+                      method    = "near",
+                      threads   = TRUE,
+                      overwrite = TRUE,
+                      progress  = FALSE,
+                      filename  = tmpfile,
+                      filetype  = "GTiff",            # do not rely on the extension alone
+                      gdal      = c("COMPRESS=LZW"))
+
+      file.rename(tmpfile, fixed_paths[i])
     }
     close(pb)
   }
 
-  fixed_files <- list.files(data_dir, pattern = "^fixed", full.names = TRUE)
-  r <- terra::rast(fixed_files)
+  r <- terra::rast(fixed_paths)
 
   pgmonth <- pg_dates(config)[1] |> lubridate::month()
   pgday <- pg_dates(config)[1] |> lubridate::day()
-  yearnames <- readr::parse_number(basename(allfiles))
-  yearnames <- as.Date(paste(yearnames, pgmonth, pgday, sep = "-"))
-  names(r) <- yearnames
+  yearnames <- as.Date(paste(linight_years, pgmonth, pgday, sep = "-"))
+  names(r) <- as.character(yearnames)
   return(r)
 }
 
@@ -176,4 +214,3 @@ gen_linight_mean <- function(config = pg_current_config()){
 
   return(res)
 }
-
