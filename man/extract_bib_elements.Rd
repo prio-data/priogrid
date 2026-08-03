@@ -10,8 +10,6 @@ extract_bib_elements(citation_liststr, bib_element = "author", ...)
 \item{citation_liststr}{A semi-colon separated list of bibliography keys from \link{pgsources}}
 
 \item{bib_element}{Supports author, journal, year, and title.}
-
-\item{...}{}
 }
 \value{
 list with BibEntry-element classes or vectors with character strings

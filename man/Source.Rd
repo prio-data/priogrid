@@ -3,24 +3,13 @@
 \name{Source}
 \alias{Source}
 \title{Source Class}
-\value{
-Boolean vector
-
-character vector
-
-character vector
-
-tibble
-
-text in console
-}
 \description{
 An R6 Class representing a data source with comprehensive validation. Only for use in dev-mode (using devtools::load_all).
 }
 \examples{
 
 ## ------------------------------------------------
-## Method `Source$new`
+## Method `Source$new()`
 ## ------------------------------------------------
 
 new_source <- Source$new(
@@ -38,23 +27,24 @@ new_source # gives warning that doeNewSource2025 does not exist in the bibliogra
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Source-new}{\code{Source$new()}}
-\item \href{#method-Source-save_url_files}{\code{Source$save_url_files()}}
-\item \href{#method-Source-get_existing_tags}{\code{Source$get_existing_tags()}}
-\item \href{#method-Source-get_existing_licenses}{\code{Source$get_existing_licenses()}}
-\item \href{#method-Source-to_tibble}{\code{Source$to_tibble()}}
-\item \href{#method-Source-print}{\code{Source$print()}}
-\item \href{#method-Source-clone}{\code{Source$clone()}}
-}
+  \itemize{
+    \item \href{#method-Source-initialize}{\code{Source$new()}}
+    \item \href{#method-Source-save_url_files}{\code{Source$save_url_files()}}
+    \item \href{#method-Source-get_existing_tags}{\code{Source$get_existing_tags()}}
+    \item \href{#method-Source-get_existing_licenses}{\code{Source$get_existing_licenses()}}
+    \item \href{#method-Source-to_tibble}{\code{Source$to_tibble()}}
+    \item \href{#method-Source-print}{\code{Source$print()}}
+    \item \href{#method-Source-clone}{\code{Source$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Source-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Source-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new Source object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$new(
+\if{html}{\out{<a id="method-Source-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Source-initialize}{}}}
+\subsection{\code{Source$new()}}{
+  Create a new Source object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$new(
   source_name,
   source_version,
   license,
@@ -69,45 +59,32 @@ Create a new Source object
   tags = NA_character_,
   reference_keys = NA_character_,
   bib_path = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{source_name}}{String. Full name of the source}
-
-\item{\code{source_version}}{String. Version of the source}
-
-\item{\code{license}}{String. Data license}
-
-\item{\code{website_url}}{String. URL to landing page}
-
-\item{\code{spatial_extent}}{String. One of predefined spatial extents}
-
-\item{\code{temporal_resolution}}{String. One of predefined temporal resolutions}
-
-\item{\code{citation_keys}}{String. Optional. Bibkey(s) of citations}
-
-\item{\code{aws_bucket}}{String. Optional. Amazon S3 bucket}
-
-\item{\code{aws_region}}{String. Optional. Amazon S3 region}
-
-\item{\code{download_url}}{String. Optional. URL to data file}
-
-\item{\code{prio_mirror}}{String. Optional. Alternative download location}
-
-\item{\code{tags}}{String. Optional. Comma-separated tags}
-
-\item{\code{reference_keys}}{String. Optional. Other relevant bibkeys}
-
-\item{\code{bib_path}}{String. Path to bibliography.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{new_source <- Source$new(
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{source_name}}{String. Full name of the source}
+      \item{\code{source_version}}{String. Version of the source}
+      \item{\code{license}}{String. Data license}
+      \item{\code{website_url}}{String. URL to landing page}
+      \item{\code{spatial_extent}}{String. One of predefined spatial extents}
+      \item{\code{temporal_resolution}}{String. One of predefined temporal resolutions}
+      \item{\code{citation_keys}}{String. Optional. Bibkey(s) of citations}
+      \item{\code{aws_bucket}}{String. Optional. Amazon S3 bucket}
+      \item{\code{aws_region}}{String. Optional. Amazon S3 region}
+      \item{\code{download_url}}{String. Optional. URL to data file}
+      \item{\code{prio_mirror}}{String. Optional. Alternative download location}
+      \item{\code{tags}}{String. Optional. Comma-separated tags}
+      \item{\code{reference_keys}}{String. Optional. Other relevant bibkeys}
+      \item{\code{bib_path}}{String. Path to bibliography.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{new_source <- Source$new(
   source_name = "my new source",
   source_version = "v1.0",
   license = "CC BY 4.0",
@@ -120,76 +97,102 @@ Create a new Source object
 )
 new_source # gives warning that doeNewSource2025 does not exist in the bibliography
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-save_url_files"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-save_url_files}{}}}
-\subsection{Method \code{save_url_files()}}{
-Saves url-files provided as a text-file with urls
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$save_url_files()}\if{html}{\out{</div>}}
+\subsection{\code{Source$save_url_files()}}{
+  Saves url-files provided as a text-file with urls
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$save_url_files()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Boolean vector
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-get_existing_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-get_existing_tags}{}}}
-\subsection{Method \code{get_existing_tags()}}{
-Get tags from source data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$get_existing_tags()}\if{html}{\out{</div>}}
+\subsection{\code{Source$get_existing_tags()}}{
+  Get tags from source data
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$get_existing_tags()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    character vector
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-get_existing_licenses"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-get_existing_licenses}{}}}
-\subsection{Method \code{get_existing_licenses()}}{
-Get licenses from source data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$get_existing_licenses()}\if{html}{\out{</div>}}
+\subsection{\code{Source$get_existing_licenses()}}{
+  Get licenses from source data
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$get_existing_licenses()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    character vector
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-to_tibble"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-to_tibble}{}}}
-\subsection{Method \code{to_tibble()}}{
-Converts source to a single row tibble
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$to_tibble()}\if{html}{\out{</div>}}
+\subsection{\code{Source$to_tibble()}}{
+  Converts source to a single row tibble
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$to_tibble()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    tibble
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-print"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-print}{}}}
-\subsection{Method \code{print()}}{
-Prints validation report of source.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$print()}\if{html}{\out{</div>}}
+\subsection{\code{Source$print()}}{
+  Prints validation report of source.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$print()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    text in console
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Source-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Source-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Source$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Source$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Source$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

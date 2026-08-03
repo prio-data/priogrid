@@ -21,7 +21,6 @@ Description: An R-package for collecting and standardizing open spatial data.
 License: MIT + ODC-By + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 RdMacros: Rdpack
 Suggests:
@@ -65,3 +64,4 @@ Depends:
 URL: http://prio-data.github.io/priogrid/
 BugReports: https://github.com/prio-data/priogrid/issues
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0

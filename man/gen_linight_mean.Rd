@@ -14,7 +14,7 @@ A \code{SpatRaster} object
 }
 \description{
 Aggregates the high-resolution Li et al. harmonized global nighttime lights
-dataset to PRIO-GRID resolution for all available years (1992–2021).
+dataset to PRIO-GRID resolution for all available years (1992–2024).
 This produces PRIO-GRID cell-level averages of nighttime light intensity,
 harmonized with PRIO-GRID’s spatial and temporal structure.
 }
@@ -24,7 +24,7 @@ The function:
 \item Reads annual nighttime lights rasters via \code{\link{read_linight}}
 \item Aggregates 1 km nighttime light intensity values into PRIO-GRID
 cells using mean values
-\item Retains global temporal coverage (1992–2021) as a multi-layer
+\item Retains global temporal coverage (1992–2024) as a multi-layer
 \code{SpatRaster}
 \item Aligns precisely to PRIO-GRID spatial extent (resampling handled
 in \code{\link{read_linight}})

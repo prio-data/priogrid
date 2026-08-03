@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Jonas Vestby \email{jonves@prio.org} (\href{https://orcid.org/0000-0002-3054-977X}{ORCID})
   \item Andreas Forø Tollefsen \email{andreas@prio.org} (\href{https://orcid.org/0000-0002-0864-5132}{ORCID})
 }
 

@@ -17,16 +17,15 @@ A \code{SpatRaster} object
 }
 \description{
 Downloads, preprocesses, and harmonizes the Li et al. global nighttime
-light dataset (v8). This dataset provides global, annual composites
+light dataset (v10). This dataset provides global, annual composites
 of nighttime light intensity, harmonized across multiple satellite
 sensors to produce a consistent multi-decadal time series.
 }
 \details{
 The function:
 \itemize{
-\item Downloads the zipped Li Nighttime Lights raster files from the
-PRIO-GRID data repository
-\item Extracts TIF files, caching results to avoid repeated unzipping
+\item Downloads individual Li Nighttime Lights raster files from the
+PRIO-GRID data repository via the Figshare API
 \item Identifies rasters with extent mismatches (common in the dataset)
 \item Resamples problematic rasters to a standardized global template
 (\code{EPSG:4326}, extent -180/180, -90/90) using nearest neighbor
