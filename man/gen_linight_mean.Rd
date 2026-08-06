@@ -48,12 +48,12 @@ linight_pg <- gen_linight_mean()
 print(linight_pg)
 
 # Plot mean nighttime lights for 2000
-terra::plot(linight_pg[["2000-01-01"]],
+terra::plot(linight_pg[["2000-12-31"]],
             main = "PRIO-GRID Nighttime Lights (Mean, 2000)")
 
 # Compare mean intensity change between 2000 and 2020
-lights_2000 <- linight_pg[["2000-01-01"]]
-lights_2020 <- linight_pg[["2020-01-01"]]
+lights_2000 <- linight_pg[["2000-12-31"]]
+lights_2020 <- linight_pg[["2020-12-31"]]
 change <- lights_2020 - lights_2000
 terra::plot(change, main = "Change in Mean Nighttime Lights 2000–2020")
 }

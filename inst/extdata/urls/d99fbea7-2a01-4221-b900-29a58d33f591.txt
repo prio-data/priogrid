@@ -1,33 +1,33 @@
-https://ndownloader.figshare.com/files/17626052
-https://ndownloader.figshare.com/files/17626055
-https://ndownloader.figshare.com/files/17626061
-https://ndownloader.figshare.com/files/17626067
-https://ndownloader.figshare.com/files/17626070
-https://ndownloader.figshare.com/files/17626073
-https://ndownloader.figshare.com/files/17626079
-https://ndownloader.figshare.com/files/17626082
-https://ndownloader.figshare.com/files/17626085
-https://ndownloader.figshare.com/files/17626088
-https://ndownloader.figshare.com/files/17626091
-https://ndownloader.figshare.com/files/17626094
-https://ndownloader.figshare.com/files/17626097
-https://ndownloader.figshare.com/files/17626100
-https://ndownloader.figshare.com/files/17626103
-https://ndownloader.figshare.com/files/17626109
-https://ndownloader.figshare.com/files/17626016
-https://ndownloader.figshare.com/files/17626019
-https://ndownloader.figshare.com/files/17626022
-https://ndownloader.figshare.com/files/17626025
-https://ndownloader.figshare.com/files/17626031
-https://ndownloader.figshare.com/files/17626034
-https://ndownloader.figshare.com/files/57065276
-https://ndownloader.figshare.com/files/57065321
-https://ndownloader.figshare.com/files/57065291
-https://ndownloader.figshare.com/files/57065282
-https://ndownloader.figshare.com/files/57065288
-https://ndownloader.figshare.com/files/57065285
-https://ndownloader.figshare.com/files/57065297
-https://ndownloader.figshare.com/files/57065294
-https://ndownloader.figshare.com/files/57065303
-https://ndownloader.figshare.com/files/57065300
-https://ndownloader.figshare.com/files/57065306
+https://ndownloader.figshare.com/files/17626052	Harmonized_DN_NTL_1992_calDMSP.tif
+https://ndownloader.figshare.com/files/17626055	Harmonized_DN_NTL_1993_calDMSP.tif
+https://ndownloader.figshare.com/files/17626061	Harmonized_DN_NTL_1994_calDMSP.tif
+https://ndownloader.figshare.com/files/17626067	Harmonized_DN_NTL_1995_calDMSP.tif
+https://ndownloader.figshare.com/files/17626070	Harmonized_DN_NTL_1996_calDMSP.tif
+https://ndownloader.figshare.com/files/17626073	Harmonized_DN_NTL_1997_calDMSP.tif
+https://ndownloader.figshare.com/files/17626079	Harmonized_DN_NTL_1998_calDMSP.tif
+https://ndownloader.figshare.com/files/17626082	Harmonized_DN_NTL_1999_calDMSP.tif
+https://ndownloader.figshare.com/files/17626085	Harmonized_DN_NTL_2000_calDMSP.tif
+https://ndownloader.figshare.com/files/17626088	Harmonized_DN_NTL_2001_calDMSP.tif
+https://ndownloader.figshare.com/files/17626091	Harmonized_DN_NTL_2002_calDMSP.tif
+https://ndownloader.figshare.com/files/17626094	Harmonized_DN_NTL_2003_calDMSP.tif
+https://ndownloader.figshare.com/files/17626097	Harmonized_DN_NTL_2004_calDMSP.tif
+https://ndownloader.figshare.com/files/17626100	Harmonized_DN_NTL_2005_calDMSP.tif
+https://ndownloader.figshare.com/files/17626103	Harmonized_DN_NTL_2006_calDMSP.tif
+https://ndownloader.figshare.com/files/17626109	Harmonized_DN_NTL_2007_calDMSP.tif
+https://ndownloader.figshare.com/files/17626016	Harmonized_DN_NTL_2008_calDMSP.tif
+https://ndownloader.figshare.com/files/17626019	Harmonized_DN_NTL_2009_calDMSP.tif
+https://ndownloader.figshare.com/files/17626022	Harmonized_DN_NTL_2010_calDMSP.tif
+https://ndownloader.figshare.com/files/17626025	Harmonized_DN_NTL_2011_calDMSP.tif
+https://ndownloader.figshare.com/files/17626031	Harmonized_DN_NTL_2012_calDMSP.tif
+https://ndownloader.figshare.com/files/17626034	Harmonized_DN_NTL_2013_calDMSP.tif
+https://ndownloader.figshare.com/files/57065276	Harmonized_DN_NTL_2014_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065321	Harmonized_DN_NTL_2015_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065291	Harmonized_DN_NTL_2016_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065282	Harmonized_DN_NTL_2017_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065288	Harmonized_DN_NTL_2018_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065285	Harmonized_DN_NTL_2019_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065297	Harmonized_DN_NTL_2020_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065294	Harmonized_DN_NTL_2021_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065303	Harmonized_DN_NTL_2022_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065300	Harmonized_DN_NTL_2023_simVIIRS.tif
+https://ndownloader.figshare.com/files/57065306	Harmonized_DN_NTL_2024_simVIIRS.tif
