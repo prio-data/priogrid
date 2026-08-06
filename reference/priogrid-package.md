@@ -17,6 +17,9 @@ Useful links:
 
 Authors:
 
+- Jonas Vestby <jonves@prio.org>
+  ([ORCID](https://orcid.org/0000-0002-3054-977X))
+
 - Andreas Forø Tollefsen <andreas@prio.org>
   ([ORCID](https://orcid.org/0000-0002-0864-5132))
 

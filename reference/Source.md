@@ -3,23 +3,11 @@
 An R6 Class representing a data source with comprehensive validation.
 Only for use in dev-mode (using devtools::load_all).
 
-## Value
-
-Boolean vector
-
-character vector
-
-character vector
-
-tibble
-
-text in console
-
 ## Methods
 
 ### Public methods
 
-- [`Source$new()`](#method-Source-new)
+- [`Source$new()`](#method-Source-initialize)
 
 - [`Source$save_url_files()`](#method-Source-save_url_files)
 
@@ -35,7 +23,7 @@ text in console
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `Source$new()`
 
 Create a new Source object
 
@@ -133,7 +121,7 @@ Create a new Source object
 
 ------------------------------------------------------------------------
 
-### Method `save_url_files()`
+### `Source$save_url_files()`
 
 Saves url-files provided as a text-file with urls
 
@@ -141,9 +129,13 @@ Saves url-files provided as a text-file with urls
 
     Source$save_url_files()
 
+#### Returns
+
+Boolean vector
+
 ------------------------------------------------------------------------
 
-### Method `get_existing_tags()`
+### `Source$get_existing_tags()`
 
 Get tags from source data
 
@@ -151,9 +143,13 @@ Get tags from source data
 
     Source$get_existing_tags()
 
+#### Returns
+
+character vector
+
 ------------------------------------------------------------------------
 
-### Method `get_existing_licenses()`
+### `Source$get_existing_licenses()`
 
 Get licenses from source data
 
@@ -161,9 +157,13 @@ Get licenses from source data
 
     Source$get_existing_licenses()
 
+#### Returns
+
+character vector
+
 ------------------------------------------------------------------------
 
-### Method `to_tibble()`
+### `Source$to_tibble()`
 
 Converts source to a single row tibble
 
@@ -171,9 +171,13 @@ Converts source to a single row tibble
 
     Source$to_tibble()
 
+#### Returns
+
+tibble
+
 ------------------------------------------------------------------------
 
-### Method [`print()`](https://rdrr.io/r/base/print.html)
+### `Source$print()`
 
 Prints validation report of source.
 
@@ -181,9 +185,13 @@ Prints validation report of source.
 
     Source$print()
 
+#### Returns
+
+text in console
+
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `Source$clone()`
 
 The objects of this class are cloneable with this method.
 
@@ -202,7 +210,7 @@ The objects of this class are cloneable with this method.
 ``` r
 
 ## ------------------------------------------------
-## Method `Source$new`
+## Method `Source$new()`
 ## ------------------------------------------------
 
 new_source <- Source$new(

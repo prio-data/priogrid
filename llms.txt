@@ -295,8 +295,6 @@ details on how you can contribute with code.
   : Update the current session configuration
 - [`pg_set_rawfolder()`](http://prio-data.github.io/priogrid/reference/pg_set_rawfolder.md)
   : Set the raw data folder path
-- [`pg_update_checksums()`](http://prio-data.github.io/priogrid/reference/pg_update_checksums.md)
-  : Regenerate pgchecksum from locally verified files
 - [`pgchecksum`](http://prio-data.github.io/priogrid/reference/pgchecksum.md)
   : PRIO-GRID File Checksums (MD5)
 - [`pgcitations()`](http://prio-data.github.io/priogrid/reference/pgcitations.md)

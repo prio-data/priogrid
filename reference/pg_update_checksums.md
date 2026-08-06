@@ -37,6 +37,6 @@ and the optional checksum verification in
 
 ``` r
 if (FALSE) { # \dontrun{
-pg_update_checksums()
+priogrid:::pg_update_checksums()
 } # }
 ```

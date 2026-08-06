@@ -8,7 +8,11 @@ individual keys and get the bibliography element from each key.
 ## Usage
 
 ``` r
-extract_bib_elements(citation_liststr, bib_element = "author", ...)
+extract_bib_elements(
+  citation_liststr,
+  bib_element = "author",
+  as_character = TRUE
+)
 ```
 
 ## Arguments
@@ -22,7 +26,9 @@ extract_bib_elements(citation_liststr, bib_element = "author", ...)
 
   Supports author, journal, year, and title.
 
-- ...:
+- as_character:
+
+  Return the result as a string instead of a RefManageR class object.
 
 ## Value
 

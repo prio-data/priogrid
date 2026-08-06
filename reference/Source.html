@@ -53,28 +53,19 @@
 
 
     <div class="section level2">
-    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Boolean vector</p>
-<p>character vector</p>
-<p>character vector</p>
-<p>tibble</p>
-<p>text in console</p>
-    </div>
-    <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
 
 <div class="section">
 <h3 id="public-methods">Public methods<a class="anchor" aria-label="anchor" href="#public-methods"></a></h3>
-
-<ul><li><p><a href="#method-Source-new"><code>Source$new()</code></a></p></li>
+<p></p><ul><li><p><a href="#method-Source-initialize"><code>Source$new()</code></a></p></li>
 <li><p><a href="#method-Source-save_url_files"><code>Source$save_url_files()</code></a></p></li>
 <li><p><a href="#method-Source-get_existing_tags"><code>Source$get_existing_tags()</code></a></p></li>
 <li><p><a href="#method-Source-get_existing_licenses"><code>Source$get_existing_licenses()</code></a></p></li>
 <li><p><a href="#method-Source-to_tibble"><code>Source$to_tibble()</code></a></p></li>
 <li><p><a href="#method-Source-print"><code>Source$print()</code></a></p></li>
 <li><p><a href="#method-Source-clone"><code>Source$clone()</code></a></p></li>
-</ul></div><p></p><hr><a id="method-Source-new"></a><div class="section">
-<h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
+</ul></div><p></p><hr><a id="method-Source-initialize"></a><div class="section">
+<h3 id="source-new-"><code>Source$new()</code><a class="anchor" aria-label="anchor" href="#source-new-"></a></h3>
 <p>Create a new Source object</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/Source.html">Source</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
@@ -93,69 +84,53 @@
 <span>  reference_keys <span class="op">=</span> <span class="cn">NA_character_</span>,</span>
 <span>  bib_path <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>source_name</code></dt>
 <dd><p>String. Full name of the source</p></dd>
 
-
-<dt><code>source_version</code></dt>
+      <dt><code>source_version</code></dt>
 <dd><p>String. Version of the source</p></dd>
 
-
-<dt><code>license</code></dt>
+      <dt><code>license</code></dt>
 <dd><p>String. Data license</p></dd>
 
-
-<dt><code>website_url</code></dt>
+      <dt><code>website_url</code></dt>
 <dd><p>String. URL to landing page</p></dd>
 
-
-<dt><code>spatial_extent</code></dt>
+      <dt><code>spatial_extent</code></dt>
 <dd><p>String. One of predefined spatial extents</p></dd>
 
-
-<dt><code>temporal_resolution</code></dt>
+      <dt><code>temporal_resolution</code></dt>
 <dd><p>String. One of predefined temporal resolutions</p></dd>
 
-
-<dt><code>citation_keys</code></dt>
+      <dt><code>citation_keys</code></dt>
 <dd><p>String. Optional. Bibkey(s) of citations</p></dd>
 
-
-<dt><code>aws_bucket</code></dt>
+      <dt><code>aws_bucket</code></dt>
 <dd><p>String. Optional. Amazon S3 bucket</p></dd>
 
-
-<dt><code>aws_region</code></dt>
+      <dt><code>aws_region</code></dt>
 <dd><p>String. Optional. Amazon S3 region</p></dd>
 
-
-<dt><code>download_url</code></dt>
+      <dt><code>download_url</code></dt>
 <dd><p>String. Optional. URL to data file</p></dd>
 
-
-<dt><code>prio_mirror</code></dt>
+      <dt><code>prio_mirror</code></dt>
 <dd><p>String. Optional. Alternative download location</p></dd>
 
-
-<dt><code>tags</code></dt>
+      <dt><code>tags</code></dt>
 <dd><p>String. Optional. Comma-separated tags</p></dd>
 
-
-<dt><code>reference_keys</code></dt>
+      <dt><code>reference_keys</code></dt>
 <dd><p>String. Optional. Other relevant bibkeys</p></dd>
 
-
-<dt><code>bib_path</code></dt>
+      <dt><code>bib_path</code></dt>
 <dd><p>String. Path to bibliography.</p></dd>
 
 
 </dl><p></p></div>
-</div>
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a></h4>
 <p></p><div class="r example copy"><div class="sourceCode"><pre><code><span><span class="va">new_source</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/Source.html">Source</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
 <span>  source_name <span class="op">=</span> <span class="st">"my new source"</span>,</span>
@@ -171,55 +146,74 @@
 <span><span class="va">new_source</span> <span class="co"># gives warning that doeNewSource2025 does not exist in the bibliography</span></span></code></pre></div><p></p></div>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-save_url_files"></a><div class="section">
-<h3 id="method-save-url-files-">Method <code>save_url_files()</code><a class="anchor" aria-label="anchor" href="#method-save-url-files-"></a></h3>
+<p></p><hr><a id="method-Source-save_url_files"></a><div class="section">
+<h3 id="source-save-url-files-"><code>Source$save_url_files()</code><a class="anchor" aria-label="anchor" href="#source-save-url-files-"></a></h3>
 <p>Saves url-files provided as a text-file with urls</p><div class="section">
 <h4 id="usage-1">Usage<a class="anchor" aria-label="anchor" href="#usage-1"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">save_url_files</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
+<p>Boolean vector</p>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-get_existing_tags"></a><div class="section">
-<h3 id="method-get-existing-tags-">Method <code>get_existing_tags()</code><a class="anchor" aria-label="anchor" href="#method-get-existing-tags-"></a></h3>
+<p></p><hr><a id="method-Source-get_existing_tags"></a><div class="section">
+<h3 id="source-get-existing-tags-"><code>Source$get_existing_tags()</code><a class="anchor" aria-label="anchor" href="#source-get-existing-tags-"></a></h3>
 <p>Get tags from source data</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">get_existing_tags</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<p>character vector</p>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-get_existing_licenses"></a><div class="section">
-<h3 id="method-get-existing-licenses-">Method <code>get_existing_licenses()</code><a class="anchor" aria-label="anchor" href="#method-get-existing-licenses-"></a></h3>
+<p></p><hr><a id="method-Source-get_existing_licenses"></a><div class="section">
+<h3 id="source-get-existing-licenses-"><code>Source$get_existing_licenses()</code><a class="anchor" aria-label="anchor" href="#source-get-existing-licenses-"></a></h3>
 <p>Get licenses from source data</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">get_existing_licenses</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
+<p>character vector</p>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-to_tibble"></a><div class="section">
-<h3 id="method-to-tibble-">Method <code>to_tibble()</code><a class="anchor" aria-label="anchor" href="#method-to-tibble-"></a></h3>
+<p></p><hr><a id="method-Source-to_tibble"></a><div class="section">
+<h3 id="source-to-tibble-"><code>Source$to_tibble()</code><a class="anchor" aria-label="anchor" href="#source-to-tibble-"></a></h3>
 <p>Converts source to a single row tibble</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">to_tibble</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
+<p>tibble</p>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-print"></a><div class="section">
-<h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
+<p></p><hr><a id="method-Source-print"></a><div class="section">
+<h3 id="source-print-"><code>Source$print()</code><a class="anchor" aria-label="anchor" href="#source-print-"></a></h3>
 <p>Prints validation report of source.</p><div class="section">
 <h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div><p></p><div class="section">
+<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
+<p>text in console</p>
 </div>
 
+</div>
 
-</div><p></p><hr><a id="method-Source-clone"></a><div class="section">
-<h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
+<p></p><hr><a id="method-Source-clone"></a><div class="section">
+<h3 id="source-clone-"><code>Source$clone()</code><a class="anchor" aria-label="anchor" href="#source-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">Source</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
+</div><p></p><div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
@@ -230,13 +224,14 @@
 
 </div>
 
+
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## ------------------------------------------------</span></span></span>
-<span class="r-in"><span><span class="co">## Method `Source$new`</span></span></span>
+<span class="r-in"><span><span class="co">## Method `Source$new()`</span></span></span>
 <span class="r-in"><span><span class="co">## ------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">new_source</span> <span class="op">&lt;-</span> <span class="va">Source</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span></span>
@@ -264,7 +259,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

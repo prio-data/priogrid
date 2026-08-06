@@ -57,7 +57,12 @@
 <span>  file_info <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  batch_size <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  max_retry <span class="op">=</span> <span class="fl">10</span></span>
+<span>  max_retry <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  max_concurrent <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  retry_base_delay <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  retry_max_delay <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>  verify <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="op">!</span><span class="fu"><a href="pg_current_config.html">pg_current_config</a></span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">verbose</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -81,10 +86,54 @@ then file_info will be all data returned from <code><a href="pg_rawfiles.html">p
 <dt id="arg-max-retry">max_retry<a class="anchor" aria-label="anchor" href="#arg-max-retry"></a></dt>
 <dd><p>Integer. Maximum number of retry attempts for failed downloads. Default 10.</p></dd>
 
+
+<dt id="arg-max-concurrent">max_concurrent<a class="anchor" aria-label="anchor" href="#arg-max-concurrent"></a></dt>
+<dd><p>Integer. Upper bound on simultaneous transfers. Default 4.
+A batch is transferred in parallel, so the effective batch is
+<code>min(batch_size, max_concurrent)</code> and this is the argument that decides how
+hard a server is hit.</p></dd>
+
+
+<dt id="arg-retry-base-delay">retry_base_delay<a class="anchor" aria-label="anchor" href="#arg-retry-base-delay"></a></dt>
+<dd><p>Numeric. Base seconds for exponential backoff between retries. Default 2.</p></dd>
+
+
+<dt id="arg-retry-max-delay">retry_max_delay<a class="anchor" aria-label="anchor" href="#arg-retry-max-delay"></a></dt>
+<dd><p>Numeric. Maximum seconds to wait between retries. Default 120.</p></dd>
+
+
+<dt id="arg-verify">verify<a class="anchor" aria-label="anchor" href="#arg-verify"></a></dt>
+<dd><p>Logical. Whether to check downloaded files against the size the
+server announced and against <a href="pgchecksum.html">pgchecksum</a>. Default TRUE.</p></dd>
+
+
+<dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
+<dd><p>Logical. Suppress progress messages. Defaults to the inverse of
+<code>verbose</code> in <code><a href="pg_current_config.html">pg_current_config()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>data.frame Download summary</p>
+    <p>data.frame (invisibly). One row per file in <code>file_info</code>, with columns
+<code>source_name</code>, <code>source_version</code>, <code>id</code>, <code>filename</code>, <code>url</code>, <code>status</code>
+("ok", "failed" or "skipped"), <code>attempts</code>, <code>status_code</code>, <code>bytes</code>,
+<code>md5_ok</code>, <code>resolved_name</code>, <code>name_drift</code> and <code>error</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Files are written to <code>&lt;filename&gt;.part</code> and only renamed into place once the
+transfer has finished, so a file under its final name always means a complete
+download. An interrupted run leaves <code>.part</code> files behind, and calling the
+function again resumes them.</p>
+<p>Two independent checks run on each downloaded file. The transfer is checked
+against the size the server announced, and a short read is retried. The file
+is separately compared against the MD5 in <code>pgchecksum</code> where one exists; that
+comparison is advisory and never blocks a download, because sources have no
+reference checksum until PRIO-GRID has been built from them once. See
+<code><a href="pg_update_checksums.html">pg_update_checksums()</a></code> and <code><a href="check_pgsourcefiles.html">check_pgsourcefiles()</a></code>.</p>
+<p>Files downloaded by earlier versions of this function were written directly
+to their final name, so a file truncated before this change still looks
+complete. Use <code><a href="check_pgsourcefiles.html">check_pgsourcefiles()</a></code> to find those.</p>
     </div>
 
     <div class="section level2">
@@ -102,7 +151,7 @@ then file_info will be all data returned from <code><a href="pg_rawfiles.html">p
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
