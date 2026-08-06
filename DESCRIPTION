@@ -39,7 +39,6 @@ Suggests:
     terra,
     sf,
     exactextractr,
-    arrow,
     countrycode
 Config/testthat/edition: 3
 Imports:
@@ -59,7 +58,8 @@ Imports:
     digest,
     rlang,
     RefManageR,
-    nanoparquet,
+    arrow,
+    jsonlite,
     stats,
     utils
 Depends: 

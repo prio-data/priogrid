@@ -277,6 +277,166 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   invisible(NULL)
 }
 
+# Internal: memory-bounded hive-partitioned builder for time-varying data.
+# Writes one parquet partition per temporal slice following Apache Hive nested layout:
+# year=YYYY/ for yearly; year=YYYY/<unit>=VV/ for sub-yearly. Also writes a gzipped CSV
+# bundle and a pg_config.json manifest. Checksums all outputs.
+# @keywords internal
+.pg_build_timevarying <- function(base_path, config, version = NULL, type = NULL, overwrite = FALSE) {
+  rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
+
+  hive_dir <- file.path(base_path, "timevarying")
+  if (dir.exists(hive_dir)) {
+    if (!overwrite) {
+      message("Hive dataset already exists at '", hive_dir, "'. Use overwrite = TRUE to rebuild.")
+      return(invisible(hive_dir))
+    }
+    unlink(hive_dir, recursive = TRUE)
+    stale_csv <- file.path(base_path, "pg_timevarying.csv.gz")
+    if (file.exists(stale_csv)) file.remove(stale_csv)
+  }
+
+  unit     <- pg_temporal_unit(config)
+  n_cells  <- length(create_pg_indices(config))
+  tmp_dir  <- file.path(pg_rawfolder(), "tmp", basename(tempfile()))
+  dir.create(tmp_dir, recursive = TRUE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  # ----- Phase 1: per-variable long parquet (date-sorted) -----
+  tv      <- dplyr::filter(pgvariables, !static)$name
+  present <- tv[file.exists(file.path(base_path, paste0(tv, ".rds")))]
+  if (length(present) == 0L)
+    stop("No time-varying .rds rasters found in ", base_path)
+
+  for (v in present) {
+    r  <- terra::unwrap(readRDS(file.path(base_path, paste0(v, ".rds"))))
+    dt <- rast_to_df(r, static = FALSE, varname = v, config = config)
+    data.table::setorder(dt, measurement_date)
+    arrow::write_parquet(dt, file.path(tmp_dir, paste0(v, ".parquet")),
+                         chunk_size = n_cells)
+    rm(r, dt); gc()
+  }
+
+  # ----- Phase 2: per-slice wide assembly → hive partition + CSV rows -----
+  dates      <- pg_dates(config)
+  tmp_csv    <- file.path(tmp_dir, "_all.csv")
+  partitions <- character(0L)
+
+  for (d in dates) {
+    d <- as.Date(d, origin = "1970-01-01")
+    parts <- list()
+    for (v in present) {
+      sub <- dplyr::collect(
+               dplyr::select(
+                 dplyr::filter(arrow::open_dataset(file.path(tmp_dir, paste0(v, ".parquet"))),
+                               measurement_date == d),
+                 pgid, dplyr::all_of(v)))
+      if (nrow(sub) > 0L) parts[[v]] <- data.table::setDT(sub)
+    }
+    if (length(parts) == 0L) next
+
+    slice <- Reduce(function(a, b) merge(a, b, by = "pgid", all = TRUE), parts)
+    for (v in setdiff(present, names(slice))) slice[, (v) := NA_real_]
+    slice[, measurement_date := d]
+    data.table::setcolorder(slice, c("pgid", "measurement_date", present))
+
+    # Nested Hive partition subpath: year=YYYY for yearly; year=YYYY/<unit>=VV for sub-yearly
+    part_subpath <- switch(unit,
+      year    = paste0("year=", lubridate::year(d)),
+      quarter = file.path(paste0("year=", lubridate::year(d)),
+                           paste0("quarter=", lubridate::quarter(d))),
+      month   = file.path(paste0("year=", lubridate::year(d)),
+                           paste0("month=", sprintf("%02d", lubridate::month(d)))),
+      week    = file.path(paste0("year=", lubridate::isoyear(d)),
+                           paste0("week=", sprintf("%02d", lubridate::isoweek(d)))))
+
+    part_dir <- file.path(hive_dir, part_subpath)
+    dir.create(part_dir, recursive = TRUE, showWarnings = FALSE)
+    pf <- file.path(part_dir, "part-0.parquet")
+    arrow::write_parquet(slice, pf)
+    .pg_record_checksum(pf,
+                        file.path("timevarying", part_subpath, "part-0.parquet"),
+                        base_path)
+    data.table::fwrite(slice, tmp_csv, append = length(partitions) > 0L)
+    partitions <- c(partitions, part_subpath)
+  }
+
+  # ----- Phase 3: CSV bundle, manifest, cleanup -----
+  csv_gz <- file.path(base_path, "pg_timevarying.csv.gz")
+  R.utils::gzip(tmp_csv, destname = csv_gz, overwrite = TRUE, remove = TRUE)
+  .pg_record_checksum(csv_gz, "pg_timevarying.csv.gz", base_path)
+
+  static_path <- file.path(base_path, "pg_static.parquet")
+  static_vars <- if (file.exists(static_path))
+    setdiff(names(arrow::open_dataset(static_path)), "pgid")
+  else character(0L)
+
+  meta <- list(
+    priogrid_version  = version %||% as.character(utils::packageVersion("priogrid")),
+    type              = type %||% "custom",
+    generated_at      = as.character(Sys.Date()),
+    grid = list(
+      nrow   = config$nrow,
+      ncol   = config$ncol,
+      crs    = config$crs,
+      extent = list(
+        xmin = unname(config$extent["xmin"]),
+        xmax = unname(config$extent["xmax"]),
+        ymin = unname(config$extent["ymin"]),
+        ymax = unname(config$extent["ymax"]))),
+    temporal = list(
+      resolution    = config$temporal_resolution,
+      partition_key = if (unit == "year") "year" else c("year", unit),
+      start_date    = as.character(config$start_date),
+      end_date      = as.character(config$end_date)),
+    pgid_to_coordinates = list(
+      description    = "pgid is 1-based; cell 1 is the south-west corner (xmin, ymin), increasing eastward then northward.",
+      col_from_west  = "(pgid - 1) %% ncol",
+      row_from_south = "(pgid - 1) %/% ncol",
+      lon_center     = "xmin + (col_from_west + 0.5) * (xmax - xmin) / ncol",
+      lat_center     = "ymin + (row_from_south + 0.5) * (ymax - ymin) / nrow"),
+    dataset_root         = paste(version %||% as.character(utils::packageVersion("priogrid")),
+                                 type %||% "custom", sep = "/"),
+    layout = list(
+      timevarying = "timevarying/<partition>/part-0.parquet",
+      static      = "pg_static.parquet",
+      csv         = list(timevarying = "pg_timevarying.csv.gz",
+                         static      = "pg_static.csv.gz")),
+    static_variables      = static_vars,
+    timevarying_variables = present,
+    partitions            = partitions)
+
+  json_path <- file.path(base_path, "pg_config.json")
+  jsonlite::write_json(meta, json_path, auto_unbox = TRUE, pretty = TRUE)
+  .pg_record_checksum(json_path, "pg_config.json", base_path)
+
+  return(invisible(hive_dir))
+}
+
+# Internal: verify MD5 checksums for hive partition files.
+# Reads _checksums.csv from base_path and warns on mismatch for any
+# entry whose varname starts with "timevarying/".
+# @keywords internal
+.pg_verify_hive <- function(base_path) {
+  cs_file <- file.path(base_path, "_checksums.csv")
+  if (!file.exists(cs_file)) return(invisible(NULL))
+  cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
+  hive_rows <- cs_df[startsWith(cs_df$varname, "timevarying/"), ]
+  for (i in seq_len(nrow(hive_rows))) {
+    fpath <- file.path(base_path, hive_rows$varname[i])
+    if (!file.exists(fpath)) {
+      warning("Hive partition missing: ", hive_rows$varname[i], call. = FALSE)
+      next
+    }
+    actual <- tools::md5sum(fpath)
+    if (actual != hive_rows$md5[i])
+      warning("Checksum mismatch for hive partition '", hive_rows$varname[i],
+              "': the file may be corrupted.", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+
 # Internal admin helper: bulk-bootstrap _checksums.csv for all .rds/.parquet
 # files in a resolved output folder. Useful after files have been placed without
 # going through save_pgvariable() / read_pg_static() / read_pg_timevarying().
@@ -645,7 +805,7 @@ read_pg_static <- function(config = NULL,
         }
       }
     }
-    return(nanoparquet::read_parquet(fname))
+    return(arrow::read_parquet(fname))
   }
 
   # From here on, terra is required
@@ -695,9 +855,11 @@ read_pg_static <- function(config = NULL,
   df <- rast_to_df(terra::rast(rasters), static = TRUE, config = data_config)
 
   # Save to cache
-  rlang::check_installed("arrow", reason = "to write parquet files")
   arrow::write_parquet(df, fname)
   .pg_record_checksum(fname, "pg_static.parquet", cfg$base_path)
+  static_csv <- file.path(cfg$base_path, "pg_static.csv.gz")
+  data.table::fwrite(df, static_csv, compress = "gzip")
+  .pg_record_checksum(static_csv, "pg_static.csv.gz", cfg$base_path)
 
   return(df)
 }
@@ -753,111 +915,92 @@ read_pg_timevarying <- function(config = NULL,
                                 verify_checksums = FALSE) {
 
   cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash, overwrite)
+  if (!is.null(cfg$warning)) warning(cfg$warning)
+  if (cfg$mode == "release") download_priogrid(version = cfg$version, type = cfg$type)
 
-  if (!is.null(cfg$warning)) {
-    warning(cfg$warning)
-  }
+  hive_dir <- file.path(cfg$base_path, "timevarying")
+  legacy   <- file.path(cfg$base_path, "pg_timevarying.parquet")
 
-  if (cfg$mode == "release") {
-    download_priogrid(version = cfg$version, type = cfg$type)
-  }
-
-  fname <- file.path(cfg$base_path, "pg_timevarying.parquet")
-
-  # Return cached if available (lightweight path — no terra needed)
-  if (!as_raster && !test && file.exists(fname) && !cfg$overwrite) {
+  if (!as_raster && !test && !cfg$overwrite && (dir.exists(hive_dir) || file.exists(legacy))) {
+    if (dir.exists(hive_dir)) {
+      if (isTRUE(verify_checksums)) .pg_verify_hive(cfg$base_path)
+      return(data.table::setDT(dplyr::collect(arrow::open_dataset(hive_dir))))
+    }
     if (isTRUE(verify_checksums)) {
       cs_file <- file.path(cfg$base_path, "_checksums.csv")
       if (file.exists(cs_file)) {
-        cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
+        cs_df    <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
         expected <- cs_df[cs_df$varname == "pg_timevarying.parquet", ]
-        if (nrow(expected) == 1) {
-          actual <- tools::md5sum(fname)
-          if (actual != expected$md5) {
-            warning(
-              "Checksum mismatch for cached 'pg_timevarying.parquet': the file may be corrupted.\n",
-              "  Expected MD5: ", expected$md5, "\n",
-              "  Actual MD5:   ", actual, "\n",
-              "  Rebuild with: read_pg_timevarying(overwrite = TRUE)",
-              call. = FALSE)
-          }
-        }
+        if (nrow(expected) == 1 && tools::md5sum(legacy) != expected$md5)
+          warning("Checksum mismatch for cached 'pg_timevarying.parquet': the file may be corrupted.",
+                  call. = FALSE)
       }
     }
-    return(nanoparquet::read_parquet(fname))
+    return(arrow::read_parquet(legacy))
   }
 
-  # From here on, terra is required
   rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
-
-  # Load individual variables
   timevarying <- pgvariables |> dplyr::filter(!static)
-
-  if (cfg$mode == "release") {
-    rasters <- lapply(timevarying$name, load_pgvariable,
-                      version = cfg$version, type = cfg$type)
-  } else {
-    if (is.null(cfg$config)) {
-      stop("config is required when using explicit spatial_hash/temporal_hash with read_pg_timevarying()")
-    }
-    rasters <- lapply(timevarying$name, load_pgvariable,
-                      spatial_hash = cfg$spatial_hash,
-                      temporal_hash = cfg$temporal_hash)
-  }
-
-  names(rasters) <- timevarying$name
-  rasters <- rasters[!is.na(rasters)]
-
-  # data_config is the resolved config (release params or user config)
   data_config <- cfg$config
 
-  # Test coverage if requested
-  if (test) {
-    pg_idx <- length(create_pg_indices(data_config))
-    coverage_test <- dplyr::bind_rows(
-      lapply(rasters, function(x) terra::freq(is.na(x))),
-      .id = "variable"
-    ) |>
-      dplyr::filter(value == 0) |> # non-missing
-      dplyr::mutate(
-        coverage_pct = round(count / pg_idx, 4),
-        measurement_date = lapply(rasters, names) |> unlist()
+  if (test || as_raster) {
+    if (cfg$mode == "release") {
+      rasters <- lapply(timevarying$name, load_pgvariable,
+                        version = cfg$version, type = cfg$type)
+    } else {
+      if (is.null(cfg$config))
+        stop("config is required when using explicit spatial_hash/temporal_hash with read_pg_timevarying()")
+      rasters <- lapply(timevarying$name, load_pgvariable,
+                        spatial_hash = cfg$spatial_hash, temporal_hash = cfg$temporal_hash)
+    }
+    names(rasters) <- timevarying$name
+    rasters <- rasters[!is.na(rasters)]
+
+    if (test) {
+      pg_idx <- length(create_pg_indices(data_config))
+      coverage_test <- dplyr::bind_rows(
+        lapply(rasters, function(x) terra::freq(is.na(x))),
+        .id = "variable"
       ) |>
-      dplyr::select(variable, measurement_date, coverage_n = count, coverage_pct)
-
-    return(coverage_test)
-  }
-
-  # Return rasters if requested
-  if (as_raster) {
+        dplyr::filter(value == 0) |>
+        dplyr::mutate(
+          coverage_pct     = round(count / pg_idx, 4),
+          measurement_date = lapply(rasters, names) |> unlist()
+        ) |>
+        dplyr::select(variable, measurement_date, coverage_n = count, coverage_pct)
+      return(coverage_test)
+    }
     return(rasters)
   }
 
-  # Build data.table
-  timevarying_lst <- mapply(rast_to_df, rasters, names(rasters),
-                            MoreArgs = list(static = FALSE, config = data_config),
-                            SIMPLIFY = FALSE)
+  .pg_build_timevarying(base_path = cfg$base_path, config = data_config,
+                        version = cfg$version, type = cfg$type, overwrite = TRUE)
+  data.table::setDT(dplyr::collect(arrow::open_dataset(hive_dir)))
+}
 
-  # Only return dates that are within the data scope
-  min_date <- do.call(min, lapply(timevarying_lst, function(x) min(x$measurement_date)))
-  my_dates <- pg_dates(data_config)
-  my_dates <- my_dates[my_dates >= min_date]
-
-  df <- expand.grid(pgid = create_pg_indices(data_config), measurement_date = my_dates)
-  df <- data.table::setDT(df, key = c("pgid", "measurement_date"))
-
-  for (sdt in timevarying_lst) {
-    df <- merge(df, sdt, all.x = TRUE)
-  }
-
-  # Save to cache
-  data.table::fwrite(df, paste0(tools::file_path_sans_ext(fname), ".csv.gz"),
-                     compress = "gzip")
-  rlang::check_installed("arrow", reason = "to write parquet files")
-  arrow::write_parquet(df, fname)
-  .pg_record_checksum(fname, "pg_timevarying.parquet", cfg$base_path)
-
-  return(df)
+#' Build a PRIO-GRID hive-partitioned dataset
+#'
+#' Memory-safe alternative to `read_pg_timevarying()` that writes the hive
+#' partitioned parquet dataset and CSV bundle without loading the full table.
+#' Useful for manual rebuild and re-upload workflows.
+#'
+#' @param config A `pg_config` object for custom data, or NULL (default) for the
+#'   official release.
+#' @param version Character string specifying PRIOGRID version (release mode only).
+#' @param type Character string specifying release type. Default: "05deg_yearly".
+#' @param spatial_hash 6-character MD5 hash of spatial options (advanced use).
+#' @param temporal_hash 6-character MD5 hash of temporal options (advanced use).
+#' @param overwrite Logical. If TRUE, rebuilds even if output already exists.
+#'
+#' @return Invisibly returns the base output path.
+#' @export
+build_pg_dataset <- function(config = NULL, version = NULL, type = "05deg_yearly",
+                             spatial_hash = NULL, temporal_hash = NULL,
+                             overwrite = FALSE) {
+  cfg <- resolve_pg_mode(config, version, type, spatial_hash, temporal_hash)
+  .pg_build_timevarying(base_path = cfg$base_path, config = cfg$config,
+                        version = cfg$version, type = cfg$type, overwrite = overwrite)
+  invisible(cfg$base_path)
 }
 
 #' Build an official PRIO-GRID release
@@ -909,7 +1052,8 @@ build_release <- function(version, type,
   # Calculate
   calc_pg(overwrite = TRUE, config = config)
   read_pg_static(config = config, overwrite = TRUE)
-  read_pg_timevarying(config = config, overwrite = TRUE)
+  .pg_build_timevarying(base_path = pgout_path(config = config), config = config,
+                        version = version, type = type, overwrite = TRUE)
 
   # Promote to release
   from_path <- pgout_path(config = config)
@@ -922,8 +1066,12 @@ build_release <- function(version, type,
   current_wd <- getwd()
   setwd(file.path(pg_rawfolder(), "priogrid"))
   safe_version <- stringr::str_replace_all(version, "\\.", "_")
-  zip(zipfile = paste0(paste("priogrid", safe_version, type, sep = "_"), ".zip"),
-      files = list.files(file.path("releases", version, type), full.names = TRUE))
+  rel_dir   <- file.path("releases", version, type)
+  all_top   <- list.files(rel_dir, full.names = TRUE)
+  csv_files <- list.files(rel_dir, pattern = "\\.csv\\.gz$", full.names = TRUE)
+  base_zip  <- paste("priogrid", safe_version, type, sep = "_")
+  zip(zipfile = paste0(base_zip, ".zip"),     files = setdiff(all_top, csv_files))
+  zip(zipfile = paste0(base_zip, "_csv.zip"), files = csv_files)
   setwd(current_wd)
 
   message("Release built at: ", to_path)

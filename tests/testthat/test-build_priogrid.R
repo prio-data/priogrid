@@ -166,3 +166,129 @@ test_that(".pg_bootstrap_checksums skips existing entries by default", {
   expect_equal(result2$n_added, 0L)
   expect_equal(result2$n_updated, 0L)
 })
+
+
+# ---- Hive-partitioned builder tests ----
+
+test_that(".pg_build_timevarying writes hive partitions, CSV bundle, and manifest", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
+
+  pg_set_rawfolder(tmp_raw)
+  cfg  <- test_config()
+  base <- pgout_path(config = cfg)
+  dir.create(base, recursive = TRUE)
+
+  # Fabricate two time-varying .rds rasters
+  tv <- pgvariables$name[!pgvariables$static][1:2]
+  dates <- pg_dates(cfg)
+
+  for (i in seq_along(tv)) {
+    r <- prio_blank_grid(cfg)
+    for (j in seq_along(dates)[-1]) terra::add(r) <- prio_blank_grid(cfg)
+    terra::values(r) <- runif(terra::ncell(r) * terra::nlyr(r))
+    names(r) <- as.character(dates)
+    # First variable: set 2011-12-31 layer all-NA
+    if (i == 1L) terra::values(r[[which(dates == as.Date("2011-12-31"))]]) <- NA_real_
+    save_pgvariable(r, tv[i], save_to = base)
+  }
+
+  build_pg_dataset(config = cfg)
+
+  # Hive partitions exist
+  for (yr in c("year=2010", "year=2011", "year=2012")) {
+    expect_true(file.exists(file.path(base, "timevarying", yr, "part-0.parquet")))
+  }
+  # CSV bundle and manifest exist
+  expect_true(file.exists(file.path(base, "pg_timevarying.csv.gz")))
+  expect_true(file.exists(file.path(base, "pg_config.json")))
+  # Monolith must be absent
+  expect_false(file.exists(file.path(base, "pg_timevarying.parquet")))
+
+  # Read hive dataset and check schema / content
+  d <- data.table::setDT(dplyr::collect(arrow::open_dataset(file.path(base, "timevarying"))))
+  expect_true("year" %in% names(d))
+  expect_true(all(tv %in% names(d)))
+  expect_true("pgid" %in% names(d))
+  expect_true("measurement_date" %in% names(d))
+  expect_equal(sort(unique(d$year)), 2010:2012)
+
+  # First variable all-NA in 2011; second populated
+  d2011 <- d[d$year == 2011, ]
+  expect_true(all(is.na(d2011[[tv[1]]])))
+  expect_true(any(!is.na(d2011[[tv[2]]])))
+
+  # Manifest assertions
+  m <- jsonlite::read_json(file.path(base, "pg_config.json"), simplifyVector = TRUE)
+  expect_equal(m$grid$nrow, 5L)
+  expect_equal(m$grid$ncol, 10L)
+  expect_equal(m$temporal$partition_key, "year")
+  expect_equal(m$grid$extent$xmin, -180)
+  expect_true(setequal(m$timevarying_variables, tv))
+  expect_true(setequal(m$partitions, c("year=2010", "year=2011", "year=2012")))
+
+  # CSV bundle row count matches hive
+  csv <- data.table::fread(file.path(base, "pg_timevarying.csv.gz"))
+  expect_equal(nrow(csv), nrow(d))
+  expect_true(setequal(setdiff(names(d), "year"), names(csv)))
+})
+
+test_that("read_pg_timevarying reads cached hive dataset (no terra required)", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
+
+  pg_set_rawfolder(tmp_raw)
+  cfg  <- test_config()
+  base <- pgout_path(config = cfg)
+  dir.create(base, recursive = TRUE)
+
+  tv <- pgvariables$name[!pgvariables$static][1:2]
+  dates <- pg_dates(cfg)
+  for (i in seq_along(tv)) {
+    r <- prio_blank_grid(cfg)
+    for (j in seq_along(dates)[-1]) terra::add(r) <- prio_blank_grid(cfg)
+    terra::values(r) <- runif(terra::ncell(r) * terra::nlyr(r))
+    names(r) <- as.character(dates)
+    save_pgvariable(r, tv[i], save_to = base)
+  }
+
+  build_pg_dataset(config = cfg)
+  d_ref <- data.table::setDT(dplyr::collect(arrow::open_dataset(file.path(base, "timevarying"))))
+
+  x <- read_pg_timevarying(config = cfg)
+  expect_s3_class(x, "data.table")
+  expect_equal(nrow(x), nrow(d_ref))
+})
+
+test_that("read_pg_timevarying falls back to legacy pg_timevarying.parquet", {
+  skip_if_not_installed("arrow")
+
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  on.exit(unlink(tmp_raw, recursive = TRUE), add = TRUE)
+
+  pg_set_rawfolder(tmp_raw)
+  cfg2 <- pg_config(nrow = 5L, ncol = 10L,
+                    start_date = as.Date("2000-12-31"),
+                    end_date   = as.Date("2000-12-31"),
+                    temporal_resolution = "1 year")
+  base2 <- pgout_path(config = cfg2)
+  dir.create(base2, recursive = TRUE)
+
+  legacy_df <- data.frame(pgid = 1:3,
+                          measurement_date = as.Date("2000-12-31"),
+                          x = 1:3)
+  arrow::write_parquet(legacy_df, file.path(base2, "pg_timevarying.parquet"))
+
+  result <- read_pg_timevarying(config = cfg2)
+  expect_equal(nrow(result), 3L)
+  expect_equal(sort(result$pgid), 1:3)
+})

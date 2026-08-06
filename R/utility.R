@@ -54,6 +54,18 @@ prio_blank_grid <- function(config = pg_current_config()){
   return(pg)
 }
 
+#' Temporal unit for a config's resolution
+#' @keywords internal
+pg_temporal_unit <- function(config = pg_current_config()) {
+  tr <- config$temporal_resolution
+  dplyr::case_when(
+    grepl("month",   tr) ~ "month",
+    grepl("week",    tr) ~ "week",
+    grepl("quarter", tr) ~ "quarter",
+    grepl("year",    tr) ~ "year"
+  )
+}
+
 #' Get a sequence of dates
 #'
 #' This is a wrapper of [base::seq.Date], only with defaults that can be set in the config.
@@ -70,12 +82,7 @@ pg_dates <- function(config = pg_current_config()){
   end_date <- config$end_date
   temporal_resolution <- config$temporal_resolution
 
-  unit <- dplyr::case_when(
-    grepl("month", temporal_resolution) ~ "month",
-    grepl("week", temporal_resolution) ~ "week",
-    grepl("quarter", temporal_resolution) ~ "quarter",
-    grepl("year", temporal_resolution) ~ "year"
-  )
+  unit <- pg_temporal_unit(config)
 
   is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
 
@@ -109,12 +116,7 @@ pg_date_intervals <- function(config = pg_current_config()){
   end_date <- config$end_date
   temporal_resolution <- config$temporal_resolution
 
-  unit <- dplyr::case_when(
-    grepl("month", temporal_resolution) ~ "month",
-    grepl("week", temporal_resolution) ~ "week",
-    grepl("quarter", temporal_resolution) ~ "quarter",
-    grepl("year", temporal_resolution) ~ "year"
-  )
+  unit <- pg_temporal_unit(config)
 
   is_end_of_month <- start_date == (lubridate::ceiling_date(start_date, "month") - lubridate::days(1))
 
