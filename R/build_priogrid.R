@@ -1052,7 +1052,15 @@ download_priogrid <- function(version = NULL,
   fpath <- file.path(pg_rawfolder(), "priogrid", fname)
 
   if (!file.exists(fpath) || overwrite) {
-    curl::multi_download(releases[[key]], destfiles = fpath, resume = TRUE)
+    dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
+    report <- pg_download_batch(releases[[key]], fpath)
+    if (!isTRUE(report$success)) {
+      stop("Could not download PRIO-GRID ", version, " (", type, "): ",
+           if (is.na(report$error)) paste("HTTP", report$status_code) else report$error,
+           call. = FALSE)
+    }
+    if (file.exists(fpath)) unlink(fpath)
+    file.rename(report$partfile, report$destfile)
   }
 
   suppressWarnings(

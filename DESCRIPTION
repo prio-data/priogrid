@@ -24,7 +24,8 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RdMacros: Rdpack
 Suggests:
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.7),
+    withr,
     assertthat,
     knitr,
     rmarkdown,
@@ -58,7 +59,9 @@ Imports:
     digest,
     rlang,
     RefManageR,
-    nanoparquet
+    nanoparquet,
+    stats,
+    utils
 Depends: 
     R (>= 3.5)
 URL: http://prio-data.github.io/priogrid/
