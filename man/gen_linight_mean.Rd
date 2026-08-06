@@ -14,7 +14,7 @@ A \code{SpatRaster} object
 }
 \description{
 Aggregates the high-resolution Li et al. harmonized global nighttime lights
-dataset to PRIO-GRID resolution for all available years (1992–2021).
+dataset to PRIO-GRID resolution for all available years (1992–2024).
 This produces PRIO-GRID cell-level averages of nighttime light intensity,
 harmonized with PRIO-GRID’s spatial and temporal structure.
 }
@@ -24,7 +24,7 @@ The function:
 \item Reads annual nighttime lights rasters via \code{\link{read_linight}}
 \item Aggregates 1 km nighttime light intensity values into PRIO-GRID
 cells using mean values
-\item Retains global temporal coverage (1992–2021) as a multi-layer
+\item Retains global temporal coverage (1992–2024) as a multi-layer
 \code{SpatRaster}
 \item Aligns precisely to PRIO-GRID spatial extent (resampling handled
 in \code{\link{read_linight}})
@@ -48,12 +48,12 @@ linight_pg <- gen_linight_mean()
 print(linight_pg)
 
 # Plot mean nighttime lights for 2000
-terra::plot(linight_pg[["2000-01-01"]],
+terra::plot(linight_pg[["2000-12-31"]],
             main = "PRIO-GRID Nighttime Lights (Mean, 2000)")
 
 # Compare mean intensity change between 2000 and 2020
-lights_2000 <- linight_pg[["2000-01-01"]]
-lights_2020 <- linight_pg[["2020-01-01"]]
+lights_2000 <- linight_pg[["2000-12-31"]]
+lights_2020 <- linight_pg[["2020-12-31"]]
 change <- lights_2020 - lights_2000
 terra::plot(change, main = "Change in Mean Nighttime Lights 2000–2020")
 }

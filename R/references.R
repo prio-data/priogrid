@@ -81,17 +81,17 @@ get_bib_element <- function(key, element = "author", as_character = TRUE){
 #'
 #' @param citation_liststr A semi-colon separated list of bibliography keys from [pgsources]
 #' @param bib_element Supports author, journal, year, and title.
-#' @param ...
+#' @param as_character Return the result as a string instead of a RefManageR class object.
 #'
 #' @return list with BibEntry-element classes or vectors with character strings
 #' @export
 #'
 #' @examples
 #' extract_bib_elements(pgsources$citation_keys[1])
-extract_bib_elements <- function(citation_liststr, bib_element = "author", ...){
+extract_bib_elements <- function(citation_liststr, bib_element = "author", as_character = TRUE){
   if (is.na(citation_liststr)) return(list())
   citations <- stringr::str_split(citation_liststr, ";") |> trimws()
-  element <- lapply(citations, get_bib_element, element = bib_element, ...)
+  element <- lapply(citations, get_bib_element, element = bib_element, as_character = as_character)
   element
 }
 

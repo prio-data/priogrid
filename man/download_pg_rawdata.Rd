@@ -8,7 +8,12 @@ download_pg_rawdata(
   file_info = NULL,
   overwrite = FALSE,
   batch_size = 20,
-  max_retry = 10
+  max_retry = 10,
+  max_concurrent = 4,
+  retry_base_delay = 2,
+  retry_max_delay = 120,
+  verify = TRUE,
+  quiet = !pg_current_config()$verbose
 )
 }
 \arguments{
@@ -20,12 +25,47 @@ then file_info will be all data returned from \code{\link[=pg_rawfiles]{pg_rawfi
 \item{batch_size}{Integer. Number of files per download batch. Default 20.}
 
 \item{max_retry}{Integer. Maximum number of retry attempts for failed downloads. Default 10.}
+
+\item{max_concurrent}{Integer. Upper bound on simultaneous transfers. Default 4.
+A batch is transferred in parallel, so the effective batch is
+\code{min(batch_size, max_concurrent)} and this is the argument that decides how
+hard a server is hit.}
+
+\item{retry_base_delay}{Numeric. Base seconds for exponential backoff between retries. Default 2.}
+
+\item{retry_max_delay}{Numeric. Maximum seconds to wait between retries. Default 120.}
+
+\item{verify}{Logical. Whether to check downloaded files against the size the
+server announced and against \link{pgchecksum}. Default TRUE.}
+
+\item{quiet}{Logical. Suppress progress messages. Defaults to the inverse of
+\code{verbose} in \code{\link[=pg_current_config]{pg_current_config()}}.}
 }
 \value{
-data.frame Download summary
+data.frame (invisibly). One row per file in \code{file_info}, with columns
+\code{source_name}, \code{source_version}, \code{id}, \code{filename}, \code{url}, \code{status}
+("ok", "failed" or "skipped"), \code{attempts}, \code{status_code}, \code{bytes},
+\code{md5_ok}, \code{resolved_name}, \code{name_drift} and \code{error}.
 }
 \description{
 Before running this, you need to set the folder using pg_set_rawfolder("path/to/folder")
+}
+\details{
+Files are written to \verb{<filename>.part} and only renamed into place once the
+transfer has finished, so a file under its final name always means a complete
+download. An interrupted run leaves \code{.part} files behind, and calling the
+function again resumes them.
+
+Two independent checks run on each downloaded file. The transfer is checked
+against the size the server announced, and a short read is retried. The file
+is separately compared against the MD5 in \code{pgchecksum} where one exists; that
+comparison is advisory and never blocks a download, because sources have no
+reference checksum until PRIO-GRID has been built from them once. See
+\code{\link[=pg_update_checksums]{pg_update_checksums()}} and \code{\link[=check_pgsourcefiles]{check_pgsourcefiles()}}.
+
+Files downloaded by earlier versions of this function were written directly
+to their final name, so a file truncated before this change still looks
+complete. Use \code{\link[=check_pgsourcefiles]{check_pgsourcefiles()}} to find those.
 }
 \examples{
 files_to_download <- pg_rawfiles() |> dplyr::filter(id == "ec3eea2e-6bec-40d5-a09c-e9c6ff2f8b6b")

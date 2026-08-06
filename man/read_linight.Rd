@@ -4,37 +4,36 @@
 \alias{read_linight}
 \title{Reads the Li Nighttime data}
 \usage{
-read_linight(overwrite_files = FALSE, config = pg_current_config())
+read_linight(config = pg_current_config(), overwrite_files = FALSE)
 }
 \arguments{
+\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
+
 \item{overwrite_files}{Logical. If \code{TRUE}, previously fixed rasters are
 recalculated and overwritten. Defaults to \code{FALSE}.}
-
-\item{config}{A \code{pg_config} object. Defaults to \code{\link{pg_current_config}()}.}
 }
 \value{
 A \code{SpatRaster} object
 }
 \description{
 Downloads, preprocesses, and harmonizes the Li et al. global nighttime
-light dataset (v8). This dataset provides global, annual composites
+light dataset (v10). This dataset provides global, annual composites
 of nighttime light intensity, harmonized across multiple satellite
 sensors to produce a consistent multi-decadal time series.
 }
 \details{
 The function:
 \itemize{
-\item Downloads the zipped Li Nighttime Lights raster files from the
-PRIO-GRID data repository
-\item Extracts TIF files, caching results to avoid repeated unzipping
+\item Downloads individual Li Nighttime Lights raster files from the
+PRIO-GRID data repository via the Figshare API
 \item Identifies rasters with extent mismatches (common in the dataset)
 \item Resamples problematic rasters to a standardized global template
 (\code{EPSG:4326}, extent -180/180, -90/90) using nearest neighbor
 resampling
-\item Stores corrected rasters with a \code{"fixed_"} prefix for reuse
+\item Stores corrected rasters with a \code{"extentfixed_"} prefix for reuse
 \item Combines corrected rasters into a multi-layer \code{SpatRaster}
 \item Assigns layer names as dates, aligned to PRIO-GRID temporal
-conventions (January 1 of each year by default)
+conventions
 }
 }
 \note{
@@ -56,12 +55,12 @@ linight <- read_linight()
 print(linight)
 
 # Plot nighttime lights for year 2000
-terra::plot(linight[["2000-01-01"]],
+terra::plot(linight[["2000-12-31"]],
             main = "Global Nighttime Lights 2000")
 
 # Compare change between 2000 and 2020
-lights_2000 <- linight[["2000-01-01"]]
-lights_2020 <- linight[["2020-01-01"]]
+lights_2000 <- linight[["2000-12-31"]]
+lights_2020 <- linight[["2020-12-31"]]
 change <- lights_2020 - lights_2000
 terra::plot(change, main = "Nighttime Lights Change 2000–2020")
 

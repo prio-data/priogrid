@@ -8,7 +8,9 @@ pg_data_availability()
 }
 \value{
 A data.frame with columns \code{source_name}, \code{source_version}, \code{n_files},
-\code{n_present}, and \code{all_present}, or NULL if the raw data folder is not set.
+\code{n_present}, \code{n_partial}, and \code{all_present}, or NULL if the raw data folder
+is not set. \code{n_partial} counts files whose download was interrupted and can
+be resumed by re-running \code{\link[=download_pg_rawdata]{download_pg_rawdata()}}.
 }
 \description{
 Returns a summary of which data sources have been downloaded to the raw data

@@ -4,14 +4,18 @@
 \alias{extract_bib_elements}
 \title{Helper function to parse bibliography elements based on a source}
 \usage{
-extract_bib_elements(citation_liststr, bib_element = "author", ...)
+extract_bib_elements(
+  citation_liststr,
+  bib_element = "author",
+  as_character = TRUE
+)
 }
 \arguments{
 \item{citation_liststr}{A semi-colon separated list of bibliography keys from \link{pgsources}}
 
 \item{bib_element}{Supports author, journal, year, and title.}
 
-\item{...}{}
+\item{as_character}{Return the result as a string instead of a RefManageR class object.}
 }
 \value{
 list with BibEntry-element classes or vectors with character strings

@@ -26,6 +26,7 @@ The resulting \code{pgchecksum} object is bundled with the package and used by
 }
 \examples{
 \dontrun{
-pg_update_checksums()
+priogrid:::pg_update_checksums()
 }
 }
+\keyword{internal}

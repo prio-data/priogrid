@@ -115,11 +115,13 @@ Source <- R6::R6Class("Source",
       # Handle URLs
       download_result <- private$handle_download_url(download_url, type = "urls")
       private$url_data$download <- download_result$urls
+      private$url_data$download_filenames <- download_result$filenames
       private$data$download_url <- download_result$url
       private$data$download_url_exists <- download_result$valid
 
       prio_result <- private$handle_download_url(prio_mirror, type = "prio_mirror_urls")
       private$url_data$prio <- prio_result$urls
+      private$url_data$prio_filenames <- prio_result$filenames
       private$data$prio_mirror <- prio_result$url
       private$data$prio_mirror_exists <- prio_result$valid
       private$data$created_at <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -320,6 +322,15 @@ Source <- R6::R6Class("Source",
 
       curl_opts <- list(timeout = 10, connecttimeout = 5)
 
+      # A url list line may carry a tab-separated filename, so validate column 1 only.
+      validate_url_list <- function(file_path){
+        url_list <- pg_read_url_list(file_path)
+        urls_valid <- all(sapply(url_list$url, function(u) {
+          tryCatch(RCurl::url.exists(u, .opts = curl_opts), error = function(e) FALSE)
+        }))
+        list(urls = url_list$url, filenames = url_list$filename, valid = urls_valid)
+      }
+
       # Handle urls/ file case
       if (startsWith(url, "urls/")) {
         file_path <- system.file("extdata", sub("^urls/", "", url), package = "priogrid")
@@ -327,26 +338,23 @@ Source <- R6::R6Class("Source",
           return(list(
             url = NA_character_,
             urls = NULL,
+            filenames = NULL,
             valid = FALSE
           ))
         }
-        urls <- readLines(file_path)
-        urls_valid <- all(sapply(urls, function(u) {
-          tryCatch(RCurl::url.exists(u, .opts = curl_opts), error = function(e) FALSE)
-        }))
-        return(list(url = url, urls = urls, valid = urls_valid))
+        checked <- validate_url_list(file_path)
+        return(list(url = url, urls = checked$urls, filenames = checked$filenames,
+                    valid = checked$valid))
       }
 
       # Handle local file case
       if (file.exists(url)) {
-        urls <- readLines(url)
-        urls_valid <- all(sapply(urls, function(u) {
-          tryCatch(RCurl::url.exists(u, .opts = curl_opts), error = function(e) FALSE)
-        }))
+        checked <- validate_url_list(url)
         return(list(
           url = file.path(type, paste0(private$data$id, ".txt")),
-          urls = urls,
-          valid = urls_valid
+          urls = checked$urls,
+          filenames = checked$filenames,
+          valid = checked$valid
         ))
       }
 
@@ -356,6 +364,7 @@ Source <- R6::R6Class("Source",
       return(list(
         url = url,
         urls = c(url),
+        filenames = NA_character_,
         valid = url_valid
       ))
     },
@@ -366,14 +375,16 @@ Source <- R6::R6Class("Source",
       if (grepl(private$data$id, private$data$download_url) & !is.null(private$url_data$download)) {
         fpath <- file.path("inst/extdata", private$data$download_url)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
-        writeLines(private$url_data$download, fpath)
+        writeLines(pg_format_url_list(private$url_data$download,
+                                      private$url_data$download_filenames), fpath)
         urls_saved <- TRUE
       }
 
       if (grepl(private$data$id, private$data$prio_mirror) & !is.null(private$url_data$prio)) {
         fpath <- file.path("inst/extdata", private$data$prio_mirror)
         dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
-        writeLines(private$url_data$prio, fpath)
+        writeLines(pg_format_url_list(private$url_data$prio,
+                                      private$url_data$prio_filenames), fpath)
         urls_saved <- TRUE
       }
 
