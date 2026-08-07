@@ -12,11 +12,11 @@ test_that("save_pgvariable and load_pgvariable round-trip works", {
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
 
   save_pgvariable(r, varname, save_to = tmp)
-  expect_true(file.exists(file.path(tmp, paste0(varname, ".rds"))))
+  expect_true(file.exists(file.path(tmp, "cog", paste0(varname, ".tif"))))
 
-  loaded <- terra::unwrap(readRDS(file.path(tmp, paste0(varname, ".rds"))))
+  loaded <- terra::rast(file.path(tmp, "cog", paste0(varname, ".tif")))
   expect_s4_class(loaded, "SpatRaster")
-  expect_equal(terra::values(loaded), terra::values(r))
+  expect_equal(terra::values(loaded), terra::values(r), tolerance = 1e-5)
 })
 
 test_that("save_pgvariable errors for unknown varname", {

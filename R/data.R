@@ -43,11 +43,18 @@
 #' for the data depending on whether the data is static or with a temporal-dimension.
 #'
 #' @format ## `pgvariables`
-#' A data frame with 4 rows and 5 columns:
+#' A data frame with 38 rows and 10 columns:
 #' \describe{
 #'   \item{name}{Full name of the variable.}
 #'   \item{static}{Boolean. Whether the variable varies over time or not.}
 #'   \item{source_ids}{Comma-separated string. The Unique Universal Identifier (UUID) of the sources used to build the variable.}
+#'   \item{label}{Display title for the variable; defaults to the variable name.}
+#'   \item{unit}{Measurement unit (e.g., "°C", "mm"); \code{NA} if not applicable.}
+#'   \item{transform}{Display transform applied before plotting; one of \code{identity}, \code{log1p}, \code{log10}, or \code{sqrt}.}
+#'   \item{palette}{Color palette name for visualization. Default: \code{viridis}.}
+#'   \item{plot_type}{Plot type hint; one of \code{continuous}, \code{categorical}, or \code{diverging}.}
+#'   \item{value_min}{Suggested color-scale minimum; \code{NA} for data-driven scaling.}
+#'   \item{value_max}{Suggested color-scale maximum; \code{NA} for data-driven scaling.}
 #' }
 "pgvariables"
 

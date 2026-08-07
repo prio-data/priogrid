@@ -135,7 +135,10 @@ test_that(".pg_bootstrap_checksums adds entries for existing files", {
   out_path <- pgout_path(spatial_hash = s_hash, temporal_hash = t_hash)
   dir.create(out_path, recursive = TRUE)
 
-  saveRDS(list(x = 1), file.path(out_path, "fake_var.rds"))
+  dir.create(file.path(out_path, "cog"))
+  terra::writeRaster(terra::rast(nrows = 2L, ncols = 2L, vals = 1:4),
+                     file.path(out_path, "cog", "fake_var.tif"),
+                     filetype = "COG", overwrite = TRUE)
 
   result <- priogrid:::.pg_bootstrap_checksums(config = cfg)
 
@@ -159,7 +162,10 @@ test_that(".pg_bootstrap_checksums skips existing entries by default", {
   out_path <- pgout_path(spatial_hash = s_hash, temporal_hash = t_hash)
   dir.create(out_path, recursive = TRUE)
 
-  saveRDS(list(x = 1), file.path(out_path, "fake_var.rds"))
+  dir.create(file.path(out_path, "cog"))
+  terra::writeRaster(terra::rast(nrows = 2L, ncols = 2L, vals = 1:4),
+                     file.path(out_path, "cog", "fake_var.tif"),
+                     filetype = "COG", overwrite = TRUE)
   priogrid:::.pg_bootstrap_checksums(config = cfg)
 
   result2 <- priogrid:::.pg_bootstrap_checksums(config = cfg)
@@ -183,7 +189,7 @@ test_that(".pg_build_timevarying writes hive partitions, CSV bundle, and manifes
   base <- pgout_path(config = cfg)
   dir.create(base, recursive = TRUE)
 
-  # Fabricate two time-varying .rds rasters
+  # Fabricate two time-varying COG rasters
   tv <- pgvariables$name[!pgvariables$static][1:2]
   dates <- pg_dates(cfg)
 
@@ -230,6 +236,14 @@ test_that(".pg_build_timevarying writes hive partitions, CSV bundle, and manifes
   expect_equal(m$grid$extent$xmin, -180)
   expect_true(setequal(m$timevarying_variables, tv))
   expect_true(setequal(m$partitions, c("year=2010", "year=2011", "year=2012")))
+
+  # COG files written by save_pgvariable
+  for (vn in tv) {
+    expect_true(file.exists(file.path(base, "cog", paste0(vn, ".tif"))))
+  }
+  # Manifest carries variables metadata
+  expect_true("variables" %in% names(m))
+  expect_true(all(tv %in% names(m$variables)))
 
   # CSV bundle row count matches hive
   csv <- data.table::fread(file.path(base, "pg_timevarying.csv.gz"))

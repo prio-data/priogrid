@@ -96,7 +96,7 @@ pgout_path <- function(version = NULL,
 #'
 #' Calculates PRIO-GRID variables based on current config and saves them
 #' to disk. Each variable is computed by calling its corresponding gen_*() function
-#' and saved as an .rds file in the custom data folder.
+#' and saved as a Cloud-Optimized GeoTIFF (COG) under the \code{cog/} sub-directory.
 #'
 #' @param varnames Character vector with variable names from [pgvariables].
 #'   If NULL (default), calculates all available variables.
@@ -165,7 +165,8 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
     ), config_file)
   }
 
-  existing_files <- list.files(save_to) |> tools::file_path_sans_ext()
+  existing_files <- list.files(file.path(save_to, "cog"), pattern = "\\.tif$") |>
+    tools::file_path_sans_ext()
 
   if (!overwrite) {
     valid_varnames <- valid_varnames[!valid_varnames %in% existing_files]
@@ -221,15 +222,40 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
   invisible(NULL)
 }
 
+# Internal: build the named pg_* GDAL metatag vector for a variable from the
+# current pgvariables row. Drop NA/empty fields so callers can call
+# terra::metags(r) <- .pg_build_metatags(varname) directly.
+# @keywords internal
+.pg_build_metatags <- function(varname) {
+  meta <- pgvariables[pgvariables$name == varname, ]
+  if (nrow(meta) == 0L) stop("varname '", varname, "' not found in pgvariables.")
+  c(
+    pg_name      = meta$name,
+    pg_static    = as.character(meta$static),
+    if (!is.na(meta$label)     && nzchar(meta$label))     c(pg_label     = meta$label)     else NULL,
+    if (!is.na(meta$unit)      && nzchar(meta$unit))      c(pg_unit      = meta$unit)      else NULL,
+    if (!is.na(meta$transform) && nzchar(meta$transform)) c(pg_transform = meta$transform) else NULL,
+    if (!is.na(meta$palette)   && nzchar(meta$palette))   c(pg_palette   = meta$palette)   else NULL,
+    if (!is.na(meta$plot_type) && nzchar(meta$plot_type)) c(pg_plot_type = meta$plot_type) else NULL,
+    if (!is.na(meta$value_min))                           c(pg_value_min = as.character(meta$value_min)) else NULL,
+    if (!is.na(meta$value_max))                           c(pg_value_max = as.character(meta$value_max)) else NULL
+  )
+}
+
 #' Save a PRIO-GRID variable
 #'
-#' Saves a terra SpatRaster as a wrapped .rds file. The variable must be
-#' listed in [pgvariables].
+#' Saves a terra SpatRaster as a Cloud-Optimized GeoTIFF (COG) under the
+#' \code{cog/} sub-directory of the dataset root. The variable must be listed
+#' in [pgvariables]. Layer names, \code{time()}, and \code{units()} are
+#' preserved natively inside the \code{.tif}. Plot metadata from [pgvariables]
+#' (\code{label}, \code{unit}, \code{transform}, \code{palette},
+#' \code{plot_type}, \code{value_min}, \code{value_max}) is stamped as
+#' \code{pg_*} GDAL metatags so the COG is self-describing.
 #'
-#' @param rast Terra SpatRaster object from a gen_*() function
-#' @param varname Character string with the variable name (must exist in pgvariables)
-#' @param save_to Character string with folder path. Defaults to current custom
-#'   data location based on config.
+#' @param rast Terra SpatRaster object from a gen_*() function.
+#' @param varname Character string with the variable name (must exist in pgvariables).
+#' @param save_to Character string with the dataset root path. Defaults to current
+#'   custom data location based on config.
 #'
 #' @return NULL (invisibly). Called for side effects (saving file).
 #' @export
@@ -249,14 +275,42 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     stop("Output directory does not exist: ", save_to)
   }
 
-  filepath <- file.path(save_to, paste0(varname, ".rds"))
+  cog_dir <- file.path(save_to, "cog")
+  if (!dir.exists(cog_dir)) dir.create(cog_dir, recursive = TRUE)
 
-  if (!inherits(rast, "PackedSpatRaster")) {
-    rast <- terra::wrap(rast)
+  filepath <- file.path(cog_dir, paste0(varname, ".tif"))
+
+  meta <- pgvariables[pgvariables$name == varname, ]
+
+  # Stamp time() for time-varying rasters whose layer names are ISO dates
+  if (!isTRUE(meta$static) && all(is.na(terra::time(rast)))) {
+    parsed <- tryCatch(as.Date(names(rast)), error = function(e) NULL)
+    if (!is.null(parsed) && !any(is.na(parsed)))
+      terra::time(rast) <- parsed
   }
 
-  saveRDS(rast, filepath)
+  # Stamp units from pgvariables
+  if (!is.na(meta$unit) && nzchar(meta$unit))
+    terra::units(rast) <- meta$unit
+
+  terra::metags(rast) <- .pg_build_metatags(varname)
+
+  terra::writeRaster(rast, filepath, filetype = "COG", overwrite = TRUE,
+                     gdal = c("COMPRESS=DEFLATE", "NUM_THREADS=ALL_CPUS"))
+
+  # Remove redundant sidecar (COG is self-describing)
+  aux <- paste0(filepath, ".aux.json")
+  if (file.exists(aux)) file.remove(aux)
+
   .pg_record_checksum(filepath, varname, save_to)
+
+  # Defensive: checksum categorical .aux.xml if terra wrote one
+  if (any(terra::is.factor(rast))) {
+    aux_xml <- paste0(filepath, ".aux.xml")
+    if (file.exists(aux_xml))
+      .pg_record_checksum(aux_xml, file.path("cog", paste0(varname, ".tif.aux.xml")), save_to)
+  }
+
   invisible(NULL)
 }
 
@@ -275,6 +329,48 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   }
   utils::write.csv(updated, checksum_file, row.names = FALSE)
   invisible(NULL)
+}
+
+# Internal: re-stamp pg_* GDAL metatags (and terra units) on an existing COG
+# from the current pgvariables row, without recomputing the raster data.
+# Use this after editing data_raw/variables.csv + regenerating pgvariables.rda
+# to propagate display metadata (label, palette, transform, …) into built COGs.
+# @param varname Variable name; must exist in pgvariables and in the cog/ dir.
+# @param save_to Dataset root (same convention as save_pgvariable).
+# @return Path to the restamped COG, invisibly.
+# @keywords internal
+.pg_restamp_metatags <- function(varname, save_to = pgout_path()) {
+  rlang::check_installed("terra", reason = "to restamp COG metatags")
+  if (!varname %in% pgvariables$name) {
+    stop("varname '", varname, "' not found in pgvariables.")
+  }
+  filepath <- file.path(save_to, "cog", paste0(varname, ".tif"))
+  if (!file.exists(filepath)) {
+    stop("COG not found at: ", filepath, "\n  Run calc_pg() first.")
+  }
+
+  r <- terra::rast(filepath)
+
+  # Sync terra units: set if non-empty, clear otherwise
+  meta <- pgvariables[pgvariables$name == varname, ]
+  terra::units(r) <- if (!is.na(meta$unit) && nzchar(meta$unit)) meta$unit else ""
+
+  terra::metags(r) <- .pg_build_metatags(varname)
+
+  # Write to a sibling temp file (same filesystem → rename is atomic), then
+  # replace the original. terra cannot write a lazy raster back to its own path.
+  tmp_path <- tempfile(tmpdir = dirname(filepath), fileext = ".tif")
+  on.exit(if (file.exists(tmp_path)) file.remove(tmp_path), add = TRUE)
+  terra::writeRaster(r, tmp_path, filetype = "COG", overwrite = TRUE,
+                     gdal = c("COMPRESS=DEFLATE", "NUM_THREADS=ALL_CPUS"))
+  file.rename(tmp_path, filepath)
+
+  aux <- paste0(filepath, ".aux.json")
+  if (file.exists(aux)) file.remove(aux)
+
+  .pg_record_checksum(filepath, varname, save_to)
+
+  invisible(filepath)
 }
 
 # Internal: memory-bounded hive-partitioned builder for time-varying data.
@@ -304,12 +400,12 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 
   # ----- Phase 1: per-variable long parquet (date-sorted) -----
   tv      <- dplyr::filter(pgvariables, !static)$name
-  present <- tv[file.exists(file.path(base_path, paste0(tv, ".rds")))]
+  present <- tv[file.exists(file.path(base_path, "cog", paste0(tv, ".tif")))]
   if (length(present) == 0L)
-    stop("No time-varying .rds rasters found in ", base_path)
+    stop("No time-varying COGs found in ", file.path(base_path, "cog"))
 
   for (v in present) {
-    r  <- terra::unwrap(readRDS(file.path(base_path, paste0(v, ".rds"))))
+    r  <- terra::rast(file.path(base_path, "cog", paste0(v, ".tif")))
     dt <- rast_to_df(r, static = FALSE, varname = v, config = config)
     data.table::setorder(dt, measurement_date)
     arrow::write_parquet(dt, file.path(tmp_dir, paste0(v, ".parquet")),
@@ -371,6 +467,15 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     setdiff(names(arrow::open_dataset(static_path)), "pgid")
   else character(0L)
 
+  all_vars <- c(static_vars, present)
+  variables_meta <- lapply(all_vars, function(vn) {
+    row <- pgvariables[pgvariables$name == vn, ]
+    if (nrow(row) == 0L) return(list(name = vn))
+    as.list(row[1L, c("name", "static", "source_ids", "label", "unit",
+                       "transform", "palette", "plot_type", "value_min", "value_max")])
+  })
+  names(variables_meta) <- all_vars
+
   meta <- list(
     priogrid_version  = version %||% as.character(utils::packageVersion("priogrid")),
     type              = type %||% "custom",
@@ -398,12 +503,14 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     dataset_root         = paste(version %||% as.character(utils::packageVersion("priogrid")),
                                  type %||% "custom", sep = "/"),
     layout = list(
+      cog         = "cog/<varname>.tif",
       timevarying = "timevarying/<partition>/part-0.parquet",
       static      = "pg_static.parquet",
       csv         = list(timevarying = "pg_timevarying.csv.gz",
                          static      = "pg_static.csv.gz")),
     static_variables      = static_vars,
     timevarying_variables = present,
+    variables             = variables_meta,
     partitions            = partitions)
 
   json_path <- file.path(base_path, "pg_config.json")
@@ -507,7 +614,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 }
 
 
-# Internal admin helper: bulk-bootstrap _checksums.csv for all .rds/.parquet
+# Internal admin helper: bulk-bootstrap _checksums.csv for all .tif/.parquet
 # files in a resolved output folder. Useful after files have been placed without
 # going through save_pgvariable() / read_pg_static() / read_pg_timevarying().
 #
@@ -530,10 +637,32 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     stop("Output directory does not exist: ", base_path, call. = FALSE)
   }
 
-  target_files <- list.files(base_path, pattern = "\\.(rds|parquet)$", full.names = FALSE)
+  # Root-level parquet files (label = filename, e.g. "pg_static.parquet")
+  parquet_files <- list.files(base_path, pattern = "\\.parquet$", full.names = FALSE)
+  parquet_entries <- if (length(parquet_files) > 0L)
+    data.frame(fname = parquet_files,
+               label = parquet_files,
+               stringsAsFactors = FALSE)
+  else
+    data.frame(fname = character(0), label = character(0), stringsAsFactors = FALSE)
 
-  if (length(target_files) == 0) {
-    message("No .rds or .parquet files found in: ", base_path)
+  # COG .tif files under cog/ (label = varname without extension)
+  cog_dir <- file.path(base_path, "cog")
+  cog_files <- if (dir.exists(cog_dir))
+    list.files(cog_dir, pattern = "\\.tif$", full.names = FALSE)
+  else
+    character(0)
+  cog_entries <- if (length(cog_files) > 0L)
+    data.frame(fname = file.path("cog", cog_files),
+               label = tools::file_path_sans_ext(cog_files),
+               stringsAsFactors = FALSE)
+  else
+    data.frame(fname = character(0), label = character(0), stringsAsFactors = FALSE)
+
+  entries <- rbind(parquet_entries, cog_entries)
+
+  if (nrow(entries) == 0L) {
+    message("No .tif or .parquet files found in: ", base_path)
     return(invisible(list(n_added = 0L, n_updated = 0L)))
   }
 
@@ -547,8 +676,9 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   n_added   <- 0L
   n_updated <- 0L
 
-  for (fname in target_files) {
-    label <- if (grepl("\\.rds$", fname)) tools::file_path_sans_ext(fname) else fname
+  for (i in seq_len(nrow(entries))) {
+    fname <- entries$fname[i]
+    label <- entries$label[i]
     already_exists <- label %in% existing_labels
 
     if (already_exists && !overwrite_existing) next
@@ -567,7 +697,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     "Bootstrap complete for: ", base_path, "\n",
     "  Added:   ", n_added, " new checksum(s)\n",
     "  Updated: ", n_updated, " existing checksum(s)\n",
-    "  Skipped: ", length(target_files) - n_added - n_updated,
+    "  Skipped: ", nrow(entries) - n_added - n_updated,
     " already-present checksum(s) (use overwrite_existing=TRUE to force)"
   )
 
@@ -577,15 +707,20 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 
 #' Load a PRIO-GRID variable
 #'
-#' Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.
-#' The mode is determined by the `config` argument:
+#' Loads a PRIO-GRID variable from disk and returns it as a lazy, file-backed
+#' terra SpatRaster (no data is loaded into memory until the raster is explicitly
+#' materialized). Supports optional lazy subsetting by layers and spatial windowing,
+#' enabling a larger-than-memory workflow.
 #'
-#' - `config = NULL` (default): loads from the official release (downloads if needed).
-#' - `config = pg_config(...)`: loads from custom data built with that config.
-#' - `spatial_hash` + `temporal_hash`: loads from a specific custom folder by hash.
+#' Mode is determined by the \code{config} argument:
+#' \itemize{
+#'   \item \code{config = NULL} (default): loads from the official release (downloads if needed).
+#'   \item \code{config = pg_config(...)}: loads from custom data built with that config.
+#'   \item \code{spatial_hash} + \code{temporal_hash}: loads from a specific custom folder by hash.
+#' }
 #'
 #' @param varname Character string with the variable name.
-#' @param config A `pg_config` object for custom data, or NULL (default) for the
+#' @param config A \code{pg_config} object for custom data, or NULL (default) for the
 #'   official release.
 #' @param version Character string specifying PRIOGRID version (e.g., "3.0.1").
 #'   Only used in release mode (config = NULL). Defaults to current package version.
@@ -597,8 +732,17 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'   spatial_hash.
 #' @param verify_checksums Logical. If TRUE, verifies the file's MD5 checksum
 #'   against stored values. Default FALSE.
+#' @param extent Optional spatial window. Either a \code{SpatExtent} (used as-is in
+#'   the raster's CRS) or a length-4 numeric vector \code{c(xmin, xmax, ymin, ymax)}
+#'   in EPSG:4326. Applied lazily via \code{terra::window()} — no data is loaded
+#'   until the raster is materialized. Enables efficient reading of spatial subsets
+#'   from large COGs (larger-than-memory workflow).
+#' @param layers Optional layer selector. A character vector of layer names or an
+#'   integer vector of layer indices. Applied lazily via \code{terra::subset()}.
 #'
-#' @return Terra SpatRaster object
+#' @return A lazy, file-backed \code{SpatRaster}. Data is not loaded into memory
+#'   until explicitly materialized (e.g., via \code{terra::values()} or
+#'   \code{terra::crop()}).
 #' @export
 #'
 #' @examples
@@ -617,6 +761,10 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'   r <- load_pgvariable("cshapes_gwcode",
 #'                        spatial_hash = "ecf4dd",
 #'                        temporal_hash = "727cca")
+#'
+#'   # Windowed / lazy load (larger-than-memory)
+#'   r <- load_pgvariable("cru_tmp", extent = c(-30, 60, 35, 72), layers = 1:12)
+#'   terra::inMemory(r)  # FALSE
 #' }
 load_pgvariable <- function(varname,
                             config = NULL,
@@ -624,10 +772,12 @@ load_pgvariable <- function(varname,
                             type = "05deg_yearly",
                             spatial_hash = NULL,
                             temporal_hash = NULL,
-                            verify_checksums = FALSE) {
+                            verify_checksums = FALSE,
+                            extent = NULL,
+                            layers = NULL) {
   rlang::check_installed("terra", reason = "to load PRIO-GRID variable rasters")
 
-  has_hashes <- !is.null(spatial_hash) && !is.null(temporal_hash)
+  has_hashes   <- !is.null(spatial_hash) && !is.null(temporal_hash)
   has_one_hash <- xor(!is.null(spatial_hash), !is.null(temporal_hash))
 
   if (has_one_hash) {
@@ -641,36 +791,26 @@ load_pgvariable <- function(varname,
   }
 
   if (has_hashes) {
-    # Custom mode: explicit hashes
-    filepath <- file.path(
-      pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash),
-      paste0(varname, ".rds")
-    )
+    base_dir <- pgout_path(spatial_hash = spatial_hash, temporal_hash = temporal_hash)
   } else if (!is.null(config)) {
-    # Custom mode: config-driven
     if (isTRUE(config$verbose)) {
       message("Loading custom data for config (", get_spatial_hash(config), "/", get_temporal_hash(config), ")")
     }
-    filepath <- file.path(
-      pgout_path(spatial_hash = get_spatial_hash(config), temporal_hash = get_temporal_hash(config)),
-      paste0(varname, ".rds")
-    )
+    base_dir <- pgout_path(spatial_hash = get_spatial_hash(config), temporal_hash = get_temporal_hash(config))
   } else {
-    # Release mode
     resolved_version <- version %||% as.character(packageVersion("priogrid"))
     download_priogrid(version = resolved_version, type = type)
-    filepath <- file.path(
-      pgout_path(version = resolved_version, type = type),
-      paste0(varname, ".rds")
-    )
+    base_dir <- pgout_path(version = resolved_version, type = type)
   }
+
+  filepath <- file.path(base_dir, "cog", paste0(varname, ".tif"))
 
   if (!file.exists(filepath)) {
     stop("Variable '", varname, "' not found at: ", filepath)
   }
 
   if (isTRUE(verify_checksums)) {
-    cs_file <- file.path(dirname(filepath), "_checksums.csv")
+    cs_file <- file.path(base_dir, "_checksums.csv")
     if (file.exists(cs_file)) {
       cs_df <- utils::read.csv(cs_file, stringsAsFactors = FALSE)
       expected <- cs_df[cs_df$varname == varname, ]
@@ -689,7 +829,50 @@ load_pgvariable <- function(varname,
     }
   }
 
-  terra::unwrap(readRDS(filepath))
+  r <- terra::rast(filepath)
+
+  # time() fallback for hand-placed COGs whose layer names are ISO dates
+  # (save_pgvariable already stamps time(); this covers external files)
+  static_flag <- pgvariables$static[pgvariables$name == varname]
+  if (length(static_flag) == 1L && !isTRUE(static_flag) && all(is.na(terra::time(r)))) {
+    parsed <- tryCatch(as.Date(names(r)), error = function(e) NULL)
+    if (!is.null(parsed) && !any(is.na(parsed)))
+      terra::time(r) <- parsed
+  }
+
+  # Lazy layer subsetting
+  if (!is.null(layers)) {
+    if (is.character(layers)) {
+      bad <- setdiff(layers, names(r))
+      if (length(bad) > 0L)
+        stop("Layer name(s) not found in '", varname, "': ", paste(bad, collapse = ", "))
+    } else {
+      if (any(layers < 1L | layers > terra::nlyr(r)))
+        stop("Layer index out of range for '", varname, "' (1:", terra::nlyr(r), ")")
+    }
+    r <- terra::subset(r, layers)
+  }
+
+  # Lazy spatial windowing
+  if (!is.null(extent)) {
+    if (inherits(extent, "SpatExtent")) {
+      e <- extent
+    } else {
+      nums <- as.numeric(extent)
+      e <- if (!terra::is.lonlat(r)) {
+        rlang::check_installed("sf", reason = "to reproject spatial extent for non-4326 rasters")
+        bbox <- sf::st_bbox(c(xmin = nums[1], xmax = nums[2],
+                               ymin = nums[3], ymax = nums[4]), crs = 4326)
+        bbox_t <- as.numeric(sf::st_transform(bbox, crs = terra::crs(r)))
+        terra::ext(bbox_t[1], bbox_t[3], bbox_t[2], bbox_t[4])
+      } else {
+        terra::ext(nums)
+      }
+    }
+    terra::window(r) <- e
+  }
+
+  r
 }
 
 #' Resolve PRIO-GRID data mode and paths
@@ -1231,7 +1414,7 @@ pg_list_custom <- function() {
     )
     cfg <- env$cfg
 
-    n_vars <- length(list.files(folder, pattern = "\\.rds$"))
+    n_vars <- length(list.files(file.path(folder, "cog"), pattern = "\\.tif$"))
     created <- format(file.info(config_files[i])$mtime, "%Y-%m-%d")
 
     cat(sprintf("[%d] %s/%s: nrow=%d, ncol=%d, %s to %s, %d vars, created %s\n",
