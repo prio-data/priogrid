@@ -292,3 +292,159 @@ test_that("read_pg_timevarying falls back to legacy pg_timevarying.parquet", {
   expect_equal(nrow(result), 3L)
   expect_equal(sort(result$pgid), 1:3)
 })
+
+# ---------------------------------------------------------------------------
+# read_pg_timevarying subsetting tests
+# ---------------------------------------------------------------------------
+
+.make_timevarying_fixture <- function() {
+  tmp_raw <- tempfile()
+  dir.create(tmp_raw)
+  pg_set_rawfolder(tmp_raw)
+  cfg  <- test_config()
+  base <- pgout_path(config = cfg)
+  dir.create(base, recursive = TRUE)
+
+  tv <- pgvariables$name[!pgvariables$static][1:2]
+  dates <- pg_dates(cfg)
+  for (i in seq_along(tv)) {
+    r <- prio_blank_grid(cfg)
+    for (j in seq_along(dates)[-1]) terra::add(r) <- prio_blank_grid(cfg)
+    terra::values(r) <- runif(terra::ncell(r) * terra::nlyr(r))
+    names(r) <- as.character(dates)
+    save_pgvariable(r, tv[i], save_to = base)
+  }
+  build_pg_dataset(config = cfg)
+  list(cfg = cfg, base = base, tv = tv, tmp_raw = tmp_raw)
+}
+
+test_that("read_pg_timevarying years filter returns only requested years", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  x <- read_pg_timevarying(config = fx$cfg, years = 2011)
+  expect_s3_class(x, "data.table")
+  expect_equal(unique(x$year), 2011L)
+  full <- read_pg_timevarying(config = fx$cfg)
+  expect_true(nrow(x) < nrow(full))
+})
+
+test_that("read_pg_timevarying date range filter keeps only matching rows", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  x <- read_pg_timevarying(config = fx$cfg,
+                            start_date = as.Date("2011-01-01"),
+                            end_date   = as.Date("2011-12-31"))
+  expect_true(all(lubridate::year(x$measurement_date) == 2011L))
+})
+
+test_that("read_pg_timevarying pgids filter keeps only requested cells", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  x <- read_pg_timevarying(config = fx$cfg, pgids = c(1L, 2L, 3L))
+  expect_true(all(x$pgid %in% 1:3))
+})
+
+test_that("read_pg_timevarying extent filter returns non-empty subset of valid pgids", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  ext <- c(-180, -90, -90, 0)
+  x <- read_pg_timevarying(config = fx$cfg, extent = ext)
+  expected_pgids <- priogrid:::.pg_extent_to_pgids(ext, fx$cfg)
+  expect_true(nrow(x) > 0)
+  expect_true(all(x$pgid %in% expected_pgids))
+})
+
+test_that("read_pg_timevarying variables filter projects to requested columns", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  x <- read_pg_timevarying(config = fx$cfg, variables = fx$tv[1])
+  expect_setequal(names(x), c("pgid", "measurement_date", "year", fx$tv[1]))
+})
+
+test_that("read_pg_timevarying combined filters all hold simultaneously", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  x <- read_pg_timevarying(config = fx$cfg,
+                            years = 2011, pgids = 1:3, variables = fx$tv[1])
+  expect_true(all(x$pgid %in% 1:3))
+  expect_equal(unique(x$year), 2011L)
+  expect_setequal(names(x), c("pgid", "measurement_date", "year", fx$tv[1]))
+})
+
+test_that("read_pg_timevarying errors when subsetting with as_raster=TRUE", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    read_pg_timevarying(config = fx$cfg, years = 2011, as_raster = TRUE),
+    "only"
+  )
+})
+
+test_that("read_pg_timevarying errors on unknown variable name", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("terra")
+
+  fx <- .make_timevarying_fixture()
+  on.exit(unlink(fx$tmp_raw, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    read_pg_timevarying(config = fx$cfg, variables = "nope"),
+    "Unknown variable"
+  )
+})
+
+test_that(".pg_extent_to_pgids reprojects lon/lat extent for non-4326 configs", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+
+  # UTM zone 32N over a small regional extent. Resolution is defined in 4326;
+  # terra determines the projected raster's actual dimensions, which may differ
+  # from nrow/ncol — that is expected behaviour.
+  cfg_proj <- pg_config(
+    nrow   = 10L, ncol = 20L,
+    crs    = "epsg:32632",
+    extent = c(xmin = 0, xmax = 10, ymin = 44, ymax = 48)
+  )
+
+  # Find which pgids exist in the projected grid.
+  pg          <- prio_blank_grid(cfg_proj)
+  valid_pgids <- as.integer(sort(unique(terra::values(pg)[!is.na(terra::values(pg))])))
+  skip_if(length(valid_pgids) == 0L, "projection yielded no cells")
+
+  # A lon/lat box covering the full config extent.
+  # Before the fix: raw degree values (0..10, 44..48) were passed to terra::crop
+  # as UTM metre coordinates — a ~10 m × ~10 m box near the origin — returning
+  # integer(0). After the fix the lon/lat box is reprojected to UTM metres first.
+  result <- priogrid:::.pg_extent_to_pgids(c(0, 10, 44, 48), cfg_proj)
+  expect_type(result, "integer")
+  expect_true(length(result) > 0L)
+  expect_true(all(result %in% valid_pgids))
+})

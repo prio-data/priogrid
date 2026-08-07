@@ -204,6 +204,25 @@ pg_static_custom <- read_pg_static(config = cfg)
 pg_tv_custom     <- read_pg_timevarying(config = cfg)
 ```
 
+All `read_pg_timevarying()` subsetting arguments (`years`, `start_date`, `end_date`, `pgids`,
+`extent`, `variables`) work identically with custom configs. `extent` is always expressed in
+lon/lat (EPSG:4326), matching the `config$extent` convention — reprojection is handled
+automatically for non-4326 configs:
+
+```{r read-custom-subset, eval=FALSE}
+cfg <- pg_config(nrow = 180, ncol = 360)
+# calc_pg(varnames = c("cru_tmp", "ucdp_ged"), config = cfg)
+
+# This will only work if you have run the calc_pg function above (it should take some minutes to complete).
+# The first time read_pg_timevarying runs, it will pull all variables and build a Parquet Hive. This also takes some time to finish.
+# Subsequent calls to the function will be fast.
+pg_tv_sub <- read_pg_timevarying(
+  config    = cfg,
+  years     = 2015,
+  variables = c("cru_tmp", "ucdp_ged")
+)
+```
+
 ## Release vs. Custom Mode Summary
 
 | Feature | Release mode (`config = NULL`) | Custom mode (`config = cfg`) |

@@ -100,16 +100,58 @@ head(pg_tv)
 
 These tables can be joined together by `pgid`, or merged with your own data.
 
-### Example: subsetting and merging
+### Subsetting at read time
 
-```{r subset-example, eval=FALSE}
+All six filter arguments default to `NULL` (no filter — full dataset). When supplied, filters are
+pushed down to Arrow before any data is collected, so only the requested rows and columns touch
+memory. Temporal and spatial constraints compose as AND; `pgids` and `extent` compose as union.
+
+| Argument | Type | Effect |
+|---|---|---|
+| `years` | integer vector | Keep only the listed calendar years (prunes hive partitions) |
+| `start_date` / `end_date` | Date | Inclusive bounds on `measurement_date` |
+| `pgids` | integer vector | Keep specific PRIO-GRID cell IDs |
+| `extent` | `c(xmin, xmax, ymin, ymax)` in lon/lat | Bounding box resolved to cell IDs (requires `terra`) |
+| `variables` | character vector | Return only the named variable columns |
+
+```{r read-subsets, eval=FALSE}
+# A single year
+pg_2020 <- read_pg_timevarying(years = 2020)
+
+# Inclusive date range
+pg_decade <- read_pg_timevarying(
+  start_date = as.Date("2010-01-01"),
+  end_date   = as.Date("2019-12-31")
+)
+
+# Spatial bounding box (Sub-Saharan Africa)
+pg_africa <- read_pg_timevarying(
+  extent = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40)
+)
+
+# One variable column only
+pg_tmp <- read_pg_timevarying(variables = "cru_tmp")
+
+# Combined: two years, one region, two variables
+pg_sub <- read_pg_timevarying(
+  years     = c(2010, 2015),
+  extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
+  variables = c("cru_tmp", "ucdp_ged")
+)
+```
+
+### Example: merging static and time-varying data
+
+```{r merge-example, eval=FALSE}
 library(data.table)
 
-# Subset to a specific year
-pg_2020 <- pg_tv[measurement_date == as.Date("2020-12-31")]
+# Load a specific year and region with push-down, then merge with static data
+pg_tv <- read_pg_timevarying(
+  years  = 2020,
+  extent = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40)
+)
 
-# Join static and time-varying on pgid
-pg_merged <- merge(pg_static, pg_2020, by = "pgid")
+pg_merged <- merge(pg_static, pg_tv, by = "pgid")
 ```
 
 ## Browsing Available Variables

@@ -436,6 +436,76 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   invisible(NULL)
 }
 
+# Internal: resolve a spatial extent to the set of pgids it covers, using the
+# config's grid definition. `extent` is a length-4 numeric c(xmin, xmax, ymin, ymax)
+# in lon/lat (EPSG:4326) — the same convention as config$extent. For non-4326 configs
+# the extent is reprojected internally (consistent with prio_blank_grid). A terra
+# SpatExtent is used as-is in the grid's native CRS. Returns integer(0) on no overlap.
+# @keywords internal
+.pg_extent_to_pgids <- function(extent, config) {
+  rlang::check_installed("terra", reason = "to subset PRIO-GRID data by spatial extent")
+  pg <- prio_blank_grid(config)
+  if (inherits(extent, "SpatExtent")) {
+    e <- extent
+  } else {
+    nums <- as.numeric(extent)
+    e <- if (config$crs != "epsg:4326") {
+      sf::st_transform(
+        sf::st_bbox(c(xmin = nums[1], xmax = nums[2], ymin = nums[3], ymax = nums[4]), crs = 4326),
+        crs = config$crs
+      )
+    } else {
+      terra::ext(nums)
+    }
+  }
+  cropped <- tryCatch(terra::crop(pg, e), error = function(err) NULL)
+  if (is.null(cropped)) return(integer(0))
+  vals <- terra::values(cropped)
+  as.integer(sort(unique(vals[!is.na(vals)])))
+}
+
+# Internal: apply optional temporal / spatial / column subsetting to an opened
+# arrow time-varying dataset, then collect to a data.table. `has_year` marks whether
+# the source exposes the hive `year` partition column (TRUE hive, FALSE legacy monolith).
+# @keywords internal
+.pg_collect_timevarying <- function(ds, has_year, years = NULL, start_date = NULL,
+                                    end_date = NULL, pgids = NULL, extent = NULL,
+                                    variables = NULL, config = NULL) {
+  if (!is.null(variables)) {
+    bad <- setdiff(variables, names(ds))
+    if (length(bad) > 0)
+      stop("Unknown variable(s) requested: ", paste(bad, collapse = ", "), ".\n",
+           "  Available: ",
+           paste(setdiff(names(ds), c("pgid", "measurement_date", "year")), collapse = ", "),
+           call. = FALSE)
+  }
+
+  if (!is.null(years)) {
+    sel_years <- as.integer(years)
+    ds <- if (has_year) dplyr::filter(ds, year %in% sel_years)
+          else           dplyr::filter(ds, lubridate::year(measurement_date) %in% sel_years)
+  }
+  if (!is.null(start_date)) { start_dt <- as.Date(start_date); ds <- dplyr::filter(ds, measurement_date >= start_dt) }
+  if (!is.null(end_date))   { end_dt   <- as.Date(end_date);   ds <- dplyr::filter(ds, measurement_date <= end_dt) }
+
+  sel_pgids <- if (!is.null(pgids)) as.integer(pgids) else NULL
+  if (!is.null(extent)) {
+    if (is.null(config))
+      stop("Spatial 'extent' subsetting requires a resolvable config (grid dimensions). ",
+           "Use release/version mode or pass config=.", call. = FALSE)
+    ext_pgids <- .pg_extent_to_pgids(extent, config)
+    sel_pgids <- if (is.null(sel_pgids)) ext_pgids else sort(unique(c(sel_pgids, ext_pgids)))
+  }
+  if (!is.null(sel_pgids)) ds <- dplyr::filter(ds, pgid %in% sel_pgids)
+
+  if (!is.null(variables)) {
+    keep <- c("pgid", "measurement_date", variables, if (has_year) "year")
+    ds <- dplyr::select(ds, dplyr::any_of(keep))
+  }
+
+  data.table::setDT(dplyr::collect(ds))
+}
+
 
 # Internal admin helper: bulk-bootstrap _checksums.csv for all .rds/.parquet
 # files in a resolved output folder. Useful after files have been placed without
@@ -880,6 +950,17 @@ read_pg_static <- function(config = NULL,
 #' @param type Character string specifying release type. Default: "05deg_yearly".
 #' @param spatial_hash Character string with 6-character spatial hash (custom only).
 #' @param temporal_hash Character string with 6-character temporal hash (custom only).
+#' @param years Integer vector of years to keep. NULL (default) keeps all. Prunes hive
+#'   partitions on the `year` column.
+#' @param start_date,end_date Date (or Date-coercible) bounds on `measurement_date`
+#'   (inclusive). NULL (default) leaves the respective bound open.
+#' @param pgids Integer vector of PRIO-GRID cell ids to keep. NULL (default) keeps all cells.
+#' @param extent Numeric `c(xmin, xmax, ymin, ymax)` in lon/lat (EPSG:4326), or a terra
+#'   `SpatExtent` in the grid's native CRS; resolved to the pgids it covers and unioned
+#'   with `pgids`. For non-4326 configs the lon/lat box is reprojected automatically.
+#'   Requires `terra`. NULL (default) applies no spatial filter.
+#' @param variables Character vector of time-varying variable columns to return (in addition
+#'   to `pgid`, `measurement_date`, `year`). NULL (default) returns all variables.
 #' @param as_raster Logical. If TRUE, returns list of SpatRasters. If FALSE
 #'   (default), returns data.table.
 #' @param test Logical. If TRUE, returns coverage summary data.frame.
@@ -903,12 +984,22 @@ read_pg_static <- function(config = NULL,
 #'   # Load custom data
 #'   cfg <- pg_config(nrow = 180, ncol = 360)
 #'   pg_dt <- read_pg_timevarying(config = cfg)
+#'
+#'   # Subset: two years, a bounding box, and one variable
+#'   pg_dt <- read_pg_timevarying(version = "3.0.1", years = c(2010, 2011),
+#'                                extent = c(10, 12, 50, 52), variables = "cru_tmp")
 #' }
 read_pg_timevarying <- function(config = NULL,
                                 version = NULL,
                                 type = "05deg_yearly",
                                 spatial_hash = NULL,
                                 temporal_hash = NULL,
+                                years = NULL,
+                                start_date = NULL,
+                                end_date = NULL,
+                                pgids = NULL,
+                                extent = NULL,
+                                variables = NULL,
                                 as_raster = FALSE,
                                 test = FALSE,
                                 overwrite = FALSE,
@@ -918,13 +1009,22 @@ read_pg_timevarying <- function(config = NULL,
   if (!is.null(cfg$warning)) warning(cfg$warning)
   if (cfg$mode == "release") download_priogrid(version = cfg$version, type = cfg$type)
 
+  subset_used <- !is.null(years) || !is.null(start_date) || !is.null(end_date) ||
+                 !is.null(pgids) || !is.null(extent) || !is.null(variables)
+  if (subset_used && (as_raster || test))
+    stop("Subsetting arguments (years/start_date/end_date/pgids/extent/variables) are only ",
+         "supported for the default data.table read, not with as_raster=TRUE or test=TRUE.",
+         call. = FALSE)
+
   hive_dir <- file.path(cfg$base_path, "timevarying")
   legacy   <- file.path(cfg$base_path, "pg_timevarying.parquet")
 
   if (!as_raster && !test && !cfg$overwrite && (dir.exists(hive_dir) || file.exists(legacy))) {
     if (dir.exists(hive_dir)) {
       if (isTRUE(verify_checksums)) .pg_verify_hive(cfg$base_path)
-      return(data.table::setDT(dplyr::collect(arrow::open_dataset(hive_dir))))
+      return(.pg_collect_timevarying(arrow::open_dataset(hive_dir), has_year = TRUE,
+        years = years, start_date = start_date, end_date = end_date,
+        pgids = pgids, extent = extent, variables = variables, config = cfg$config))
     }
     if (isTRUE(verify_checksums)) {
       cs_file <- file.path(cfg$base_path, "_checksums.csv")
@@ -936,7 +1036,9 @@ read_pg_timevarying <- function(config = NULL,
                   call. = FALSE)
       }
     }
-    return(arrow::read_parquet(legacy))
+    return(.pg_collect_timevarying(arrow::open_dataset(legacy), has_year = FALSE,
+      years = years, start_date = start_date, end_date = end_date,
+      pgids = pgids, extent = extent, variables = variables, config = cfg$config))
   }
 
   rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
@@ -975,7 +1077,9 @@ read_pg_timevarying <- function(config = NULL,
 
   .pg_build_timevarying(base_path = cfg$base_path, config = data_config,
                         version = cfg$version, type = cfg$type, overwrite = TRUE)
-  data.table::setDT(dplyr::collect(arrow::open_dataset(hive_dir)))
+  .pg_collect_timevarying(arrow::open_dataset(hive_dir), has_year = TRUE,
+    years = years, start_date = start_date, end_date = end_date,
+    pgids = pgids, extent = extent, variables = variables, config = data_config)
 }
 
 #' Build a PRIO-GRID hive-partitioned dataset

@@ -79,8 +79,18 @@ Download the official release and read it into R:
 ```r
 download_priogrid()
 
-pg_static     <- read_pg_static()
+pg_static      <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
+```
+
+Load only the rows and columns you need — filters push down to Arrow before anything is collected:
+
+```r
+pg_sub <- read_pg_timevarying(
+  years     = 2010:2015,
+  extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
+  variables = "cru_tmp"
+)
 ```
 
 Browse available variables:
