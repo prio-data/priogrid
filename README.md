@@ -17,6 +17,7 @@ An R-package for collecting and standardizing open spatial data into a common gr
 - **R, not SQL** — More researchers know R, and the package leverages excellent spatial-data infrastructure with `sf`, `terra`, and `exactextractr`.
 - **Flexible spatio-temporal configuration** — Change resolution, extent, and projection to test the modifiable areal unit problem or create tailored datasets (e.g., area-equal projections for polar regions).
 - **PRIOGRID is a research tool, not just a dataset.**
+- **Efficient, self-describing outputs** — Variables ship as Cloud-Optimized GeoTIFFs and time-varying tables as Hive-partitioned Parquet, so `read_pg_timevarying()` pushes year/date/cell/variable filters down to Arrow before loading.
 
 ## Installation
 
@@ -29,7 +30,7 @@ renv::install("prio-data/priogrid")
 
 ### Optional R Packages
 
-`terra`, `sf`, `exactextractr`, and `arrow` are listed in `Suggests` and are **not installed automatically**. They are only required for specific functionality (working with rasters) and will be requested the first time you use a function that needs them.
+`terra`, `sf`, and `exactextractr` are listed in `Suggests` and are **not installed automatically**. They are only required for spatial functionality (working with rasters, and `extent`-based subsetting) and will be requested the first time you use a function that needs them.
 
 ### Troubleshooting Installation
 

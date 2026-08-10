@@ -46,6 +46,7 @@ cfg
 | `start_date` / `end_date` | Date | First and last measurement dates |
 | `verbose` | logical | Print progress messages |
 | `automatic_download` | logical | Auto-download missing source files |
+| `verify_checksums` | logical | Verify raw-file MD5s against `pgchecksum` on read (default `FALSE`) |
 
 > **Date convention:** Use the last day of each temporal increment. For yearly data with December measurement dates, use `1990-12-31`. For monthly data with January measurement dates, use `1990-01-31`.
 

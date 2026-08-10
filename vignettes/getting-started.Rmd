@@ -179,18 +179,25 @@ After downloading, your data folder has this structure:
 ```
 {rawfolder}/
 ├── priogrid/
-│   ├── priogrid_3_0_1_05deg_yearly.zip   # Downloaded archive
+│   ├── priogrid_3_0_1_05deg_yearly.zip       # Downloaded archive
 │   └── releases/
 │       └── 3.0.1/
 │           └── 05deg_yearly/
-│               ├── pg_static.parquet        # Static data (cached)
-│               ├── pg_timevarying.parquet   # Time-varying data (cached)
-│               └── {varname}.rds            # Individual variable rasters
-├── {source_name}/{version}/{id}/            # Raw source files
-└── tmp/                                     # Temporary processing files
+│               ├── cog/
+│               │   └── {varname}.tif          # Individual variables as Cloud-Optimized GeoTIFFs
+│               ├── timevarying/
+│               │   └── year=YYYY/
+│               │       └── part-0.parquet      # Hive-partitioned time-varying data
+│               ├── pg_static.parquet           # Static data (wide table)
+│               ├── pg_static.csv.gz            # Static data (CSV bundle)
+│               ├── pg_timevarying.csv.gz       # Time-varying data (CSV bundle)
+│               ├── pg_config.json              # Dataset manifest (grid, layout, variables)
+│               └── _checksums.csv              # Per-file MD5s
+├── {source_name}/{version}/{id}/               # Raw source files
+└── tmp/                                        # Temporary processing files
 ```
 
-The `.parquet` files are what `read_pg_static()` and `read_pg_timevarying()` read by default. The `.rds` files contain individual variables as rasters (used by `load_pgvariable()`).
+`read_pg_static()` reads `pg_static.parquet`; `read_pg_timevarying()` reads the hive-partitioned `timevarying/` dataset, pushing any filters down to Arrow first. The `cog/*.tif` files hold individual variables as Cloud-Optimized GeoTIFFs and are read by `load_pgvariable()`. The `*.csv.gz` bundles provide the same tables for non-R users, and `pg_config.json` records the grid and layout.
 
 ## Next Steps
 

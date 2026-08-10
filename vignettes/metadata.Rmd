@@ -27,6 +27,15 @@ pgvariables$name
 | `name` | Variable name used in `load_pgvariable()`, `calc_pg()`, etc. |
 | `static` | `TRUE` = no temporal dimension; `FALSE` = time-varying |
 | `source_ids` | Comma-separated UUIDs of the data sources feeding this variable |
+| `label` | Display title shown in plots |
+| `unit` | Unit string (e.g. `°C`, `mm`); empty if not applicable |
+| `transform` | Display transform: `identity`, `log1p`, `log10`, or `sqrt` |
+| `palette` | Colour palette name (e.g. `viridis`) |
+| `plot_type` | `continuous`, `categorical`, or `diverging` |
+| `value_min` | Numeric lower display bound (empty = data-driven) |
+| `value_max` | Numeric upper display bound (empty = data-driven) |
+
+The seven display columns (`label`…`value_max`) are also stamped into each built COG as `pg_*` GDAL metatags, making the `.tif` self-describing (see the [Contributing](contributing.html) vignette).
 
 Static and time-varying variables:
 
