@@ -222,23 +222,75 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
   invisible(NULL)
 }
 
-# Internal: build the named pg_* GDAL metatag vector for a variable from the
-# current pgvariables row. Drop NA/empty fields so callers can call
-# terra::metags(r) <- .pg_build_metatags(varname) directly.
+# Internal: data-driven display stats from a built raster.
+# value_min/value_max: overall min/max across layers (NA-robust).
+# value_mean/value_std: per-layer mean/sd averaged across layers (display hint).
+# nunique/class_values: distinct non-NA values, only for plot_type == "discrete".
 # @keywords internal
-.pg_build_metatags <- function(varname) {
+.pg_variable_stats <- function(rast, plot_type = NA_character_) {
+  empty <- list(value_min = NA_real_, value_max = NA_real_,
+                value_mean = NA_real_, value_std = NA_real_,
+                nunique = NA_integer_, class_values = NA_character_)
+  if (terra::nlyr(rast) == 0L || terra::ncell(rast) == 0L) return(empty)
+
+  g   <- terra::global(rast, fun = c("min", "max", "mean", "sd"), na.rm = TRUE)
+  fin <- function(x) if (length(x) && is.finite(x)) x else NA_real_
+  vmin  <- fin(suppressWarnings(min(g$min,   na.rm = TRUE)))
+  vmax  <- fin(suppressWarnings(max(g$max,   na.rm = TRUE)))
+  vmean <- fin(suppressWarnings(mean(g$mean, na.rm = TRUE)))
+  vstd  <- fin(suppressWarnings(mean(g$sd,   na.rm = TRUE)))
+
+  nuniq <- NA_integer_; cls <- NA_character_
+  if (!is.na(plot_type) && plot_type == "discrete") {
+    f <- terra::freq(rast, bylayer = FALSE)
+    if (nrow(f) > 0L) {
+      vals  <- sort(unique(f$value))
+      nuniq <- length(vals)
+      cls   <- paste(vals, collapse = ",")
+    }
+  }
+  list(value_min = vmin, value_max = vmax, value_mean = vmean,
+       value_std = vstd, nunique = nuniq, class_values = cls)
+}
+
+# Internal: recommended rio-tiler/matplotlib colormap for a plot_type.
+# @keywords internal
+.pg_colormap <- function(plot_type) {
+  switch(as.character(plot_type),
+    continuous    = "rdbu_r",   # diverging (temperature, elevation, SPEI)
+    positive_real = "viridis",  # sequential magnitude
+    count         = "inferno",  # sequential hotspot
+    share         = "viridis",  # sequential 0-1
+    discrete      = "tab20",    # qualitative
+    "viridis")                  # default
+}
+
+# Internal: build the named pg_* GDAL metatag vector for a variable.
+# Drop NA/empty fields so callers can assign terra::metags(r) <- ... directly.
+# Accepts optional computed stats from .pg_variable_stats(); pg_colormap is
+# derived from plot_type, never stored in pgvariables.
+# @keywords internal
+.pg_build_metatags <- function(varname, stats = NULL) {
   meta <- pgvariables[pgvariables$name == varname, ]
   if (nrow(meta) == 0L) stop("varname '", varname, "' not found in pgvariables.")
+
+  cmap <- if (!is.na(meta$plot_type) && nzchar(meta$plot_type)) .pg_colormap(meta$plot_type) else NULL
+  st   <- function(k) if (!is.null(stats) && !is.na(stats[[k]])) stats[[k]] else NULL
+
   c(
     pg_name      = meta$name,
     pg_static    = as.character(meta$static),
     if (!is.na(meta$label)     && nzchar(meta$label))     c(pg_label     = meta$label)     else NULL,
     if (!is.na(meta$unit)      && nzchar(meta$unit))      c(pg_unit      = meta$unit)      else NULL,
     if (!is.na(meta$transform) && nzchar(meta$transform)) c(pg_transform = meta$transform) else NULL,
-    if (!is.na(meta$palette)   && nzchar(meta$palette))   c(pg_palette   = meta$palette)   else NULL,
     if (!is.na(meta$plot_type) && nzchar(meta$plot_type)) c(pg_plot_type = meta$plot_type) else NULL,
-    if (!is.na(meta$value_min))                           c(pg_value_min = as.character(meta$value_min)) else NULL,
-    if (!is.na(meta$value_max))                           c(pg_value_max = as.character(meta$value_max)) else NULL
+    if (!is.null(cmap))               c(pg_colormap     = cmap)                           else NULL,
+    if (!is.null(st("value_min")))    c(pg_value_min    = as.character(stats$value_min))  else NULL,
+    if (!is.null(st("value_max")))    c(pg_value_max    = as.character(stats$value_max))  else NULL,
+    if (!is.null(st("value_mean")))   c(pg_value_mean   = as.character(stats$value_mean)) else NULL,
+    if (!is.null(st("value_std")))    c(pg_value_std    = as.character(stats$value_std))  else NULL,
+    if (!is.null(st("nunique")))      c(pg_nunique      = as.character(stats$nunique))    else NULL,
+    if (!is.null(st("class_values"))) c(pg_class_values = stats$class_values)             else NULL
   )
 }
 
@@ -248,9 +300,16 @@ calc_pg <- function(varnames = NULL, overwrite = FALSE, config = pg_current_conf
 #' \code{cog/} sub-directory of the dataset root. The variable must be listed
 #' in [pgvariables]. Layer names, \code{time()}, and \code{units()} are
 #' preserved natively inside the \code{.tif}. Plot metadata from [pgvariables]
-#' (\code{label}, \code{unit}, \code{transform}, \code{palette},
-#' \code{plot_type}, \code{value_min}, \code{value_max}) is stamped as
-#' \code{pg_*} GDAL metatags so the COG is self-describing.
+#' (\code{label}, \code{unit}, \code{transform}, \code{plot_type}) is stamped as
+#' \code{pg_*} GDAL metatags so the COG is self-describing. In addition,
+#' \code{pg_colormap} (derived from \code{plot_type}), \code{pg_value_min},
+#' \code{pg_value_max}, \code{pg_value_mean}, \code{pg_value_std} (computed
+#' from the raster at save time), and — for discrete variables —
+#' \code{pg_nunique} and \code{pg_class_values} are also stamped.
+#' \code{value_*}, \code{nunique}, and \code{class_values} are computed from
+#' the raster at save time; \code{colormap} is derived from \code{plot_type}.
+#' These map directly onto rio-tiler/TiTiler \code{rescale} and
+#' \code{colormap_name}.
 #'
 #' @param rast Terra SpatRaster object from a gen_*() function.
 #' @param varname Character string with the variable name (must exist in pgvariables).
@@ -293,7 +352,8 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   if (!is.na(meta$unit) && nzchar(meta$unit))
     terra::units(rast) <- meta$unit
 
-  terra::metags(rast) <- .pg_build_metatags(varname)
+  stats <- .pg_variable_stats(rast, plot_type = meta$plot_type)
+  terra::metags(rast) <- .pg_build_metatags(varname, stats = stats)
 
   terra::writeRaster(rast, filepath, filetype = "COG", overwrite = TRUE,
                      gdal = c("COMPRESS=DEFLATE", "NUM_THREADS=ALL_CPUS"))
@@ -334,7 +394,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 # Internal: re-stamp pg_* GDAL metatags (and terra units) on an existing COG
 # from the current pgvariables row, without recomputing the raster data.
 # Use this after editing data_raw/variables.csv + regenerating pgvariables.rda
-# to propagate display metadata (label, palette, transform, …) into built COGs.
+# to propagate display metadata (label, unit, transform, plot_type, colormap, …) into built COGs.
 # @param varname Variable name; must exist in pgvariables and in the cog/ dir.
 # @param save_to Dataset root (same convention as save_pgvariable).
 # @return Path to the restamped COG, invisibly.
@@ -355,7 +415,8 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   meta <- pgvariables[pgvariables$name == varname, ]
   terra::units(r) <- if (!is.na(meta$unit) && nzchar(meta$unit)) meta$unit else ""
 
-  terra::metags(r) <- .pg_build_metatags(varname)
+  stats <- .pg_variable_stats(r, plot_type = meta$plot_type)
+  terra::metags(r) <- .pg_build_metatags(varname, stats = stats)
 
   # Write to a sibling temp file (same filesystem → rename is atomic), then
   # replace the original. terra cannot write a lazy raster back to its own path.
@@ -471,8 +532,32 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
   variables_meta <- lapply(all_vars, function(vn) {
     row <- pgvariables[pgvariables$name == vn, ]
     if (nrow(row) == 0L) return(list(name = vn))
-    as.list(row[1L, c("name", "static", "source_ids", "label", "unit",
-                       "transform", "palette", "plot_type", "value_min", "value_max")])
+    base <- as.list(row[1L, c("name", "static", "source_ids", "label", "unit",
+                              "transform", "plot_type")])
+    tag_val <- function(tags, key) {
+      v <- tags$value[tags$name == key]
+      if (length(v) == 0L) NA else v[[1]]
+    }
+    cog <- file.path(base_path, "cog", paste0(vn, ".tif"))
+    if (file.exists(cog)) {
+      tags <- terra::metags(terra::rast(cog))
+      base$colormap     <- tag_val(tags, "pg_colormap")
+      base$value_min    <- suppressWarnings(as.numeric(tag_val(tags, "pg_value_min")))
+      base$value_max    <- suppressWarnings(as.numeric(tag_val(tags, "pg_value_max")))
+      base$value_mean   <- suppressWarnings(as.numeric(tag_val(tags, "pg_value_mean")))
+      base$value_std    <- suppressWarnings(as.numeric(tag_val(tags, "pg_value_std")))
+      base$nunique      <- suppressWarnings(as.integer(tag_val(tags, "pg_nunique")))
+      base$class_values <- tag_val(tags, "pg_class_values")
+    } else {
+      base$colormap     <- if (!is.na(row$plot_type) && nzchar(row$plot_type)) .pg_colormap(row$plot_type) else NA
+      base$value_min    <- NA
+      base$value_max    <- NA
+      base$value_mean   <- NA
+      base$value_std    <- NA
+      base$nunique      <- NA
+      base$class_values <- NA
+    }
+    base
   })
   names(variables_meta) <- all_vars
 

@@ -267,27 +267,24 @@ gen_my_yearly_variable <- function(config = pg_current_config()) {
 
 ### Add to `data_raw/variables.csv`
 
-`variables.csv` is **tab-separated** with 10 columns. Add one row per variable:
+`variables.csv` is **tab-separated** with 7 columns. Add one row per variable:
 
 | Column | Description / Allowed values |
 |---|---|
 | `name` | Must match the string set by `names(r)` in `gen_*()` and equal `gen_{name}` without the prefix |
 | `static` | `TRUE` for variables without a time dimension, `FALSE` for time-varying |
 | `source_ids` | Comma-separated source UUIDs from `sources.csv` |
-| `label` | Display title shown in plots; set equal to `name` (no code default exists) |
-| `unit` | Unit string (e.g. `°C`, `mm`); leave empty if not applicable |
+| `label` | Human-readable display title for plots/legends |
+| `unit` | Unit string (e.g. `°C`, `mm`); leave empty if dimensionless |
 | `transform` | One of: `identity`, `log1p`, `log10`, `sqrt` |
-| `palette` | Palette name (e.g. `viridis`); default `viridis` |
-| `plot_type` | One of: `continuous`, `categorical`, `diverging` |
-| `value_min` | Numeric lower display bound, or empty for data-driven scaling |
-| `value_max` | Numeric upper display bound, or empty for data-driven scaling |
+| `plot_type` | One of: `continuous`, `positive_real`, `count`, `share`, `discrete` |
 
-A hand-written row must include all 10 tab-separated fields; empty fields still need their tab
+A hand-written row must include all 7 tab-separated fields; empty fields still need their tab
 delimiter. Example (tabs shown as `→`):
 
 ```
-name→static→source_ids→label→unit→transform→palette→plot_type→value_min→value_max
-my_new_variable→FALSE→a1b2c3d4-e5f6-7890-abcd-ef1234567890→my_new_variable→→identity→viridis→continuous→→
+name→static→source_ids→label→unit→transform→plot_type
+my_new_variable→FALSE→a1b2c3d4-e5f6-7890-abcd-ef1234567890→My new variable→→identity→continuous
 ```
 
 Regenerate `pgvariables.rda`:
@@ -304,9 +301,11 @@ pgvariables[pgvariables$name == "my_new_variable", ]
 
 ### Display Metadata and COG Metatags
 
-The seven display columns (`label`, `unit`, `transform`, `palette`, `plot_type`, `value_min`,
-`value_max`) are stamped into each built COG as `pg_*` GDAL metatags by `save_pgvariable()`
-via `.pg_build_metatags()`, making the `.tif` self-describing.
+The four authored display columns (`label`, `unit`, `transform`, `plot_type`) are stamped into
+each built COG as `pg_*` GDAL metatags by `save_pgvariable()` via `.pg_build_metatags()`,
+making the `.tif` self-describing. Built COGs additionally carry the derived `pg_colormap` and
+computed `pg_value_min`/`pg_value_max`/`pg_value_mean`/`pg_value_std`/`pg_nunique`/`pg_class_values`
+metatags — these are not authored columns.
 
 After editing display columns for an **already-built** variable, re-stamp without recomputing:
 
@@ -603,7 +602,7 @@ mode (`devtools::load_all()`).
 - [ ] Run `source("data_raw/pgsources.R")` to regenerate `pgsources.rda`
 - [ ] Run `download_pg_rawdata()`, then `pg_data_availability()` to confirm all files are present
 - [ ] Create `R/data_{source}.R` with `read_*()` and `gen_*()` functions
-- [ ] Add row to `data_raw/variables.csv` (tab-separated, all 10 columns)
+- [ ] Add row to `data_raw/variables.csv` (tab-separated, all 7 columns)
 - [ ] Run `source("data_raw/pgvariables.R")` to regenerate `pgvariables.rda`
 - [ ] Run `devtools::document()` to regenerate `NAMESPACE` and `man/`
 - [ ] Add tests in `tests/testthat/`; call `skip_if_no_rawdata()` in `gen_*` tests

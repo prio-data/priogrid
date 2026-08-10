@@ -25,3 +25,19 @@ test_that("pgvariables names are unique", {
 test_that("pgchecksum has required columns", {
   expect_true(all(c("source_name", "source_version", "id", "filename", "md5") %in% names(pgchecksum)))
 })
+
+
+test_that("pgvariables has only authored columns (no palette, no statistics)", {
+  expect_setequal(names(pgvariables),
+    c("name", "static", "source_ids", "label", "unit", "transform", "plot_type"))
+  expect_false(any(c("palette","value_min","value_max","nunique","value_mean",
+                     "value_std","class_values") %in% names(pgvariables)))
+})
+
+test_that("pgvariables plot_type/transform vocabularies and non-empty labels", {
+  expect_true(all(pgvariables$plot_type %in%
+    c("continuous", "positive_real", "count", "share", "discrete")))
+  expect_true(all(pgvariables$transform %in%
+    c("identity", "log1p", "log10", "sqrt")))
+  expect_true(all(nzchar(pgvariables$label)) && !any(is.na(pgvariables$label)))
+})

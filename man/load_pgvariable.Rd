@@ -11,7 +11,9 @@ load_pgvariable(
   type = "05deg_yearly",
   spatial_hash = NULL,
   temporal_hash = NULL,
-  verify_checksums = FALSE
+  verify_checksums = FALSE,
+  extent = NULL,
+  layers = NULL
 )
 }
 \arguments{
@@ -34,15 +36,29 @@ spatial_hash.}
 
 \item{verify_checksums}{Logical. If TRUE, verifies the file's MD5 checksum
 against stored values. Default FALSE.}
+
+\item{extent}{Optional spatial window. Either a \code{SpatExtent} (used as-is in
+the raster's CRS) or a length-4 numeric vector \code{c(xmin, xmax, ymin, ymax)}
+in EPSG:4326. Applied lazily via \code{terra::window()} — no data is loaded
+until the raster is materialized. Enables efficient reading of spatial subsets
+from large COGs (larger-than-memory workflow).}
+
+\item{layers}{Optional layer selector. A character vector of layer names or an
+integer vector of layer indices. Applied lazily via \code{terra::subset()}.}
 }
 \value{
-Terra SpatRaster object
+A lazy, file-backed \code{SpatRaster}. Data is not loaded into memory
+until explicitly materialized (e.g., via \code{terra::values()} or
+\code{terra::crop()}).
 }
 \description{
-Loads a PRIO-GRID variable from disk and returns it as a terra SpatRaster.
-The mode is determined by the \code{config} argument:
+Loads a PRIO-GRID variable from disk and returns it as a lazy, file-backed
+terra SpatRaster (no data is loaded into memory until the raster is explicitly
+materialized). Supports optional lazy subsetting by layers and spatial windowing,
+enabling a larger-than-memory workflow.
 }
 \details{
+Mode is determined by the \code{config} argument:
 \itemize{
 \item \code{config = NULL} (default): loads from the official release (downloads if needed).
 \item \code{config = pg_config(...)}: loads from custom data built with that config.
@@ -65,5 +81,9 @@ The mode is determined by the \code{config} argument:
   r <- load_pgvariable("cshapes_gwcode",
                        spatial_hash = "ecf4dd",
                        temporal_hash = "727cca")
+
+  # Windowed / lazy load (larger-than-memory)
+  r <- load_pgvariable("cru_tmp", extent = c(-30, 60, 35, 72), layers = 1:12)
+  terra::inMemory(r)  # FALSE
 }
 }

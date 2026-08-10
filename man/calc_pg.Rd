@@ -21,7 +21,7 @@ NULL (invisibly). Called for side effects (saving files).
 \description{
 Calculates PRIO-GRID variables based on current config and saves them
 to disk. Each variable is computed by calling its corresponding gen_*() function
-and saved as an .rds file in the custom data folder.
+and saved as a Cloud-Optimized GeoTIFF (COG) under the \code{cog/} sub-directory.
 }
 \examples{
 \dontrun{
