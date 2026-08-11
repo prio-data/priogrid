@@ -136,8 +136,37 @@ time-varying</td>
 <td><code>source_ids</code></td>
 <td>Comma-separated UUIDs of the data sources feeding this variable</td>
 </tr>
+<tr class="even">
+<td><code>label</code></td>
+<td>Human-readable display title for plots/legends</td>
+</tr>
+<tr class="odd">
+<td><code>unit</code></td>
+<td>Unit string (e.g. <code>°C</code>, <code>mm</code>); empty if
+dimensionless</td>
+</tr>
+<tr class="even">
+<td><code>transform</code></td>
+<td>Display transform: <code>identity</code>, <code>log1p</code>,
+<code>log10</code>, or <code>sqrt</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>plot_type</code></td>
+<td>One of: <code>continuous</code>, <code>positive_real</code>,
+<code>count</code>, <code>share</code>, <code>discrete</code>
+</td>
+</tr>
 </tbody>
 </table>
+<p>The four authored display columns (<code>label</code>,
+<code>unit</code>, <code>transform</code>, <code>plot_type</code>) are
+stamped into each built COG as <code>pg_*</code> GDAL metatags by
+<code><a href="../reference/save_pgvariable.html">save_pgvariable()</a></code>. Built COGs additionally carry computed
+<code>pg_colormap</code>/<code>pg_value_min</code>/<code>pg_value_max</code>/<code>pg_value_mean</code>/<code>pg_value_std</code>/<code>pg_nunique</code>/<code>pg_class_values</code>
+(not authored columns). These map onto rio-tiler
+<code>rescale</code>=<code>pg_value_min</code>,<code>pg_value_max</code>
+and <code>colormap_name</code>=<code>pg_colormap</code>.</p>
 <p>Static and time-varying variables:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pgvariables</span><span class="op">[</span><span class="va">pgvariables</span><span class="op">$</span><span class="va">static</span> <span class="op">==</span> <span class="cn">TRUE</span>,  <span class="st">"name"</span><span class="op">]</span>  <span class="co"># terrain, borders, etc.</span></span>

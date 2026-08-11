@@ -62,6 +62,12 @@ a list of rasters. See <a href="pgvariables.html">pgvariables</a> for available 
 <span>  type <span class="op">=</span> <span class="st">"05deg_yearly"</span>,</span>
 <span>  spatial_hash <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  temporal_hash <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  years <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  end_date <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  pgids <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  variables <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  as_raster <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  test <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -92,6 +98,32 @@ official release.</p></dd>
 
 <dt id="arg-temporal-hash">temporal_hash<a class="anchor" aria-label="anchor" href="#arg-temporal-hash"></a></dt>
 <dd><p>Character string with 6-character temporal hash (custom only).</p></dd>
+
+
+<dt id="arg-years">years<a class="anchor" aria-label="anchor" href="#arg-years"></a></dt>
+<dd><p>Integer vector of years to keep. NULL (default) keeps all. Prunes hive
+partitions on the <code>year</code> column.</p></dd>
+
+
+<dt id="arg-start-date-end-date">start_date, end_date<a class="anchor" aria-label="anchor" href="#arg-start-date-end-date"></a></dt>
+<dd><p>Date (or Date-coercible) bounds on <code>measurement_date</code>
+(inclusive). NULL (default) leaves the respective bound open.</p></dd>
+
+
+<dt id="arg-pgids">pgids<a class="anchor" aria-label="anchor" href="#arg-pgids"></a></dt>
+<dd><p>Integer vector of PRIO-GRID cell ids to keep. NULL (default) keeps all cells.</p></dd>
+
+
+<dt id="arg-extent">extent<a class="anchor" aria-label="anchor" href="#arg-extent"></a></dt>
+<dd><p>Numeric <code>c(xmin, xmax, ymin, ymax)</code> in lon/lat (EPSG:4326), or a terra
+<code>SpatExtent</code> in the grid's native CRS; resolved to the pgids it covers and unioned
+with <code>pgids</code>. For non-4326 configs the lon/lat box is reprojected automatically.
+Requires <code>terra</code>. NULL (default) applies no spatial filter.</p></dd>
+
+
+<dt id="arg-variables">variables<a class="anchor" aria-label="anchor" href="#arg-variables"></a></dt>
+<dd><p>Character vector of time-varying variable columns to return (in addition
+to <code>pgid</code>, <code>measurement_date</code>, <code>year</code>). NULL (default) returns all variables.</p></dd>
 
 
 <dt id="arg-as-raster">as_raster<a class="anchor" aria-label="anchor" href="#arg-as-raster"></a></dt>
@@ -136,6 +168,10 @@ or list of terra SpatRasters if as_raster=TRUE, or coverage test data.frame if t
 <span class="r-in"><span>  <span class="co"># Load custom data</span></span></span>
 <span class="r-in"><span>  <span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="pg_config.html">pg_config</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">180</span>, ncol <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Subset: two years, a bounding box, and one variable</span></span></span>
+<span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.1"</span>, years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">2011</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                               extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">50</span>, <span class="fl">52</span><span class="op">)</span>, variables <span class="op">=</span> <span class="st">"cru_tmp"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

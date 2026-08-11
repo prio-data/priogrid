@@ -39,6 +39,19 @@ pgvariables$name
 | `name` | Variable name used in [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md), [`calc_pg()`](http://prio-data.github.io/priogrid/reference/calc_pg.md), etc. |
 | `static` | `TRUE` = no temporal dimension; `FALSE` = time-varying |
 | `source_ids` | Comma-separated UUIDs of the data sources feeding this variable |
+| `label` | Human-readable display title for plots/legends |
+| `unit` | Unit string (e.g. `°C`, `mm`); empty if dimensionless |
+| `transform` | Display transform: `identity`, `log1p`, `log10`, or `sqrt` |
+| `plot_type` | One of: `continuous`, `positive_real`, `count`, `share`, `discrete` |
+
+The four authored display columns (`label`, `unit`, `transform`,
+`plot_type`) are stamped into each built COG as `pg_*` GDAL metatags by
+[`save_pgvariable()`](http://prio-data.github.io/priogrid/reference/save_pgvariable.md).
+Built COGs additionally carry computed
+`pg_colormap`/`pg_value_min`/`pg_value_max`/`pg_value_mean`/`pg_value_std`/`pg_nunique`/`pg_class_values`
+(not authored columns). These map onto rio-tiler
+`rescale`=`pg_value_min`,`pg_value_max` and
+`colormap_name`=`pg_colormap`.
 
 Static and time-varying variables:
 

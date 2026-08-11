@@ -21,7 +21,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-08-06 
+#>   end_date: 2026-08-11 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```
@@ -62,6 +62,7 @@ cfg
 | `start_date` / `end_date` | Date | First and last measurement dates |
 | `verbose` | logical | Print progress messages |
 | `automatic_download` | logical | Auto-download missing source files |
+| `verify_checksums` | logical | Verify raw-file MD5s against `pgchecksum` on read (default `FALSE`) |
 
 > **Date convention:** Use the last day of each temporal increment. For
 > yearly data with December measurement dates, use `1990-12-31`. For
@@ -247,6 +248,28 @@ cfg <- pg_config(nrow = 180, ncol = 360)
 
 pg_static_custom <- read_pg_static(config = cfg)
 pg_tv_custom     <- read_pg_timevarying(config = cfg)
+```
+
+All
+[`read_pg_timevarying()`](http://prio-data.github.io/priogrid/reference/read_pg_timevarying.md)
+subsetting arguments (`years`, `start_date`, `end_date`, `pgids`,
+`extent`, `variables`) work identically with custom configs. `extent` is
+always expressed in lon/lat (EPSG:4326), matching the `config$extent`
+convention — reprojection is handled automatically for non-4326 configs:
+
+``` r
+
+cfg <- pg_config(nrow = 180, ncol = 360)
+# calc_pg(varnames = c("cru_tmp", "ucdp_ged"), config = cfg)
+
+# This will only work if you have run the calc_pg function above (it should take some minutes to complete).
+# The first time read_pg_timevarying runs, it will pull all variables and build a Parquet Hive. This also takes some time to finish.
+# Subsequent calls to the function will be fast.
+pg_tv_sub <- read_pg_timevarying(
+  config    = cfg,
+  years     = 2015,
+  variables = c("cru_tmp", "ucdp_ged")
+)
 ```
 
 ## Release vs. Custom Mode Summary

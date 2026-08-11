@@ -2,7 +2,8 @@
 
 Calculates PRIO-GRID variables based on current config and saves them to
 disk. Each variable is computed by calling its corresponding gen\_\*()
-function and saved as an .rds file in the custom data folder.
+function and saved as a Cloud-Optimized GeoTIFF (COG) under the `cog/`
+sub-directory.
 
 ## Usage
 

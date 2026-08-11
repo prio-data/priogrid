@@ -178,8 +178,12 @@ terra::plot(c(elev_africa, log1p(pop_africa)),
 ## Saving and Reusing Custom Results
 
 [`save_pgvariable()`](http://prio-data.github.io/priogrid/reference/save_pgvariable.md)
-saves any `SpatRaster` back to the PRIOGRID data folder as a wrapped
-`.rds` file:
+writes any `SpatRaster` to the dataset’s `cog/` sub-folder as a
+Cloud-Optimized GeoTIFF (`{varname}.tif`), stamping layer dates via
+[`time()`](https://rspatial.github.io/terra/reference/time.html),
+[`units()`](https://rspatial.github.io/terra/reference/units.html), and
+the `pg_*` display metadata from `pgvariables` so the file is
+self-describing:
 
 ``` r
 

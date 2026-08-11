@@ -100,7 +100,7 @@ with:</p>
 <span><span class="co">#&gt;   extent: -180 180 -90 90 </span></span>
 <span><span class="co">#&gt;   temporal_resolution: 1 year </span></span>
 <span><span class="co">#&gt;   start_date: 1850-12-31 </span></span>
-<span><span class="co">#&gt;   end_date: 2026-08-06 </span></span>
+<span><span class="co">#&gt;   end_date: 2026-08-11 </span></span>
 <span><span class="co">#&gt;   verbose: TRUE </span></span>
 <span><span class="co">#&gt;   automatic_download: TRUE</span></span></code></pre></div>
 <p>Create a custom config with <code><a href="../reference/pg_config.html">pg_config()</a></code>:</p>
@@ -177,6 +177,12 @@ with:</p>
 <td><code>automatic_download</code></td>
 <td>logical</td>
 <td>Auto-download missing source files</td>
+</tr>
+<tr class="even">
+<td><code>verify_checksums</code></td>
+<td>logical</td>
+<td>Verify raw-file MD5s against <code>pgchecksum</code> on read
+(default <code>FALSE</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -344,6 +350,25 @@ release:</p>
 <span></span>
 <span><span class="va">pg_static_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_static.html">read_pg_static</a></span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span>
 <span><span class="va">pg_tv_custom</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span></code></pre></div>
+<p>All <code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code> subsetting arguments
+(<code>years</code>, <code>start_date</code>, <code>end_date</code>,
+<code>pgids</code>, <code>extent</code>, <code>variables</code>) work
+identically with custom configs. <code>extent</code> is always expressed
+in lon/lat (EPSG:4326), matching the <code>config$extent</code>
+convention — reprojection is handled automatically for non-4326
+configs:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pg_config.html">pg_config</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">180</span>, ncol <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span>
+<span><span class="co"># calc_pg(varnames = c("cru_tmp", "ucdp_ged"), config = cfg)</span></span>
+<span></span>
+<span><span class="co"># This will only work if you have run the calc_pg function above (it should take some minutes to complete).</span></span>
+<span><span class="co"># The first time read_pg_timevarying runs, it will pull all variables and build a Parquet Hive. This also takes some time to finish.</span></span>
+<span><span class="co"># Subsequent calls to the function will be fast.</span></span>
+<span><span class="va">pg_tv_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
+<span>  config    <span class="op">=</span> <span class="va">cfg</span>,</span>
+<span>  years     <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cru_tmp"</span>, <span class="st">"ucdp_ged"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="release-vs--custom-mode-summary">Release vs. Custom Mode Summary<a class="anchor" aria-label="anchor" href="#release-vs--custom-mode-summary"></a>

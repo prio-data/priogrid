@@ -113,7 +113,7 @@ official PRIOGRID release:</p>
 <span><span class="co">#&gt;   extent: -180 180 -90 90 </span></span>
 <span><span class="co">#&gt;   temporal_resolution: 1 year </span></span>
 <span><span class="co">#&gt;   start_date: 1850-12-31 </span></span>
-<span><span class="co">#&gt;   end_date: 2026-08-06 </span></span>
+<span><span class="co">#&gt;   end_date: 2026-08-11 </span></span>
 <span><span class="co">#&gt;   verbose: TRUE </span></span>
 <span><span class="co">#&gt;   automatic_download: TRUE</span></span></code></pre></div>
 <table class="table">
@@ -210,16 +210,94 @@ addition to <code>pgid</code>:</p>
 with your own data.</p>
 </div>
 <div class="section level3">
-<h3 id="example-subsetting-and-merging">Example: subsetting and merging<a class="anchor" aria-label="anchor" href="#example-subsetting-and-merging"></a>
+<h3 id="subsetting-at-read-time">Subsetting at read time<a class="anchor" aria-label="anchor" href="#subsetting-at-read-time"></a>
 </h3>
+<p>All six filter arguments default to <code>NULL</code> (no filter —
+full dataset). When supplied, filters are pushed down to Arrow before
+any data is collected, so only the requested rows and columns touch
+memory. Temporal and spatial constraints compose as AND;
+<code>pgids</code> and <code>extent</code> compose as union.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Argument</th>
+<th>Type</th>
+<th>Effect</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>years</code></td>
+<td>integer vector</td>
+<td>Keep only the listed calendar years (prunes hive partitions)</td>
+</tr>
+<tr class="even">
+<td>
+<code>start_date</code> / <code>end_date</code>
+</td>
+<td>Date</td>
+<td>Inclusive bounds on <code>measurement_date</code>
+</td>
+</tr>
+<tr class="odd">
+<td><code>pgids</code></td>
+<td>integer vector</td>
+<td>Keep specific PRIO-GRID cell IDs</td>
+</tr>
+<tr class="even">
+<td><code>extent</code></td>
+<td>
+<code>c(xmin, xmax, ymin, ymax)</code> in lon/lat</td>
+<td>Bounding box resolved to cell IDs (requires <code>terra</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>variables</code></td>
+<td>character vector</td>
+<td>Return only the named variable columns</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># A single year</span></span>
+<span><span class="va">pg_2020</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span>years <span class="op">=</span> <span class="fl">2020</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Inclusive date range</span></span>
+<span><span class="va">pg_decade</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
+<span>  start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2010-01-01"</span><span class="op">)</span>,</span>
+<span>  end_date   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2019-12-31"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Spatial bounding box (Sub-Saharan Africa)</span></span>
+<span><span class="va">pg_africa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
+<span>  extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="fl">20</span>, xmax <span class="op">=</span> <span class="fl">55</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="fl">35</span>, ymax <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One variable column only</span></span>
+<span><span class="va">pg_tmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span>variables <span class="op">=</span> <span class="st">"cru_tmp"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Combined: two years, one region, two variables</span></span>
+<span><span class="va">pg_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
+<span>  years     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">2015</span><span class="op">)</span>,</span>
+<span>  extent    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="fl">20</span>, xmax <span class="op">=</span> <span class="fl">55</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="fl">35</span>, ymax <span class="op">=</span> <span class="fl">40</span><span class="op">)</span>,</span>
+<span>  variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cru_tmp"</span>, <span class="st">"ucdp_ged"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-merging-static-and-time-varying-data">Example: merging static and time-varying data<a class="anchor" aria-label="anchor" href="#example-merging-static-and-time-varying-data"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Subset to a specific year</span></span>
-<span><span class="va">pg_2020</span> <span class="op">&lt;-</span> <span class="va">pg_tv</span><span class="op">[</span><span class="va">measurement_date</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-12-31"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co"># Load a specific year and region with push-down, then merge with static data</span></span>
+<span><span class="va">pg_tv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
+<span>  years  <span class="op">=</span> <span class="fl">2020</span>,</span>
+<span>  extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="fl">20</span>, xmax <span class="op">=</span> <span class="fl">55</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="fl">35</span>, ymax <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Join static and time-varying on pgid</span></span>
-<span><span class="va">pg_merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">pg_static</span>, <span class="va">pg_2020</span>, by <span class="op">=</span> <span class="st">"pgid"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">pg_merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">pg_static</span>, <span class="va">pg_tv</span>, by <span class="op">=</span> <span class="st">"pgid"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -227,7 +305,7 @@ with your own data.</p>
 </h2>
 <p>The <code>pgvariables</code> data frame lists all variables in
 PRIOGRID:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pgvariables</span></span>
 <span><span class="co">#&gt;                            name static</span></span>
 <span><span class="co">#&gt; 1                       cru_tmp  FALSE</span></span>
@@ -306,10 +384,88 @@ PRIOGRID:</p>
 <span><span class="co">#&gt; 35 8aaf6b27-6372-43da-87a9-d4235095bb2c, a8e35e36-9f7e-4194-9cc4-ce8ca59f7b51, 8aaf6b27-6372-43da-87a9-d4235095bb2c</span></span>
 <span><span class="co">#&gt; 36                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span>
 <span><span class="co">#&gt; 37                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span>
-<span><span class="co">#&gt; 38                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span></code></pre></div>
+<span><span class="co">#&gt; 38                                                                             e42b30e3-75da-4dd4-a375-0d6557087804</span></span>
+<span><span class="co">#&gt;                                               label                unit</span></span>
+<span><span class="co">#&gt; 1                                  Mean temperature                  °C</span></span>
+<span><span class="co">#&gt; 2                                     Precipitation                  mm</span></span>
+<span><span class="co">#&gt; 3                      Potential evapotranspiration              mm/day</span></span>
+<span><span class="co">#&gt; 4                  State territory coverage (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5                     Country (Gleditsch-Ward code)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 6          Excluded ethnic groups (regional, share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 7                   Distance to nearest land border                   m</span></span>
+<span><span class="co">#&gt; 8          Distance to nearest international border                   m</span></span>
+<span><span class="co">#&gt; 9                    Distance to own country border                   m</span></span>
+<span><span class="co">#&gt; 10                                 Population count             persons</span></span>
+<span><span class="co">#&gt; 11                           Cropland cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 12                             Forest cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 13                          Grassland cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 14                              Ocean cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 15                            Pasture cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 16                  Sparse vegetation cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 17                              Urban cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 18                              Water cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 19               Nighttime light (harmonized, mean)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 20                          Land cover mask (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 21                               Land cover (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 22                                   Mean elevation                   m</span></span>
+<span><span class="co">#&gt; 23                 Travel time to major city (mean)             minutes</span></span>
+<span><span class="co">#&gt; 24              Travel time to major city (minimum)             minutes</span></span>
+<span><span class="co">#&gt; 25                   UN peacekeeping troops (count)           personnel</span></span>
+<span><span class="co">#&gt; 26               UN peacekeeping operations (count)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 27                   Disputed area coverage (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 28               SPEI drought index (6-month, mean)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 29                      Urban area (DEGURBA, share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 30                 Battle-related deaths (UCDP GED)              deaths</span></span>
+<span><span class="co">#&gt; 31              Subnational Human Development Index                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 32                          Mean years of schooling               years</span></span>
+<span><span class="co">#&gt; 33                      Expected years of schooling               years</span></span>
+<span><span class="co">#&gt; 34                         Life expectancy at birth               years</span></span>
+<span><span class="co">#&gt; 35                                   GNI per capita 1000 USD (2011 PPP)</span></span>
+<span><span class="co">#&gt; 36               Excluded ethnic population (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 37               Included ethnic population (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 38 Politically irrelevant ethnic population (share)                &lt;NA&gt;</span></span>
+<span><span class="co">#&gt;    transform     plot_type</span></span>
+<span><span class="co">#&gt; 1   identity    continuous</span></span>
+<span><span class="co">#&gt; 2   identity positive_real</span></span>
+<span><span class="co">#&gt; 3   identity positive_real</span></span>
+<span><span class="co">#&gt; 4   identity         share</span></span>
+<span><span class="co">#&gt; 5   identity      discrete</span></span>
+<span><span class="co">#&gt; 6   identity         share</span></span>
+<span><span class="co">#&gt; 7   identity positive_real</span></span>
+<span><span class="co">#&gt; 8   identity positive_real</span></span>
+<span><span class="co">#&gt; 9   identity positive_real</span></span>
+<span><span class="co">#&gt; 10     log10 positive_real</span></span>
+<span><span class="co">#&gt; 11  identity         share</span></span>
+<span><span class="co">#&gt; 12  identity         share</span></span>
+<span><span class="co">#&gt; 13  identity         share</span></span>
+<span><span class="co">#&gt; 14  identity         share</span></span>
+<span><span class="co">#&gt; 15  identity         share</span></span>
+<span><span class="co">#&gt; 16  identity         share</span></span>
+<span><span class="co">#&gt; 17  identity         share</span></span>
+<span><span class="co">#&gt; 18  identity         share</span></span>
+<span><span class="co">#&gt; 19  identity positive_real</span></span>
+<span><span class="co">#&gt; 20  identity         share</span></span>
+<span><span class="co">#&gt; 21  identity         share</span></span>
+<span><span class="co">#&gt; 22  identity    continuous</span></span>
+<span><span class="co">#&gt; 23  identity positive_real</span></span>
+<span><span class="co">#&gt; 24  identity positive_real</span></span>
+<span><span class="co">#&gt; 25     log1p         count</span></span>
+<span><span class="co">#&gt; 26     log1p         count</span></span>
+<span><span class="co">#&gt; 27  identity         share</span></span>
+<span><span class="co">#&gt; 28  identity    continuous</span></span>
+<span><span class="co">#&gt; 29  identity         share</span></span>
+<span><span class="co">#&gt; 30     log1p         count</span></span>
+<span><span class="co">#&gt; 31  identity positive_real</span></span>
+<span><span class="co">#&gt; 32  identity positive_real</span></span>
+<span><span class="co">#&gt; 33  identity positive_real</span></span>
+<span><span class="co">#&gt; 34  identity positive_real</span></span>
+<span><span class="co">#&gt; 35  identity positive_real</span></span>
+<span><span class="co">#&gt; 36  identity         share</span></span>
+<span><span class="co">#&gt; 37  identity         share</span></span>
+<span><span class="co">#&gt; 38  identity         share</span></span></code></pre></div>
 <p>The <code>static</code> column indicates whether a variable varies
 over time. Use this to filter:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Static variables</span></span>
 <span><span class="va">pgvariables</span><span class="op">[</span><span class="va">pgvariables</span><span class="op">$</span><span class="va">static</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="st">"name"</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "naturalearth_cover"           "naturalearth_cover_share"    </span></span>
@@ -341,19 +497,29 @@ over time. Use this to filter:</p>
 <p>After downloading, your data folder has this structure:</p>
 <pre><code>{rawfolder}/
 ├── priogrid/
-│   ├── priogrid_3_0_1_05deg_yearly.zip   # Downloaded archive
+│   ├── priogrid_3_0_1_05deg_yearly.zip       # Downloaded archive
 │   └── releases/
 │       └── 3.0.1/
 │           └── 05deg_yearly/
-│               ├── pg_static.parquet        # Static data (cached)
-│               ├── pg_timevarying.parquet   # Time-varying data (cached)
-│               └── {varname}.rds            # Individual variable rasters
-├── {source_name}/{version}/{id}/            # Raw source files
-└── tmp/                                     # Temporary processing files</code></pre>
-<p>The <code>.parquet</code> files are what
-<code><a href="../reference/read_pg_static.html">read_pg_static()</a></code> and <code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code>
-read by default. The <code>.rds</code> files contain individual
-variables as rasters (used by <code><a href="../reference/load_pgvariable.html">load_pgvariable()</a></code>).</p>
+│               ├── cog/
+│               │   └── {varname}.tif          # Individual variables as Cloud-Optimized GeoTIFFs
+│               ├── timevarying/
+│               │   └── year=YYYY/
+│               │       └── part-0.parquet      # Hive-partitioned time-varying data
+│               ├── pg_static.parquet           # Static data (wide table)
+│               ├── pg_static.csv.gz            # Static data (CSV bundle)
+│               ├── pg_timevarying.csv.gz       # Time-varying data (CSV bundle)
+│               ├── pg_config.json              # Dataset manifest (grid, layout, variables)
+│               └── _checksums.csv              # Per-file MD5s
+├── {source_name}/{version}/{id}/               # Raw source files
+└── tmp/                                        # Temporary processing files</code></pre>
+<p><code><a href="../reference/read_pg_static.html">read_pg_static()</a></code> reads <code>pg_static.parquet</code>;
+<code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code> reads the hive-partitioned
+<code>timevarying/</code> dataset, pushing any filters down to Arrow
+first. The <code>cog/*.tif</code> files hold individual variables as
+Cloud-Optimized GeoTIFFs and are read by <code><a href="../reference/load_pgvariable.html">load_pgvariable()</a></code>.
+The <code>*.csv.gz</code> bundles provide the same tables for non-R
+users, and <code>pg_config.json</code> records the grid and layout.</p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

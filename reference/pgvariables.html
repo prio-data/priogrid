@@ -63,7 +63,7 @@
 <h3 id="pgvariables"><code>pgvariables</code><a class="anchor" aria-label="anchor" href="#pgvariables"></a></h3>
 
 
-<p>A data frame with 4 rows and 5 columns:</p><dl><dt>name</dt>
+<p>A data frame with 38 rows and 7 columns:</p><dl><dt>name</dt>
 <dd><p>Full name of the variable.</p></dd>
 
 <dt>static</dt>
@@ -72,8 +72,23 @@
 <dt>source_ids</dt>
 <dd><p>Comma-separated string. The Unique Universal Identifier (UUID) of the sources used to build the variable.</p></dd>
 
+<dt>label</dt>
+<dd><p>Human-readable display title for plots/legends.</p></dd>
 
-</dl></div>
+<dt>unit</dt>
+<dd><p>Measurement unit for colorbar labels; empty if dimensionless.</p></dd>
+
+<dt>transform</dt>
+<dd><p>Display transform applied before plotting; one of <code>identity</code>, <code>log1p</code>, <code>log10</code>, or <code>sqrt</code>.</p></dd>
+
+<dt>plot_type</dt>
+<dd><p>Plot type hint; one of <code>continuous</code>, <code>positive_real</code>, <code>count</code>, <code>share</code>, or <code>discrete</code>.</p></dd>
+
+
+</dl><p>Raster statistics (<code>value_min</code>/<code>value_max</code>/<code>value_mean</code>/<code>value_std</code>/<code>nunique</code>/<code>class_values</code>)
+and the derived <code>colormap</code> are not stored here; they are computed at build and stamped into
+each COG as <code>pg_*</code> metatags.</p>
+</div>
 
     </div>
     <div class="section level2">

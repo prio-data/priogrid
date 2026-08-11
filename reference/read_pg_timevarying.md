@@ -14,6 +14,12 @@ read_pg_timevarying(
   type = "05deg_yearly",
   spatial_hash = NULL,
   temporal_hash = NULL,
+  years = NULL,
+  start_date = NULL,
+  end_date = NULL,
+  pgids = NULL,
+  extent = NULL,
+  variables = NULL,
   as_raster = FALSE,
   test = FALSE,
   overwrite = FALSE,
@@ -43,6 +49,35 @@ read_pg_timevarying(
 - temporal_hash:
 
   Character string with 6-character temporal hash (custom only).
+
+- years:
+
+  Integer vector of years to keep. NULL (default) keeps all. Prunes hive
+  partitions on the `year` column.
+
+- start_date, end_date:
+
+  Date (or Date-coercible) bounds on `measurement_date` (inclusive).
+  NULL (default) leaves the respective bound open.
+
+- pgids:
+
+  Integer vector of PRIO-GRID cell ids to keep. NULL (default) keeps all
+  cells.
+
+- extent:
+
+  Numeric `c(xmin, xmax, ymin, ymax)` in lon/lat (EPSG:4326), or a terra
+  `SpatExtent` in the grid's native CRS; resolved to the pgids it covers
+  and unioned with `pgids`. For non-4326 configs the lon/lat box is
+  reprojected automatically. Requires `terra`. NULL (default) applies no
+  spatial filter.
+
+- variables:
+
+  Character vector of time-varying variable columns to return (in
+  addition to `pgid`, `measurement_date`, `year`). NULL (default)
+  returns all variables.
 
 - as_raster:
 
@@ -92,5 +127,9 @@ if (FALSE) { # \dontrun{
   # Load custom data
   cfg <- pg_config(nrow = 180, ncol = 360)
   pg_dt <- read_pg_timevarying(config = cfg)
+
+  # Subset: two years, a bounding box, and one variable
+  pg_dt <- read_pg_timevarying(version = "3.0.1", years = c(2010, 2011),
+                               extent = c(10, 12, 50, 52), variables = "cru_tmp")
 } # }
 ```

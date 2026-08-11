@@ -127,10 +127,10 @@ You can inspect this manually:
 
 # Find the source IDs for a variable
 pgvariables[pgvariables$name == "cru_tmp", ]
-#> # A tibble: 1 × 3
-#>   name    static source_ids                          
-#>   <chr>   <lgl>  <chr>                               
-#> 1 cru_tmp FALSE  ac037134-3567-49d9-a3ba-64f37c1ee698
+#> # A tibble: 1 × 7
+#>   name    static source_ids                      label unit  transform plot_type
+#>   <chr>   <lgl>  <chr>                           <chr> <chr> <chr>     <chr>    
+#> 1 cru_tmp FALSE  ac037134-3567-49d9-a3ba-64f37c… Mean… °C    identity  continuo…
 
 # Look up citation keys in pgsources
 source_id <- pgvariables[pgvariables$name == "cru_tmp", "source_ids"]

@@ -12,7 +12,7 @@ pgvariables
 
 ### `pgvariables`
 
-A data frame with 4 rows and 5 columns:
+A data frame with 38 rows and 7 columns:
 
 - name:
 
@@ -26,6 +26,29 @@ A data frame with 4 rows and 5 columns:
 
   Comma-separated string. The Unique Universal Identifier (UUID) of the
   sources used to build the variable.
+
+- label:
+
+  Human-readable display title for plots/legends.
+
+- unit:
+
+  Measurement unit for colorbar labels; empty if dimensionless.
+
+- transform:
+
+  Display transform applied before plotting; one of `identity`, `log1p`,
+  `log10`, or `sqrt`.
+
+- plot_type:
+
+  Plot type hint; one of `continuous`, `positive_real`, `count`,
+  `share`, or `discrete`.
+
+Raster statistics
+(`value_min`/`value_max`/`value_mean`/`value_std`/`nunique`/`class_values`)
+and the derived `colormap` are not stored here; they are computed at
+build and stamped into each COG as `pg_*` metatags.
 
 ## Details
 

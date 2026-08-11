@@ -16,6 +16,7 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/bdist1.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/bdist2.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/bdist3.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/build_pg_dataset.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/build_release.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/calc_pg.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/calc_traveltime.html</loc></url>
@@ -106,6 +107,7 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_set_config.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_set_rawfolder.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_suspicious_filename.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/pg_temporal_unit.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_update_checksums.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pg_verify_checksums.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pgchecksum.html</loc></url>
@@ -114,6 +116,7 @@
 <url><loc>http://prio-data.github.io/priogrid/reference/pgsearch.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pgsources.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/pgvariables.html</loc></url>
+<url><loc>http://prio-data.github.io/priogrid/reference/plot_pgvariable.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/print.pg_config.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/prio_blank_grid.html</loc></url>
 <url><loc>http://prio-data.github.io/priogrid/reference/priogrid-package.html</loc></url>

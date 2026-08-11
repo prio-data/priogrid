@@ -41,7 +41,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-08-06 
+#>   end_date: 2026-08-11 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```
@@ -124,17 +124,62 @@ head(pg_tv)
 These tables can be joined together by `pgid`, or merged with your own
 data.
 
-### Example: subsetting and merging
+### Subsetting at read time
+
+All six filter arguments default to `NULL` (no filter — full dataset).
+When supplied, filters are pushed down to Arrow before any data is
+collected, so only the requested rows and columns touch memory. Temporal
+and spatial constraints compose as AND; `pgids` and `extent` compose as
+union.
+
+| Argument | Type | Effect |
+|----|----|----|
+| `years` | integer vector | Keep only the listed calendar years (prunes hive partitions) |
+| `start_date` / `end_date` | Date | Inclusive bounds on `measurement_date` |
+| `pgids` | integer vector | Keep specific PRIO-GRID cell IDs |
+| `extent` | `c(xmin, xmax, ymin, ymax)` in lon/lat | Bounding box resolved to cell IDs (requires `terra`) |
+| `variables` | character vector | Return only the named variable columns |
+
+``` r
+
+# A single year
+pg_2020 <- read_pg_timevarying(years = 2020)
+
+# Inclusive date range
+pg_decade <- read_pg_timevarying(
+  start_date = as.Date("2010-01-01"),
+  end_date   = as.Date("2019-12-31")
+)
+
+# Spatial bounding box (Sub-Saharan Africa)
+pg_africa <- read_pg_timevarying(
+  extent = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40)
+)
+
+# One variable column only
+pg_tmp <- read_pg_timevarying(variables = "cru_tmp")
+
+# Combined: two years, one region, two variables
+pg_sub <- read_pg_timevarying(
+  years     = c(2010, 2015),
+  extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
+  variables = c("cru_tmp", "ucdp_ged")
+)
+```
+
+### Example: merging static and time-varying data
 
 ``` r
 
 library(data.table)
 
-# Subset to a specific year
-pg_2020 <- pg_tv[measurement_date == as.Date("2020-12-31")]
+# Load a specific year and region with push-down, then merge with static data
+pg_tv <- read_pg_timevarying(
+  years  = 2020,
+  extent = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40)
+)
 
-# Join static and time-varying on pgid
-pg_merged <- merge(pg_static, pg_2020, by = "pgid")
+pg_merged <- merge(pg_static, pg_tv, by = "pgid")
 ```
 
 ## Browsing Available Variables
@@ -222,6 +267,84 @@ pgvariables
 #> 36                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
 #> 37                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
 #> 38                                                                             e42b30e3-75da-4dd4-a375-0d6557087804
+#>                                               label                unit
+#> 1                                  Mean temperature                  °C
+#> 2                                     Precipitation                  mm
+#> 3                      Potential evapotranspiration              mm/day
+#> 4                  State territory coverage (share)                <NA>
+#> 5                     Country (Gleditsch-Ward code)                <NA>
+#> 6          Excluded ethnic groups (regional, share)                <NA>
+#> 7                   Distance to nearest land border                   m
+#> 8          Distance to nearest international border                   m
+#> 9                    Distance to own country border                   m
+#> 10                                 Population count             persons
+#> 11                           Cropland cover (share)                <NA>
+#> 12                             Forest cover (share)                <NA>
+#> 13                          Grassland cover (share)                <NA>
+#> 14                              Ocean cover (share)                <NA>
+#> 15                            Pasture cover (share)                <NA>
+#> 16                  Sparse vegetation cover (share)                <NA>
+#> 17                              Urban cover (share)                <NA>
+#> 18                              Water cover (share)                <NA>
+#> 19               Nighttime light (harmonized, mean)                <NA>
+#> 20                          Land cover mask (share)                <NA>
+#> 21                               Land cover (share)                <NA>
+#> 22                                   Mean elevation                   m
+#> 23                 Travel time to major city (mean)             minutes
+#> 24              Travel time to major city (minimum)             minutes
+#> 25                   UN peacekeeping troops (count)           personnel
+#> 26               UN peacekeeping operations (count)                <NA>
+#> 27                   Disputed area coverage (share)                <NA>
+#> 28               SPEI drought index (6-month, mean)                <NA>
+#> 29                      Urban area (DEGURBA, share)                <NA>
+#> 30                 Battle-related deaths (UCDP GED)              deaths
+#> 31              Subnational Human Development Index                <NA>
+#> 32                          Mean years of schooling               years
+#> 33                      Expected years of schooling               years
+#> 34                         Life expectancy at birth               years
+#> 35                                   GNI per capita 1000 USD (2011 PPP)
+#> 36               Excluded ethnic population (share)                <NA>
+#> 37               Included ethnic population (share)                <NA>
+#> 38 Politically irrelevant ethnic population (share)                <NA>
+#>    transform     plot_type
+#> 1   identity    continuous
+#> 2   identity positive_real
+#> 3   identity positive_real
+#> 4   identity         share
+#> 5   identity      discrete
+#> 6   identity         share
+#> 7   identity positive_real
+#> 8   identity positive_real
+#> 9   identity positive_real
+#> 10     log10 positive_real
+#> 11  identity         share
+#> 12  identity         share
+#> 13  identity         share
+#> 14  identity         share
+#> 15  identity         share
+#> 16  identity         share
+#> 17  identity         share
+#> 18  identity         share
+#> 19  identity positive_real
+#> 20  identity         share
+#> 21  identity         share
+#> 22  identity    continuous
+#> 23  identity positive_real
+#> 24  identity positive_real
+#> 25     log1p         count
+#> 26     log1p         count
+#> 27  identity         share
+#> 28  identity    continuous
+#> 29  identity         share
+#> 30     log1p         count
+#> 31  identity positive_real
+#> 32  identity positive_real
+#> 33  identity positive_real
+#> 34  identity positive_real
+#> 35  identity positive_real
+#> 36  identity         share
+#> 37  identity         share
+#> 38  identity         share
 ```
 
 The `static` column indicates whether a variable varies over time. Use
@@ -261,23 +384,32 @@ After downloading, your data folder has this structure:
 
     {rawfolder}/
     ├── priogrid/
-    │   ├── priogrid_3_0_1_05deg_yearly.zip   # Downloaded archive
+    │   ├── priogrid_3_0_1_05deg_yearly.zip       # Downloaded archive
     │   └── releases/
     │       └── 3.0.1/
     │           └── 05deg_yearly/
-    │               ├── pg_static.parquet        # Static data (cached)
-    │               ├── pg_timevarying.parquet   # Time-varying data (cached)
-    │               └── {varname}.rds            # Individual variable rasters
-    ├── {source_name}/{version}/{id}/            # Raw source files
-    └── tmp/                                     # Temporary processing files
+    │               ├── cog/
+    │               │   └── {varname}.tif          # Individual variables as Cloud-Optimized GeoTIFFs
+    │               ├── timevarying/
+    │               │   └── year=YYYY/
+    │               │       └── part-0.parquet      # Hive-partitioned time-varying data
+    │               ├── pg_static.parquet           # Static data (wide table)
+    │               ├── pg_static.csv.gz            # Static data (CSV bundle)
+    │               ├── pg_timevarying.csv.gz       # Time-varying data (CSV bundle)
+    │               ├── pg_config.json              # Dataset manifest (grid, layout, variables)
+    │               └── _checksums.csv              # Per-file MD5s
+    ├── {source_name}/{version}/{id}/               # Raw source files
+    └── tmp/                                        # Temporary processing files
 
-The `.parquet` files are what
 [`read_pg_static()`](http://prio-data.github.io/priogrid/reference/read_pg_static.md)
-and
+reads `pg_static.parquet`;
 [`read_pg_timevarying()`](http://prio-data.github.io/priogrid/reference/read_pg_timevarying.md)
-read by default. The `.rds` files contain individual variables as
-rasters (used by
-[`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md)).
+reads the hive-partitioned `timevarying/` dataset, pushing any filters
+down to Arrow first. The `cog/*.tif` files hold individual variables as
+Cloud-Optimized GeoTIFFs and are read by
+[`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md).
+The `*.csv.gz` bundles provide the same tables for non-R users, and
+`pg_config.json` records the grid and layout.
 
 ## Next Steps
 

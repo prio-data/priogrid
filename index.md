@@ -26,6 +26,11 @@ PRIOGRID data as .zip](https://www.prio.org/data/40)
   create tailored datasets (e.g., area-equal projections for polar
   regions).
 - **PRIOGRID is a research tool, not just a dataset.**
+- **Efficient, self-describing outputs** — Variables ship as
+  Cloud-Optimized GeoTIFFs and time-varying tables as Hive-partitioned
+  Parquet, so
+  [`read_pg_timevarying()`](http://prio-data.github.io/priogrid/reference/read_pg_timevarying.md)
+  pushes year/date/cell/variable filters down to Arrow before loading.
 
 ## Installation
 
@@ -39,10 +44,10 @@ renv::install("prio-data/priogrid")
 
 ### Optional R Packages
 
-`terra`, `sf`, `exactextractr`, and `arrow` are listed in `Suggests` and
-are **not installed automatically**. They are only required for specific
-functionality (working with rasters) and will be requested the first
-time you use a function that needs them.
+`terra`, `sf`, and `exactextractr` are listed in `Suggests` and are
+**not installed automatically**. They are only required for spatial
+functionality (working with rasters, and `extent`-based subsetting) and
+will be requested the first time you use a function that needs them.
 
 ### Troubleshooting Installation
 
@@ -103,8 +108,20 @@ Download the official release and read it into R:
 
 download_priogrid()
 
-pg_static     <- read_pg_static()
+pg_static      <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
+```
+
+Load only the rows and columns you need — filters push down to Arrow
+before anything is collected:
+
+``` r
+
+pg_sub <- read_pg_timevarying(
+  years     = 2010:2015,
+  extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
+  variables = "cru_tmp"
+)
 ```
 
 Browse available variables:

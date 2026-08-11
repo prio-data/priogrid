@@ -223,8 +223,12 @@ operations. Here are a few patterns:</p>
 <div class="section level2">
 <h2 id="saving-and-reusing-custom-results">Saving and Reusing Custom Results<a class="anchor" aria-label="anchor" href="#saving-and-reusing-custom-results"></a>
 </h2>
-<p><code><a href="../reference/save_pgvariable.html">save_pgvariable()</a></code> saves any <code>SpatRaster</code> back
-to the PRIOGRID data folder as a wrapped <code>.rds</code> file:</p>
+<p><code><a href="../reference/save_pgvariable.html">save_pgvariable()</a></code> writes any <code>SpatRaster</code> to
+the dataset’s <code>cog/</code> sub-folder as a Cloud-Optimized GeoTIFF
+(<code>{varname}.tif</code>), stamping layer dates via
+<code><a href="https://rspatial.github.io/terra/reference/time.html" class="external-link">time()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/units.html" class="external-link">units()</a></code>, and the <code>pg_*</code>
+display metadata from <code>pgvariables</code> so the file is
+self-describing:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gen_ruggedterrain_elevation_mean.html">gen_ruggedterrain_elevation_mean</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/save_pgvariable.html">save_pgvariable</a></span><span class="op">(</span><span class="va">r</span>, <span class="st">"ruggedterrain_elevation_mean"</span><span class="op">)</span></span>

@@ -12,6 +12,8 @@
   : Calculate distance to nearest international border (bdist2)
 - [`bdist3()`](http://prio-data.github.io/priogrid/reference/bdist3.md)
   : Calculate nearest distance to a country's own borders (bdist3)
+- [`build_pg_dataset()`](http://prio-data.github.io/priogrid/reference/build_pg_dataset.md)
+  : Build a PRIO-GRID hive-partitioned dataset
 - [`build_release()`](http://prio-data.github.io/priogrid/reference/build_release.md)
   : Build an official PRIO-GRID release
 - [`calc_pg()`](http://prio-data.github.io/priogrid/reference/calc_pg.md)
@@ -168,6 +170,8 @@
   : PRIO-GRID Meta-data survey and source information
 - [`pgvariables`](http://prio-data.github.io/priogrid/reference/pgvariables.md)
   : PRIO-GRID Variables
+- [`plot_pgvariable()`](http://prio-data.github.io/priogrid/reference/plot_pgvariable.md)
+  : Plot a PRIO-GRID variable
 - [`print(`*`<pg_config>`*`)`](http://prio-data.github.io/priogrid/reference/print.pg_config.md)
   : Print a pg_config object
 - [`prio_blank_grid()`](http://prio-data.github.io/priogrid/reference/prio_blank_grid.md)
