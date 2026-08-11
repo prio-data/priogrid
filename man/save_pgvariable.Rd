@@ -7,19 +7,31 @@
 save_pgvariable(rast, varname, save_to = pgout_path())
 }
 \arguments{
-\item{rast}{Terra SpatRaster object from a gen_*() function}
+\item{rast}{Terra SpatRaster object from a gen_*() function.}
 
-\item{varname}{Character string with the variable name (must exist in pgvariables)}
+\item{varname}{Character string with the variable name (must exist in pgvariables).}
 
-\item{save_to}{Character string with folder path. Defaults to current custom
-data location based on config.}
+\item{save_to}{Character string with the dataset root path. Defaults to current
+custom data location based on config.}
 }
 \value{
 NULL (invisibly). Called for side effects (saving file).
 }
 \description{
-Saves a terra SpatRaster as a wrapped .rds file. The variable must be
-listed in \link{pgvariables}.
+Saves a terra SpatRaster as a Cloud-Optimized GeoTIFF (COG) under the
+\code{cog/} sub-directory of the dataset root. The variable must be listed
+in \link{pgvariables}. Layer names, \code{time()}, and \code{units()} are
+preserved natively inside the \code{.tif}. Plot metadata from \link{pgvariables}
+(\code{label}, \code{unit}, \code{transform}, \code{plot_type}) is stamped as
+\code{pg_*} GDAL metatags so the COG is self-describing. In addition,
+\code{pg_colormap} (derived from \code{plot_type}), \code{pg_value_min},
+\code{pg_value_max}, \code{pg_value_mean}, \code{pg_value_std} (computed
+from the raster at save time), and — for discrete variables —
+\code{pg_nunique} and \code{pg_class_values} are also stamped.
+\code{value_*}, \code{nunique}, and \code{class_values} are computed from
+the raster at save time; \code{colormap} is derived from \code{plot_type}.
+These map directly onto rio-tiler/TiTiler \code{rescale} and
+\code{colormap_name}.
 }
 \examples{
 \dontrun{
