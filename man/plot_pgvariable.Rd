@@ -12,6 +12,10 @@ plot_pgvariable(
   type = "05deg_yearly",
   spatial_hash = NULL,
   temporal_hash = NULL,
+  extent = NULL,
+  add_borders = FALSE,
+  add_ne = FALSE,
+  add_citation = FALSE,
   ...
 )
 }
@@ -38,11 +42,34 @@ passed to \code{load_pgvariable()}. Default \code{"05deg_yearly"}.}
 output folder; passed to \code{load_pgvariable()}. Must be supplied
 together. Cannot be combined with \code{version}.}
 
+\item{extent}{Numeric vector \code{c(xmin, xmax, ymin, ymax)} in lon/lat,
+or a continent name string: \code{"Africa"}, \code{"Antarctica"},
+\code{"Asia"}, \code{"Europe"}, \code{"North America"}, \code{"Oceania"},
+\code{"South America"} (case-insensitive; spaces/underscores optional).
+When \code{x} is a variable name string, passed to
+\code{load_pgvariable()} for a windowed COG read — only the blocks
+covering the requested region are fetched. Ignored with a warning when
+\code{x} is already a \code{SpatRaster}; crop it before calling if needed.}
+
+\item{add_borders}{Logical. If \code{TRUE}, overlays country borders from
+\code{\link{read_cshapes}()} (requires the cShapes raw data). When the
+selected layer name is a parseable ISO date (e.g. \code{"1999-12-31"}),
+the historically correct borders for that date are used; otherwise the
+most recent snapshot (\code{max(gwsdate)}) is used as a fallback.}
+
+\item{add_ne}{Logical. If \code{TRUE}, overlays land outlines from
+\code{\link{read_naturalearth_10m_land}()} (requires the Natural Earth
+raw data). Drawn beneath \code{add_borders} when both are \code{TRUE}.}
+
+\item{add_citation}{Logical. If \code{TRUE}, renders a compact
+\dQuote{Author et al. (Year)} citation string in the bottom margin,
+sourced from \code{\link{pgvariables}}, \code{\link{pgsources}}, and
+\code{inst/REFERENCES.bib}. Variables with multiple data sources produce
+a semicolon-separated list. The bottom margin is expanded automatically
+to accommodate the text.}
+
 \item{...}{Additional arguments forwarded to \code{terra::plot()}, overriding
 any metadata-derived default (e.g. \code{range}, \code{main}, \code{col}).}
-}
-\value{
-The drawn \code{SpatRaster} layer, invisibly.
 }
 \description{
 Renders a PRIO-GRID raster using display metadata from its embedded
@@ -59,14 +86,24 @@ data frame. No new package dependency — colours come from base
   r <- load_pgvariable("ucdp_ged")
   plot_pgvariable(r)
 
-  # Plot by name from a custom data directory:
+  # Windowed read by continent name:
+  plot_pgvariable("cru_tmp", extent = "Africa")
+
+  # Windowed read by numeric bbox (xmin, xmax, ymin, ymax):
+  plot_pgvariable("cru_tmp", extent = c(-20, 20, 5, 20))
+
+  # Historical borders + land outline overlaid:
+  plot_pgvariable("ucdp_ged", layer = "1999-12-31",
+                  extent = "Africa", add_borders = TRUE, add_ne = TRUE)
+
+  # Custom data directory:
   cfg <- pg_config(nrow = 180, ncol = 360)
   plot_pgvariable("ucdp_ged", config = cfg)
 
-  # Plot a specific release:
+  # Specific release:
   plot_pgvariable("ucdp_ged", version = "3.0.1")
 
-  # Override the title:
+  # Override terra::plot() args:
   plot_pgvariable(r, main = "Custom title")
 }
 }
