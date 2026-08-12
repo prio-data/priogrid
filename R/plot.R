@@ -282,16 +282,8 @@ plot_pgvariable <- function(x, layer = 1,
   do.call(terra::plot, args)
 
   if (add_ne || add_borders) {
-    crop_to_extent <- function(sf_obj) {
-      if (is.null(extent)) return(sf_obj)
-      bbox <- sf::st_bbox(c(xmin = extent[1], xmax = extent[2],
-                            ymin = extent[3], ymax = extent[4]),
-                          crs = sf::st_crs(4326))
-      suppressWarnings(sf::st_crop(sf_obj, bbox))
-    }
-
     if (add_ne) {
-      ne <- tryCatch(crop_to_extent(read_naturalearth_10m_land()),
+      ne <- tryCatch(read_naturalearth_10m_land(),
                      error = function(e) {
                        warning("add_ne: ", conditionMessage(e), call. = FALSE); NULL
                      })
@@ -304,9 +296,9 @@ plot_pgvariable <- function(x, layer = 1,
         warning("add_borders: ", conditionMessage(e), call. = FALSE); NULL
       })
       if (!is.null(cs)) {
-        d <- if (!is.na(layer_date)) layer_date else max(cs$gwsdate, na.rm = TRUE)
+        d <- if (!is.na(layer_date)) layer_date else max(cs$gwedate, na.rm = TRUE)
+        d <- pmin(d, max(cs$gwedate))
         borders <- dplyr::filter(cs, d %within% date_interval)
-        borders <- tryCatch(crop_to_extent(borders), error = function(e) borders)
         plot(sf::st_geometry(borders), add = TRUE, border = "grey20", col = NA, lwd = 0.5)
       }
     }
