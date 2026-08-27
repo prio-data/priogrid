@@ -16,9 +16,9 @@ The best first contribution is to use PRIO-GRID. Our tutorials are written to gu
 
 -   *Accessing PRIO-GRID as Rasters* show you how to work with individual variables as spatial rasters using `terra` for spatial analysis and mapping.
 
--   *Custom Spatial and Temporal Configuraions* show you how to change the resolution, extent, projection, or time to build the dataset you need and/or conduct sensitivity analyses.
+-   *Custom Configurations* show you how to change the resolution, extent, projection, or time to build the dataset you need and/or conduct sensitivity analyses.
 
--   *Understanding PRIO-GRID Metadata* show you the sources and variables in PRIO-GRID with `pgsources`, `pgvariables`, and `pgsearch()`.
+-   *Understanding Metadata* show you the sources and variables in PRIO-GRID with `pgsources`, `pgvariables`, and `pgsearch()`.
 
 -   *Citation and Bibliography* show you how to automatically retrieve every citation the data you used requires, and how to export it as BibLaTeX for your paper.
 
