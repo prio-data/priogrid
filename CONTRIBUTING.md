@@ -2,11 +2,11 @@
 
 ## Welcome, and thank you for being here
 
-PRIO-GRID is an open source project, built by and for the scientific community. Its purpose is to lower the barriers of subnational spatial research for social scientists. PRIO-GRID takes messy and mismatched geospatial data, from climate rasters, conflict events, population grids, and administrative boundaries and more, and standardizing it into one consistent grid. The goal is that any researcher can use PRIO-GRID regardless of their GIS background.
+PRIO-GRID is an open source project, built by and for the scientific community. Its purpose is to lower the barriers of subnational spatial research for social scientists. PRIO-GRID takes messy and mismatched geospatial data, from climate rasters, conflict events, population grids, and administrative boundaries and more, and standardizing it into one consistent grid. The goal is that any researcher can use PRIO-GRID regardless of their GIS or data science background.
 
-For over a decade PRIO-GRID has helped researchers across peace and conflict studies, development economics, environmental science, and public health. Our goal is that PRIO-GRID will continue to benefit researchers in more decades to come.
+For over a decade PRIO-GRID has helped researchers across domains. Our goal is that PRIO-GRID will continue to benefit researchers in more decades to come.
 
-Our mission is that PRIO-GRID will remain a pillar for spatial science science research. For this to happen, we need the community to contribute, identifying problems, sharing ideas, ask questions, and help us make the package better for everyone. Most importantly, we hope you find PRIO-GRID useful in your own work, and that you want to use it and tell your colleagues and students about it.
+Our mission is that PRIO-GRID will remain a pillar for spatial science science research. For this to happen, we need the community to contribute, identifying problems, sharing ideas, ask questions, and help us make PRIO-GRID better for everyone. Most importantly, we hope you find PRIO-GRID useful in your own work, and that you want to use it and tell your colleagues and students about it.
 
 If you want to contribute to PRIO-GRID technically, refer to the *Contributing to PRIO-GRID tutorial*.
 
@@ -26,15 +26,15 @@ The best first contribution is to use PRIO-GRID. Our tutorials are written to gu
 
 Please let us know if a tutorial is confusing or you encounter errors.
 
-## Ways to contribute: a call for service
+## Ways to contribute
 
-PRIO-GRID can grow through small acts of contribution by multiple people. Here are ways to help, from the easiest to the most involved. We welcome and appreciate all of them.
+Acts of contribution by the whole scientific community help PRIO-GRID to grow and improve. Here are ways to contribute, from the easiest to the most involved. We welcome and appreciate all of them.
 
 -   **Spread the word.** Mention PRIO-GRID in methods sections, workshops, reading groups, and to students.
 
--   **Use it in your research and teaching.** Every application of PRIO-GRID makes a case for the project, and often also reveal what to improve next.
+-   **Use it in your research and teaching.** Every time PRIO-GRID is used in research, it helps grow the project.
 
--   **Cite the data you use.** PRIO-GRID stands on the shoulders of many upstream data providers that must be cited and credited. The package makes this easy with `pgcitations()` (see the *Citations tutorial)*.
+-   **Cite the data you use.** PRIO-GRID builds on data from many upstream providers that must be cited and credited. The package makes this easy with `pgcitations()` (see the *Citations tutorial)*.
 
 -   **Send us issues.** If you encounter errors, failed downloads, or bugs, *open an issue* (see *Reporting a bug.*
 
@@ -65,10 +65,6 @@ The code snippet that triggers the issue:
 # issue code
 
 ```
-
-**What you expected**
-
-If possible: what you expected the code should have done
 
 **The error message**
 
@@ -122,19 +118,19 @@ Would you like to fix a bug or add a feature? The basic workflow follows GitHub 
 
 Additional notes for contributors:
 
--   **The package is set up for development with `r devtools`.** `devtools::load_all()` loads your working copy, `devtools::test()` and `devtools::document()` can also be useful commands to run before opening a pull request.
+-   **The package is set up for development with `devtools`.** `devtools::load_all()` loads your working copy, `devtools::test()` and `devtools::document()` can also be useful commands to run before opening a pull request.
 
 -   **Match the existing style.** PRIO-GRID follows the tidyverse style guide and uses established naming patterns such as `read_*()`, `gen_*()`, `pg_*()`. Documentation is written with `roxygen2`
 
 -   **Draft pull request are also welcome.** If you want early feedback or you get stuck halfway it may still help to contribute what you have done, and one of our maintainers can take over or guide you.
 
-If your contribution is a new data source or variable, or *Contributing to PRIOGRID tutorial* walks through every step from registering the source, writing `read_*()` and `gen_*()` functions, adding tests, and verifying the result.
+If your contribution is a new data source or variable, our *Contributing to PRIOGRID tutorial* walks through every step from registering the source, writing `read_*()` and `gen_*()` functions, adding tests, and verifying the result.
 
-We are a small research team working on PRIO-GRID alongside other research project. Therefore we encourage patience with reviews, but a friendly nudge is always OK if things go quiet. Also remember that review comments are aimed at keeping PRIO-GRID a reliable tool for the whole community and not a judgement of you or your coding skills. We will try and be clear about what would help a contribution get merged into PRIO-GRID.
+We are a small research team working on PRIO-GRID alongside other research project. Therefore we encourage patience with reviews, but a friendly nudge is always OK if things take time. Also remember that review comments are aimed at keeping PRIO-GRID a reliable tool for the whole community and not a judgement of you or your coding skills. We will try and be clear about what would help a contribution get merged into PRIO-GRID.
 
 ## Code of Conduct
 
-We are committed to a friendly, safe, and welcoming environment for everyone. By taking part in contributing through issues, pull requests or any other contributions to project space you agree to uphold our Code of Conduct. Please report any unacceptable behavior should you encounter it. Reports are handled confidentially.
+We are committed to a friendly, safe, and welcoming environment for everyone. By taking part in contributing through issues, pull requests or any other contributions to the project you agree to uphold our Code of Conduct. Please report any unacceptable behavior should you encounter it. Reports are handled confidentially.
 
 ## Getting help
 
