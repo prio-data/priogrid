@@ -36,7 +36,7 @@ PRIO-GRID can grow through small acts of contribution by multiple people. Here a
 
 -   **Cite the data you use.** PRIO-GRID stands on the shoulders of many upstream data providers that must be cited and credited. The package makes this easy with `pgcitations()` (see the *Citations tutorial)*.
 
--   **Send us issues.** If you encounter errors, failed downloads, or bugs, [open an issue]{.underline} (see [Reporting a bug]{.underline}.
+-   **Send us issues.** If you encounter errors, failed downloads, or bugs, *open an issue* (see *Reporting a bug.*
 
 -   **Suggest a data source or variable.** If you know a great open dataset that should be incorporated into PRIO-GRID, please suggest it for us (see *Suggesting a data source*).
 
