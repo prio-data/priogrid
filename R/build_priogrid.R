@@ -66,7 +66,7 @@ get_temporal_hash <- function(config = pg_current_config()) {
 #'   pgout_path(spatial_hash = "a3f2e1", temporal_hash = "9c8b7a")
 #'
 #'   # Official release
-#'   pgout_path(version = "3.0.1", type = "05deg_yearly")
+#'   pgout_path(version = "3.0.2", type = "05deg_yearly")
 #' }
 pgout_path <- function(version = NULL,
                        type = NULL,
@@ -812,7 +812,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #' @param varname Character string with the variable name.
 #' @param config A \code{pg_config} object for custom data, or NULL (default) for the
 #'   official release.
-#' @param version Character string specifying PRIOGRID version (e.g., "3.0.1").
+#' @param version Character string specifying PRIOGRID version (e.g., "3.0.2").
 #'   Only used in release mode (config = NULL). Defaults to current package version.
 #' @param type Character string specifying release type (e.g., "05deg_yearly").
 #'   Only used in release mode. Default: "05deg_yearly".
@@ -841,7 +841,7 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 #'   r <- load_pgvariable("cshapes_gwcode")
 #'
 #'   # Load from specific official release
-#'   r <- load_pgvariable("cshapes_gwcode", version = "3.0.1")
+#'   r <- load_pgvariable("cshapes_gwcode", version = "3.0.2")
 #'
 #'   # Load from custom data
 #'   cfg <- pg_config(nrow = 180, ncol = 360)
@@ -1098,7 +1098,7 @@ resolve_pg_mode <- function(config = NULL,
 #'   pg_dt <- read_pg_static()
 #'
 #'   # Load specific official release
-#'   pg_dt <- read_pg_static(version = "3.0.1")
+#'   pg_dt <- read_pg_static(version = "3.0.2")
 #'
 #'   # Load custom data
 #'   cfg <- pg_config(nrow = 180, ncol = 360)
@@ -1250,14 +1250,14 @@ read_pg_static <- function(config = NULL,
 #'   pg_dt <- read_pg_timevarying()
 #'
 #'   # Load specific official release
-#'   pg_dt <- read_pg_timevarying(version = "3.0.1")
+#'   pg_dt <- read_pg_timevarying(version = "3.0.2")
 #'
 #'   # Load custom data
 #'   cfg <- pg_config(nrow = 180, ncol = 360)
 #'   pg_dt <- read_pg_timevarying(config = cfg)
 #'
 #'   # Subset: two years, a bounding box, and one variable
-#'   pg_dt <- read_pg_timevarying(version = "3.0.1", years = c(2010, 2011),
+#'   pg_dt <- read_pg_timevarying(version = "3.0.2", years = c(2010, 2011),
 #'                                extent = c(10, 12, 50, 52), variables = "cru_tmp")
 #' }
 read_pg_timevarying <- function(config = NULL,
@@ -1384,7 +1384,7 @@ build_pg_dataset <- function(config = NULL, version = NULL, type = "05deg_yearly
 #' location, then copies them to the official release folder. This ensures
 #' consistency between custom and release workflows.
 #'
-#' @param version Character string with release version (e.g., "3.0.1")
+#' @param version Character string with release version (e.g., "3.0.2")
 #' @param type Character string with release type (e.g., "05deg_yearly")
 #' @param nrow Number of rows
 #' @param ncol Number of columns
@@ -1400,7 +1400,7 @@ build_pg_dataset <- function(config = NULL, version = NULL, type = "05deg_yearly
 #' @examples
 #' \dontrun{
 #'   build_release(
-#'     version = "3.0.1",
+#'     version = "3.0.2",
 #'     type = "05deg_yearly",
 #'     nrow = 360,
 #'     ncol = 720,
@@ -1408,7 +1408,7 @@ build_pg_dataset <- function(config = NULL, version = NULL, type = "05deg_yearly
 #'     extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
 #'     temporal_resolution = "1 year",
 #'     start_date = as.Date("1850-12-31"),
-#'     end_date = as.Date("2025-08-26")
+#'     end_date = as.Date("2026-08-11")
 #'  )
 #' }
 build_release <- function(version, type,
@@ -1612,7 +1612,7 @@ pg_list_custom <- function() {
 #'   download_priogrid()
 #'
 #'   # Download specific release
-#'   download_priogrid(version = "3.0.1", type = "05deg_yearly")
+#'   download_priogrid(version = "3.0.2", type = "05deg_yearly")
 #'
 #'   # List releases
 #'   download_priogrid(list_releases = TRUE)

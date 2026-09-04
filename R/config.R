@@ -214,7 +214,7 @@ pg_set_rawfolder <- function(path) {
 #' for a known official PRIO-GRID release. Useful for loading release data
 #' with the correct grid dimensions and date range.
 #'
-#' @param version Character string specifying the release version (e.g., "3.0.1").
+#' @param version Character string specifying the release version (e.g., "3.0.2").
 #'   If NULL, uses the current package version.
 #' @param type Character string specifying the release type. Default: "05deg_yearly".
 #'
@@ -222,7 +222,7 @@ pg_set_rawfolder <- function(path) {
 #' @export
 #'
 #' @examples
-#' cfg <- pg_release_config("3.0.1")
+#' cfg <- pg_release_config("3.0.2")
 #' cfg$nrow  # 360
 pg_release_config <- function(version = NULL, type = "05deg_yearly") {
   if (is.null(version)) version <- as.character(packageVersion("priogrid"))

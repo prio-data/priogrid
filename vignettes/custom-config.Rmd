@@ -103,14 +103,14 @@ If you change any spatial parameter, the spatial hash changes and PRIOGRID will 
 ```{r pgout-path, eval=FALSE}
 cfg <- pg_config(nrow = 180, ncol = 360)
 pgout_path(config = cfg)
-# {rawfolder}/priogrid/custom/3.0.1/a1b2c3/d4e5f6/
+# {rawfolder}/priogrid/custom/3.0.2/a1b2c3/d4e5f6/
 ```
 
 For the official release:
 
 ```{r pgout-release, eval=FALSE}
-pgout_path(version = "3.0.1", type = "05deg_yearly")
-# {rawfolder}/priogrid/releases/3.0.1/05deg_yearly/
+pgout_path(version = "3.0.2", type = "05deg_yearly")
+# {rawfolder}/priogrid/releases/3.0.2/05deg_yearly/
 ```
 
 ## Building Custom Variables

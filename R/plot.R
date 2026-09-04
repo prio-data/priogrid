@@ -146,7 +146,7 @@
 #'   \code{\link{load_pgvariable}()} when \code{x} is a variable name string;
 #'   ignored when \code{x} is already a \code{SpatRaster}.
 #'   \code{NULL} (default) resolves via the release path or current config.
-#' @param version Character. Release version string (e.g. \code{"3.0.1"});
+#' @param version Character. Release version string (e.g. \code{"3.0.2"});
 #'   passed to \code{load_pgvariable()}. Cannot be combined with \code{config}.
 #' @param type Character. Release type (e.g. \code{"05deg_yearly"});
 #'   passed to \code{load_pgvariable()}. Default \code{"05deg_yearly"}.
@@ -179,6 +179,7 @@
 #'   a semicolon-separated list. The bottom margin is expanded automatically
 #'   to accommodate the text.
 #'
+#' @export
 #' @examples
 #' \dontrun{
 #'   # Plot directly from a loaded raster:
@@ -200,7 +201,7 @@
 #'   plot_pgvariable("ucdp_ged", config = cfg)
 #'
 #'   # Specific release:
-#'   plot_pgvariable("ucdp_ged", version = "3.0.1")
+#'   plot_pgvariable("ucdp_ged", version = "3.0.2")
 #'
 #'   # Override terra::plot() args:
 #'   plot_pgvariable(r, main = "Custom title")

@@ -17,7 +17,7 @@ An R-package for collecting and standardizing open spatial data into a common gr
 - **R, not SQL** — More researchers know R, and the package leverages excellent spatial-data infrastructure with `sf`, `terra`, and `exactextractr`.
 - **Flexible spatio-temporal configuration** — Change resolution, extent, and projection to test the modifiable areal unit problem or create tailored datasets (e.g., area-equal projections for polar regions).
 - **PRIOGRID is a research tool, not just a dataset.**
-- **Efficient, self-describing outputs** — Variables ship as Cloud-Optimized GeoTIFFs and time-varying tables as Hive-partitioned Parquet, so `read_pg_timevarying()` pushes year/date/cell/variable filters down to Arrow before loading.
+- **Efficient, self-describing outputs** — Variables are distributed as Cloud-Optimized GeoTIFFs. The tabular tables (a static wide table and Hive-partitioned Parquet for time-varying data) are built locally from those GeoTIFFs on first read, after which `read_pg_timevarying()` pushes year/date/cell/variable filters down to Arrow before loading.
 
 ## Installation
 
@@ -30,7 +30,7 @@ renv::install("prio-data/priogrid")
 
 ### Optional R Packages
 
-`terra`, `sf`, and `exactextractr` are listed in `Suggests` and are **not installed automatically**. They are only required for spatial functionality (working with rasters, and `extent`-based subsetting) and will be requested the first time you use a function that needs them.
+`terra`, `sf`, and `exactextractr` are listed in `Suggests` and are **not installed automatically**. They are only required for spatial functionality (working with rasters, `extent`-based subsetting, and building the tabular tables from the downloaded GeoTIFFs on first read) and will be requested the first time you use a function that needs them.
 
 ### Troubleshooting Installation
 
@@ -83,6 +83,8 @@ download_priogrid()
 pg_static      <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
 ```
+
+The first `read_pg_*()` call builds the tabular tables from the downloaded GeoTIFFs (requires `terra`) and caches them; later reads use the cache and need only `arrow`.
 
 Load only the rows and columns you need — filters push down to Arrow before anything is collected:
 
