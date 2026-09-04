@@ -439,7 +439,8 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
 # year=YYYY/ for yearly; year=YYYY/<unit>=VV/ for sub-yearly. Also writes a gzipped CSV
 # bundle and a pg_config.json manifest. Checksums all outputs.
 # @keywords internal
-.pg_build_timevarying <- function(base_path, config, version = NULL, type = NULL, overwrite = FALSE) {
+.pg_build_timevarying <- function(base_path, config, version = NULL, type = NULL, overwrite = FALSE,
+                                   write_csv = FALSE) {
   rlang::check_installed("terra", reason = "to build PRIO-GRID data from individual variables")
 
   hive_dir <- file.path(base_path, "timevarying")
@@ -449,8 +450,10 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
       return(invisible(hive_dir))
     }
     unlink(hive_dir, recursive = TRUE)
-    stale_csv <- file.path(base_path, "pg_timevarying.csv.gz")
-    if (file.exists(stale_csv)) file.remove(stale_csv)
+    if (write_csv) {
+      stale_csv <- file.path(base_path, "pg_timevarying.csv.gz")
+      if (file.exists(stale_csv)) file.remove(stale_csv)
+    }
   }
 
   unit     <- pg_temporal_unit(config)
@@ -514,14 +517,16 @@ save_pgvariable <- function(rast, varname, save_to = pgout_path()) {
     .pg_record_checksum(pf,
                         file.path("timevarying", part_subpath, "part-0.parquet"),
                         base_path)
-    data.table::fwrite(slice, tmp_csv, append = length(partitions) > 0L)
+    if (write_csv) data.table::fwrite(slice, tmp_csv, append = length(partitions) > 0L)
     partitions <- c(partitions, part_subpath)
   }
 
-  # ----- Phase 3: CSV bundle, manifest, cleanup -----
-  csv_gz <- file.path(base_path, "pg_timevarying.csv.gz")
-  R.utils::gzip(tmp_csv, destname = csv_gz, overwrite = TRUE, remove = TRUE)
-  .pg_record_checksum(csv_gz, "pg_timevarying.csv.gz", base_path)
+  # ----- Phase 3: manifest, cleanup -----
+  if (write_csv) {
+    csv_gz <- file.path(base_path, "pg_timevarying.csv.gz")
+    R.utils::gzip(tmp_csv, destname = csv_gz, overwrite = TRUE, remove = TRUE)
+    .pg_record_checksum(csv_gz, "pg_timevarying.csv.gz", base_path)
+  }
 
   static_path <- file.path(base_path, "pg_static.parquet")
   static_vars <- if (file.exists(static_path))
@@ -884,7 +889,8 @@ load_pgvariable <- function(varname,
     base_dir <- pgout_path(spatial_hash = get_spatial_hash(config), temporal_hash = get_temporal_hash(config))
   } else {
     resolved_version <- version %||% as.character(packageVersion("priogrid"))
-    download_priogrid(version = resolved_version, type = type)
+    .pg_download_release_files(resolved_version, type,
+                              filenames = c(paste0(varname, ".tif"), "_checksums.csv"))
     base_dir <- pgout_path(version = resolved_version, type = type)
   }
 
@@ -1195,9 +1201,6 @@ read_pg_static <- function(config = NULL,
   # Save to cache
   arrow::write_parquet(df, fname)
   .pg_record_checksum(fname, "pg_static.parquet", cfg$base_path)
-  static_csv <- file.path(cfg$base_path, "pg_static.csv.gz")
-  data.table::fwrite(df, static_csv, compress = "gzip")
-  .pg_record_checksum(static_csv, "pg_static.csv.gz", cfg$base_path)
 
   return(df)
 }
@@ -1422,13 +1425,18 @@ build_release <- function(version, type,
   )
 
   # Calculate
+  from_path <- pgout_path(config = config)
   calc_pg(overwrite = TRUE, config = config)
   read_pg_static(config = config, overwrite = TRUE)
-  .pg_build_timevarying(base_path = pgout_path(config = config), config = config,
-                        version = version, type = type, overwrite = TRUE)
+  static_df  <- arrow::read_parquet(file.path(from_path, "pg_static.parquet"))
+  static_csv <- file.path(from_path, "pg_static.csv.gz")
+  data.table::fwrite(static_df, static_csv, compress = "gzip")
+  .pg_record_checksum(static_csv, "pg_static.csv.gz", from_path)
+  rm(static_df)
+  .pg_build_timevarying(base_path = from_path, config = config,
+                        version = version, type = type, overwrite = TRUE, write_csv = TRUE)
 
   # Promote to release
-  from_path <- pgout_path(config = config)
   to_path <- pgout_path(version = version, type = type, config = config)
 
   dir.create(dirname(to_path), recursive = TRUE, showWarnings = FALSE)
@@ -1515,6 +1523,74 @@ pg_list_custom <- function() {
   invisible(configs)
 }
 
+.pg_release_manifest <- function(version, type = "05deg_yearly") {
+  key  <- paste(as.character(version), type, sep = "_")
+  path <- system.file("extdata", "releases", paste0(key, ".txt"), package = "priogrid")
+  if (identical(path, "") || !file.exists(path)) {
+    stop("No download manifest for release ", version, " (", type, ").\n",
+         "  Only releases published as individual COG files are supported.\n",
+         "  Older versions remain available as .zip archives at https://www.prio.org/data/40.",
+         call. = FALSE)
+  }
+  ul <- pg_read_url_list(path)
+  ul$filename <- dplyr::coalesce(ul$filename, pg_default_filename(ul$url))
+  ul
+}
+
+.pg_download_release_files <- function(version, type = "05deg_yearly",
+                                       filenames = NULL, overwrite = FALSE,
+                                       quiet = !pg_current_config()$verbose) {
+  m    <- .pg_release_manifest(version, type)
+  base <- pgout_path(version = version, type = type)
+
+  if (!is.null(filenames)) {
+    bad <- setdiff(filenames, m$filename)
+    if (length(bad)) {
+      stop("No entry in the ", version, " (", type, ") manifest for: ",
+           paste(bad, collapse = ", "), call. = FALSE)
+    }
+    m <- m[m$filename %in% filenames, , drop = FALSE]
+  }
+
+  is_tif <- grepl("\\.tif$", m$filename)
+  dest   <- ifelse(is_tif,
+                   file.path(base, "cog", m$filename),
+                   file.path(base, m$filename))
+
+  need <- overwrite | !file.exists(dest)
+  if (!any(need)) return(invisible(base))
+
+  for (d in unique(dirname(dest[need]))) {
+    if (!dir.exists(d)) dir.create(d, recursive = TRUE)
+  }
+
+  rows_needed <- which(need)
+  chunks      <- split(rows_needed, ceiling(seq_along(rows_needed) / 4))
+  failed_rows <- integer(0)
+
+  for (chunk in chunks) {
+    report <- pg_download_batch(m$url[chunk], dest[chunk], progress = !quiet)
+    for (k in seq_len(nrow(report))) {
+      if (isTRUE(report$success[k])) {
+        if (file.exists(report$destfile[k])) unlink(report$destfile[k])
+        file.rename(report$partfile[k], report$destfile[k])
+      } else {
+        failed_rows <- c(failed_rows, chunk[k])
+      }
+    }
+  }
+
+  if (length(failed_rows) > 0) {
+    stop("Could not download ", length(failed_rows), " release file(s) for ",
+         version, " (", type, "):\n",
+         paste0("  ", m$filename[failed_rows], collapse = "\n"),
+         "\n  Partial downloads were kept as .part files; run again to resume.",
+         call. = FALSE)
+  }
+
+  invisible(base)
+}
+
 #' Download and initialize official PRIO-GRID release
 #'
 #' Downloads the official PRIO-GRID release data from the PRIO CDN and extracts
@@ -1541,51 +1617,25 @@ pg_list_custom <- function() {
 #'   # List releases
 #'   download_priogrid(list_releases = TRUE)
 #' }
-download_priogrid <- function(version = NULL,
-                              type = "05deg_yearly",
-                              overwrite = FALSE,
-                              list_releases = FALSE) {
+download_priogrid <- function(version = NULL, type = "05deg_yearly",
+                              overwrite = FALSE, list_releases = FALSE) {
+  if (is.null(version)) version <- as.character(packageVersion("priogrid"))
 
-  if(is.null(version)){
-    version <- packageVersion("priogrid")
+  if (isTRUE(list_releases)) {
+    dir   <- system.file("extdata", "releases", package = "priogrid")
+    files <- if (nzchar(dir)) list.files(dir, pattern = "\\.txt$") else character(0)
+    keys  <- tools::file_path_sans_ext(files)
+    parts <- stringr::str_split_fixed(keys, "_", 2)
+    df <- dplyr::tibble(
+      version = parts[, 1],
+      type    = parts[, 2],
+      n_files = vapply(files, function(f)
+        nrow(pg_read_url_list(file.path(dir, f))), integer(1))
+    )
+    print(df)
+    return(invisible(df))
   }
 
-  releases <- list(
-    "3.0.0_05deg_yearly" = "https://cdn.cloud.prio.org/files/379b7254-b47c-48f3-a650-783348d0ff7e",
-    "3.0.1_05deg_yearly" = "https://cdn.cloud.prio.org/files/1c76a606-8efa-4dc0-a938-301c4e9331e6"
-  )
-
-  if(list_releases == TRUE){
-   df <- stringr::str_split(names(releases), "_", n = 2, simplify = T) |> as.data.frame()
-   df$url <- unlist(releases)
-   names(df) <- c("version", "type", "url")
-   df <- dplyr::tibble(df)
-   return(print(df))
-  }
-
-  key <- paste(version, type, sep = "_")
-  if (!key %in% names(releases)) {
-    stop("Unknown release: ", version, " (", type, ")")
-  }
-
-  fname <- paste0("priogrid_", gsub("\\.", "_", version), "_", type, ".zip")
-  fpath <- file.path(pg_rawfolder(), "priogrid", fname)
-
-  if (!file.exists(fpath) || overwrite) {
-    dir.create(dirname(fpath), recursive = TRUE, showWarnings = FALSE)
-    report <- pg_download_batch(releases[[key]], fpath)
-    if (!isTRUE(report$success)) {
-      stop("Could not download PRIO-GRID ", version, " (", type, "): ",
-           if (is.na(report$error)) paste("HTTP", report$status_code) else report$error,
-           call. = FALSE)
-    }
-    if (file.exists(fpath)) unlink(fpath)
-    file.rename(report$partfile, report$destfile)
-  }
-
-  suppressWarnings(
-    unzip(fpath, exdir = file.path(pg_rawfolder(), "priogrid"), overwrite = overwrite)
-  )
-
+  .pg_download_release_files(version, type, filenames = NULL, overwrite = overwrite)
   invisible(NULL)
 }

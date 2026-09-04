@@ -1,7 +1,7 @@
 # PRIOGRID
 
 > [!NOTE]
-> PRIOGRID v.3.0.1 is an unstable Alpha release. We will be releasing a Beta version shortly.
+> PRIOGRID v.3.0.2 is a Beta version. Please report any issues and we will aim to fix them as soon as possible.
 
 An R-package for collecting and standardizing open spatial data into a common grid format.
 

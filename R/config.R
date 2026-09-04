@@ -197,6 +197,14 @@ pg_set_rawfolder <- function(path) {
     temporal_resolution = "1 year",
     start_date = as.Date("1850-12-31"),
     end_date = as.Date("2025-08-26")
+  ),
+  "3.0.2_05deg_yearly" = list(
+    nrow = 360L, ncol = 720L,
+    crs = "epsg:4326",
+    extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
+    temporal_resolution = "1 year",
+    start_date = as.Date("1850-12-31"),
+    end_date = as.Date("2026-08-11")
   )
 )
 
