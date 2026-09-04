@@ -598,7 +598,7 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
       sf::st_transform(crs = sf::st_crs(pg)) |>
       terra::vect()
     res <- terra::distance(pg, shared_borders_trans, rasterize = TRUE)
-    if(unit_factor != 1) res <- res * unit_factor  # normalize to meters
+    if(unit_factor != 0 && unit_factor != 1) res <- res * unit_factor  # normalize to meters
   } else {
     # This is the default
     # Fall back to WGS84 geodesic, reproject result
