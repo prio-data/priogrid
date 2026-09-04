@@ -253,14 +253,12 @@ plot_pgvariable <- function(x, layer = 1,
   }
 
   if (!is.na(layer_date))
-    args$main <- paste0(args$main, " \u2014 ", format(layer_date))
+    args$main <- paste0(args$main, " \n ", format(layer_date))
   args <- utils::modifyList(args, list(...))
 
   # Pre-compute citation lines before plotting so margin can be sized correctly.
   cit_lines <- NULL
   if (add_citation) {
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
     cit_raw <- tryCatch(.pg_citation_string(meta$varname),
                         error = function(e) {
                           warning("add_citation: ", conditionMessage(e), call. = FALSE)
@@ -274,10 +272,17 @@ plot_pgvariable <- function(x, layer = 1,
       ))
       cit_lines <- cit_lines[nzchar(trimws(cit_lines))]
     }
-    n_cit  <- max(length(cit_lines), 1L)
-    new_mar    <- old_mar
-    new_mar[1] <- max(old_mar[1], 4.5 + n_cit)
-    graphics::par(mar = new_mar)
+  }
+
+  # terra ignores par(mar) — it calls par(mar = x$mar) internally via .prep.plot.data().
+  # Pass mar directly in args instead. Terra's single-panel default is c(2, 2, 2, 5).
+  title_lines <- length(strsplit(args$main %||% "", "\n")[[1L]])
+  n_cit       <- if (add_citation) max(length(cit_lines), 1L) else 0L
+  if ((title_lines > 1L || n_cit > 0L) && !"mar" %in% names(args)) {
+    new_mar    <- c(2, 2, 2, 5)
+    if (title_lines > 1L) new_mar[3] <- 2 + (title_lines - 1L)
+    if (n_cit > 0L)       new_mar[1] <- max(2, 4.5 + n_cit)
+    args$mar   <- new_mar
   }
 
   do.call(terra::plot, args)
