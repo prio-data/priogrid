@@ -84,7 +84,7 @@ pgvariables
 Plot a variable (this will automatically download the required data to the folder you have set).
 
 ```r
-plot_pgvariable("cru_tmp", "2010-12-31", "Africa", add_border = T)
+plot_pgvariable("cru_tmp", "2010-12-31", extent = "Asia", add_borders = T)
 ```
 
 Read in raw-data:
