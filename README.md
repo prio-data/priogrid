@@ -102,7 +102,7 @@ pg_timevarying <- read_pg_timevarying()
 
 The first `read_pg_*()` call builds the tabular tables from the downloaded GeoTIFFs (requires `terra`) and caches them; later reads use the cache and need only `arrow`.
 
-Load only the rows and columns you need — filters push down to Arrow before anything is collected:
+The full `pg_timevarying` table takes ~8.5GB RAM to load, so users might experience errors when loading the full table. You can load only the rows and columns you need, however. Filters push down to Arrow before anything is collected:
 
 ```r
 pg_sub <- read_pg_timevarying(
