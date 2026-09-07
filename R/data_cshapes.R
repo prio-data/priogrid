@@ -536,11 +536,11 @@ gen_bdist1 <- function(cshp = read_cshapes(), config = pg_current_config(), geod
 #'   avoiding recomputation. Default is NULL.
 #' @param config A pg_config object, see \code{\link{pg_config()}}.
 #' @param geodesic Logical or NULL. If TRUE, uses spherical (S2/WGS84) geometry
-#'   for distance calculations, projecting the result back to the config CRS.
-#'   If FALSE, uses Euclidean distances in the config CRS, converting to meters
-#'   via \code{terra::linearUnits()}. Default NULL auto-detects: geodesic for
-#'   projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
-#'   already geodesic via terra's internal handling).
+#'  for distance calculations, projecting the result back to the config CRS.
+#'  If FALSE, uses Euclidean distances in the config CRS, converting to meters
+#'  via \code{terra::linearUnits()}. Default NULL auto-detects: geodesic for
+#'  native for geographic CRS (e.g. WGS84, which is already geodesic via terra's internal handling),
+#'  and Euclidian for projected CRS (e.g. UTM).
 #'
 #' @return A list containing three elements:
 #'   \itemize{
@@ -583,9 +583,10 @@ bdist2 <- function(measurement_date, cshp = read_cshapes(), past_result = NULL, 
   # Calculate distances
   pg <- prio_blank_grid(config)
   unit_factor <- terra::linearUnits(pg)
-  # Default: geodesic for projected CRS, native for geographic CRS
-  use_geodesic <- if(is.null(geodesic)) unit_factor != 0 else geodesic
+  # WGS84 and other lon/lat projections return unit_factor == 0.
+  use_geodesic <- if(is.null(geodesic)) unit_factor == 0 else geodesic
 
+  # Use s2 (great circle distance) when use_geodesic == TRUE
   prev_s2 <- sf::sf_use_s2()
   sf::sf_use_s2(use_geodesic)
   on.exit(sf::sf_use_s2(prev_s2))
