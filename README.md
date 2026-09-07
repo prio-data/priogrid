@@ -75,11 +75,27 @@ library(priogrid)
 pg_set_rawfolder("/path/to/your/data/folder")
 ```
 
-Download the official release and read it into R:
+Browse available variables:
 
 ```r
-download_priogrid()
+pgvariables
+```
 
+Plot a variable (this will automatically download the required data to the folder you have set).
+
+```r
+plot_pgvariable("cru_tmp", "2010-12-31", "Africa", add_border = T)
+```
+
+Read in raw-data:
+
+```r
+df <- read_cshapes()
+```
+
+Download the official release and read it into R in tabular format:
+
+```r
 pg_static      <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
 ```
@@ -94,12 +110,6 @@ pg_sub <- read_pg_timevarying(
   extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
   variables = "cru_tmp"
 )
-```
-
-Browse available variables:
-
-```r
-pgvariables
 ```
 
 ## Documentation
