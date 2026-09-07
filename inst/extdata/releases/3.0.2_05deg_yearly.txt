@@ -1,5 +1,5 @@
 https://cdn.cloud.prio.org/files/17c6897a-f225-48d3-8323-9cbf45de4f2a/bdist1.tif?inline=true
-https://cdn.cloud.prio.org/files/a4b7a83e-5faf-4d47-912f-82cadc4e35ca/bdist2.tif?inline=true
+https://cdn.cloud.prio.org/files/0191d650-105b-474d-9b50-58daef2f4da1/bdist2.tif?inline=true
 https://cdn.cloud.prio.org/files/ed9d7ef6-4578-4d08-aa25-170fde4dafb0/bdist3.tif?inline=true
 https://cdn.cloud.prio.org/files/142c11c3-94b0-4684-97d9-2c2275e7a993/cru_pre.tif?inline=true
 https://cdn.cloud.prio.org/files/50900ae7-575c-4cda-b079-ef7992b8b213/cru_tmp.tif?inline=true
@@ -36,5 +36,5 @@ https://cdn.cloud.prio.org/files/788e6891-17ba-4937-9472-2db4a377dfbb/speibase6_
 https://cdn.cloud.prio.org/files/0a479915-b765-427c-ba94-ef1ac4ea917a/ucdp_ged.tif?inline=true
 https://cdn.cloud.prio.org/files/7ae901de-f4c4-4fc4-8b8f-0d402bc48de3/side_excluded.tif?inline=true
 https://cdn.cloud.prio.org/files/bfae9f85-e575-4a1d-b333-3ace3c1956db/traveltime_min.tif?inline=true
-https://cdn.cloud.prio.org/files/451c8376-a68f-4d0c-b45f-84b27b70df0a/_checksums.csv?inline=true
-https://cdn.cloud.prio.org/files/32467e5d-15ae-4e23-a55d-f695802c7d58/pg_config.json?inline=true
+https://cdn.cloud.prio.org/files/4b2408d9-1665-44d0-a15c-e82811fbde82/pg_config.json?inline=true
+https://cdn.cloud.prio.org/files/17ebbd0e-5159-47ed-aadf-7fc2b7ab3dbf/_checksums.csv?inline=true
