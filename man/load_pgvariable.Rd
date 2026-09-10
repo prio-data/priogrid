@@ -22,7 +22,7 @@ load_pgvariable(
 \item{config}{A \code{pg_config} object for custom data, or NULL (default) for the
 official release.}
 
-\item{version}{Character string specifying PRIOGRID version (e.g., "3.0.1").
+\item{version}{Character string specifying PRIOGRID version (e.g., "3.0.2").
 Only used in release mode (config = NULL). Defaults to current package version.}
 
 \item{type}{Character string specifying release type (e.g., "05deg_yearly").
@@ -71,7 +71,7 @@ Mode is determined by the \code{config} argument:
   r <- load_pgvariable("cshapes_gwcode")
 
   # Load from specific official release
-  r <- load_pgvariable("cshapes_gwcode", version = "3.0.1")
+  r <- load_pgvariable("cshapes_gwcode", version = "3.0.2")
 
   # Load from custom data
   cfg <- pg_config(nrow = 180, ncol = 360)

@@ -146,7 +146,7 @@
 #'   \code{\link{load_pgvariable}()} when \code{x} is a variable name string;
 #'   ignored when \code{x} is already a \code{SpatRaster}.
 #'   \code{NULL} (default) resolves via the release path or current config.
-#' @param version Character. Release version string (e.g. \code{"3.0.1"});
+#' @param version Character. Release version string (e.g. \code{"3.0.2"});
 #'   passed to \code{load_pgvariable()}. Cannot be combined with \code{config}.
 #' @param type Character. Release type (e.g. \code{"05deg_yearly"});
 #'   passed to \code{load_pgvariable()}. Default \code{"05deg_yearly"}.
@@ -179,6 +179,7 @@
 #'   a semicolon-separated list. The bottom margin is expanded automatically
 #'   to accommodate the text.
 #'
+#' @export
 #' @examples
 #' \dontrun{
 #'   # Plot directly from a loaded raster:
@@ -200,7 +201,7 @@
 #'   plot_pgvariable("ucdp_ged", config = cfg)
 #'
 #'   # Specific release:
-#'   plot_pgvariable("ucdp_ged", version = "3.0.1")
+#'   plot_pgvariable("ucdp_ged", version = "3.0.2")
 #'
 #'   # Override terra::plot() args:
 #'   plot_pgvariable(r, main = "Custom title")
@@ -252,14 +253,12 @@ plot_pgvariable <- function(x, layer = 1,
   }
 
   if (!is.na(layer_date))
-    args$main <- paste0(args$main, " \u2014 ", format(layer_date))
+    args$main <- paste0(args$main, " \n ", format(layer_date))
   args <- utils::modifyList(args, list(...))
 
   # Pre-compute citation lines before plotting so margin can be sized correctly.
   cit_lines <- NULL
   if (add_citation) {
-    old_mar <- graphics::par("mar")
-    on.exit(graphics::par(mar = old_mar), add = TRUE)
     cit_raw <- tryCatch(.pg_citation_string(meta$varname),
                         error = function(e) {
                           warning("add_citation: ", conditionMessage(e), call. = FALSE)
@@ -273,30 +272,36 @@ plot_pgvariable <- function(x, layer = 1,
       ))
       cit_lines <- cit_lines[nzchar(trimws(cit_lines))]
     }
-    n_cit  <- max(length(cit_lines), 1L)
-    new_mar    <- old_mar
-    new_mar[1] <- max(old_mar[1], 4.5 + n_cit)
-    graphics::par(mar = new_mar)
+  }
+
+  # terra ignores par(mar) — it calls par(mar = x$mar) internally via .prep.plot.data().
+  # Pass mar directly in args instead. Terra's single-panel default is c(2, 2, 2, 5).
+  title_lines <- length(strsplit(args$main %||% "", "\n")[[1L]])
+  n_cit       <- if (add_citation) max(length(cit_lines), 1L) else 0L
+  if ((title_lines > 1L || n_cit > 0L) && !"mar" %in% names(args)) {
+    new_mar    <- c(2, 2, 2, 5)
+    if (title_lines > 1L) new_mar[3] <- 2 + (title_lines - 1L)
+    if (n_cit > 0L)       new_mar[1] <- max(2, 4.5 + n_cit)
+    args$mar   <- new_mar
   }
 
   do.call(terra::plot, args)
 
   if (add_ne || add_borders) {
-    crop_to_extent <- function(sf_obj) {
-      if (is.null(extent)) return(sf_obj)
-      bbox <- sf::st_bbox(c(xmin = extent[1], xmax = extent[2],
-                            ymin = extent[3], ymax = extent[4]),
-                          crs = sf::st_crs(4326))
-      suppressWarnings(sf::st_crop(sf_obj, bbox))
-    }
+    # Check the raster's CRS; reproject vector overlays if it differs from WGS84.
+    raster_crs       <- terra::crs(args$x)
+    needs_reproject  <- !terra::same.crs(args$x, "EPSG:4326")
 
     if (add_ne) {
-      ne <- tryCatch(crop_to_extent(read_naturalearth_10m_land()),
+      ne <- tryCatch(read_naturalearth_10m_land(),
                      error = function(e) {
                        warning("add_ne: ", conditionMessage(e), call. = FALSE); NULL
                      })
-      if (!is.null(ne))
+      if (!is.null(ne)) {
+        if (needs_reproject)
+          ne <- sf::st_transform(ne, raster_crs)
         plot(sf::st_geometry(ne), add = TRUE, border = "grey40", col = NA, lwd = 0.4)
+      }
     }
 
     if (add_borders) {
@@ -304,9 +309,11 @@ plot_pgvariable <- function(x, layer = 1,
         warning("add_borders: ", conditionMessage(e), call. = FALSE); NULL
       })
       if (!is.null(cs)) {
-        d <- if (!is.na(layer_date)) layer_date else max(cs$gwsdate, na.rm = TRUE)
+        d <- if (!is.na(layer_date)) layer_date else max(cs$gwedate, na.rm = TRUE)
+        d <- pmin(d, max(cs$gwedate))
         borders <- dplyr::filter(cs, d %within% date_interval)
-        borders <- tryCatch(crop_to_extent(borders), error = function(e) borders)
+        if (needs_reproject)
+          borders <- sf::st_transform(borders, raster_crs)
         plot(sf::st_geometry(borders), add = TRUE, border = "grey20", col = NA, lwd = 0.5)
       }
     }
