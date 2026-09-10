@@ -288,13 +288,20 @@ plot_pgvariable <- function(x, layer = 1,
   do.call(terra::plot, args)
 
   if (add_ne || add_borders) {
+    # Check the raster's CRS; reproject vector overlays if it differs from WGS84.
+    raster_crs       <- terra::crs(args$x)
+    needs_reproject  <- !terra::same.crs(args$x, "EPSG:4326")
+
     if (add_ne) {
       ne <- tryCatch(read_naturalearth_10m_land(),
                      error = function(e) {
                        warning("add_ne: ", conditionMessage(e), call. = FALSE); NULL
                      })
-      if (!is.null(ne))
+      if (!is.null(ne)) {
+        if (needs_reproject)
+          ne <- sf::st_transform(ne, raster_crs)
         plot(sf::st_geometry(ne), add = TRUE, border = "grey40", col = NA, lwd = 0.4)
+      }
     }
 
     if (add_borders) {
@@ -305,6 +312,8 @@ plot_pgvariable <- function(x, layer = 1,
         d <- if (!is.na(layer_date)) layer_date else max(cs$gwedate, na.rm = TRUE)
         d <- pmin(d, max(cs$gwedate))
         borders <- dplyr::filter(cs, d %within% date_interval)
+        if (needs_reproject)
+          borders <- sf::st_transform(borders, raster_crs)
         plot(sf::st_geometry(borders), add = TRUE, border = "grey20", col = NA, lwd = 0.5)
       }
     }
