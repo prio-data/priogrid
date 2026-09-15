@@ -72,7 +72,11 @@ read_linight <- function(config = pg_current_config(), overwrite_files = FALSE){
   years <- basename(allfiles) |> stringr::str_extract(pattern = "\\d{4}") |> as.integer()
 
   extentfixed_files <- list.files(dirname(allfiles[1]), pattern = "^extentfix_", full.names = TRUE)
-  files_to_fix <- allfiles[!file.exists(extentfixed_files)]
+  if(length(extentfixed_files) == 0) extentfixed_files <- ""
+  extentfix_paths <- file.path(dirname(allfiles), paste0("extentfix_", basename(allfiles)))
+
+  files_to_fix <- extentfix_paths[!(extentfixed_files %in% extentfix_paths)]
+  files_to_fix <- file.path(dirname(files_to_fix), stringr::str_remove(basename(files_to_fix), "blah_"))
 
   if(length(files_to_fix) > 0){
     message("Harmonizing extent of Li Nighttime rasters. Next time you run the function, this will not be required")
@@ -89,6 +93,8 @@ read_linight <- function(config = pg_current_config(), overwrite_files = FALSE){
       fname <- paste0("extentfix_", basename(f))
       terra::resample(r_orig, template, method = "near", threads = T, overwrite = overwrite_files, filename = file.path(dirname(f), fname))
     }
+
+    extentfixed_files <- list.files(dirname(allfiles[1]), pattern = "^extentfix_", full.names = TRUE)
   }
 
   r <- terra::rast(extentfixed_files)
