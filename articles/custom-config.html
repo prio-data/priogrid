@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,7 +100,7 @@ with:</p>
 <span><span class="co">#&gt;   extent: -180 180 -90 90 </span></span>
 <span><span class="co">#&gt;   temporal_resolution: 1 year </span></span>
 <span><span class="co">#&gt;   start_date: 1850-12-31 </span></span>
-<span><span class="co">#&gt;   end_date: 2026-08-11 </span></span>
+<span><span class="co">#&gt;   end_date: 2026-09-16 </span></span>
 <span><span class="co">#&gt;   verbose: TRUE </span></span>
 <span><span class="co">#&gt;   automatic_download: TRUE</span></span></code></pre></div>
 <p>Create a custom config with <code><a href="../reference/pg_config.html">pg_config()</a></code>:</p>
@@ -257,11 +257,11 @@ config:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pg_config.html">pg_config</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">180</span>, ncol <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/pgout_path.html">pgout_path</a></span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span>
-<span><span class="co"># {rawfolder}/priogrid/custom/3.0.1/a1b2c3/d4e5f6/</span></span></code></pre></div>
+<span><span class="co"># {rawfolder}/priogrid/custom/3.0.2/a1b2c3/d4e5f6/</span></span></code></pre></div>
 <p>For the official release:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pgout_path.html">pgout_path</a></span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.1"</span>, type <span class="op">=</span> <span class="st">"05deg_yearly"</span><span class="op">)</span></span>
-<span><span class="co"># {rawfolder}/priogrid/releases/3.0.1/05deg_yearly/</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pgout_path.html">pgout_path</a></span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.2"</span>, type <span class="op">=</span> <span class="st">"05deg_yearly"</span><span class="op">)</span></span>
+<span><span class="co"># {rawfolder}/priogrid/releases/3.0.2/05deg_yearly/</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="building-custom-variables">Building Custom Variables<a class="anchor" aria-label="anchor" href="#building-custom-variables"></a>

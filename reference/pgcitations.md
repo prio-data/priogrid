@@ -40,7 +40,7 @@ pgcitations(df)
 #> <https://doi.org/10.1177/0022343311431287>.
 #> 
 #> Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the
-#> R-package_. R package version 3.0.1,
+#> R-package_. R package version 3.0.2,
 #> <http://prio-data.github.io/priogrid>.
 #> 
 #> 

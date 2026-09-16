@@ -16,7 +16,7 @@ pg_release_config(version = NULL, type = "05deg_yearly")
 
 - version:
 
-  Character string specifying the release version (e.g., "3.0.1"). If
+  Character string specifying the release version (e.g., "3.0.2"). If
   NULL, uses the current package version.
 
 - type:
@@ -30,7 +30,7 @@ A `pg_config` object matching the release parameters.
 ## Examples
 
 ``` r
-cfg <- pg_release_config("3.0.1")
+cfg <- pg_release_config("3.0.2")
 cfg$nrow  # 360
 #> [1] 360
 ```

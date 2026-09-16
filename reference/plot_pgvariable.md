@@ -58,7 +58,7 @@ plot_pgvariable(
 
 - version:
 
-  Character. Release version string (e.g. `"3.0.1"`); passed to
+  Character. Release version string (e.g. `"3.0.2"`); passed to
   [`load_pgvariable()`](http://prio-data.github.io/priogrid/reference/load_pgvariable.md).
   Cannot be combined with `config`.
 
@@ -141,7 +141,7 @@ if (FALSE) { # \dontrun{
   plot_pgvariable("ucdp_ged", config = cfg)
 
   # Specific release:
-  plot_pgvariable("ucdp_ged", version = "3.0.1")
+  plot_pgvariable("ucdp_ged", version = "3.0.2")
 
   # Override terra::plot() args:
   plot_pgvariable(r, main = "Custom title")

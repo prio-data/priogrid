@@ -29,7 +29,7 @@ pgcitations(variables)
 #> <https://doi.org/10.1177/0022343311431287>.
 #> 
 #> Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the
-#> R-package_. R package version 3.0.1,
+#> R-package_. R package version 3.0.2,
 #> <http://prio-data.github.io/priogrid>.
 #> 
 #> 
@@ -77,7 +77,7 @@ pgcitations(c("hilda_urban", "cru_tmp"), as_biblatex = TRUE)
 #>   title = {priogrid: the R-package},
 #>   author = {Jonas Vestby and Andreas Forø Tollefsen and Kristine Helskog and Garret Benz},
 #>   year = {2025},
-#>   note = {R package version 3.0.1},
+#>   note = {R package version 3.0.2},
 #>   url = {http://prio-data.github.io/priogrid},
 #> }
 #> @Misc{winklerHILDAGlobalLand2020,
@@ -228,7 +228,7 @@ citation("priogrid")
 #>   <https://doi.org/10.1177/0022343311431287>.
 #> 
 #>   Vestby J, Tollefsen AF, Helskog K, Benz G (2025). _priogrid: the
-#>   R-package_. R package version 3.0.1,
+#>   R-package_. R package version 3.0.2,
 #>   <http://prio-data.github.io/priogrid>.
 #> 
 #> To see these entries in BibTeX format, use 'print(<citation>,

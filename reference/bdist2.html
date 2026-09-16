@@ -13,7 +13,7 @@ regardless of whether countries are separated by international waters."></head><
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,8 +100,8 @@ avoiding recomputation. Default is NULL.</p></dd>
 for distance calculations, projecting the result back to the config CRS.
 If FALSE, uses Euclidean distances in the config CRS, converting to meters
 via <code><a href="https://rspatial.github.io/terra/reference/linearUnits.html" class="external-link">terra::linearUnits()</a></code>. Default NULL auto-detects: geodesic for
-projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
-already geodesic via terra's internal handling).</p></dd>
+native for geographic CRS (e.g. WGS84, which is already geodesic via terra's internal handling),
+and Euclidian for projected CRS (e.g. UTM).</p></dd>
 
 </dl></div>
     <div class="section level2">

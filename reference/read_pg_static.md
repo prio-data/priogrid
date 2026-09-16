@@ -86,7 +86,7 @@ if (FALSE) { # \dontrun{
   pg_dt <- read_pg_static()
 
   # Load specific official release
-  pg_dt <- read_pg_static(version = "3.0.1")
+  pg_dt <- read_pg_static(version = "3.0.2")
 
   # Load custom data
   cfg <- pg_config(nrow = 180, ncol = 360)

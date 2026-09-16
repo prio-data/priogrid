@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -152,11 +152,47 @@ being a multi-layer <code>SpatRaster</code>:</p>
 <span><span class="va">tv_rasters</span><span class="op">[[</span><span class="st">"cru_tmp"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="plotting-variables-with-plot_pgvariable">Plotting Variables with plot_pgvariable()<a class="anchor" aria-label="anchor" href="#plotting-variables-with-plot_pgvariable"></a>
+</h2>
+<p><code><a href="../reference/plot_pgvariable.html">plot_pgvariable()</a></code> renders a variable with sensible
+defaults pulled from its embedded <code>pg_*</code> metadata (label,
+unit, display transform, colormap, value range) — no manual styling
+needed. It wraps <code><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">terra::plot()</a></code>, so it needs only
+<code>terra</code> (already required for rasters).</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Plot from a loaded raster:</span></span>
+<span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_pgvariable.html">load_pgvariable</a></span><span class="op">(</span><span class="st">"ucdp_ged"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="va">r</span>, layer <span class="op">=</span> <span class="st">"2020-12-31"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot directly from a variable name:</span></span>
+<span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="st">"cru_tmp"</span><span class="op">)</span></span></code></pre></div>
+<p>Restrict the read to a region — a bounding box
+<code>c(xmin, xmax, ymin, ymax)</code> in lon/lat, or a continent name.
+When <code>x</code> is a variable name, only the COG blocks covering
+that region are fetched (windowed read):</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="st">"cru_tmp"</span>, extent <span class="op">=</span> <span class="st">"Africa"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="st">"cru_tmp"</span>, extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">20</span>, <span class="fl">55</span>, <span class="op">-</span><span class="fl">35</span>, <span class="fl">40</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Overlay historically correct country borders
+(<code>add_borders</code>, from cShapes, matched to the layer’s date), a
+land outline (<code>add_ne</code>, from Natural Earth), and a
+data-source citation in the margin (<code>add_citation</code>). The
+border and land overlays require the cShapes and Natural Earth raw data
+locally:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="st">"ucdp_ged"</span>, layer <span class="op">=</span> <span class="st">"1999-12-31"</span>, extent <span class="op">=</span> <span class="st">"Africa"</span>,</span>
+<span>                add_borders <span class="op">=</span> <span class="cn">TRUE</span>, add_ne <span class="op">=</span> <span class="cn">TRUE</span>, add_citation <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Extra arguments pass through to <code><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">terra::plot()</a></code>,
+overriding the metadata defaults:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_pgvariable.html">plot_pgvariable</a></span><span class="op">(</span><span class="va">r</span>, main <span class="op">=</span> <span class="st">"Custom title"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="discovering-variables-with-pgsearch">Discovering Variables with pgsearch()<a class="anchor" aria-label="anchor" href="#discovering-variables-with-pgsearch"></a>
 </h2>
 <p><code><a href="../reference/pgsearch.html">pgsearch()</a></code> searches the meta-data across source names,
 versions, tags, spatial extent, and temporal resolution:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pgsearch.html">pgsearch</a></span><span class="op">(</span><span class="st">"climate"</span><span class="op">)</span></span>
 <span><span class="co"># Returns a named list of data frames for each search category</span></span>
 <span></span>
@@ -170,7 +206,7 @@ versions, tags, spatial extent, and temporal resolution:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> CRU Climate pet      climate, validation, evapotranspiration</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Global SPEI database drought index, climate</span></span></code></pre></div>
 <p>Search by tag to find related variables:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">conflict_sources</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pgsearch.html">pgsearch</a></span><span class="op">(</span><span class="st">"conflict"</span><span class="op">)</span><span class="op">$</span><span class="va">in_tags</span></span>
 <span><span class="va">conflict_sources</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_name"</span>, <span class="st">"temporal_resolution"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 2</span></span></span>
@@ -186,7 +222,7 @@ versions, tags, spatial extent, and temporal resolution:</p>
 <p><code><a href="../reference/rast_to_df.html">rast_to_df()</a></code> converts a <code>SpatRaster</code> to a
 <code>data.table</code> with <code>pgid</code> (and
 <code>measurement_date</code> for time-varying data):</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_pgvariable.html">load_pgvariable</a></span><span class="op">(</span><span class="st">"ruggedterrain_elevation_mean"</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rast_to_df.html">rast_to_df</a></span><span class="op">(</span><span class="va">r</span>, static <span class="op">=</span> <span class="cn">TRUE</span>, varname <span class="op">=</span> <span class="st">"ruggedterrain_elevation_mean"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
@@ -195,7 +231,7 @@ versions, tags, spatial extent, and temporal resolution:</p>
 <span><span class="co"># 2:    2                           NA</span></span>
 <span><span class="co"># ...</span></span></code></pre></div>
 <p>For time-varying data, set <code>static = FALSE</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_pgvariable.html">load_pgvariable</a></span><span class="op">(</span><span class="st">"cru_tmp"</span><span class="op">)</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rast_to_df.html">rast_to_df</a></span><span class="op">(</span><span class="va">r</span>, static <span class="op">=</span> <span class="cn">FALSE</span>, varname <span class="op">=</span> <span class="st">"cru_tmp"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
@@ -207,7 +243,7 @@ versions, tags, spatial extent, and temporal resolution:</p>
 </h2>
 <p><code>terra</code> supports stacking, arithmetic, and many other
 operations. Here are a few patterns:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Stack two variables for combined analysis</span></span>
 <span><span class="va">elev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_pgvariable.html">load_pgvariable</a></span><span class="op">(</span><span class="st">"ruggedterrain_elevation_mean"</span><span class="op">)</span></span>
 <span><span class="va">pop</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_pgvariable.html">load_pgvariable</a></span><span class="op">(</span><span class="st">"ghsl_population_grid"</span><span class="op">)</span><span class="op">[[</span><span class="st">"2020-12-31"</span><span class="op">]</span><span class="op">]</span></span>
@@ -229,7 +265,7 @@ the dataset’s <code>cog/</code> sub-folder as a Cloud-Optimized GeoTIFF
 <code><a href="https://rspatial.github.io/terra/reference/time.html" class="external-link">time()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/units.html" class="external-link">units()</a></code>, and the <code>pg_*</code>
 display metadata from <code>pgvariables</code> so the file is
 self-describing:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gen_ruggedterrain_elevation_mean.html">gen_ruggedterrain_elevation_mean</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/save_pgvariable.html">save_pgvariable</a></span><span class="op">(</span><span class="va">r</span>, <span class="st">"ruggedterrain_elevation_mean"</span><span class="op">)</span></span>
 <span></span>

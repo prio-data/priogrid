@@ -13,7 +13,7 @@ enabling a larger-than-memory workflow."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,7 +89,7 @@ official release.</p></dd>
 
 
 <dt id="arg-version">version<a class="anchor" aria-label="anchor" href="#arg-version"></a></dt>
-<dd><p>Character string specifying PRIOGRID version (e.g., "3.0.1").
+<dd><p>Character string specifying PRIOGRID version (e.g., "3.0.2").
 Only used in release mode (config = NULL). Defaults to current package version.</p></dd>
 
 
@@ -146,7 +146,7 @@ until explicitly materialized (e.g., via <code><a href="https://rspatial.github.
 <span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">load_pgvariable</span><span class="op">(</span><span class="st">"cshapes_gwcode"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Load from specific official release</span></span></span>
-<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">load_pgvariable</span><span class="op">(</span><span class="st">"cshapes_gwcode"</span>, version <span class="op">=</span> <span class="st">"3.0.1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu">load_pgvariable</span><span class="op">(</span><span class="st">"cshapes_gwcode"</span>, version <span class="op">=</span> <span class="st">"3.0.2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Load from custom data</span></span></span>
 <span class="r-in"><span>  <span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="pg_config.html">pg_config</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">180</span>, ncol <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span></span>

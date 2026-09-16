@@ -46,7 +46,7 @@ if (FALSE) { # \dontrun{
   download_priogrid()
 
   # Download specific release
-  download_priogrid(version = "3.0.1", type = "05deg_yearly")
+  download_priogrid(version = "3.0.2", type = "05deg_yearly")
 
   # List releases
   download_priogrid(list_releases = TRUE)

@@ -1,7 +1,7 @@
 # PRIOGRID
 
-> \[!NOTE\] PRIOGRID v.3.0.1 is an unstable Alpha release. We will be
-> releasing a Beta version shortly.
+> \[!NOTE\] PRIOGRID v.3.0.2 is a Beta version. Please report any issues
+> and we will aim to fix them as soon as possible.
 
 An R-package for collecting and standardizing open spatial data into a
 common grid format.
@@ -26,9 +26,10 @@ PRIOGRID data as .zip](https://www.prio.org/data/40)
   create tailored datasets (e.g., area-equal projections for polar
   regions).
 - **PRIOGRID is a research tool, not just a dataset.**
-- **Efficient, self-describing outputs** — Variables ship as
-  Cloud-Optimized GeoTIFFs and time-varying tables as Hive-partitioned
-  Parquet, so
+- **Efficient, self-describing outputs** — Variables are distributed as
+  Cloud-Optimized GeoTIFFs. The tabular tables (a static wide table and
+  Hive-partitioned Parquet for time-varying data) are built locally from
+  those GeoTIFFs on first read, after which
   [`read_pg_timevarying()`](http://prio-data.github.io/priogrid/reference/read_pg_timevarying.md)
   pushes year/date/cell/variable filters down to Arrow before loading.
 
@@ -46,8 +47,9 @@ renv::install("prio-data/priogrid")
 
 `terra`, `sf`, and `exactextractr` are listed in `Suggests` and are
 **not installed automatically**. They are only required for spatial
-functionality (working with rasters, and `extent`-based subsetting) and
-will be requested the first time you use a function that needs them.
+functionality (working with rasters, `extent`-based subsetting, and
+building the tabular tables from the downloaded GeoTIFFs on first read)
+and will be requested the first time you use a function that needs them.
 
 ### Troubleshooting Installation
 
@@ -102,18 +104,44 @@ library(priogrid)
 pg_set_rawfolder("/path/to/your/data/folder")
 ```
 
-Download the official release and read it into R:
+Browse available variables:
 
 ``` r
 
-download_priogrid()
+pgvariables
+```
+
+Plot a variable (this will automatically download the required data to
+the folder you have set).
+
+``` r
+
+plot_pgvariable("cru_tmp", "2010-12-31", extent = "Asia", add_borders = T)
+```
+
+Read in raw-data:
+
+``` r
+
+df <- read_cshapes()
+```
+
+Download the official release and read it into R in tabular format:
+
+``` r
 
 pg_static      <- read_pg_static()
 pg_timevarying <- read_pg_timevarying()
 ```
 
-Load only the rows and columns you need — filters push down to Arrow
-before anything is collected:
+The first `read_pg_*()` call builds the tabular tables from the
+downloaded GeoTIFFs (requires `terra`) and caches them; later reads use
+the cache and need only `arrow`.
+
+The full `pg_timevarying` table takes ~8.5GB RAM to load, so users might
+experience errors when loading the full table. You can load only the
+rows and columns you need, however. Filters push down to Arrow before
+anything is collected:
 
 ``` r
 
@@ -122,13 +150,6 @@ pg_sub <- read_pg_timevarying(
   extent    = c(xmin = -20, xmax = 55, ymin = -35, ymax = 40),
   variables = "cru_tmp"
 )
-```
-
-Browse available variables:
-
-``` r
-
-pgvariables
 ```
 
 ## Documentation

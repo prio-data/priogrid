@@ -57,6 +57,6 @@ if (FALSE) { # \dontrun{
   pgout_path(spatial_hash = "a3f2e1", temporal_hash = "9c8b7a")
 
   # Official release
-  pgout_path(version = "3.0.1", type = "05deg_yearly")
+  pgout_path(version = "3.0.2", type = "05deg_yearly")
 } # }
 ```

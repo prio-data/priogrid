@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -622,10 +622,10 @@ larger-than-memory reads.</p>
 <h3 id="table-readers">Table readers<a class="anchor" aria-label="anchor" href="#table-readers"></a>
 </h3>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Static variables → pg_static.parquet + pg_static.csv.gz</span></span>
+<code class="sourceCode R"><span><span class="co"># Static variables → pg_static.parquet (built and cached on first read)</span></span>
 <span><span class="va">static</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_static.html">read_pg_static</a></span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Time-varying → hive-partitioned parquet + pg_timevarying.csv.gz + pg_config.json manifest</span></span>
+<span><span class="co"># Time-varying → hive-partitioned parquet + pg_config.json manifest (built and cached on first read)</span></span>
 <span><span class="co"># Supports lazy subsetting:</span></span>
 <span><span class="va">tv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_pg_timevarying.html">read_pg_timevarying</a></span><span class="op">(</span></span>
 <span>  config    <span class="op">=</span> <span class="va">cfg</span>,</span>
@@ -633,6 +633,8 @@ larger-than-memory reads.</p>
 <span>  variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"my_new_variable"</span>, <span class="st">"another_var"</span><span class="op">)</span>,</span>
 <span>  extent    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="op">-</span><span class="fl">10</span>, <span class="fl">40</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>The <code>.csv.gz</code> bundles are written only by
+<code><a href="../reference/build_release.html">build_release()</a></code>, not by the table readers.</p>
 <p><code><a href="../reference/build_pg_dataset.html">build_pg_dataset()</a></code> writes the hive dataset memory-safely
 without collecting the full table into RAM.</p>
 </div>
@@ -684,8 +686,8 @@ from them once and this is run.</p>
 <div class="section level2">
 <h2 id="cutting-an-official-release">Cutting an Official Release<a class="anchor" aria-label="anchor" href="#cutting-an-official-release"></a>
 </h2>
-<p>A release is registered in two places, both keyed
-<code>"&lt;version&gt;_&lt;type&gt;"</code>:</p>
+<p>A release is published as a set of individual Cloud-Optimized
+GeoTIFFs on the PRIO CDN, described by two things:</p>
 <p><strong>1. Grid spec</strong> — add an entry to
 <code>.pg_release_specs</code> in <code>R/config.R</code>:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
@@ -697,16 +699,20 @@ from them once and this is run.</p>
 <span>  extent             <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="fl">180</span>, xmax <span class="op">=</span> <span class="fl">180</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="fl">90</span>, ymax <span class="op">=</span> <span class="fl">90</span><span class="op">)</span>,</span>
 <span>  temporal_resolution <span class="op">=</span> <span class="st">"1 year"</span>,</span>
 <span>  start_date         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1850-12-31"</span><span class="op">)</span>,</span>
-<span>  end_date           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-08-26"</span><span class="op">)</span></span>
+<span>  end_date           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-08-11"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>2. CDN URL</strong> — add the corresponding entry to the
-<code>releases</code> list inside <code><a href="../reference/download_priogrid.html">download_priogrid()</a></code> in
-<code>R/build_priogrid.R</code>:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Inside the releases list in download_priogrid() in R/build_priogrid.R:</span></span>
-<span><span class="st">"3.0.2_05deg_yearly"</span> <span class="op">=</span> <span class="st">"https://cdn.cloud.prio.org/files/&lt;uuid&gt;"</span></span></code></pre></div>
+<p><strong>2. Download manifest</strong> — create a plain-text file
+<code>inst/extdata/releases/&lt;version&gt;_&lt;type&gt;.txt</code> with
+one CDN URL per line, listing every <code>cog/&lt;varname&gt;.tif</code>
+plus <code>_checksums.csv</code> and <code>pg_config.json</code>.
+<code><a href="../reference/download_priogrid.html">download_priogrid()</a></code> reads this manifest via
+<code><a href="../reference/pg_read_url_list.html">pg_read_url_list()</a></code> and derives each local filename from the
+last path segment of the URL (<code><a href="../reference/pg_default_filename.html">pg_default_filename()</a></code>); add a
+tab-separated second column only for URLs that do not name the file they
+serve. There is no longer a hard-coded <code>releases</code> list inside
+<code><a href="../reference/download_priogrid.html">download_priogrid()</a></code>.</p>
 <p>Then build the release:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/build_release.html">build_release</a></span><span class="op">(</span></span>
 <span>  version             <span class="op">=</span> <span class="st">"3.0.2"</span>,</span>
 <span>  type                <span class="op">=</span> <span class="st">"05deg_yearly"</span>,</span>
@@ -716,16 +722,23 @@ from them once and this is run.</p>
 <span>  extent              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="fl">180</span>, xmax <span class="op">=</span> <span class="fl">180</span>, ymin <span class="op">=</span> <span class="op">-</span><span class="fl">90</span>, ymax <span class="op">=</span> <span class="fl">90</span><span class="op">)</span>,</span>
 <span>  temporal_resolution <span class="op">=</span> <span class="st">"1 year"</span>,</span>
 <span>  start_date          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1850-12-31"</span><span class="op">)</span>,</span>
-<span>  end_date            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-08-26"</span><span class="op">)</span></span>
+<span>  end_date            <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2026-08-11"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/build_release.html">build_release()</a></code> calculates all variables to the custom
-location, builds static and hive time-varying tables, copies the output
-to <code>releases/&lt;version&gt;/&lt;type&gt;/</code>, and writes two
-zip archives: <code>priogrid_&lt;ver&gt;_&lt;type&gt;.zip</code> and
-<code>priogrid_&lt;ver&gt;_&lt;type&gt;_csv.zip</code>.</p>
+location, builds the static and hive time-varying tables plus the
+<code>.csv.gz</code> bundles, copies everything to
+<code>releases/&lt;version&gt;/&lt;type&gt;/</code>, and writes two zip
+archives — <code>priogrid_&lt;ver&gt;_&lt;type&gt;.zip</code> (COGs,
+Parquet, manifest, checksums) and
+<code>priogrid_&lt;ver&gt;_&lt;type&gt;_csv.zip</code> (CSV bundles) —
+for the download on prio.org/data/40. To publish for
+<code><a href="../reference/download_priogrid.html">download_priogrid()</a></code>, upload the individual
+<code>cog/*.tif</code>, <code>_checksums.csv</code>, and
+<code>pg_config.json</code> to the CDN and record their URLs in the
+manifest file from step 2.</p>
 <p>Retrieve a release config programmatically, or list all published
 releases:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pg_release_config.html">pg_release_config</a></span><span class="op">(</span><span class="st">"3.0.2"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/download_priogrid.html">download_priogrid</a></span><span class="op">(</span>list_releases <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>

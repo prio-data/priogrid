@@ -24,7 +24,7 @@ build_release(
 
 - version:
 
-  Character string with release version (e.g., "3.0.1")
+  Character string with release version (e.g., "3.0.2")
 
 - type:
 
@@ -67,7 +67,7 @@ NULL (invisibly). Called for side effects (creating release).
 ``` r
 if (FALSE) { # \dontrun{
   build_release(
-    version = "3.0.1",
+    version = "3.0.2",
     type = "05deg_yearly",
     nrow = 360,
     ncol = 720,
@@ -75,7 +75,7 @@ if (FALSE) { # \dontrun{
     extent = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
     temporal_resolution = "1 year",
     start_date = as.Date("1850-12-31"),
-    end_date = as.Date("2025-08-26")
+    end_date = as.Date("2026-08-11")
  )
 } # }
 ```

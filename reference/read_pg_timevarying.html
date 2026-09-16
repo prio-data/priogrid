@@ -9,7 +9,7 @@ a list of rasters. See pgvariables for available variables."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -163,14 +163,14 @@ or list of terra SpatRasters if as_raster=TRUE, or coverage test data.frame if t
 <span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Load specific official release</span></span></span>
-<span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Load custom data</span></span></span>
 <span class="r-in"><span>  <span class="va">cfg</span> <span class="op">&lt;-</span> <span class="fu"><a href="pg_config.html">pg_config</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">180</span>, ncol <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>config <span class="op">=</span> <span class="va">cfg</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># Subset: two years, a bounding box, and one variable</span></span></span>
-<span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.1"</span>, years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">2011</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="va">pg_dt</span> <span class="op">&lt;-</span> <span class="fu">read_pg_timevarying</span><span class="op">(</span>version <span class="op">=</span> <span class="st">"3.0.2"</span>, years <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2010</span>, <span class="fl">2011</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                               extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">12</span>, <span class="fl">50</span>, <span class="fl">52</span><span class="op">)</span>, variables <span class="op">=</span> <span class="st">"cru_tmp"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>

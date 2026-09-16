@@ -507,10 +507,10 @@ windowed larger-than-memory reads.
 
 ``` r
 
-# Static variables → pg_static.parquet + pg_static.csv.gz
+# Static variables → pg_static.parquet (built and cached on first read)
 static <- read_pg_static(config = cfg)
 
-# Time-varying → hive-partitioned parquet + pg_timevarying.csv.gz + pg_config.json manifest
+# Time-varying → hive-partitioned parquet + pg_config.json manifest (built and cached on first read)
 # Supports lazy subsetting:
 tv <- read_pg_timevarying(
   config    = cfg,
@@ -519,6 +519,10 @@ tv <- read_pg_timevarying(
   extent    = c(-20, 50, -10, 40)
 )
 ```
+
+The `.csv.gz` bundles are written only by
+[`build_release()`](http://prio-data.github.io/priogrid/reference/build_release.md),
+not by the table readers.
 
 [`build_pg_dataset()`](http://prio-data.github.io/priogrid/reference/build_pg_dataset.md)
 writes the hive dataset memory-safely without collecting the full table
@@ -577,7 +581,8 @@ them once and this is run.
 
 ## Cutting an Official Release
 
-A release is registered in two places, both keyed `"<version>_<type>"`:
+A release is published as a set of individual Cloud-Optimized GeoTIFFs
+on the PRIO CDN, described by two things:
 
 **1. Grid spec** — add an entry to `.pg_release_specs` in `R/config.R`:
 
@@ -591,20 +596,22 @@ A release is registered in two places, both keyed `"<version>_<type>"`:
   extent             = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
   temporal_resolution = "1 year",
   start_date         = as.Date("1850-12-31"),
-  end_date           = as.Date("2026-08-26")
+  end_date           = as.Date("2026-08-11")
 )
 ```
 
-**2. CDN URL** — add the corresponding entry to the `releases` list
-inside
+**2. Download manifest** — create a plain-text file
+`inst/extdata/releases/<version>_<type>.txt` with one CDN URL per line,
+listing every `cog/<varname>.tif` plus `_checksums.csv` and
+`pg_config.json`.
 [`download_priogrid()`](http://prio-data.github.io/priogrid/reference/download_priogrid.md)
-in `R/build_priogrid.R`:
-
-``` r
-
-# Inside the releases list in download_priogrid() in R/build_priogrid.R:
-"3.0.2_05deg_yearly" = "https://cdn.cloud.prio.org/files/<uuid>"
-```
+reads this manifest via
+[`pg_read_url_list()`](http://prio-data.github.io/priogrid/reference/pg_read_url_list.md)
+and derives each local filename from the last path segment of the URL
+([`pg_default_filename()`](http://prio-data.github.io/priogrid/reference/pg_default_filename.md));
+add a tab-separated second column only for URLs that do not name the
+file they serve. There is no longer a hard-coded `releases` list inside
+[`download_priogrid()`](http://prio-data.github.io/priogrid/reference/download_priogrid.md).
 
 Then build the release:
 
@@ -619,15 +626,21 @@ build_release(
   extent              = c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),
   temporal_resolution = "1 year",
   start_date          = as.Date("1850-12-31"),
-  end_date            = as.Date("2026-08-26")
+  end_date            = as.Date("2026-08-11")
 )
 ```
 
 [`build_release()`](http://prio-data.github.io/priogrid/reference/build_release.md)
-calculates all variables to the custom location, builds static and hive
-time-varying tables, copies the output to `releases/<version>/<type>/`,
-and writes two zip archives: `priogrid_<ver>_<type>.zip` and
-`priogrid_<ver>_<type>_csv.zip`.
+calculates all variables to the custom location, builds the static and
+hive time-varying tables plus the `.csv.gz` bundles, copies everything
+to `releases/<version>/<type>/`, and writes two zip archives —
+`priogrid_<ver>_<type>.zip` (COGs, Parquet, manifest, checksums) and
+`priogrid_<ver>_<type>_csv.zip` (CSV bundles) — for the download on
+prio.org/data/40. To publish for
+[`download_priogrid()`](http://prio-data.github.io/priogrid/reference/download_priogrid.md),
+upload the individual `cog/*.tif`, `_checksums.csv`, and
+`pg_config.json` to the CDN and record their URLs in the manifest file
+from step 2.
 
 Retrieve a release config programmatically, or list all published
 releases:

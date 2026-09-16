@@ -49,9 +49,9 @@ bdist2(
   If FALSE, uses Euclidean distances in the config CRS, converting to
   meters via
   [`terra::linearUnits()`](https://rspatial.github.io/terra/reference/linearUnits.html).
-  Default NULL auto-detects: geodesic for projected CRS (e.g. UTM),
-  native for geographic CRS (e.g. WGS84, which is already geodesic via
-  terra's internal handling).
+  Default NULL auto-detects: geodesic for native for geographic CRS
+  (e.g. WGS84, which is already geodesic via terra's internal handling),
+  and Euclidian for projected CRS (e.g. UTM).
 
 ## Value
 

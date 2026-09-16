@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">priogrid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.0.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,9 @@
 <p>PRIOGRID is an R package for collecting and standardizing open
 spatial data into a common grid format. This tutorial covers the basics:
 setting up the package, downloading data, and reading it into R as
-tabular data — no <code>terra</code> or <code>sf</code> required.</p>
+tabular data. Reading cached tables needs only <code>arrow</code>
+(installed automatically); the first read after download builds those
+tables from the downloaded GeoTIFFs and needs <code>terra</code>.</p>
 <div class="section level2">
 <h2 id="initial-setup">Initial Setup<a class="anchor" aria-label="anchor" href="#initial-setup"></a>
 </h2>
@@ -113,7 +115,7 @@ official PRIOGRID release:</p>
 <span><span class="co">#&gt;   extent: -180 180 -90 90 </span></span>
 <span><span class="co">#&gt;   temporal_resolution: 1 year </span></span>
 <span><span class="co">#&gt;   start_date: 1850-12-31 </span></span>
-<span><span class="co">#&gt;   end_date: 2026-08-11 </span></span>
+<span><span class="co">#&gt;   end_date: 2026-09-16 </span></span>
 <span><span class="co">#&gt;   verbose: TRUE </span></span>
 <span><span class="co">#&gt;   automatic_download: TRUE</span></span></code></pre></div>
 <table class="table">
@@ -172,8 +174,9 @@ how to change it.</p>
 <h2 id="downloading-the-official-release">Downloading the Official Release<a class="anchor" aria-label="anchor" href="#downloading-the-official-release"></a>
 </h2>
 <p>Download the current official PRIOGRID release with a single call.
-This downloads a zip archive and extracts it to your raw data
-folder:</p>
+This fetches the variables as individual Cloud-Optimized GeoTIFFs (plus
+a <code>pg_config.json</code> manifest and <code>_checksums.csv</code>)
+into your raw data folder:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/download_priogrid.html">download_priogrid</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>To see what releases are available:</p>
@@ -186,7 +189,9 @@ you set <code>overwrite = TRUE</code>.</p>
 <h2 id="reading-priogrid-data">Reading PRIOGRID Data<a class="anchor" aria-label="anchor" href="#reading-priogrid-data"></a>
 </h2>
 <p>Once downloaded, load the full dataset as a <code>data.table</code>.
-This requires no spatial libraries.</p>
+The first read builds the table from the downloaded COGs and needs
+<code>terra</code>; every read after that uses the cached Parquet and
+needs only <code>arrow</code> (installed automatically).</p>
 <div class="section level3">
 <h3 id="static-variables">Static Variables<a class="anchor" aria-label="anchor" href="#static-variables"></a>
 </h3>
@@ -497,29 +502,34 @@ over time. Use this to filter:</p>
 <p>After downloading, your data folder has this structure:</p>
 <pre><code>{rawfolder}/
 ├── priogrid/
-│   ├── priogrid_3_0_1_05deg_yearly.zip       # Downloaded archive
 │   └── releases/
-│       └── 3.0.1/
+│       └── 3.0.2/
 │           └── 05deg_yearly/
 │               ├── cog/
-│               │   └── {varname}.tif          # Individual variables as Cloud-Optimized GeoTIFFs
-│               ├── timevarying/
-│               │   └── year=YYYY/
-│               │       └── part-0.parquet      # Hive-partitioned time-varying data
-│               ├── pg_static.parquet           # Static data (wide table)
-│               ├── pg_static.csv.gz            # Static data (CSV bundle)
-│               ├── pg_timevarying.csv.gz       # Time-varying data (CSV bundle)
-│               ├── pg_config.json              # Dataset manifest (grid, layout, variables)
-│               └── _checksums.csv              # Per-file MD5s
-├── {source_name}/{version}/{id}/               # Raw source files
-└── tmp/                                        # Temporary processing files</code></pre>
-<p><code><a href="../reference/read_pg_static.html">read_pg_static()</a></code> reads <code>pg_static.parquet</code>;
-<code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code> reads the hive-partitioned
-<code>timevarying/</code> dataset, pushing any filters down to Arrow
-first. The <code>cog/*.tif</code> files hold individual variables as
-Cloud-Optimized GeoTIFFs and are read by <code><a href="../reference/load_pgvariable.html">load_pgvariable()</a></code>.
-The <code>*.csv.gz</code> bundles provide the same tables for non-R
-users, and <code>pg_config.json</code> records the grid and layout.</p>
+│               │   └── {varname}.tif       # Downloaded: variables as Cloud-Optimized GeoTIFFs
+│               ├── pg_config.json           # Downloaded: dataset manifest (grid, layout, variables)
+│               ├── _checksums.csv           # Downloaded, then extended locally: per-file MD5s
+│               ├── pg_static.parquet         # Built locally on first read_pg_static()
+│               └── timevarying/              # Built locally on first read_pg_timevarying()
+│                   └── year=YYYY/
+│                       └── part-0.parquet    # Hive-partitioned time-varying data
+├── {source_name}/{version}/{id}/            # Raw source files (only if you build variables yourself)
+└── tmp/                                      # Temporary processing files</code></pre>
+<p><code><a href="../reference/download_priogrid.html">download_priogrid()</a></code> fetches the Cloud-Optimized GeoTIFFs
+(<code>cog/*.tif</code>), the <code>pg_config.json</code> manifest, and
+<code>_checksums.csv</code> from the PRIO CDN — there is no zip archive.
+The tabular tables are built locally the first time you call
+<code><a href="../reference/read_pg_static.html">read_pg_static()</a></code> / <code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code>:
+<code><a href="../reference/read_pg_static.html">read_pg_static()</a></code> writes <code>pg_static.parquet</code> and
+<code><a href="../reference/read_pg_timevarying.html">read_pg_timevarying()</a></code> writes the hive-partitioned
+<code>timevarying/</code> dataset (both require <code>terra</code>).
+Subsequent reads use these cached files and push any filters down to
+Arrow first — no <code>terra</code> needed. Individual COGs are read
+directly by <code><a href="../reference/load_pgvariable.html">load_pgvariable()</a></code>. The compressed CSV bundles
+(<code>pg_static.csv.gz</code>, <code>pg_timevarying.csv.gz</code>) are
+not part of the CDN release; they are produced only by
+<code><a href="../reference/build_release.html">build_release()</a></code> for the zip download on
+prio.org/data/40.</p>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

@@ -21,7 +21,7 @@ pg_current_config()
 #>   extent: -180 180 -90 90 
 #>   temporal_resolution: 1 year 
 #>   start_date: 1850-12-31 
-#>   end_date: 2026-08-11 
+#>   end_date: 2026-09-16 
 #>   verbose: TRUE 
 #>   automatic_download: TRUE
 ```
@@ -134,15 +134,15 @@ returns the storage path for the current config:
 
 cfg <- pg_config(nrow = 180, ncol = 360)
 pgout_path(config = cfg)
-# {rawfolder}/priogrid/custom/3.0.1/a1b2c3/d4e5f6/
+# {rawfolder}/priogrid/custom/3.0.2/a1b2c3/d4e5f6/
 ```
 
 For the official release:
 
 ``` r
 
-pgout_path(version = "3.0.1", type = "05deg_yearly")
-# {rawfolder}/priogrid/releases/3.0.1/05deg_yearly/
+pgout_path(version = "3.0.2", type = "05deg_yearly")
+# {rawfolder}/priogrid/releases/3.0.2/05deg_yearly/
 ```
 
 ## Building Custom Variables

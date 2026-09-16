@@ -54,13 +54,13 @@ Data Structure.” *Journal of Peace Research*, **49**(2), 363–374.
     }
 
 Vestby J, Tollefsen AF, Helskog K, Benz G (2025). *priogrid: the
-R-package*. R package version 3.0.1,
+R-package*. R package version 3.0.2,
 <http://prio-data.github.io/priogrid>.
 
     @Manual{,
       title = {priogrid: the R-package},
       author = {Jonas Vestby and Andreas Forø Tollefsen and Kristine Helskog and Garret Benz},
       year = {2025},
-      note = {R package version 3.0.1},
+      note = {R package version 3.0.2},
       url = {http://prio-data.github.io/priogrid},
     }
