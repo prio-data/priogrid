@@ -82,14 +82,14 @@ The mode is determined by the \code{config} argument:
   pg_dt <- read_pg_timevarying()
 
   # Load specific official release
-  pg_dt <- read_pg_timevarying(version = "3.0.1")
+  pg_dt <- read_pg_timevarying(version = "3.0.2")
 
   # Load custom data
   cfg <- pg_config(nrow = 180, ncol = 360)
   pg_dt <- read_pg_timevarying(config = cfg)
 
   # Subset: two years, a bounding box, and one variable
-  pg_dt <- read_pg_timevarying(version = "3.0.1", years = c(2010, 2011),
+  pg_dt <- read_pg_timevarying(version = "3.0.2", years = c(2010, 2011),
                                extent = c(10, 12, 50, 52), variables = "cru_tmp")
 }
 }

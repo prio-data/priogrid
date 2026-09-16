@@ -32,7 +32,7 @@ layer name is a date with the format "YYYY-MM-DD".}
 ignored when \code{x} is already a \code{SpatRaster}.
 \code{NULL} (default) resolves via the release path or current config.}
 
-\item{version}{Character. Release version string (e.g. \code{"3.0.1"});
+\item{version}{Character. Release version string (e.g. \code{"3.0.2"});
 passed to \code{load_pgvariable()}. Cannot be combined with \code{config}.}
 
 \item{type}{Character. Release type (e.g. \code{"05deg_yearly"});
@@ -101,7 +101,7 @@ data frame. No new package dependency — colours come from base
   plot_pgvariable("ucdp_ged", config = cfg)
 
   # Specific release:
-  plot_pgvariable("ucdp_ged", version = "3.0.1")
+  plot_pgvariable("ucdp_ged", version = "3.0.2")
 
   # Override terra::plot() args:
   plot_pgvariable(r, main = "Custom title")

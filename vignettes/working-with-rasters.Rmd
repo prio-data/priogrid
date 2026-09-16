@@ -85,6 +85,39 @@ tv_rasters <- read_pg_timevarying(as_raster = TRUE)
 tv_rasters[["cru_tmp"]]
 ```
 
+## Plotting Variables with plot_pgvariable()
+
+`plot_pgvariable()` renders a variable with sensible defaults pulled from its embedded `pg_*` metadata (label, unit, display transform, colormap, value range) — no manual styling needed. It wraps `terra::plot()`, so it needs only `terra` (already required for rasters).
+
+```{r plot-basic, eval=FALSE}
+# Plot from a loaded raster:
+r <- load_pgvariable("ucdp_ged")
+plot_pgvariable(r, layer = "2020-12-31")
+
+# Plot directly from a variable name:
+plot_pgvariable("cru_tmp")
+```
+
+Restrict the read to a region — a bounding box `c(xmin, xmax, ymin, ymax)` in lon/lat, or a continent name. When `x` is a variable name, only the COG blocks covering that region are fetched (windowed read):
+
+```{r plot-extent, eval=FALSE}
+plot_pgvariable("cru_tmp", extent = "Africa")
+plot_pgvariable("cru_tmp", extent = c(-20, 55, -35, 40))
+```
+
+Overlay historically correct country borders (`add_borders`, from cShapes, matched to the layer's date), a land outline (`add_ne`, from Natural Earth), and a data-source citation in the margin (`add_citation`). The border and land overlays require the cShapes and Natural Earth raw data locally:
+
+```{r plot-overlays, eval=FALSE}
+plot_pgvariable("ucdp_ged", layer = "1999-12-31", extent = "Africa",
+                add_borders = TRUE, add_ne = TRUE, add_citation = TRUE)
+```
+
+Extra arguments pass through to `terra::plot()`, overriding the metadata defaults:
+
+```{r plot-override, eval=FALSE}
+plot_pgvariable(r, main = "Custom title")
+```
+
 ## Discovering Variables with pgsearch()
 
 `pgsearch()` searches the meta-data across source names, versions, tags, spatial extent, and temporal resolution:

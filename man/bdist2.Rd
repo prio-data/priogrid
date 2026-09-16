@@ -29,8 +29,8 @@ avoiding recomputation. Default is NULL.}
 for distance calculations, projecting the result back to the config CRS.
 If FALSE, uses Euclidean distances in the config CRS, converting to meters
 via \code{terra::linearUnits()}. Default NULL auto-detects: geodesic for
-projected CRS (e.g. UTM), native for geographic CRS (e.g. WGS84, which is
-already geodesic via terra's internal handling).}
+native for geographic CRS (e.g. WGS84, which is already geodesic via terra's internal handling),
+and Euclidian for projected CRS (e.g. UTM).}
 }
 \value{
 A list containing three elements:

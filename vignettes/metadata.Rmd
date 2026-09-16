@@ -84,7 +84,7 @@ pgsources[pgsources$temporal_resolution == "Yearly", c("source_name", "source_ve
 `pgchecksum` stores MD5 checksums for downloaded files, allowing you to verify that your local copies match those used to build the official release:
 
 ```{r pgchecksum}
-pgchecksum
+head(pgchecksum)
 ```
 
 Use `check_pgsourcefiles()` to run the check against your local storage:
