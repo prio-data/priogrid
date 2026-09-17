@@ -174,3 +174,9 @@ Tracker](https://github.com/prio-data/priogrid/issues/new/choose).
 Please see our [contribution
 guidelines](http://prio-data.github.io/priogrid/CONTRIBUTING.md) for
 details on how you can contribute with code.
+
+## Funding
+
+PRIOGRID 3 has been developed through the [Peace Science
+Infrastructure](https://www.prio.org/projects/1998) project funded by
+the Research Council of Norway (grant number 322425).
