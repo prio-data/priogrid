@@ -130,3 +130,7 @@ Full documentation is available in the package vignettes:
 We welcome contributions. Report issues or suggest new data sources or variable ideas using our [Issue Tracker](https://github.com/prio-data/priogrid/issues/new/choose).
 
 Please see our [contribution guidelines](CONTRIBUTING.md) for details on how you can contribute with code.
+
+## Funding
+
+PRIOGRID 3 has been developed through the [Peace Science Infrastructure](https://www.prio.org/projects/1998) project funded by the Research Council of Norway (grant number 322425).
