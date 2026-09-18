@@ -36,7 +36,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/prio-data/priogrid/blob/3.0.2/inst/CITATION)
+[`inst/CITATION`](https://github.com/prio-data/priogrid/blob/master/inst/CITATION)
 
 Tollefsen AF, Strand H, Buhaug H (2012). “PRIO-GRID: A Unified Spatial
 Data Structure.” *Journal of Peace Research*, **49**(2), 363–374.
