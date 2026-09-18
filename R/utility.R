@@ -247,7 +247,7 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", config = p
   equal_projection <- terra::crs(r) == terra::crs(pg)
   if(!equal_projection){
     tmp1 <- tempfile(pattern = "reprojection", fileext = ".tif", tmpdir = temporary_directory)
-    r <- terra::project(r, terra::crs(pg), filename = tmp1)
+    r <- terra::project(r, terra::crs(pg), mask = TRUE, filename = tmp1)
   }
 
   pg_extent <- terra::vect(terra::ext(pg)) |> sf::st_as_sf()
