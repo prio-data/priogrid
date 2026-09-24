@@ -270,8 +270,9 @@ robust_transformation <- function(r, agg_fun, disagg_method = "near", config = p
                   ...)
   }
 
-  lower_resolution <- terra::res(r) > terra::res(pg)
-  if(any(lower_resolution)){
+  rr <- terra::res(r); rp <- terra::res(pg)
+  lower_resolution <- any(rr - rp > 1e-6 * pmax(abs(rr), abs(rp)))
+  if(lower_resolution){
     tmp4 <- tempfile(pattern = "disaggregate", fileext = ".tif", tmpdir = temporary_directory)
     r <- terra::disagg(r,
                fact = terra::res(r)/terra::res(pg),
