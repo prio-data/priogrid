@@ -76,7 +76,7 @@ read_linight <- function(config = pg_current_config(), overwrite_files = FALSE){
   extentfix_paths <- file.path(dirname(allfiles), paste0("extentfix_", basename(allfiles)))
 
   files_to_fix <- extentfix_paths[!(extentfixed_files %in% extentfix_paths)]
-  files_to_fix <- file.path(dirname(files_to_fix), stringr::str_remove(basename(files_to_fix), "blah_"))
+  files_to_fix <- file.path(dirname(files_to_fix), stringr::str_remove(basename(files_to_fix), "extentfix_"))
 
   if(length(files_to_fix) > 0){
     message("Harmonizing extent of Li Nighttime rasters. Next time you run the function, this will not be required")
